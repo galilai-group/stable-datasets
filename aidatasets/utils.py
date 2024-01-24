@@ -20,11 +20,12 @@ import torch as ch
 from typing import Dict, Union
 from PIL import Image
 import time
+from torch.utils.data import Dataset as TorchDataset
 
 
-class ImagePathsDataset(list):
-    def __getitem__(self, i):
-        return Image.open(list.__getitem__(self, i)).convert("RGB")
+class Dataset(dict):
+    # def __getitem__(self, i):
+    #     return Image.open(list.__getitem__(self, i)).convert("RGB")
 
     def __init__(self, path=None, **kwargs):
         if path is None:
@@ -80,6 +81,7 @@ class ImagePathsDataset(list):
             if filename in self.extract:
                 to = os.path.splitext(folder / ("extracted_" + filename))[0]
                 extract_file(folder / filename, to)
+        return self
 
     @property
     def load(self):
@@ -1185,7 +1187,7 @@ def base_two(x: ch.Tensor, bits: int):
         return x.view(-1, 1).bitwise_and(mask).ne_(0).byte()
 
 
-class TensorDataset(Dataset):
+class TensorDataset(TorchDataset):
     def __init__(self, X, y, transform=None):
         self.X = X
         self.y = y

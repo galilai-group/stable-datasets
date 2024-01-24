@@ -97,6 +97,7 @@ class CIFAR10(Dataset):
         self["test_X"] = np.transpose(test_images, (0, 2, 3, 1))
         self["test_y"] = test_labels
         print("Dataset cifar10 loaded in{0:.2f}s.".format(time.time() - t0))
+        return self
 
 
 class CIFAR10C(CIFAR10):
