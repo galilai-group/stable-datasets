@@ -16,7 +16,7 @@ from .svhn import SVHN
 from .rock_paper_scissor import RockPaperScissor
 from .tinyimagenet import TinyImagenet, TinyImagenetC
 from .medmnist import MedMNIST
-from .imagenette import Imagenette
+# from .imagenette import Imagenette
 from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
 
