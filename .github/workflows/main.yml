@@ -28,7 +28,7 @@ jobs:
       run: pip install black
     - name: Check format with black
       run: |
-        black --check numpy_datasets/ setup.py
+        black --check aidatasets/ setup.py
     - name: Install sndfile
       run: |
         sudo apt-get install libsndfile1
