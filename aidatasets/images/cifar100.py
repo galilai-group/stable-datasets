@@ -1,295 +1,89 @@
-import os
 import pickle
 import tarfile
-import time
-from ..utils import Dataset
-from io import BytesIO
-import numpy as np
+import datasets
 
 
-class CIFAR100(Dataset):
-    """Image classification.
+class CIFAR100(datasets.GeneratorBasedBuilder):
+    """CIFAR-100 dataset, a variant of CIFAR-10 with 100 classes."""
 
-    The `CIFAR-100 < https: // www.cs.toronto.edu/~kriz/cifar.html >`_ dataset is
-    just like the CIFAR-10, except it has 100 classes containing 600 images
-    each. There are 500 training images and 100 testing images per class.
-    The 100 classes in the CIFAR-100 are grouped into 20 superclasses. Each
-    image comes with a "fine" label(the class to which it belongs) and a
-    "coarse" label(the superclass to which it belongs)."""
+    VERSION = datasets.Version("1.0.0")
 
-    @property
-    def label_to_name(label):
-        labels_list = [
-            "apple",
-            "aquarium_fish",
-            "baby",
-            "bear",
-            "beaver",
-            "bed",
-            "bee",
-            "beetle",
-            "bicycle",
-            "bottle",
-            "bowl",
-            "boy",
-            "bridge",
-            "bus",
-            "butterfly",
-            "camel",
-            "can",
-            "castle",
-            "caterpillar",
-            "cattle",
-            "chair",
-            "chimpanzee",
-            "clock",
-            "cloud",
-            "cockroach",
-            "couch",
-            "crab",
-            "crocodile",
-            "cup",
-            "dinosaur",
-            "dolphin",
-            "elephant",
-            "flatfish",
-            "forest",
-            "fox",
-            "girl",
-            "hamster",
-            "house",
-            "kangaroo",
-            "keyboard",
-            "lamp",
-            "lawn_mower",
-            "leopard",
-            "lion",
-            "lizard",
-            "lobster",
-            "man",
-            "maple_tree",
-            "motorcycle",
-            "mountain",
-            "mouse",
-            "mushroom",
-            "oak_tree",
-            "orange",
-            "orchid",
-            "otter",
-            "palm_tree",
-            "pear",
-            "pickup_truck",
-            "pine_tree",
-            "plain",
-            "plate",
-            "poppy",
-            "porcupine",
-            "possum",
-            "rabbit",
-            "raccoon",
-            "ray",
-            "road",
-            "rocket",
-            "rose",
-            "sea",
-            "seal",
-            "shark",
-            "shrew",
-            "skunk",
-            "skyscraper",
-            "snail",
-            "snake",
-            "spider",
-            "squirrel",
-            "streetcar",
-            "sunflower",
-            "sweet_pepper",
-            "table",
-            "tank",
-            "telephone",
-            "television",
-            "tiger",
-            "tractor",
-            "train",
-            "trout",
-            "tulip",
-            "turtle",
-            "wardrobe",
-            "whale",
-            "willow_tree",
-            "wolf",
-            "woman",
-            "worm",
-        ]
-
-    @property
-    def urls(self):
-        return {
-            "cifar100.tar.gz": "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
-        }
-
-    @property
-    def md5(self):
-        return {"cifar100.tar.gz": "eb9058c3a382ffc7106e4002c42a8d85"}
-
-    @property
-    def num_classes(self):
-        return 100
-
-    @property
-    def image_shape(self):
-        return (32, 32, 3)
-
-    @property
-    def modalities(self):
-        return dict(
-            train_X="image",
-            test_X="image",
-            train_y=int,
-            test_y=int,
-            train_y_coarse=int,
-            test_y_coarse=int,
+    def _info(self):
+        return datasets.DatasetInfo(
+            description="""The CIFAR-100 dataset contains 50,000 32x32 color training images and 10,000 test images, 
+                           categorized into 100 classes, grouped into 20 superclasses. Each image has a 'fine' label 
+                           (the class it belongs to) and a 'coarse' label (the superclass it belongs to).""",
+            features=datasets.Features(
+                {
+                    "image": datasets.Image(),
+                    "label": datasets.ClassLabel(names=self._fine_labels()),
+                    "superclass": datasets.ClassLabel(names=self._coarse_labels())
+                }
+            ),
+            supervised_keys=("image", "label"),
+            homepage="https://www.cs.toronto.edu/~kriz/cifar.html",
+            license="MIT License",
+            citation="""@article{krizhevsky2009learning,
+                         title={Learning multiple layers of features from tiny images},
+                         author={Krizhevsky, Alex and Hinton, Geoffrey and others},
+                         year={2009},
+                         publisher={Toronto, ON, Canada}}"""
         )
 
-    def load(self):
-        t0 = time.time()
-        # Loading the file
-        tar = tarfile.open(self.path / self.name / list(self.urls.keys())[0], "r:gz")
-
-        # Loading training set
-        f = tar.extractfile("cifar-100-python/train").read()
-        data = pickle.loads(f, encoding="latin1")
-        train_images = data["data"].reshape((-1, 3, 32, 32))
-        train_fine = np.array(data["fine_labels"])
-        train_coarse = np.array(data["coarse_labels"])
-
-        # Loading test set
-        f = tar.extractfile("cifar-100-python/test").read()
-        data = pickle.loads(f, encoding="latin1")
-        test_images = data["data"].reshape((-1, 3, 32, 32))
-        test_fine = np.array(data["fine_labels"])
-        test_coarse = np.array(data["coarse_labels"])
-
-        self["train_X"] = np.transpose(train_images, (0, 2, 3, 1))
-        self["train_y"] = train_fine
-        self["train_y_coarse"] = train_coarse
-        self["test_X"] = np.transpose(test_images, (0, 2, 3, 1))
-        self["test_y"] = test_fine
-        self["test_y_coarse"] = test_coarse
-        print("Dataset cifar100 loaded in {0:.2f}s.".format(time.time() - t0))
-        return self
-
-
-class CIFAR100C(CIFAR100):
-    """Image classification.
-    The `CIFAR-10 < https: // www.cs.toronto.edu/~kriz/cifar.html >`_ dataset
-    was collected by Alex Krizhevsky, Vinod Nair, and Geoffrey
-    Hinton. It consists of 60000 32x32 colour images in 10 classes, with
-    6000 images per class. There are 50000 training images and 10000 test images.
-    The dataset is divided into five training batches and one test batch,
-    each with 10000 images. The test batch contains exactly 1000 randomly
-    selected images from each class. The training batches contain the
-    remaining images in random order, but some training batches may
-    contain more images from one class than another. Between them, the
-    training batches contain exactly 5000 images from each class.
-
-    Parameters
-    ----------
-
-    path: str
-        default ($DATASET_PATH), the path to look for the data and
-        where the data will be downloaded if not present
-
-    corruption: str or list
-        which corruption version to use
-
-    Returns
-    -------
-
-    train_images: array
-
-    train_labels: array
-
-    test_images: array
-
-    test_labels: array
-
-    """
-
-    @property
-    def corruptions(self):
+    def _split_generators(self, dl_manager):
+        archive_path = dl_manager.download(
+            "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
+        )
         return [
-            "zoom_blur",
-            "speckle_noise",
-            "spatter",
-            "snow",
-            "shot_noise",
-            "saturate",
-            "pixelate",
-            "motion_blur",
-            "jpeg_compression",
-            "impulse_noise",
-            "glass_blur",
-            "gaussian_noise",
-            "gaussian_blur",
-            "frost",
-            "fog",
-            "elastic_transform",
-            "defocus_blur",
-            "contrast",
-            "bightness",
+            datasets.SplitGenerator(
+                name=datasets.Split.TRAIN,
+                gen_kwargs={"archive_path": archive_path, "train": True},
+            ),
+            datasets.SplitGenerator(
+                name=datasets.Split.TEST,
+                gen_kwargs={"archive_path": archive_path, "train": False},
+            ),
         ]
 
-    @property
-    def urls(self):
-        return {
-            "CIFAR-100-C.tar": "https://zenodo.org/records/3555552/files/CIFAR-100-C.tar?download=1"
-        }
+    def _generate_examples(self, archive_path, train=True):
+        with tarfile.open(archive_path, "r:gz") as tar:
+            split_file = "cifar-100-python/train" if train else "cifar-100-python/test"
+            file = tar.extractfile(split_file).read()
+            data = pickle.loads(file, encoding="latin1")
+            images = data["data"].reshape((-1, 3, 32, 32)).transpose((0, 2, 3, 1))
+            fine_labels = data["fine_labels"]
+            coarse_labels = data["coarse_labels"]
 
-    @property
-    def md5(self):
-        return {"CIFAR-100-C.tar": "11f0ed0f1191edbf9fa23466ae6021d3"}
+            for idx, (image, fine_label, coarse_label) in enumerate(zip(images, fine_labels, coarse_labels)):
+                yield idx, {
+                    "image": image,
+                    "label": fine_label,
+                    "superclass": coarse_label
+                }
 
-    @property
-    def webpage(self):
-        return "https://zenodo.org/records/3555552"
+    @staticmethod
+    def _fine_labels():
+        """Returns the list of CIFAR-100 fine labels (100 classes)."""
+        return [
+            "apple", "aquarium_fish", "baby", "bear", "beaver", "bed", "bee", "beetle", "bicycle", "bottle",
+            "bowl", "boy", "bridge", "bus", "butterfly", "camel", "can", "castle", "caterpillar", "cattle",
+            "chair", "chimpanzee", "clock", "cloud", "cockroach", "couch", "crab", "crocodile", "cup",
+            "dinosaur", "dolphin", "elephant", "flatfish", "forest", "fox", "girl", "hamster", "house",
+            "kangaroo", "keyboard", "lamp", "lawn_mower", "leopard", "lion", "lizard", "lobster", "man",
+            "maple_tree", "motorcycle", "mountain", "mouse", "mushroom", "oak_tree", "orange", "orchid",
+            "otter", "palm_tree", "pear", "pickup_truck", "pine_tree", "plain", "plate", "poppy", "porcupine",
+            "possum", "rabbit", "raccoon", "ray", "road", "rocket", "rose", "sea", "seal", "shark", "shrew",
+            "skunk", "skyscraper", "snail", "snake", "spider", "squirrel", "streetcar", "sunflower",
+            "sweet_pepper", "table", "tank", "telephone", "television", "tiger", "tractor", "train", "trout",
+            "tulip", "turtle", "wardrobe", "whale", "willow_tree", "wolf", "woman", "worm"
+        ]
 
-    @property
-    def modalities(self):
-        return dict(X="image", y=int, corruption_name=str, corruption_level=int)
-
-    def load(self, corruption=None):
-        t0 = time.time()
-
-        tar = tarfile.open(self.path / self.name / "CIFAR-100-C.tar", "r")
-
-        # Load train set
-        array_file = BytesIO()
-        array_file.write(tar.extractfile("CIFAR-100-C/labels.npy").read())
-        array_file.seek(0)
-        labels = np.load(array_file)
-        if type(corruption) == str:
-            corruptions = [corruption]
-        elif type(corruption) in [list, tuple]:
-            corruptions = corruption
-        else:
-            corruptions = self.corruptions
-        images = []
-        names = []
-        for c in corruptions:
-            assert c in self.corruptions
-            print(f"Loading corruption {c}")
-            array_file = BytesIO()
-            array_file.write(tar.extractfile(f"CIFAR-100-C/{c}.npy").read())
-            array_file.seek(0)
-            images.append(np.load(array_file))
-            names.extend([c] * 10000)
-
-        self["X"] = np.concatenate(images).transpose((0, 2, 3, 1))
-        self["y"] = np.concatenate([labels for i in range(len(corruptions))])
-        self["corruption_name"] = np.array(names)
-        self["corruption_level"] = (
-            np.arange(1, 6).repeat(10000).repeat(len(corruptions))
-        )
-        print("Dataset cifar100-C loaded in{0:.2f}s.".format(time.time() - t0))
-        return self
+    @staticmethod
+    def _coarse_labels():
+        """Returns the list of CIFAR-100 coarse labels (20 superclasses)."""
+        return [
+            "aquatic_mammals", "fish", "flowers", "food_containers", "fruit_and_vegetables", "household_electrical_devices",
+            "household_furniture", "insects", "large_carnivores", "large_man-made_outdoor_things", "large_natural_outdoor_scenes",
+            "large_omnivores_and_herbivores", "medium_mammals", "non-insect_invertebrates", "people", "reptiles", "small_mammals",
+            "trees", "vehicles_1", "vehicles_2"
+        ]

@@ -5,7 +5,8 @@ from .ibeans import IBeans
 from .flowers102 import Flowers102
 from .cifar10 import CIFAR10
 from .cifar10c import CIFAR10C
-from .cifar100 import CIFAR100, CIFAR100C
+from .cifar100 import CIFAR100
+from .cifar100c import CIFAR100C
 from .food101 import Food101
 from .fgvcaircraft import FGVCAircraft
 from .country211 import Country211
