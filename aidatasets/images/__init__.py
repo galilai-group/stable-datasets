@@ -19,6 +19,7 @@ from .medmnist import MedMNIST
 # from .imagenette import Imagenette
 from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
+from celeba import CelebA
 
 # from . import (
 #    kmnist,
