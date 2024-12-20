@@ -1,157 +1,96 @@
-import gzip
-import io
-import os
-import time
-import urllib.request
-import zipfile
-
 import numpy as np
-import tqdm
-from ..utils import download_dataset
-from pathlib import Path
-
-_urls = {"gzip.zip": "http://www.itl.nist.gov/iaui/vip/cs_links/EMNIST/gzip.zip"}
-_name = "emnist"
-SHAPE = (1, 28, 28)
+import datasets
+import scipy.io as sio
+import os
 
 
-def _read_images(filename, folder):
-    mat = folder.read(filename)
-    f = gzip.open(io.BytesIO(mat), "rb")
-
-    magic = f.read(4)
-    magic = int.from_bytes(magic, "big")
-    print("Magic is:", magic)
-
-    # Number of images in next 4 bytes
-    noimg = f.read(4)
-    noimg = int.from_bytes(noimg, "big")
-
-    # Number of rows in next 4 bytes
-    norow = f.read(4)
-    norow = int.from_bytes(norow, "big")
-
-    # Number of columns in next 4 bytes
-    nocol = f.read(4)
-    nocol = int.from_bytes(nocol, "big")
-
-    images = np.empty((noimg, norow, nocol), "float32")
-
-    for i in tqdm.tqdm(range(noimg), ascii=True):
-        for r in range(norow):
-            for c in range(nocol):
-                images[i, c, r] = float(int.from_bytes(f.read(1), "big"))
-
-    f.close()
-
-    return images
+class EMNISTConfig(datasets.BuilderConfig):
+    def __init__(self, variant, **kwargs):
+        super(EMNISTConfig, self).__init__(version=datasets.Version("1.0.0", ""), **kwargs)
+        self.variant = variant
 
 
-def _read_labels(filename, folder):
-    mat = folder.read(filename)
-    f = gzip.open(io.BytesIO(mat), "rb")
+class EMNIST(datasets.GeneratorBasedBuilder):
+    BUILDER_CONFIGS = [
+        EMNISTConfig(name="byclass", variant="byclass"),
+        EMNISTConfig(name="bymerge", variant="bymerge"),
+        EMNISTConfig(name="balanced", variant="balanced"),
+        EMNISTConfig(name="letters", variant="letters"),
+        EMNISTConfig(name="digits", variant="digits"),
+        EMNISTConfig(name="mnist", variant="mnist"),
+    ]
 
-    magic = f.read(4)
-    magic = int.from_bytes(magic, "big")
-    print("Magic is:", magic)
+    def _info(self):
+        variant = self.config.variant
+        if variant == "byclass":
+            num_classes = 62
+        elif variant == "bymerge":
+            num_classes = 47
+        elif variant == "balanced":
+            num_classes = 47
+        elif variant == "letters":
+            num_classes = 26
+        elif variant == "digits":
+            num_classes = 10
+        elif variant == "mnist":
+            num_classes = 10
 
-    # Number of images in next 4 bytes
-    nolab = f.read(4)
-    nolab = int.from_bytes(nolab, "big")
+        return datasets.DatasetInfo(
+            description="EMNIST dataset",
+            features=datasets.Features(
+                {
+                    "image": datasets.Image(),
+                    "label": datasets.ClassLabel(num_classes=num_classes)
+                }
+            ),
+            supervised_keys=("image", "label"),
+            homepage="https://www.nist.gov/itl/iad/image-group/emnist-dataset",
+            citation="""@misc{cohen2017emnistextensionmnisthandwritten,
+                        title={EMNIST: an extension of MNIST to handwritten letters}, 
+                        author={Gregory Cohen and Saeed Afshar and Jonathan Tapson and André van Schaik},
+                        year={2017},
+                        eprint={1702.05373},
+                        archivePrefix={arXiv},
+                        primaryClass={cs.CV},
+                        url={https://arxiv.org/abs/1702.05373}, 
+            }"""
+        )
 
-    labels = [f.read(1) for i in range(nolab)]
-    labels = [int.from_bytes(label, "big") for label in labels]
+    def _split_generators(self, dl_manager):
+        variant = self.config.variant
+        # Download and extract the matlab.zip file
+        extracted_path = dl_manager.download_and_extract("https://biometrics.nist.gov/cs_links/EMNIST/matlab.zip")
 
-    f.close()
+        # The extracted_path now points to the directory containing "matlab" folder
+        # The .mat files are likely in extracted_path/matlab/
+        mat_dir = os.path.join(extracted_path, "matlab")
+        mat_file = f"emnist-{variant}.mat"
+        mat_path = os.path.join(mat_dir, mat_file)
 
-    return np.array(labels)
+        return [
+            datasets.SplitGenerator(
+                name=datasets.Split.TRAIN,
+                gen_kwargs={"mat_path": mat_path, "split": "train"}
+            ),
+            datasets.SplitGenerator(
+                name=datasets.Split.TEST,
+                gen_kwargs={"mat_path": mat_path, "split": "test"}
+            ),
+        ]
 
+    def _generate_examples(self, mat_path, split):
+        data = sio.loadmat(mat_path)
+        dataset = data['dataset'][0, 0]
+        subset = dataset[split][0, 0]
 
-def load(path=None, option="balanced"):
-    """Grayscale digit/letter classification.
+        images = subset['images']
+        labels = subset['labels']
 
-    The EMNIST Dataset
+        images = np.array(images, dtype=np.uint8).reshape(-1, 28, 28)
+        labels = np.array(labels, dtype=np.int64).flatten()
 
-    Authors:
-
-    Gregory Cohen, Saeed Afshar, Jonathan Tapson,
-    and Andre van Schaik
-
-    The MARCS Institute for Brain, Behaviour and Development
-    Western Sydney University
-    Penrith, Australia 2751
-
-    Email: g.cohen@westernsydney.edu.au
-
-    What is it?
-
-    The EMNIST dataset is a set of handwritten character digits
-    derived from the NIST Special Database 19
-    (https://www.nist.gov/srd/nist-special-database-19) and
-    converted to a 28x28 pixel image format and dataset structure
-    that directly matches the MNIST dataset
-    (http://yann.lecun.com/exdb/mnist/). Further information on
-    the dataset contents and conversion process can be found in
-    the paper available at https://arxiv.org/abs/1702.05373v1.
-
-    Formats:
-
-    The dataset is provided in two file formats. Both versions of
-    the dataset contain identical information, and are provided
-    entirely for the sake of convenience. The first dataset is
-    provided in a Matlab format that is accessible through both
-    Matlab and Python (using the scipy.io.loadmat function). The
-    second version of the dataset is provided in the same binary
-    format as the original MNIST dataset as outlined in
-    http://yann.lecun.com/exdb/mnist/
-
-    Dataset Summary:
-
-    There are six different splits provided in this dataset.
-    A short summary of the dataset is provided below:
-
-    EMNIST ByClass:EMNIST814,255 characters. 62 unbalanced classes
-    EMNIST ByMerge:     814,255 characters. 47 unbalanced classes
-    EMNIST Balanced:Balanced131,600 characters. 47 balanced classes.
-    EMNIST Letters:EMNIST145,600 characters. 26 balanced classes.
-    EMNIST Digits:EMNIST280,000 characters. 10 balanced classes.
-    EMNIST MNIST:EMNIST 70,000 characters. 10 balanced classes.
-
-    The full complement of the NIST Special Database 19 is
-    available in the ByClass and ByMerge splits. The EMNIST
-    Balanced dataset contains a set of characters with an equal
-    number of samples per class. The EMNIST Letters dataset
-    merges a balanced set of the uppercase and lowercase letters
-    into a single 26-class task. The EMNIST Digits and EMNIST
-    MNIST dataset provide balanced handwritten digit datasets
-    directly compatible with the original MNIST dataset.
-
-    Please refer to the EMNIST paper (available at
-    https://arxiv.org/abs/1702.05373v1) for further details of
-    the dataset structure.
-
-    How to cite:
-
-    Please cite the following paper when using or referencing
-    the dataset:
-
-    Cohen, G., Afshar, S., Tapson, J., & van Schaik, A. (2017).
-    EMNIST: an extension of MNIST to handwritten letters.
-    Retrieved from http://arxiv.org/abs/1702.05373
-
-    """
-    download_dataset(_name, _urls, path)
-
-    # Loading the file
-    print("Loading emnist")
-    folder = zipfile.ZipFile(Path(path) / _name / "gzip.zip")
-    filename = "gzip/emnist-{}-{}-{}-idx{}-ubyte.gz"
-    x_test = _read_images(filename.format(option, "test", "images", 3), folder)
-    x_train = _read_images(filename.format(option, "train", "images", 3), folder)
-    y_test = _read_labels(filename.format(option, "test", "labels", 1), folder)
-    y_train = _read_labels(filename.format(option, "train", "labels", 1), folder)
-    dataset = {
-        "train": {"X": x_train, "y": y_train},
-        "val": {"X": x_test, "y": y_test},
-    }
-    return dataset
+        for idx, (img, lbl) in enumerate(zip(images, labels)):
+            yield idx, {
+                "image": img,
+                "label": int(lbl)
+            }
