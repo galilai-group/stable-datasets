@@ -1,71 +1,78 @@
-from io import BytesIO
-import tarfile
-from zipfile import ZipFile
-import numpy as np
-from ..utils import Dataset
-from tqdm import tqdm
-from sklearn.preprocessing import LabelEncoder
-
 from PIL import Image
+import datasets
+import zipfile
+import os
 
 
-class AWA2(Dataset):
+class AWA2(datasets.GeneratorBasedBuilder):
     """
-    Tiny Imagenet has 200 classes. Each class has 500 training images, 50
-    validation images, and 50 test images. We have released the training and
-    validation sets with images and annotations. We provide both class labels an
-    bounding boxes as annotations; however, you are asked only to predict the
-    class label of each image without localizing the objects. The test set is
-    released without labels. You can download the whole tiny ImageNet dataset
-    here.
+    The Animals with Attributes 2 (AwA2) dataset provides images across 50 animal classes, useful for attribute-based classification
+    and zero-shot learning research. See https://cvml.ista.ac.at/AwA2/ for more information.
     """
 
-    @property
-    def urls(self):
-        return {
-            "AwA2-base.zip": "https://cvml.ista.ac.at/AwA2/AwA2-base.zip",
-            "AwA2-data.zip": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip",
-        }
+    VERSION = datasets.Version("1.0.0")
 
-    @property
-    def md5(self):
-        return {
-            "AwA2-base.zip": "90528d7ca1a48142e341f4ef8d21d0de",
-            "AwA2-data.zip": "90528d7ca1a48142e341f4ef8d21d0de",
-        }
-
-    @property
-    def num_classes(self):
-        return 50
-
-    def load(self):
-        asdf
-        # Loading the file
-        f = ZipFile(self.path / self.name / "tiny-imagenet-200.zip", "r")
-        names = [name for name in f.namelist() if name.endswith("JPEG")]
-        val_classes = np.loadtxt(
-            f.open("tiny-imagenet-200/val/val_annotations.txt"),
-            dtype=str,
-            delimiter="\t",
+    def _info(self):
+        return datasets.DatasetInfo(
+            description="""The AWA2 dataset is an image classification dataset with images of 50 classes, primarily used in attribute-based image recognition research. See https://cvml.ista.ac.at/AwA2/ for more information.""",
+            features=datasets.Features(
+                {
+                    "image": datasets.Image(),
+                    "label": datasets.ClassLabel(names=['antelope', 'grizzly+bear', 'killer+whale', 'beaver',
+                                                        'dalmatian', 'persian+cat', 'horse', 'german+shepherd',
+                                                        'blue+whale', 'siamese+cat', 'skunk', 'mole', 'tiger',
+                                                        'hippopotamus', 'leopard', 'moose', 'spider+monkey',
+                                                        'humpback+whale', 'elephant', 'gorilla', 'ox', 'fox', 'sheep',
+                                                        'seal', 'chimpanzee', 'hamster', 'squirrel', 'rhinoceros',
+                                                        'rabbit', 'bat', 'giraffe', 'wolf', 'chihuahua', 'rat',
+                                                        'weasel', 'otter', 'buffalo', 'zebra', 'giant+panda', 'deer',
+                                                        'bobcat', 'pig', 'lion', 'mouse', 'polar+bear', 'collie',
+                                                        'walrus', 'raccoon', 'cow', 'dolphin']),
+                }
+            ),
+            supervised_keys=("image", "label"),
+            homepage="https://cvml.ista.ac.at/AwA2/",
+            citation="""@ARTICLE{8413121,
+                         author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},
+                         journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, 
+                         title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly}, 
+                         year={2019},
+                         volume={41},
+                         number={9},
+                         pages={2251-2265},
+                         keywords={Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning},
+                         doi={10.1109/TPAMI.2018.2857768}}"""
         )
-        val_classes = dict(
-            [(a, b) for a, b in zip(val_classes[:, 0], val_classes[:, 1])]
-        )
-        x_train, x_test, x_valid, y_train, y_test, y_valid = [], [], [], [], [], []
-        for name in tqdm(names, desc=f"Loading {self.name}"):
-            im = Image.open(f.open(name)).convert("RGB")
-            if "train" in name:
-                classe = name.split("/")[-1].split("_")[0]
-                x_train.append(im)
-                y_train.append(classe)
-            if "val" in name:
-                x_valid.append(im)
-                arg = name.split("/")[-1]
-                y_valid.append(val_classes[arg])
-            if "test" in name:
-                x_test.append(im)
-        labels = LabelEncoder().fit(y_train)
-        self["train_X"] = x_train
-        self["train_y"] = labels.transform(y_train)
-        self["test_X"] = x_valid
-        self["test_y"] = labels.transform(y_valid)
+
+    def _split_generators(self, dl_manager):
+        # Download the dataset
+        archive_path = dl_manager.download({
+            "data": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip"
+        })
+        return [
+            datasets.SplitGenerator(
+                name=datasets.Split.TEST,
+                gen_kwargs={"archive_paths": archive_path}
+            )
+        ]
+
+    def _generate_examples(self, archive_path):
+        # Open the zip file
+        with zipfile.ZipFile(archive_path, "r") as z:
+            # Use the class names from DatasetInfo for consistent label order
+            class_names = self._info().features["label"].names
+
+            # Create a mapping from class name to label index based on DatasetInfo order
+            label_mapping = {name: idx for idx, name in enumerate(class_names)}
+
+            root_dir = "Animals_with_Attributes2/JPEGImages/"
+            for class_name in class_names:
+                class_dir = os.path.join(root_dir, class_name)
+
+                # Iterate through each image in the class folder
+                for image_path in z.namelist():
+                    if image_path.startswith(class_dir) and image_path.endswith(".jpg"):
+                        with z.open(image_path) as image_file:
+                            image = Image.open(image_file).convert("RGB")
+                            label = label_mapping[class_name]
+                            yield image_path, {"image": image, "label": label}
