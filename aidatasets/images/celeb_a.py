@@ -27,10 +27,10 @@ class CelebA(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
-                    "attributes": datasets.Sequence(datasets.ClassLabel(names=["-1", "1"])),  # Binary attributes
+                    "label": datasets.Sequence(datasets.ClassLabel(names=["-1", "1"])),  # Binary attributes
                 }
             ),
-            supervised_keys=("image", "attributes"),
+            supervised_keys=("image", "label"),
             homepage="http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html",
             citation="""@inproceedings{liu2015faceattributes,
                          title = {Deep Learning Face Attributes in the Wild},
@@ -82,7 +82,7 @@ class CelebA(datasets.GeneratorBasedBuilder):
         # Load attribute data
         with open(attr_path, "r") as f:
             lines = f.readlines()
-            attributes = [line.split()[1:] for line in lines[2:]]  # Skip header lines
+            label = [line.split()[1:] for line in lines[2:]]  # Skip header lines
             image_ids = [line.split()[0] for line in lines[2:]]
 
         # Load partition data
@@ -90,9 +90,9 @@ class CelebA(datasets.GeneratorBasedBuilder):
         split_indices = partition_df[partition_df["split"] == split].index
         start_idx, end_idx = split_indices[0], split_indices[-1] + 1  # end_idx is non-inclusive
 
-        # Slice attributes and image IDs for the split range
+        # Slice label and image IDs for the split range
         split_image_ids = image_ids[start_idx:end_idx]
-        split_attributes = attributes[start_idx:end_idx]
+        split_label = label[start_idx:end_idx]
 
         # Open the zip file and process each image
         with zipfile.ZipFile(archive_path, "r") as z:
@@ -100,10 +100,10 @@ class CelebA(datasets.GeneratorBasedBuilder):
                 with z.open(f"img_align_celeba/{image_name}") as img_file:
                     image = Image.open(img_file).convert("RGB")
 
-                    # Get attributes for this image and convert them to integers (-1 or 1)
-                    attributes = [int(attr) for attr in split_attributes[idx]]
+                    # Get label for this image and convert them to integers (-1 or 1)
+                    label = [int(attr) for attr in split_label[idx]]
 
                     yield idx, {
                         "image": image,
-                        "attributes": attributes,
+                        "label": label,
                     }

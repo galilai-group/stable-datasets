@@ -14,10 +14,10 @@ class FGVCAircraft(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
-                    "variant": datasets.ClassLabel(names=self._labels())
+                    "label": datasets.ClassLabel(names=self._labels())
                 }
             ),
-            supervised_keys=("image", "variant"),
+            supervised_keys=("image", "label"),
             homepage="https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/",
             citation="""@article{maji2013fgvc,
                          title={Fine-Grained Visual Classification of Aircraft},
@@ -59,7 +59,7 @@ class FGVCAircraft(datasets.GeneratorBasedBuilder):
                     cropped_image = image.crop((0, 0, image.width, image.height - 20))
                     yield idx, {
                         "image": cropped_image,
-                        "variant": label,
+                        "label": label,
                     }
 
     @staticmethod

@@ -18,8 +18,8 @@ class Food101(datasets.GeneratorBasedBuilder):
             Discriminative Components with Random Forests" by Lukas Bossard, Matthieu Guillaumin and Luc Van Gool. It's 
             a good (large dataset) for testing computer vision techniques.""",
             features=datasets.Features(
-            {"image": datasets.Image(), "class": datasets.ClassLabel(names=self._labels())}),
-            supervised_keys=("image", "shape"),
+            {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}),
+            supervised_keys=("image", "label"),
             homepage="https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
         )
 
@@ -46,7 +46,7 @@ class Food101(datasets.GeneratorBasedBuilder):
             image_path = os.path.join(root, "food-101", "images", f"{name}.jpg")
             yield key, {
                 "image": image_path,
-                "class": name.split("/")[0],
+                "label": name.split("/")[0],
             }
 
     @staticmethod
