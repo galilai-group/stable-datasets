@@ -23,6 +23,12 @@ class Beans(datasets.GeneratorBasedBuilder):
             ),
             supervised_keys=("image", "label"),
             license="MIT License",
+            citation="""@misc{makerere2020beans,
+                         author = "{Makerere AI Lab}",
+                         title = "{Bean Disease Dataset}",
+                         year = "2020",
+                         month = "January",
+                         url = "https://github.com/AI-Lab-Makerere/ibean/"}"""
         )
 
     def _split_generators(self, dl_manager):
