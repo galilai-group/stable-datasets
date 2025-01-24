@@ -21,6 +21,11 @@ class Food101(datasets.GeneratorBasedBuilder):
             {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}),
             supervised_keys=("image", "label"),
             homepage="https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
+            citation="""@inproceedings{bossard14,
+                         title = {Food-101 -- Mining Discriminative Components with Random Forests},
+                         author = {Bossard, Lukas and Guillaumin, Matthieu and Van Gool, Luc},
+                         booktitle = {European Conference on Computer Vision},
+                         year = {2014}}"""
         )
 
     def _split_generators(self, dl_manager):
