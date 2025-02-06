@@ -2,7 +2,8 @@ import os
 import json
 import tarfile
 import urllib.request
-
+import io
+from PIL import Image
 import datasets
 
 
@@ -90,8 +91,11 @@ class ImageNet100(datasets.GeneratorBasedBuilder):
                             if sub_m.isfile():
                                 img_f = sub_tar.extractfile(sub_m)
                                 image_bytes = img_f.read()
+                                img = Image.open(io.BytesIO(image_bytes))
+                                if img.mode != "RGB":
+                                    img = img.convert("RGB")
                                 yield example_idx, {
-                                    "image": {"bytes": image_bytes, "filename": sub_m.name},
+                                    "image": img,
                                     "label": new_label,
                                 }
                                 example_idx += 1
@@ -131,8 +135,11 @@ class ImageNet100(datasets.GeneratorBasedBuilder):
                     new_label = wnid_to_new_label[wnid]
                     img_f = val_tar.extractfile(m)
                     image_bytes = img_f.read()
+                    img = Image.open(io.BytesIO(image_bytes))
+                    if img.mode != "RGB":
+                        img = img.convert("RGB")
                     yield example_idx, {
-                        "image": {"bytes": image_bytes, "filename": m.name},
+                        "image": img,
                         "label": new_label,
                     }
                     example_idx += 1
