@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+__version__ = "0.0.0a1"
 
-# from . import images, timeseries, utils, preprocess, loader
-
-# from ._version import get_versions
-
-# __version__ = get_versions()["version"]
-# del get_versions
+from . import images

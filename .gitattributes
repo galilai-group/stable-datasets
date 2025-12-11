@@ -1,1 +1,4 @@
-numpy_datasets/_version.py export-subst
+*.py    eol=lf
+*.rst   eol=lf
+*.md    eol=lf
+*.mdx   eol=lf
