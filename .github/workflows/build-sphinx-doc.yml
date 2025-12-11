@@ -32,7 +32,7 @@ jobs:
 
       - name: Generate .rst files from package
         run: |
-          sphinx-apidoc -o docs/source stable_worldmodel
+          sphinx-apidoc -o docs/source stable_datasets
 
       - name: Build Sphinx HTML documentation
         run: |
