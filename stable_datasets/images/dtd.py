@@ -1,8 +1,9 @@
 import tarfile
 from io import BytesIO
+
+import datasets
 from PIL import Image
 from tqdm import tqdm
-import datasets
 
 
 class DTD(datasets.GeneratorBasedBuilder):
@@ -29,15 +30,57 @@ class DTD(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=[
-                        "banded", "blotchy", "braided", "bubbly", "bumpy", "chequered", "cobwebbed",
-                        "cracked", "crosshatched", "crystalline", "dotted", "fibrous", "flecked",
-                        "freckled", "frilly", "gauzy", "grid", "grooved", "honeycombed", "interlaced",
-                        "knitted", "lacelike", "lined", "marbled", "matted", "meshed", "paisley",
-                        "perforated", "pitted", "pleated", "polka-dotted", "porous", "potholed", "scaly",
-                        "smeared", "spiralled", "sprinkled", "stained", "stratified", "striped",
-                        "studded", "swirly", "veined", "waffled", "woven", "wrinkled", "zigzagged"
-                    ])
+                    "label": datasets.ClassLabel(
+                        names=[
+                            "banded",
+                            "blotchy",
+                            "braided",
+                            "bubbly",
+                            "bumpy",
+                            "chequered",
+                            "cobwebbed",
+                            "cracked",
+                            "crosshatched",
+                            "crystalline",
+                            "dotted",
+                            "fibrous",
+                            "flecked",
+                            "freckled",
+                            "frilly",
+                            "gauzy",
+                            "grid",
+                            "grooved",
+                            "honeycombed",
+                            "interlaced",
+                            "knitted",
+                            "lacelike",
+                            "lined",
+                            "marbled",
+                            "matted",
+                            "meshed",
+                            "paisley",
+                            "perforated",
+                            "pitted",
+                            "pleated",
+                            "polka-dotted",
+                            "porous",
+                            "potholed",
+                            "scaly",
+                            "smeared",
+                            "spiralled",
+                            "sprinkled",
+                            "stained",
+                            "stratified",
+                            "striped",
+                            "studded",
+                            "swirly",
+                            "veined",
+                            "waffled",
+                            "woven",
+                            "wrinkled",
+                            "zigzagged",
+                        ]
+                    ),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -50,9 +93,7 @@ class DTD(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager):
-        archive_path = dl_manager.download(
-            "https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz"
-        )
+        archive_path = dl_manager.download("https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz")
 
         return [
             datasets.SplitGenerator(
@@ -79,10 +120,13 @@ class DTD(datasets.GeneratorBasedBuilder):
                 file = tar.extractfile(member)
                 image = Image.open(BytesIO(file.read())).convert("RGB")
 
-                yield idx, {
-                    "image": image,
-                    "label": file_name.split("/")[0],
-                }
+                yield (
+                    idx,
+                    {
+                        "image": image,
+                        "label": file_name.split("/")[0],
+                    },
+                )
 
     def _read_split_file(self, tar, split_file):
         """Helper function to read split file from the tar archive."""

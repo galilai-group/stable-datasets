@@ -207,16 +207,4 @@ node_modules/
 logs/
 .vscode/
 *.sh
-
-outputs/
-multirun/
-checkpoints/
-dino_wm_ckpt/
-pusht_noise/
-wandb/
-videos/
-dataset/
-*.out
-*.mp4
-lightning_logs/
-old_tests/
+*.lock

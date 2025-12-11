@@ -4,11 +4,8 @@ This module was moved under `stable_datasets.timeseries` to align the repository
 It still exposes the original imperative `FSDKaggle2018.load(...)` API for now.
 """
 
-import gzip
 import io
 import os
-import pickle
-import tarfile
 import time
 import urllib.request
 import zipfile
@@ -38,9 +35,7 @@ class FSDKaggle2018:
         if not os.path.exists(path + "FSDKaggle2018/audio_train.zip"):
             print("\tDownloading train set")
             urllib.request.urlretrieve(url, path + "FSDKaggle2018/audio_train.zip")
-        url = (
-            "https://zenodo.org/record/2552860/files/FSDKaggle2018.meta.zip?download=1"
-        )
+        url = "https://zenodo.org/record/2552860/files/FSDKaggle2018.meta.zip?download=1"
         if not os.path.exists(path + "FSDKaggle2018/meta.zip"):
             print("\tDownloading meta set")
             urllib.request.urlretrieve(url, path + "FSDKaggle2018/meta.zip")
@@ -52,26 +47,26 @@ class FSDKaggle2018:
         t0 = time.time()
 
         f = zipfile.ZipFile(path + "FSDKaggle2018/audio_train.zip")
-        wavs_train = list()
-        names_train = list()
+        wavs_train = []
+        names_train = []
         for filename in tqdm(f.namelist(), ascii=True, desc="Loading train set"):
             if ".wav" not in filename:
                 continue
             wavfile = f.read(filename)
             byt = io.BytesIO(wavfile)
             wavs_train.append(wav_read(byt)[1].astype("float32"))
-            names_train.append((filename.split("/")[-1]))
+            names_train.append(filename.split("/")[-1])
 
         f = zipfile.ZipFile(path + "FSDKaggle2018/audio_test.zip")
-        wavs_test = list()
-        names_test = list()
+        wavs_test = []
+        names_test = []
         for filename in tqdm(f.namelist(), ascii=True, desc="Loading test set"):
             if ".wav" not in filename:
                 continue
             wavfile = f.read(filename)
             byt = io.BytesIO(wavfile)
             wavs_test.append(wav_read(byt)[1].astype("float32"))
-            names_test.append((filename.split("/")[-1]))
+            names_test.append(filename.split("/")[-1])
 
         f = zipfile.ZipFile(path + "FSDKaggle2018/meta.zip")
         meta_train = np.loadtxt(
@@ -81,9 +76,7 @@ class FSDKaggle2018:
             dtype="str",
         )
         meta_test = np.loadtxt(
-            io.BytesIO(
-                f.read("FSDKaggle2018.meta/test_post_competition_scoring_clips.csv")
-            ),
+            io.BytesIO(f.read("FSDKaggle2018.meta/test_post_competition_scoring_clips.csv")),
             delimiter=",",
             skiprows=1,
             dtype="str",
@@ -114,7 +107,5 @@ class FSDKaggle2018:
             "usage_test": usage,
             "fsid_test": fsid_test,
         }
-        print("Dataset FSDKaggle2018 loaded in {0:.2f}s.".format(time.time() - t0))
+        print(f"Dataset FSDKaggle2018 loaded in {time.time() - t0:.2f}s.")
         return dataset
-
-

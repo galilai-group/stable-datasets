@@ -1,6 +1,7 @@
 import gzip
-import numpy as np
+
 import datasets
+import numpy as np
 
 
 class FashionMNIST(datasets.GeneratorBasedBuilder):
@@ -18,10 +19,20 @@ class FashionMNIST(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=[
-                        "T-shirt/top", "Trouser", "Pullover", "Dress", "Coat",
-                        "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"
-                    ])
+                    "label": datasets.ClassLabel(
+                        names=[
+                            "T-shirt/top",
+                            "Trouser",
+                            "Pullover",
+                            "Dress",
+                            "Coat",
+                            "Sandal",
+                            "Shirt",
+                            "Sneaker",
+                            "Bag",
+                            "Ankle boot",
+                        ]
+                    ),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -31,7 +42,7 @@ class FashionMNIST(datasets.GeneratorBasedBuilder):
                          title={Fashion-MNIST: a Novel Image Dataset for Benchmarking Machine Learning Algorithms},
                          author={Xiao, Han and Rasul, Kashif and Vollgraf, Roland},
                          journal={arXiv preprint arXiv:1708.07747},
-                         year={2017}}"""
+                         year={2017}}""",
         )
 
     def _split_generators(self, dl_manager):

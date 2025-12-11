@@ -1,11 +1,11 @@
 import os
-import pickle, gzip
-import urllib.request
-import numpy as np
 import tarfile
 import time
-from tqdm import tqdm
+
+import numpy as np
 from scipy.io.wavfile import read as wav_read
+from tqdm import tqdm
+
 from ..utils import download_dataset
 
 
@@ -55,8 +55,8 @@ def load(path=None):
     tar = tarfile.open(path + "gtzan/genres.tar.gz", "r:gz")
 
     # Load train set
-    train_songs = list()
-    train_labels = list()
+    train_songs = []
+    train_labels = []
     names = tar.getnames()
     names = tar.getmembers()
     for name in tqdm(names, ascii=True, total=1000):
@@ -65,6 +65,7 @@ def load(path=None):
         f = tar.extractfile(name.name)  # .read()
         train_songs.append(wav_read(f)[1])
         t = name.name.split("/")[1]
+        gtzan = None
         train_labels.append(gtzan.name2class[t])
 
     N = np.min([len(w) for w in train_songs])
@@ -73,6 +74,6 @@ def load(path=None):
     train_songs = np.stack(train_songs).astype("float32")
     train_labels = np.array(train_labels).astype("int32")
 
-    print("Dataset gtzan loaded in{0:.2f}s.".format(time.time() - t0))
+    print(f"Dataset gtzan loaded in{time.time() - t0:.2f}s.")
     data = {"wavs": train_songs, "labels": train_labels}
     return data

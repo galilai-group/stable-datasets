@@ -1,12 +1,13 @@
-import numpy as np
-import datasets
-import scipy.io as sio
 import os
+
+import datasets
+import numpy as np
+import scipy.io as sio
 
 
 class EMNISTConfig(datasets.BuilderConfig):
     def __init__(self, variant, **kwargs):
-        super(EMNISTConfig, self).__init__(version=datasets.Version("1.0.0", ""), **kwargs)
+        super().__init__(version=datasets.Version("1.0.0", ""), **kwargs)
         self.variant = variant
 
 
@@ -38,22 +39,19 @@ class EMNIST(datasets.GeneratorBasedBuilder):
         return datasets.DatasetInfo(
             description="EMNIST dataset",
             features=datasets.Features(
-                {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(num_classes=num_classes)
-                }
+                {"image": datasets.Image(), "label": datasets.ClassLabel(num_classes=num_classes)}
             ),
             supervised_keys=("image", "label"),
             homepage="https://www.nist.gov/itl/iad/image-group/emnist-dataset",
             citation="""@misc{cohen2017emnistextensionmnisthandwritten,
-                        title={EMNIST: an extension of MNIST to handwritten letters}, 
+                        title={EMNIST: an extension of MNIST to handwritten letters},
                         author={Gregory Cohen and Saeed Afshar and Jonathan Tapson and André van Schaik},
                         year={2017},
                         eprint={1702.05373},
                         archivePrefix={arXiv},
                         primaryClass={cs.CV},
-                        url={https://arxiv.org/abs/1702.05373}, 
-            }"""
+                        url={https://arxiv.org/abs/1702.05373},
+            }""",
         )
 
     def _split_generators(self, dl_manager):
@@ -68,29 +66,20 @@ class EMNIST(datasets.GeneratorBasedBuilder):
         mat_path = os.path.join(mat_dir, mat_file)
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"mat_path": mat_path, "split": "train"}
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"mat_path": mat_path, "split": "test"}
-            ),
+            datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"mat_path": mat_path, "split": "train"}),
+            datasets.SplitGenerator(name=datasets.Split.TEST, gen_kwargs={"mat_path": mat_path, "split": "test"}),
         ]
 
     def _generate_examples(self, mat_path, split):
         data = sio.loadmat(mat_path)
-        dataset = data['dataset'][0, 0]
+        dataset = data["dataset"][0, 0]
         subset = dataset[split][0, 0]
 
-        images = subset['images']
-        labels = subset['labels']
+        images = subset["images"]
+        labels = subset["labels"]
 
         images = np.array(images, dtype=np.uint8).reshape(-1, 28, 28)
         labels = np.array(labels, dtype=np.int64).flatten()
 
         for idx, (img, lbl) in enumerate(zip(images, labels)):
-            yield idx, {
-                "image": img,
-                "label": int(lbl)
-            }
+            yield idx, {"image": img, "label": int(lbl)}

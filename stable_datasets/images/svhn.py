@@ -1,6 +1,7 @@
+import datasets
 import numpy as np
 import scipy.io as sio
-import datasets
+
 
 class SVHN(datasets.GeneratorBasedBuilder):
     """SVHN (Street View House Numbers) Dataset for image classification."""
@@ -10,7 +11,7 @@ class SVHN(datasets.GeneratorBasedBuilder):
     def _info(self):
         return datasets.DatasetInfo(
             description="The SVHN dataset contains images of digits obtained from house numbers in Google Street View "
-                        "images. It has over 600,000 labeled digit images.",
+            "images. It has over 600,000 labeled digit images.",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
@@ -28,7 +29,7 @@ class SVHN(datasets.GeneratorBasedBuilder):
                           pages={4},
                           year={2011},
                           organization={Granada}
-                        }"""
+                        }""",
         )
 
     def _split_generators(self, dl_manager):
@@ -58,4 +59,3 @@ class SVHN(datasets.GeneratorBasedBuilder):
 
         for idx, (image, label) in enumerate(zip(images, labels)):
             yield idx, {"image": image, "label": label}
-

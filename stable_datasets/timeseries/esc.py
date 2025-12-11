@@ -1,13 +1,11 @@
-import os
-import pickle, gzip
-import urllib.request
-import numpy as np
-import time
-import tarfile
-from tqdm import tqdm
-import zipfile
-from scipy.io.wavfile import read as wav_read
 import io
+import os
+import zipfile
+
+import numpy as np
+from scipy.io.wavfile import read as wav_read
+from tqdm import tqdm
+
 
 fine_to_coarse = {
     "dog": 0,
@@ -115,7 +113,7 @@ def load(path=None):
         vector
 
     coarse_labels: array
-        the labels of the classes big cateogry (5 of them)
+        the labels of the classes big category (5 of them)
 
     folds: array
         the fold as an integer from 1 to 5 specifying how to split the data
@@ -133,9 +131,7 @@ def load(path=None):
     if path is None:
         path = os.environ["DATASET_PATH"]
 
-    download_dataset(path, _dataset, _urls, _baseurl)
-
-    t0 = time.time()
+    # download_dataset(path, _dataset, _urls, _baseurl)
 
     f = zipfile.ZipFile(path + "esc50/master.zip")
 
@@ -150,11 +146,12 @@ def load(path=None):
     fine_labels = meta[:, 2].astype("int32")
     categories = meta[:, 3]
     esc10 = meta[:, 4] == "True"
+    esc = None
     coarse_labels = np.array([esc.fine_to_coarse[c] for c in categories])
     coarse_labels = coarse_labels.astype("int32")
 
-    wavs = list()
-    order = list()
+    wavs = []
+    order = []
     N = 0
     for filename in tqdm(f.namelist(), ascii=True):
         if ".wav" not in filename:

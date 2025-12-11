@@ -1,12 +1,12 @@
+import io
 import os
-import gzip
-import urllib.request
-import numpy as np
 import time
 import zipfile
-import io
+
+import numpy as np
 from scipy.io.wavfile import read as wav_read
 from tqdm import tqdm
+
 from ..utils import download_dataset
 
 
@@ -51,16 +51,16 @@ def load(path=None):
         skiprows=1,
         dtype="str",
     )
+
     # Loading the files
     f = zipfile.ZipFile(path + "warblr/warblrb10k_public_wav.zip")
-    N = labels.shape[0]
-    wavs = list()
+    wavs = []
     for i, files_ in tqdm(enumerate(labels), ascii=True):
         wavfile = f.read("wav/" + files_[0] + ".wav")
         byt = io.BytesIO(wavfile)
         wavs.append(np.expand_dims(wav_read(byt)[1].astype("float32"), 0))
     labels = labels[:, 1].astype("int32")
 
-    print("Dataset warblr loaded in", "{0:.2f}".format(time.time() - t), "s.")
+    print("Dataset warblr loaded in", f"{time.time() - t:.2f}", "s.")
     dataset = {"wavs": wavs, "labels": labels}
     return dataset

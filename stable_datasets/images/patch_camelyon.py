@@ -23,5 +23,3 @@ class PatchCamelyon(StableDatasetBuilder):
 
     def _generate_examples(self, **kwargs):  # pragma: no cover
         raise NotImplementedError("PatchCamelyon builder not implemented yet.")
-
-

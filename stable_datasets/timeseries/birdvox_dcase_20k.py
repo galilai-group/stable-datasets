@@ -1,17 +1,16 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 __author__ = "Randall Balestriero"
 
 import io
 import os
-import pickle, gzip
-import urllib.request
-import numpy as np
 import time
 import zipfile
-from tqdm import tqdm
+
+import numpy as np
 from scipy.io.wavfile import read as wav_read
+from tqdm import tqdm
+
 from ..utils import download_dataset
 
 
@@ -142,7 +141,7 @@ def load(path=None):
 
     # Loading the file
     basefile = os.path.join(path, "birdvox_dcase_20k/BirdVox-DCASE-20k.zip")
-    wavs = list()
+    wavs = []
     labels = np.loadtxt(
         os.path.join(path, "birdvox_dcase_20k/data_labels.csv"),
         skiprows=1,
@@ -151,7 +150,7 @@ def load(path=None):
     )
     wav_names = list(labels[:, 0])
     wav_labels = labels[:, 2].astype("int")
-    labels = list()
+    labels = []
     f = zipfile.ZipFile(basefile)
     for name in tqdm(f.namelist(), ascii=True):
         filename = name.split("/")[-1][:-4]
@@ -164,6 +163,6 @@ def load(path=None):
     wavs = np.array(wavs).astype("float32")
     labels = np.array(labels).astype("int32")
 
-    print("Dataset birdvox_dcase_20k loaded in {0:.2f}s.".format(time.time() - t0))
+    print(f"Dataset birdvox_dcase_20k loaded in {time.time() - t0:.2f}s.")
     dataset = {"wavs": wavs, "labels": labels}
     return dataset

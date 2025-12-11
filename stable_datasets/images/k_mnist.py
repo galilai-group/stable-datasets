@@ -1,15 +1,16 @@
-import numpy as np
 import datasets
+import numpy as np
 from PIL import Image
 
 
 class KMNIST(datasets.GeneratorBasedBuilder):
     """Kuzushiji-MNIST and Kuzushiji-49 datasets."""
+
     VERSION = datasets.Version("1.0.0")
 
     BUILDER_CONFIGS = [
         datasets.BuilderConfig(name="kmnist", description="Kuzushiji-MNIST dataset with 10 classes."),
-        datasets.BuilderConfig(name="k49mnist", description="Kuzushiji-49 dataset with 49 classes.")
+        datasets.BuilderConfig(name="k49mnist", description="Kuzushiji-49 dataset with 49 classes."),
     ]
 
     def _info(self):
@@ -19,10 +20,12 @@ class KMNIST(datasets.GeneratorBasedBuilder):
             num_classes = 49
         return datasets.DatasetInfo(
             description="Kuzushiji-MNIST and Kuzushiji-49 datasets.",
-            features=datasets.Features({
-                "image": datasets.Image(),  # Automatically converts to PIL.Image
-                "label": datasets.ClassLabel(num_classes=num_classes),
-            }),
+            features=datasets.Features(
+                {
+                    "image": datasets.Image(),  # Automatically converts to PIL.Image
+                    "label": datasets.ClassLabel(num_classes=num_classes),
+                }
+            ),
             supervised_keys=("image", "label"),
             homepage="http://codh.rois.ac.jp/kmnist/",
             citation="""
@@ -35,7 +38,7 @@ class KMNIST(datasets.GeneratorBasedBuilder):
                   eprinttype   = {arXiv},
                   eprint       = {cs.CV/1812.01718},
                 }
-            """
+            """,
         )
 
     def _split_generators(self, dl_manager):
@@ -61,15 +64,15 @@ class KMNIST(datasets.GeneratorBasedBuilder):
                 name=datasets.Split.TRAIN,
                 gen_kwargs={
                     "images_path": downloaded_files["train_imgs"],
-                    "labels_path": downloaded_files["train_labels"]
-                }
+                    "labels_path": downloaded_files["train_labels"],
+                },
             ),
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
                     "images_path": downloaded_files["test_imgs"],
-                    "labels_path": downloaded_files["test_labels"]
-                }
+                    "labels_path": downloaded_files["test_labels"],
+                },
             ),
         ]
 

@@ -1,8 +1,9 @@
 import io
-from tqdm import tqdm
-from PIL import Image
 from zipfile import ZipFile
+
 import datasets
+from PIL import Image
+from tqdm import tqdm
 
 
 class ArabicDigits(datasets.GeneratorBasedBuilder):
@@ -12,14 +13,11 @@ class ArabicDigits(datasets.GeneratorBasedBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""Arabic Handwritten Digits Dataset, composed of images of Arabic digits handwritten 
-                           by participants. This dataset is structured for use in machine learning tasks such 
+            description="""Arabic Handwritten Digits Dataset, composed of images of Arabic digits handwritten
+                           by participants. This dataset is structured for use in machine learning tasks such
                            as digit classification.""",
             features=datasets.Features(
-                {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=[str(i) for i in range(10)])
-                }
+                {"image": datasets.Image(), "label": datasets.ClassLabel(names=[str(i) for i in range(10)])}
             ),
             supervised_keys=("image", "label"),
             homepage="https://github.com/mloey/Arabic-Handwritten-Digits-Dataset",
@@ -30,13 +28,13 @@ class ArabicDigits(datasets.GeneratorBasedBuilder):
                         pages={566--575},
                         year={2016},
                         organization={Springer}
-                        }"""
+                        }""",
         )
 
     def _split_generators(self, dl_manager):
         urls = {
             "train": "https://github.com/mloey/Arabic-Handwritten-Digits-Dataset/raw/master/Train%20Images.zip",
-            "test": "https://github.com/mloey/Arabic-Handwritten-Digits-Dataset/raw/master/Test%20Images.zip"
+            "test": "https://github.com/mloey/Arabic-Handwritten-Digits-Dataset/raw/master/Test%20Images.zip",
         }
         downloaded_files = dl_manager.download(urls)
 
@@ -48,7 +46,7 @@ class ArabicDigits(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={"archive_path": downloaded_files["test"], "split": "test"},
-            )
+            ),
         ]
 
     def _generate_examples(self, archive_path, split):
@@ -60,7 +58,4 @@ class ArabicDigits(datasets.GeneratorBasedBuilder):
                     image = Image.open(io.BytesIO(content))
                     label = int(entry.filename.split("_")[-1][:-4])  # Extract label from filename
 
-                    yield entry.filename, {
-                        "image": image,
-                        "label": label
-                    }
+                    yield entry.filename, {"image": image, "label": label}

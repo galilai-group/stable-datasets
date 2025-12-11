@@ -1,10 +1,12 @@
 import os
+import pathlib
+from multiprocessing import Pool
+
 import numpy as np
 from scipy.io import arff
 from tqdm import tqdm
-from ..utils import download_dataset, tolist_recursive
-import pathlib
-from multiprocessing import Pool
+
+from ..utils import download_dataset
 
 
 def load(path=None, num_workers=16):

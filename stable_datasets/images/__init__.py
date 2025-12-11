@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 from .arabic_characters import ArabicCharacters
+
+
 # from .arabic_digits import ArabicDigits
 # from .awa2 import AWA2
 # from .beans import Beans
@@ -32,3 +33,7 @@ from .arabic_characters import ArabicCharacters
 # from .svhn import SVHN
 # from .tiny_imagenet import TinyImagenet
 # from .tiny_imagenet_c import TinyImagenetC
+
+__all__ = [
+    "ArabicCharacters",
+]

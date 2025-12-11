@@ -30,15 +30,15 @@
 
 
 import argparse
-import urllib.request, urllib.error, urllib.parse
-import time
-import os
-import math
-import threading
-import sys
 import imghdr
-import http.client
-from ssl import CertificateError
+import math
+import os
+import sys
+import threading
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 
 class DownloadError(Exception):
@@ -49,13 +49,11 @@ class DownloadError(Exception):
 
 
 def download(n_images, min_size, n_threads, wnids_list, out_dir):
-    wnid_thread_lists = list()
+    wnid_thread_lists = []
     wnid_list_len = len(wnids_list)
     wnid_thread_sizes = int(math.ceil(float(wnid_list_len) / n_threads))
     for i in range(n_threads):
-        wnid_thread_lists.append(
-            wnids_list[i * wnid_thread_sizes : (i + 1) * wnid_thread_sizes]
-        )
+        wnid_thread_lists.append(wnids_list[i * wnid_thread_sizes : (i + 1) * wnid_thread_sizes])
 
     # Define the threads
     def downloader(wnid_list):
@@ -71,10 +69,7 @@ def download(n_images, min_size, n_threads, wnids_list, out_dir):
 
     # initialize the threads
     print(wnid_thread_lists[0])
-    download_threads = [
-        threading.Thread(target=downloader, args=([wnid_thread_lists[i]]))
-        for i in range(n_threads)
-    ]
+    download_threads = [threading.Thread(target=downloader, args=([wnid_thread_lists[i]])) for i in range(n_threads)]
 
     for t in download_threads:
         t.start()
@@ -109,13 +104,9 @@ def get_url_request_list_function(request_url):
     return get_url_request_list
 
 
-get_image_urls = get_url_request_list_function(
-    "http://www.image-net.org/api/text/imagenet.synset.geturls?wnid="
-)
+get_image_urls = get_url_request_list_function("http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=")
 
-get_subtree_wnid = get_url_request_list_function(
-    "http://www.image-net.org/api/text/wordnet.structure.hyponym?wnid="
-)
+get_subtree_wnid = get_url_request_list_function("http://www.image-net.org/api/text/wordnet.structure.hyponym?wnid=")
 
 get_full_subtree_wnid = get_url_request_list_function(
     "http://www.image-net.org/api/text/wordnet.structure.hyponym?full=1&wnid="
@@ -150,12 +141,11 @@ def download_images(dir_path, image_url_list, n_images, min_size):
                 image_file.write(image)
                 image_file.close()
                 image_count += 1
-        except:
+        except Exception:
             print("skipping ", url)
 
 
 def main(wnid, out_dir, n_threads, n_images, fullsubtree, noroot, nosubtree, min_size):
-
     wnids_list = []
 
     # First get the list of wnids
@@ -165,6 +155,8 @@ def main(wnid, out_dir, n_threads, n_images, fullsubtree, noroot, nosubtree, min
         if fullsubtree:
             subtree = get_full_subtree_wnid(wnid)
         else:
+            timeout = None
+            retry = None
             subtree = get_subtree_wnid(wnid, timeout, retry)
         for i in range(1, len(subtree)):
             subtree[i] = subtree[i][1:]  # removes dash
@@ -194,15 +186,9 @@ if __name__ == "__main__":
         metavar="N_IMAGES",
         help="Number of images per category to download",
     )
-    p.add_argument(
-        "--fullsubtree", "-F", action="store_true", help="Downloads the full subtree"
-    )
-    p.add_argument(
-        "--noroot", "-R", action="store_true", help="Do not Downloads the root"
-    )
-    p.add_argument(
-        "--nosubtree", "-S", action="store_true", help="Do not Downloads the subtree"
-    )
+    p.add_argument("--fullsubtree", "-F", action="store_true", help="Downloads the full subtree")
+    p.add_argument("--noroot", "-R", action="store_true", help="Do not Downloads the root")
+    p.add_argument("--nosubtree", "-S", action="store_true", help="Do not Downloads the subtree")
 
     p.add_argument(
         "--humanreadable",

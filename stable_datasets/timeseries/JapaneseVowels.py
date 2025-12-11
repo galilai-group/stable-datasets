@@ -1,7 +1,9 @@
 import os
-from ..utils import download_dataset, load_from_tsfile_to_dataframe
 import pathlib
+
 import numpy as np
+
+from ..utils import download_dataset, load_from_tsfile_to_dataframe
 
 
 def load(path=None):
@@ -35,20 +37,14 @@ def load(path=None):
     path = pathlib.Path(path) / "JapaneseVowels"
     download_dataset(
         path,
-        {
-            "JapaneseVowels.zip": "http://www.timeseriesclassification.com/Downloads/JapaneseVowels.zip"
-        },
+        {"JapaneseVowels.zip": "http://www.timeseriesclassification.com/Downloads/JapaneseVowels.zip"},
         extract=True,
     )
 
     path = path / "extracted_JapaneseVowels"
 
-    X_train, y_train = load_from_tsfile_to_dataframe(
-        path / "JapaneseVowels/JapaneseVowels_TRAIN.ts"
-    )
-    X_test, y_test = load_from_tsfile_to_dataframe(
-        path / "JapaneseVowels/JapaneseVowels_TEST.ts"
-    )
+    X_train, y_train = load_from_tsfile_to_dataframe(path / "JapaneseVowels/JapaneseVowels_TRAIN.ts")
+    X_test, y_test = load_from_tsfile_to_dataframe(path / "JapaneseVowels/JapaneseVowels_TEST.ts")
     dims = []
     for col in X_train.columns:
         dims.append(np.stack(list(X_train[col].map(lambda x: x.reindex(range(29))))))

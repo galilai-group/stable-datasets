@@ -4,13 +4,13 @@ import numpy as np
 
 class MedMNISTConfig(datasets.BuilderConfig):
     def __init__(self, variant, **kwargs):
-        super(MedMNISTConfig, self).__init__(version=datasets.Version("1.0.0", ""), **kwargs)
+        super().__init__(version=datasets.Version("1.0.0", ""), **kwargs)
         self.variant = variant
 
 
 class MedMNIST(datasets.GeneratorBasedBuilder):
-    """MedMNIST, a large-scale MNIST-like collection of standardized biomedical images, including 12 datasets for 2D and 6 datasets for 3D.
-    """
+    """MedMNIST, a large-scale MNIST-like collection of standardized biomedical images, including 12 datasets for 2D and 6 datasets for 3D."""
+
     BUILDER_CONFIGS = [
         # 2D Datasets
         MedMNISTConfig(name="pathmnist", variant="pathmnist"),
@@ -57,7 +57,7 @@ class MedMNIST(datasets.GeneratorBasedBuilder):
             "synapsemnist3d": 2,
         }.get(variant, 0)
 
-        if variant == "chestmnist":     # multi-label instead of multi-class
+        if variant == "chestmnist":  # multi-label instead of multi-class
             label_feature = datasets.Sequence(datasets.Value("int8"))
         else:
             label_feature = datasets.ClassLabel(num_classes=num_classes)
@@ -67,7 +67,8 @@ class MedMNIST(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "image": datasets.Array3D(shape=(28, 28, 28), dtype="uint8")
-                    if '3d' in variant else datasets.Image(),
+                    if "3d" in variant
+                    else datasets.Image(),
                     "label": label_feature,
                 }
             ),

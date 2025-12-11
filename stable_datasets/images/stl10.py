@@ -1,6 +1,7 @@
 import tarfile
-import numpy as np
+
 import datasets
+import numpy as np
 
 
 class STL10(datasets.GeneratorBasedBuilder):
@@ -13,16 +14,12 @@ class STL10(datasets.GeneratorBasedBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="STL-10 dataset for unsupervised feature learning. "
-                        "Includes labeled and unlabeled images.",
+            description="STL-10 dataset for unsupervised feature learning. Includes labeled and unlabeled images.",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
                     "label": datasets.ClassLabel(
-                        names=[
-                            "airplane", "bird", "car", "cat", "deer",
-                            "dog", "horse", "monkey", "ship", "truck"
-                        ]
+                        names=["airplane", "bird", "car", "cat", "deer", "dog", "horse", "monkey", "ship", "truck"]
                     ),
                 }
             ),
@@ -36,9 +33,7 @@ class STL10(datasets.GeneratorBasedBuilder):
         )
 
     def _split_generators(self, dl_manager):
-        archive_path = dl_manager.download(
-            "http://ai.stanford.edu/~acoates/stl10/stl10_binary.tar.gz"
-        )
+        archive_path = dl_manager.download("http://ai.stanford.edu/~acoates/stl10/stl10_binary.tar.gz")
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
@@ -67,11 +62,7 @@ class STL10(datasets.GeneratorBasedBuilder):
                 labels_file = None
 
             images = tar.extractfile(images_file).read()
-            images = (
-                np.frombuffer(images, dtype=np.uint8)
-                .reshape(-1, 3, 96, 96)
-                .transpose((0, 2, 3, 1))
-            )
+            images = np.frombuffer(images, dtype=np.uint8).reshape(-1, 3, 96, 96).transpose((0, 2, 3, 1))
 
             if labels_file:
                 labels = tar.extractfile(labels_file).read()

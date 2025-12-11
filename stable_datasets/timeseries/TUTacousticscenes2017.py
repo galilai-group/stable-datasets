@@ -1,28 +1,23 @@
+import io
 import os
-import numpy as np
 import zipfile
-from tqdm import tqdm
+
+import numpy as np
 import soundfile as sf
+from tqdm import tqdm
+
 from ..utils import download_dataset
 
 
 _urls = {
-    "https://zenodo.org/record/400515/files/TUT-acoustic-scenes-2017-development.audio.{}.zip".format(
-        u
-    ): "TUT-acoustic-scenes-2017-development.audio.{}.zip".format(
-        u
-    )
+    f"https://zenodo.org/record/400515/files/TUT-acoustic-scenes-2017-development.audio.{u}.zip": f"TUT-acoustic-scenes-2017-development.audio.{u}.zip"
     for u in range(1, 11)
 }
 
 
 _urls.update(
     {
-        "https://zenodo.org/record/1040168/files/TUT-acoustic-scenes-2017-evaluation.audio.{}.zip".format(
-            u
-        ): "TUT-acoustic-scenes-2017-evaluation.audio.{}.zip".format(
-            u
-        )
+        f"https://zenodo.org/record/1040168/files/TUT-acoustic-scenes-2017-evaluation.audio.{u}.zip": f"TUT-acoustic-scenes-2017-evaluation.audio.{u}.zip"
         for u in range(1, 5)
     }
 )
@@ -96,41 +91,31 @@ def load(path=None):
     download_dataset(path, "irmas", _urls)
 
     # meta data
-    filename = (
-        path + "TUTacousticscences2017/TUT-acoustic-scenes-2017-development.meta.zip"
-    )
+    filename = path + "TUTacousticscences2017/TUT-acoustic-scenes-2017-development.meta.zip"
     meta = zipfile.ZipFile(filename)
-    meta_names = list()
-    wav_names = list()
-    wav_labels = list()
+    meta_names = []
+    wav_names = []
+    wav_labels = []
     for filename in meta.namelist():
         if "train" not in filename and "evaluate" not in filename:
             continue
         meta_names.append(filename.split("/")[-1][:-4])
-        content = np.loadtxt(
-            io.BytesIO(meta.read(filename)), delimiter="\t", dtype="str"
-        )
+        content = np.loadtxt(io.BytesIO(meta.read(filename)), delimiter="\t", dtype="str")
         wav_names.append(list(content[:, 0]))
         wav_labels.append(list(content[:, 1]))
         for j in range(len(wav_names[-1])):
             wav_names[-1][j] = wav_names[-1][j].split("/")[-1]
 
-    folds = list()
-    wavs = list()
-    labels = list()
+    folds = []
+    wavs = []
+    labels = []
 
-    filename = (
-        path
-        + "TUTacousticscences2017/"
-        + "TUT-acoustic-scenes-2017-development.audio.{}.zip"
-    )
+    filename = path + "TUTacousticscences2017/" + "TUT-acoustic-scenes-2017-development.audio.{}.zip"
 
     for part in range(1, 11):
         # load wavs
         f = zipfile.ZipFile(filename.format(part))
-        for name in tqdm(
-            f.namelist(), ascii=True, desc="Train Part:{}/10".format(part)
-        ):
+        for name in tqdm(f.namelist(), ascii=True, desc=f"Train Part:{part}/10"):
             if ".wav" not in name:
                 continue
             wavfile = f.read(name)
@@ -139,9 +124,7 @@ def load(path=None):
             nn = name.split("/")[-1]
             add_label = 1
             folds.append([])
-            for meta_name, wav_name, wav_label in zip(
-                meta_names, wav_names, wav_labels
-            ):
+            for meta_name, wav_name, wav_label in zip(meta_names, wav_names, wav_labels):
                 if nn in wav_name:
                     if add_label:
                         index = wav_name.index(nn)
@@ -159,11 +142,7 @@ def load(path=None):
     # now deal with the test set
 
     # meta data
-    filename = (
-        path
-        + "TUTacousticscences2017/"
-        + "TUT-acoustic-scenes-2017-evaluation.meta.zip"
-    )
+    filename = path + "TUTacousticscences2017/" + "TUT-acoustic-scenes-2017-evaluation.meta.zip"
     meta = zipfile.ZipFile(filename)
     for filename in meta.namelist():
         if "evaluate.txt" in filename:
@@ -178,11 +157,9 @@ def load(path=None):
 
     mapping = dict(zip(targets_0, targets_1))
 
-    test_wavs = list()
-    test_labels = list()
-    filename = (
-        path + "TUTacousticscences2017/TUT-acoustic-scenes-2017-evaluation.audio.{}.zip"
-    )
+    test_wavs = []
+    test_labels = []
+    filename = path + "TUTacousticscences2017/TUT-acoustic-scenes-2017-evaluation.audio.{}.zip"
 
     for part in range(1, 5):
         # load wavs
@@ -190,7 +167,7 @@ def load(path=None):
         for name in tqdm(
             f.namelist(),
             ascii=True,
-            desc="Test Data Part{}/4".format(part),
+            desc=f"Test Data Part{part}/4",
         ):
             if ".wav" not in name:
                 continue

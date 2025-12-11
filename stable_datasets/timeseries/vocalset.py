@@ -1,17 +1,14 @@
-import os
-import gzip
-import urllib.request
-import numpy as np
-import time
-import zipfile
 import io
+import os
+import zipfile
+
 from scipy.io.wavfile import read as wav_read
 from tqdm import tqdm
+
 from ..utils import download_dataset
 
-_urls = {
-    "https://zenodo.org/record/1442513/files/VocalSet11.zip?download=1": "VocalSet11.zip"
-}
+
+_urls = {"https://zenodo.org/record/1442513/files/VocalSet11.zip?download=1": "VocalSet11.zip"}
 
 _name = "vocalset"
 
@@ -59,7 +56,6 @@ def load(path=None):
         path = os.environ["DATASET_PATH"]
 
     download_dataset(path, _name, _urls)
-    t = time.time()
 
     # load wavs
     f = zipfile.ZipFile(os.path.join(path, "vocalset/VocalSet11.zip"))
@@ -88,6 +84,5 @@ def load(path=None):
         "singers": singers,
         "genders": genders,
         "vowels": vowels,
-        "wavs": wavs,
     }
     return dataset

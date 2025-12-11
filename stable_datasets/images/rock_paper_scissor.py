@@ -1,16 +1,18 @@
-import datasets
 import os
+
+import datasets
 from PIL import Image
 
 
 class RockPaperScissor(datasets.GeneratorBasedBuilder):
     """Rock Paper Scissors dataset."""
+
     VERSION = datasets.Version("1.0.0")
 
     def _info(self):
         return datasets.DatasetInfo(
             description="Rock Paper Scissors contains images from various hands, from different races, ages, and "
-                        "genders, posed into Rock / Paper or Scissors and labeled as such.",
+            "genders, posed into Rock / Paper or Scissors and labeled as such.",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),

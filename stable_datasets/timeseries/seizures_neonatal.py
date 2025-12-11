@@ -1,25 +1,15 @@
 import os
-import urllib.request
-import time
-import io
+
 from scipy.io import loadmat
 
 # import mne
 from tqdm import tqdm
+
 from ..utils import download_dataset
 
 
-_urls = {
-    "https://zenodo.org/record/2547147/files/annotations_2017.mat?download=1": "annotations_2017.mat"
-}
-_urls.update(
-    {
-        "https://zenodo.org/record/2547147/files/eeg{}.edf?download=1".format(
-            i
-        ): "eeg{}.edf".format(i)
-        for i in range(1, 80)
-    }
-)
+_urls = {"https://zenodo.org/record/2547147/files/annotations_2017.mat?download=1": "annotations_2017.mat"}
+_urls.update({f"https://zenodo.org/record/2547147/files/eeg{i}.edf?download=1": f"eeg{i}.edf" for i in range(1, 80)})
 
 _name = "seizures_neonatal"
 
@@ -29,7 +19,7 @@ def load(path=None):
 
     source: https://zenodo.org/record/2547147
 
-    Neonatal seizures are a common emergency inthe neonatal intensive care unit
+    Neonatal seizures are a common emergency in the neonatal intensive care unit
     (NICU). There are many questions yet to be answered regarding the
     temporal/spatial characteristics of seizures from different pathologies,
     response to medication, effects on neurodevelopment and optimal detection.
@@ -65,7 +55,6 @@ def load(path=None):
         path = os.environ["DATASET_PATH"]
 
     download_dataset(path, _name, _urls)
-    t = time.time()
 
     # load wavs
     annotations = loadmat(os.path.join(path, "seizures_neonatal/annotations_2017.mat"))
@@ -74,7 +63,8 @@ def load(path=None):
     # init. the data array
     waveforms = []
     for i in tqdm(range(1, 80), ascii=True):
-        filename = os.path.join(path, "seizures_neonatal/eeg{}.edf".format(i))
+        filename = os.path.join(path, f"seizures_neonatal/eeg{i}.edf")
+        mne = None
         data = mne.io.read_raw_edf(filename)
         waveforms.append(data.get_data())
 

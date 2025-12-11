@@ -1,5 +1,5 @@
 # V0.0.0
-- file locking for concurent downloads
+- file locking for concurrent downloads
 - download recovery from partially downloaded files
 - datasets:
   - CIFAR10/CIFAR10C

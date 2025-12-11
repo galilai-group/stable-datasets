@@ -1,6 +1,7 @@
+import zipfile
+
 import datasets
 from PIL import Image
-import zipfile
 
 
 class Beans(datasets.GeneratorBasedBuilder):
@@ -10,15 +11,13 @@ class Beans(datasets.GeneratorBasedBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""The IBeans dataset contains leaf images representing three classes: 
-                1) Healthy leaves, 2) Angular Leaf Spot, and 3) Bean Rust. Images are collected in Uganda for disease 
+            description="""The IBeans dataset contains leaf images representing three classes:
+                1) Healthy leaves, 2) Angular Leaf Spot, and 3) Bean Rust. Images are collected in Uganda for disease
                 classification in the field.""",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
-                    "label": datasets.ClassLabel(
-                        names=["healthy", "angular_leaf_spot", "bean_rust"]
-                    ),
+                    "label": datasets.ClassLabel(names=["healthy", "angular_leaf_spot", "bean_rust"]),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -28,7 +27,7 @@ class Beans(datasets.GeneratorBasedBuilder):
                          title = "{Bean Disease Dataset}",
                          year = "2020",
                          month = "January",
-                         url = "https://github.com/AI-Lab-Makerere/ibean/"}"""
+                         url = "https://github.com/AI-Lab-Makerere/ibean/"}""",
         )
 
     def _split_generators(self, dl_manager):
