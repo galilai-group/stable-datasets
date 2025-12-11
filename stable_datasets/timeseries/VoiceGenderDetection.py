@@ -1,10 +1,12 @@
 import os
-from ..utils import download_dataset
 import pathlib
+from multiprocessing import Pool
+
 import numpy as np
 from pydub import AudioSegment
 from tqdm import tqdm
-from multiprocessing import Pool
+
+from ..utils import download_dataset
 
 
 def load(path=None, num_workers=16):
@@ -61,7 +63,6 @@ def load(path=None, num_workers=16):
         y_train = np.zeros(len(X_train))
 
     with Pool(num_workers) as pool:
-
         results = tuple(
             tqdm(
                 pool.imap(_reader, females),

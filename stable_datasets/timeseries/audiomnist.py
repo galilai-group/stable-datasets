@@ -1,12 +1,13 @@
 import io
 import os
 import time
-from ..utils import download_dataset
 import zipfile
 
 import numpy as np
 from scipy.io.wavfile import read as wav_read
 from tqdm import tqdm
+
+from ..utils import download_dataset
 
 
 _dataset = "audiomnist"
@@ -40,9 +41,9 @@ def load(path=None):
 
     # load wavs
     f = zipfile.ZipFile(os.path.join(path, _dataset, "data.zip"))
-    wavs = list()
-    digits = list()
-    speakers = list()
+    wavs = []
+    digits = []
+    speakers = []
     N = 0
     for filename in tqdm(f.namelist(), ascii=True):
         if ".wav" not in filename:
@@ -61,5 +62,5 @@ def load(path=None):
     for i in range(len(wavs)):
         left = (N - len(wavs[i])) // 2
         all_wavs[i, left : left + len(wavs[i])] = wavs[i]
-    print("Audio-MNIST loaded in {} s.".format(time.time() - t0))
+    print(f"Audio-MNIST loaded in {time.time() - t0} s.")
     return all_wavs, digits, speakers

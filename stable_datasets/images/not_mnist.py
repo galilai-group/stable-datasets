@@ -1,6 +1,7 @@
-import numpy as np
-import datasets
 import struct
+
+import datasets
+import numpy as np
 
 
 class NotMNIST(datasets.GeneratorBasedBuilder):
@@ -10,7 +11,7 @@ class NotMNIST(datasets.GeneratorBasedBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""A dataset that was created by Yaroslav Bulatov by taking some publicly available fonts and 
+            description="""A dataset that was created by Yaroslav Bulatov by taking some publicly available fonts and
             extracting glyphs from them to make a dataset similar to MNIST. There are 10 classes, with letters A-J.""",
             features=datasets.Features(
                 {

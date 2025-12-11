@@ -1,5 +1,6 @@
-from PIL import Image
 import numpy as np
+from PIL import Image
+
 from stable_datasets.images.arabic_characters import ArabicCharacters
 
 
@@ -9,8 +10,9 @@ def test_arabic_characters_dataset():
 
     # Test 1: Check that the dataset has the expected number of samples
     expected_num_train_samples = 13440
-    assert len(
-        arabic_characters) == expected_num_train_samples, f"Expected {expected_num_train_samples} training samples, got {len(arabic_characters)}."
+    assert len(arabic_characters) == expected_num_train_samples, (
+        f"Expected {expected_num_train_samples} training samples, got {len(arabic_characters)}."
+    )
 
     # Test 2: Check that each sample has the keys "image" and "label"
     sample = arabic_characters[0]
@@ -34,8 +36,9 @@ def test_arabic_characters_dataset():
     # Test 5: Check the test split
     arabic_characters_test = ArabicCharacters(split="test")
     expected_num_test_samples = 3360
-    assert len(
-        arabic_characters_test) == expected_num_test_samples, f"Expected {expected_num_test_samples} test samples, got {len(arabic_characters_test)}."
+    assert len(arabic_characters_test) == expected_num_test_samples, (
+        f"Expected {expected_num_test_samples} test samples, got {len(arabic_characters_test)}."
+    )
 
     print("All ArabicCharacters dataset tests passed successfully!")
 

@@ -1,18 +1,16 @@
 import io
 import os
-import time
-from ..utils import download_dataset
 import zipfile
 
 import numpy as np
-from scipy.io.wavfile import read as wav_read
-from tqdm import tqdm
 import pretty_midi
 import soundfile as sf
+from tqdm import tqdm
 
-_urls = {
-    "https://storage.googleapis.com/magentadata/datasets/groove/groove-v1.0.0.zip": "groove-v1.0.0.zip"
-}
+from ..utils import download_dataset
+
+
+_urls = {"https://storage.googleapis.com/magentadata/datasets/groove/groove-v1.0.0.zip": "groove-v1.0.0.zip"}
 
 
 def load(path=None):
@@ -59,7 +57,7 @@ def load(path=None):
     MIDI Data
     Format
 
-    The Roland TD-11 splits the recorded data into separate tracks: one for meta-messages (tempo, time signature, key signature), one for control changes (hi-hat pedal position), and one for notes. The control changes are set on channel 0 and the notes on channel 9 (the canonical drum channel). To simplify processing of this data, we made two adustments to the raw MIDI files before distributing:
+    The Roland TD-11 splits the recorded data into separate tracks: one for meta-messages (tempo, time signature, key signature), one for control changes (hi-hat pedal position), and one for notes. The control changes are set on channel 0 and the notes on channel 9 (the canonical drum channel). To simplify processing of this data, we made two adjustments to the raw MIDI files before distributing:
 
         We merged all messages (meta, control change, and note) to a single track.
         We set all messages to channel 9 (10 if 1-indexed).
@@ -131,13 +129,11 @@ def load(path=None):
         path = os.environ["DATASET_PATH"]
     download_dataset(path, "groove_MIDI", _urls)
 
-    t0 = time.time()
-
     # load wavs
     f = zipfile.ZipFile(os.path.join(path, "groove_MIDI", "groove-v1.0.0.zip"))
 
-    columns = "drummer,session,id,style,bpm,beat_type,time_signature,midi_filename,audio_filename,duration,split".split(
-        ","
+    columns = (
+        "drummer,session,id,style,bpm,beat_type,time_signature,midi_filename,audio_filename,duration,split".split(",")
     )
     info_file = f.open("groove/info.csv")
     infos = np.loadtxt(info_file, delimiter=",", dtype=str)
@@ -147,7 +143,6 @@ def load(path=None):
     indices = list(range(7)) + [9, 10]
 
     for row in tqdm(infos[1:], ascii=True):
-
         try:
             wav = f.read("groove/" + row[8])
             byt = io.BytesIO(wav)
@@ -161,6 +156,6 @@ def load(path=None):
 
         data[7].append(pretty_midi.PrettyMIDI(io.BytesIO(f.read("groove/" + row[7]))))
 
-    data = {col: data for col, data in zip(columns, data)}
+    data = dict(zip(columns, data))
 
     return data

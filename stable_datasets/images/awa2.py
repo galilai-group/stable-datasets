@@ -1,7 +1,8 @@
-from PIL import Image
-import datasets
-import zipfile
 import os
+import zipfile
+
+import datasets
+from PIL import Image
 
 
 class AWA2(datasets.GeneratorBasedBuilder):
@@ -18,43 +19,80 @@ class AWA2(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=['antelope', 'grizzly+bear', 'killer+whale', 'beaver',
-                                                        'dalmatian', 'persian+cat', 'horse', 'german+shepherd',
-                                                        'blue+whale', 'siamese+cat', 'skunk', 'mole', 'tiger',
-                                                        'hippopotamus', 'leopard', 'moose', 'spider+monkey',
-                                                        'humpback+whale', 'elephant', 'gorilla', 'ox', 'fox', 'sheep',
-                                                        'seal', 'chimpanzee', 'hamster', 'squirrel', 'rhinoceros',
-                                                        'rabbit', 'bat', 'giraffe', 'wolf', 'chihuahua', 'rat',
-                                                        'weasel', 'otter', 'buffalo', 'zebra', 'giant+panda', 'deer',
-                                                        'bobcat', 'pig', 'lion', 'mouse', 'polar+bear', 'collie',
-                                                        'walrus', 'raccoon', 'cow', 'dolphin']),
+                    "label": datasets.ClassLabel(
+                        names=[
+                            "antelope",
+                            "grizzly+bear",
+                            "killer+whale",
+                            "beaver",
+                            "dalmatian",
+                            "persian+cat",
+                            "horse",
+                            "german+shepherd",
+                            "blue+whale",
+                            "siamese+cat",
+                            "skunk",
+                            "mole",
+                            "tiger",
+                            "hippopotamus",
+                            "leopard",
+                            "moose",
+                            "spider+monkey",
+                            "humpback+whale",
+                            "elephant",
+                            "gorilla",
+                            "ox",
+                            "fox",
+                            "sheep",
+                            "seal",
+                            "chimpanzee",
+                            "hamster",
+                            "squirrel",
+                            "rhinoceros",
+                            "rabbit",
+                            "bat",
+                            "giraffe",
+                            "wolf",
+                            "chihuahua",
+                            "rat",
+                            "weasel",
+                            "otter",
+                            "buffalo",
+                            "zebra",
+                            "giant+panda",
+                            "deer",
+                            "bobcat",
+                            "pig",
+                            "lion",
+                            "mouse",
+                            "polar+bear",
+                            "collie",
+                            "walrus",
+                            "raccoon",
+                            "cow",
+                            "dolphin",
+                        ]
+                    ),
                 }
             ),
             supervised_keys=("image", "label"),
             homepage="https://cvml.ista.ac.at/AwA2/",
             citation="""@ARTICLE{8413121,
                          author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},
-                         journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, 
-                         title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly}, 
+                         journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+                         title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly},
                          year={2019},
                          volume={41},
                          number={9},
                          pages={2251-2265},
                          keywords={Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning},
-                         doi={10.1109/TPAMI.2018.2857768}}"""
+                         doi={10.1109/TPAMI.2018.2857768}}""",
         )
 
     def _split_generators(self, dl_manager):
         # Download the dataset
-        archive_path = dl_manager.download({
-            "data": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip"
-        })
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"archive_paths": archive_path}
-            )
-        ]
+        archive_path = dl_manager.download({"data": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip"})
+        return [datasets.SplitGenerator(name=datasets.Split.TEST, gen_kwargs={"archive_paths": archive_path})]
 
     def _generate_examples(self, archive_path):
         # Open the zip file

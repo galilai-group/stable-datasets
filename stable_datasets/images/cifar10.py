@@ -1,7 +1,8 @@
 import pickle
 import tarfile
-import numpy as np
+
 import datasets
+import numpy as np
 
 
 class CIFAR10(datasets.GeneratorBasedBuilder):
@@ -26,10 +27,20 @@ class CIFAR10(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=[
-                        "airplane", "automobile", "bird", "cat", "deer",
-                        "dog", "frog", "horse", "ship", "truck"
-                    ])
+                    "label": datasets.ClassLabel(
+                        names=[
+                            "airplane",
+                            "automobile",
+                            "bird",
+                            "cat",
+                            "deer",
+                            "dog",
+                            "frog",
+                            "horse",
+                            "ship",
+                            "truck",
+                        ]
+                    ),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -39,13 +50,11 @@ class CIFAR10(datasets.GeneratorBasedBuilder):
                          title={Learning multiple layers of features from tiny images},
                          author={Krizhevsky, Alex and Hinton, Geoffrey and others},
                          year={2009},
-                         publisher={Toronto, ON, Canada}}"""
+                         publisher={Toronto, ON, Canada}}""",
         )
 
     def _split_generators(self, dl_manager):
-        archive_path = dl_manager.download(
-            "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
-        )
+        archive_path = dl_manager.download("https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz")
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,

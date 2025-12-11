@@ -1,9 +1,8 @@
 import os
-import tarfile
+
+import datasets
 import scipy.io
 from PIL import Image
-import numpy as np
-import datasets
 
 
 class Flowers102(datasets.GeneratorBasedBuilder):
@@ -22,7 +21,7 @@ class Flowers102(datasets.GeneratorBasedBuilder):
             ),
             supervised_keys=("image", "label"),
             homepage="https://www.robots.ox.ac.uk/~vgg/data/flowers/102/",
-            citation="""@inproceedings{nilsback2008flowers102,
+            citation=r"""@inproceedings{nilsback2008flowers102,
                          title={Automated flower classification over a large number of classes},
                          author={Nilsback, Maria-Elena and Zisserman, Andrew},
                          booktitle={2008 Sixth Indian conference on computer vision, graphics \& image processing},
@@ -80,7 +79,10 @@ class Flowers102(datasets.GeneratorBasedBuilder):
 
         for idx, image_id in enumerate(ids):
             image_path = os.path.join(image_dir, "jpg", f"image_{image_id:05d}.jpg")
-            yield idx, {
-                "image": Image.open(image_path).convert("RGB"),
-                "label": labels[image_id - 1],
-            }
+            yield (
+                idx,
+                {
+                    "image": Image.open(image_path).convert("RGB"),
+                    "label": labels[image_id - 1],
+                },
+            )

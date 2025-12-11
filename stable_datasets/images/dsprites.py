@@ -1,5 +1,5 @@
-import numpy as np
 import datasets
+import numpy as np
 from sklearn.model_selection import train_test_split
 
 
@@ -68,12 +68,15 @@ All possible combinations of these latents are present exactly once, generating 
             selected_indices = test_indices
 
         for key in selected_indices:
-            yield int(key), {  # Ensure the key is a Python native int
-                "image": images[key],
-                "color": int(latents_values[key, 0]) - 1,
-                "shape": int(latents_values[key, 1]) - 1,
-                "scale": latents_values[key, 2],
-                "orientation": latents_values[key, 3],
-                "position_x": latents_values[key, 4],
-                "position_y": latents_values[key, 5],
-            }
+            yield (
+                int(key),
+                {  # Ensure the key is a Python native int
+                    "image": images[key],
+                    "color": int(latents_values[key, 0]) - 1,
+                    "shape": int(latents_values[key, 1]) - 1,
+                    "scale": latents_values[key, 2],
+                    "orientation": latents_values[key, 3],
+                    "position_x": latents_values[key, 4],
+                    "position_y": latents_values[key, 5],
+                },
+            )

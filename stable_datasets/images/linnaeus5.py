@@ -1,6 +1,7 @@
-import rarfile
-import datasets
 from io import BytesIO
+
+import datasets
+import rarfile
 
 
 class Linnaeus5(datasets.GeneratorBasedBuilder):
@@ -10,8 +11,8 @@ class Linnaeus5(datasets.GeneratorBasedBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""Linnaeus 5 dataset contains RGB images (256x256) for classification across 5 categories: 
-                           berry, bird, dog, flower, and other (negative set). It includes 1200 training images 
+            description="""Linnaeus 5 dataset contains RGB images (256x256) for classification across 5 categories:
+                           berry, bird, dog, flower, and other (negative set). It includes 1200 training images
                            and 400 test images per class.""",
             features=datasets.Features(
                 {
@@ -26,13 +27,11 @@ class Linnaeus5(datasets.GeneratorBasedBuilder):
                       author={Chaladze, G and Kalatozishvili, L},
                       journal={chaladze. com},
                       year={2017}}
-                      """
+                      """,
         )
 
     def _split_generators(self, dl_manager):
-        archive_path = dl_manager.download(
-            "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar"
-        )
+        archive_path = dl_manager.download("http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar")
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
@@ -51,7 +50,10 @@ class Linnaeus5(datasets.GeneratorBasedBuilder):
                     label = member.filename.split("/")[2]
                     with rar.open(member) as file:
                         image_bytes = BytesIO(file.read())
-                        yield member.filename, {
-                            "image": image_bytes,
-                            "label": label,
-                        }
+                        yield (
+                            member.filename,
+                            {
+                                "image": image_bytes,
+                                "label": label,
+                            },
+                        )

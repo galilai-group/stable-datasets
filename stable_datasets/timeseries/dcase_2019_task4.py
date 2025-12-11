@@ -1,15 +1,15 @@
-import os
-import numpy as np
-import zipfile
-from tqdm import tqdm
-import soundfile as sf
-from ..utils import download_dataset
 import io
-from scipy.io.wavfile import read as wav_read
+import os
+import zipfile
 
-_urls = {
-    "https://zenodo.org/record/2583796/files/Synthetic_dataset.zip?download=1": "Synthetic_dataset.zip"
-}
+import numpy as np
+from scipy.io.wavfile import read as wav_read
+from tqdm import tqdm
+
+from ..utils import download_dataset
+
+
+_urls = {"https://zenodo.org/record/2583796/files/Synthetic_dataset.zip?download=1": "Synthetic_dataset.zip"}
 
 
 def load(path=None):
@@ -28,7 +28,7 @@ def load(path=None):
 
     License:
 
-    All sounds comming from FSD are released under Creative Commons licences. Synthetic sounds can only be used for competition purposes until the full CC license list is made available at the end of the competition.
+    All sounds coming from FSD are released under Creative Commons licences. Synthetic sounds can only be used for competition purposes until the full CC license list is made available at the end of the competition.
 
     Further information on dcase website.
 
@@ -53,16 +53,14 @@ def load(path=None):
 
     # labels
     file = zfile.open("synthetic_dataset.csv")
-    labels = np.genfromtxt(
-        file, delimiter="\t", encoding=None, dtype=None, names=True
-    ).view(np.recarray)
+    labels = np.genfromtxt(file, delimiter="\t", encoding=None, dtype=None, names=True).view(np.recarray)
 
     # Simplify labels
     for label in labels:
         label.event_label = label.event_label.replace("_", " ")
 
     # Classes
-    classes = list(np.unique(labels.event_label))
+    # classes = list(np.unique(labels.event_label))
 
     wavs = []
     for filename in tqdm(labels.filename, ascii=True):

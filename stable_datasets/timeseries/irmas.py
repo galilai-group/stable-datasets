@@ -1,10 +1,12 @@
-import os
-import zipfile
 import io
-from tqdm import tqdm
-import numpy as np
+import os
 import time
+import zipfile
+
+import numpy as np
 from scipy.io.wavfile import read as wav_read
+from tqdm import tqdm
+
 from ..utils import download_dataset
 
 
@@ -38,7 +40,7 @@ def load(path=None):
     voice. This dataset is derived from the one compiled by Ferdinand Fuhrmann
     in his PhD thesis, with the difference that we provide audio data in stereo
     format, the annotations in the testing dataset are limited to specific
-    pitched instruments, and there is a different amount and lenght of excerpts.
+    pitched instruments, and there is a different amount and length of excerpts.
     """
     if path is None:
         path = os.environ["DATASET_PATH"]
@@ -47,10 +49,10 @@ def load(path=None):
 
     t0 = time.time()
 
-    train_wavs = list()
-    train_labels = list()
-    test_wavs = list()
-    test_labels = list()
+    train_wavs = []
+    train_labels = []
+    test_wavs = []
+    test_labels = []
 
     # loading the training set
     f = zipfile.ZipFile(path + "irmas/IRMAS-TrainingData.zip")
@@ -67,7 +69,7 @@ def load(path=None):
     for part in ["1", "2", "3"]:
         f = zipfile.ZipFile(path + base.format(part))
         namelist = f.namelist()
-        for filename in tqdm(namelist, ascii=True, desc="Test data {}/3".format(part)):
+        for filename in tqdm(namelist, ascii=True, desc=f"Test data {part}/3"):
             if ".wav" not in filename:
                 continue
 
@@ -84,5 +86,5 @@ def load(path=None):
         "test_labels": test_labels,
     }
 
-    print("Dataset IRMAS loaded in {0:.2f}s.".format(time.time() - t0))
+    print(f"Dataset IRMAS loaded in {time.time() - t0:.2f}s.")
     return data

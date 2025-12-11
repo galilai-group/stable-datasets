@@ -1,8 +1,10 @@
 import os
+import pathlib
+
 import numpy as np
 from scipy.io import arff
+
 from ..utils import download_dataset
-import pathlib
 
 
 def load(path=None):
@@ -36,9 +38,7 @@ def load(path=None):
     path = pathlib.Path(path) / "CatsDogs"
     download_dataset(
         path,
-        {
-            "CatsDogs.zip": "http://www.timeseriesclassification.com/Downloads/CatsDogs.zip"
-        },
+        {"CatsDogs.zip": "http://www.timeseriesclassification.com/Downloads/CatsDogs.zip"},
         extract=True,
     )
 

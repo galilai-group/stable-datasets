@@ -25,5 +25,3 @@ class BrainMNIST(StableDatasetBuilder):
 
     def _generate_examples(self, **kwargs):  # pragma: no cover
         raise NotImplementedError("BrainMNIST builder not implemented yet.")
-
-

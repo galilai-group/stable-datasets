@@ -1,10 +1,12 @@
 import os
+import pathlib
+from multiprocessing import Pool
+
 import numpy as np
 from scipy.io import arff
 from tqdm import tqdm
+
 from ..utils import download_dataset
-import pathlib
-from multiprocessing import Pool
 
 
 def load(path=None, num_workers=16):
@@ -78,15 +80,11 @@ def _loader(name):
             data_train = arff.loadarff(name / f"{data}_TRAIN.arff")
             data_test = arff.loadarff(name / f"{data}_TEST.arff")
 
-            data_train = np.asarray(
-                [data_train[0][name] for name in data_train[1].names()]
-            )
+            data_train = np.asarray([data_train[0][name] for name in data_train[1].names()])
             X_train = data_train[:-1].T.astype("float64")
             y_train = data_train[-1].astype("int")
 
-            data_test = np.asarray(
-                [data_test[0][name] for name in data_test[1].names()]
-            )
+            data_test = np.asarray([data_test[0][name] for name in data_test[1].names()])
             X_test = data_test[:-1].T.astype("float64")
             y_test = data_test[-1].astype("int")
         else:

@@ -1,16 +1,17 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 __author__ = "Randall Balestriero"
 
-import os
 import io
-from ..utils import download_dataset
-import numpy as np
+import os
 import time
-from tqdm import tqdm
 import zipfile
+
+import numpy as np
 from scipy.io.wavfile import read as wav_read
+from tqdm import tqdm
+
+from ..utils import download_dataset
 
 
 DOC = """An Annotated Acoustic Dataset of 7 Picidae Species
@@ -51,9 +52,7 @@ DOC = """An Annotated Acoustic Dataset of 7 Picidae Species
    """
 
 _dataset = "picidae"
-_urls = {
-    "https://zenodo.org/record/574438/files/PicidaeDataset.zip?download=1": "PicidaeDataset.zip"
-}
+_urls = {"https://zenodo.org/record/574438/files/PicidaeDataset.zip?download=1": "PicidaeDataset.zip"}
 
 
 def load(path=None):
@@ -86,9 +85,9 @@ def load(path=None):
     t0 = time.time()
 
     archive = zipfile.ZipFile(path + "picidae/PicidaeDataset.zip")
-    wavs = list()
-    labels = list()
-    XC = list()
+    wavs = []
+    labels = []
+    XC = []
     for item in tqdm(archive.namelist(), ascii=True):
         if item[-4:] == ".wav" and "._" not in item:
             wavfile = archive.read(item)
@@ -111,6 +110,6 @@ def load(path=None):
         "DOC": DOC,
     }
 
-    print("Dataset picidae loaded in {0:.2f}s.".format(time.time() - t0))
+    print(f"Dataset picidae loaded in {time.time() - t0:.2f}s.")
 
     return data

@@ -1,13 +1,17 @@
-from tqdm import tqdm
 import zipfile
+from pathlib import Path
+
 import datasets
 import pandas as pd
 from PIL import Image
-from pathlib import Path
+from tqdm import tqdm
+
+
 try:
     import gdown
 except ImportError:
     import subprocess
+
     subprocess.check_call(["pip", "install", "gdown"])
     import gdown
 
@@ -22,7 +26,7 @@ class CelebA(datasets.GeneratorBasedBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""CelebA is a large-scale face attributes dataset with 200K images and 40 attribute annotations per image, 
+            description="""CelebA is a large-scale face attributes dataset with 200K images and 40 attribute annotations per image,
                            useful for face attribute recognition, detection, and landmark localization tasks.""",
             features=datasets.Features(
                 {
@@ -57,30 +61,49 @@ class CelebA(datasets.GeneratorBasedBuilder):
 
         # Download files using gdown to the cache directory
         if not archive_path.exists():
-            gdown.download(f"https://drive.google.com/uc?export=download&id={archive_id}", str(archive_path), quiet=False)
+            gdown.download(
+                f"https://drive.google.com/uc?export=download&id={archive_id}", str(archive_path), quiet=False
+            )
         if not attr_path.exists():
             gdown.download(f"https://drive.google.com/uc?export=download&id={attr_id}", str(attr_path), quiet=False)
         if not partition_path.exists():
-            gdown.download(f"https://drive.google.com/uc?export=download&id={partition_id}", str(partition_path), quiet=False)
+            gdown.download(
+                f"https://drive.google.com/uc?export=download&id={partition_id}", str(partition_path), quiet=False
+            )
 
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
-                gen_kwargs={"archive_path": str(archive_path), "attr_path": str(attr_path), "partition_path": str(partition_path), "split": 0},
+                gen_kwargs={
+                    "archive_path": str(archive_path),
+                    "attr_path": str(attr_path),
+                    "partition_path": str(partition_path),
+                    "split": 0,
+                },
             ),
             datasets.SplitGenerator(
                 name=datasets.Split.VALIDATION,
-                gen_kwargs={"archive_path": str(archive_path), "attr_path": str(attr_path), "partition_path": str(partition_path), "split": 1},
+                gen_kwargs={
+                    "archive_path": str(archive_path),
+                    "attr_path": str(attr_path),
+                    "partition_path": str(partition_path),
+                    "split": 1,
+                },
             ),
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
-                gen_kwargs={"archive_path": str(archive_path), "attr_path": str(attr_path), "partition_path": str(partition_path), "split": 2},
+                gen_kwargs={
+                    "archive_path": str(archive_path),
+                    "attr_path": str(attr_path),
+                    "partition_path": str(partition_path),
+                    "split": 2,
+                },
             ),
         ]
 
     def _generate_examples(self, archive_path, attr_path, partition_path, split):
         # Load attribute data
-        with open(attr_path, "r") as f:
+        with open(attr_path) as f:
             lines = f.readlines()
             attributes = [line.split()[1:] for line in lines[2:]]  # Skip header lines
             image_ids = [line.split()[0] for line in lines[2:]]
@@ -103,7 +126,10 @@ class CelebA(datasets.GeneratorBasedBuilder):
                     # Get attributes for this image and convert them to integers (-1 or 1)
                     attributes = [int(attr) for attr in split_attributes[idx]]
 
-                    yield idx, {
-                        "image": image,
-                        "attributes": attributes,
-                    }
+                    yield (
+                        idx,
+                        {
+                            "image": image,
+                            "attributes": attributes,
+                        },
+                    )

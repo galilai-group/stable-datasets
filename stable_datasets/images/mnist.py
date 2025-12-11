@@ -1,6 +1,7 @@
-import numpy as np
-import datasets
 import struct
+
+import datasets
+import numpy as np
 
 
 class MNIST(datasets.GeneratorBasedBuilder):
@@ -10,7 +11,7 @@ class MNIST(datasets.GeneratorBasedBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""The MNIST database of handwritten digits, with a training set of 60,000 examples, and a test 
+            description="""The MNIST database of handwritten digits, with a training set of 60,000 examples, and a test
             set of 10,000 examples.""",
             features=datasets.Features(
                 {

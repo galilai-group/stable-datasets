@@ -1,14 +1,16 @@
-import os
-import numpy as np
-import zipfile
 import io
+import os
+import zipfile
+
+import numpy as np
 from scipy.io.wavfile import read as wav_read
 from tqdm import tqdm
+
 from ..utils import download_dataset
 
 
 _urls = {
-    "hhttps://archive.org/download/ff1010bird/ff1010bird_wav.zip": "ff1010bird_wav.zip",
+    "https://archive.org/download/ff1010bird/ff1010bird_wav.zip": "ff1010bird_wav.zip",
     "https://ndownloader.figshare.com/files/6035814": "ff1010bird_metadata.csv",
 }
 

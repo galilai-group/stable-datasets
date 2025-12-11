@@ -1,8 +1,10 @@
 import os
-import numpy as np
 import tarfile
-from tqdm import tqdm
+
+import numpy as np
 from scipy.io.wavfile import read as wav_read
+from tqdm import tqdm
+
 from ..utils import download_dataset
 
 
@@ -15,7 +17,7 @@ _urls = {
 coarse_labels = [
     "engine",
     "machinery-impact",
-    "non-machinery-impact" "powered-saw",
+    "non-machinery-impactpowered-saw",
     "alert-signal",
     "music",
     "human-voice",
@@ -153,7 +155,7 @@ def load(path=None):
     for i in range(len(filenames)):
         filenames[i] = annotations[i, 0] + "/" + str(filenames[i])
 
-    # get fine labels and limts for coarse classes
+    # get fine labels and limits for coarse classes
     fine_labels = annotations[:, 4:33].astype("float32").astype("int32")
     class_limits = [0, 4, 9, 10, 14, 19, 23, 28, 29]
     n_classes = len(class_limits) - 1

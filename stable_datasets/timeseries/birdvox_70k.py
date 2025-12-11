@@ -1,21 +1,18 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 __author__ = "Randall Balestriero"
 import os
-import pickle, gzip
-import urllib.request
-import numpy as np
 import time
+
 import h5py
+import numpy as np
 from tqdm import tqdm
+
 from ..utils import download_dataset
 
 
 _urls = {
-    "https://zenodo.org/record/1226427/files/BirdVox-70k_unit{}.hdf5?download=1".format(
-        i
-    ): "BirdVox-70k_unit{}.hdf5".format(i)
+    f"https://zenodo.org/record/1226427/files/BirdVox-70k_unit{i}.hdf5?download=1": f"BirdVox-70k_unit{i}.hdf5"
     for i in ["01", "02", "03", "05", "07", "10"]
 }
 
@@ -100,19 +97,18 @@ def load(path=None):
     if path is None:
         path = os.environ["DATASET_PATH"]
     download_dataset(path, "birdvox_70k", _urls)
+    t0 = time.time()
 
     # Loading the file
     path += "birdvox_70k/"
     names = ["01", "02", "03", "05", "07", "10"]
     basefile = "BirdVox-70k_unit{}.hdf5"
-    wavs = list()
-    label = list()
-    recording = list()
+    wavs = []
+    label = []
+    recording = []
     for name in names:
         f = h5py.File(path + basefile.format(name), "r")
-        for filename in tqdm(
-            f["waveforms"].keys(), ascii=True, desc="recording {}".format(name)
-        ):
+        for filename in tqdm(f["waveforms"].keys(), ascii=True, desc=f"recording {name}"):
             wavs.append(f["waveforms"][filename][...])
             label.append(int(filename[-1]))
             recording.append(int(name))
@@ -123,6 +119,6 @@ def load(path=None):
         "recording": np.array(recording).astype("int32"),
     }
 
-    print("Dataset birdvox_70k loaded in {0:.2f}s.".format(time.time() - t0))
+    print(f"Dataset birdvox_70k loaded in {time.time() - t0:.2f}s.")
 
     return data

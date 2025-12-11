@@ -1,5 +1,6 @@
-import datasets
 import os
+
+import datasets
 
 
 class Food101(datasets.GeneratorBasedBuilder):
@@ -14,24 +15,23 @@ class Food101(datasets.GeneratorBasedBuilder):
     def _info(self):
         return datasets.DatasetInfo(
             description="""This is the Food 101 dataset, also available from https://www.vision.ee.ethz.ch/datasets_extra/food-101/
-            It contains images of food, organized by type of food. It was used in the Paper "Food-101 – Mining 
-            Discriminative Components with Random Forests" by Lukas Bossard, Matthieu Guillaumin and Luc Van Gool. It's 
+            It contains images of food, organized by type of food. It was used in the Paper "Food-101 – Mining
+            Discriminative Components with Random Forests" by Lukas Bossard, Matthieu Guillaumin and Luc Van Gool. It's
             a good (large dataset) for testing computer vision techniques.""",
             features=datasets.Features(
-            {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}),
+                {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}
+            ),
             supervised_keys=("image", "label"),
             homepage="https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
             citation="""@inproceedings{bossard14,
                          title = {Food-101 -- Mining Discriminative Components with Random Forests},
                          author = {Bossard, Lukas and Guillaumin, Matthieu and Van Gool, Luc},
                          booktitle = {European Conference on Computer Vision},
-                         year = {2014}}"""
+                         year = {2014}}""",
         )
 
     def _split_generators(self, dl_manager):
-        archive = dl_manager.download_and_extract(
-            "http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz"
-        )
+        archive = dl_manager.download_and_extract("http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz")
         archive = str(archive)
         train = open(os.path.join(archive, "food-101", "meta", "train.txt")).read().splitlines()
         test = open(os.path.join(archive, "food-101", "meta", "test.txt")).read().splitlines()
@@ -49,10 +49,13 @@ class Food101(datasets.GeneratorBasedBuilder):
     def _generate_examples(self, root, archives):
         for key, name in enumerate(archives):
             image_path = os.path.join(root, "food-101", "images", f"{name}.jpg")
-            yield key, {
-                "image": image_path,
-                "label": name.split("/")[0],
-            }
+            yield (
+                key,
+                {
+                    "image": image_path,
+                    "label": name.split("/")[0],
+                },
+            )
 
     @staticmethod
     def _labels():

@@ -1,9 +1,11 @@
 import io
-from tqdm import tqdm
-from PIL import Image
 from zipfile import ZipFile
+
 import datasets
-from stable_datasets.utils import bulk_download, StableDatasetBuilder
+from PIL import Image
+from tqdm import tqdm
+
+from stable_datasets.utils import StableDatasetBuilder, bulk_download
 
 
 class ArabicCharacters(StableDatasetBuilder):
@@ -23,14 +25,11 @@ class ArabicCharacters(StableDatasetBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""Arabic Handwritten Characters Dataset, consisting of 16,800 characters 
-                           written by 60 participants. The dataset is split into training and test 
+            description="""Arabic Handwritten Characters Dataset, consisting of 16,800 characters
+                           written by 60 participants. The dataset is split into training and test
                            sets, with a balanced distribution across all classes.""",
             features=datasets.Features(
-                {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=[str(i) for i in range(28)])
-                }
+                {"image": datasets.Image(), "label": datasets.ClassLabel(names=[str(i) for i in range(28)])}
             ),
             supervised_keys=("image", "label"),
             homepage="https://github.com/mloey/Arabic-Handwritten-Characters-Dataset",
@@ -40,15 +39,15 @@ class ArabicCharacters(StableDatasetBuilder):
                         journal={WSEAS Transactions on Computer Research},
                         volume={5},
                         pages={11--19},
-                        year={2017}}"""
+                        year={2017}}""",
         )
 
     def _split_generators(self, dl_manager):
         urls = {
             "train": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Train%20Images%2013440x32x32.zip",
-            "test": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Test%20Images%203360x32x32.zip"
+            "test": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Test%20Images%203360x32x32.zip",
         }
-        split_names = list(urls.keys())          # ["train", "test"]
+        split_names = list(urls.keys())  # ["train", "test"]
         ordered_urls = [urls[s] for s in split_names]
         local_paths = bulk_download(ordered_urls)
 
@@ -62,7 +61,7 @@ class ArabicCharacters(StableDatasetBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={"archive_path": split_to_path["test"], "split": "test"},
-            )
+            ),
         ]
 
     def _generate_examples(self, archive_path, split):
@@ -74,7 +73,4 @@ class ArabicCharacters(StableDatasetBuilder):
                     image = Image.open(io.BytesIO(content))
                     label = int(entry.filename.split("_")[-1][:-4]) - 1  # Extract label from filename
 
-                    yield entry.filename, {
-                        "image": image,
-                        "label": label
-                    }
+                    yield entry.filename, {"image": image, "label": label}

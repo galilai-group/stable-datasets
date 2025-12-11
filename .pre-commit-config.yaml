@@ -39,16 +39,6 @@ repos:
       - id: shellcheck
         require_serial: true
 
-  # Word spelling linter
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
-    hooks:
-      - id: codespell
-        require_serial: true
-        args:
-          - --skip=logs/**,data/**,*.ipynb
-          - --ignore-words-list=socio-economic
-
   # Check for common Python anti-patterns
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.15.2

@@ -1,8 +1,10 @@
-import datasets
 import importlib.util
 import sys
 from pathlib import Path
+
+import datasets
 from huggingface_hub import snapshot_download
+
 
 _IN10_classes = [
     "n01440764",
@@ -159,9 +161,7 @@ class Imagenette(datasets.GeneratorBasedBuilder):
     def _get_in1k_module(self):
         if hasattr(self, "_in_mod"):
             return self._in_mod
-        path = Path(
-            snapshot_download(repo_id="ILSVRC/imagenet-1k", repo_type="dataset")
-        )
+        path = Path(snapshot_download(repo_id="ILSVRC/imagenet-1k", repo_type="dataset"))
         print(path)
         if not (path / "imagenet_1k.py").is_file():
             (path / "imagenet-1k.py").rename(path / "imagenet_1k.py")
@@ -229,10 +229,7 @@ class Imagenette(datasets.GeneratorBasedBuilder):
                 datasets.SplitGenerator(
                     name=datasets.Split.TRAIN,
                     gen_kwargs={
-                        "archives": [
-                            dl_manager.iter_archive(archive)
-                            for archive in archives["train"]
-                        ],
+                        "archives": [dl_manager.iter_archive(archive) for archive in archives["train"]],
                         "split": "train",
                     },
                 )
@@ -242,30 +239,21 @@ class Imagenette(datasets.GeneratorBasedBuilder):
                 datasets.SplitGenerator(
                     name=datasets.Split.TRAIN,
                     gen_kwargs={
-                        "archives": [
-                            dl_manager.iter_archive(archive)
-                            for archive in archives["train"]
-                        ],
+                        "archives": [dl_manager.iter_archive(archive) for archive in archives["train"]],
                         "split": "train",
                     },
                 ),
                 datasets.SplitGenerator(
                     name=datasets.Split.VALIDATION,
                     gen_kwargs={
-                        "archives": [
-                            dl_manager.iter_archive(archive)
-                            for archive in archives["val"]
-                        ],
+                        "archives": [dl_manager.iter_archive(archive) for archive in archives["val"]],
                         "split": "validation",
                     },
                 ),
                 datasets.SplitGenerator(
                     name=datasets.Split.TEST,
                     gen_kwargs={
-                        "archives": [
-                            dl_manager.iter_archive(archive)
-                            for archive in archives["test"]
-                        ],
+                        "archives": [dl_manager.iter_archive(archive) for archive in archives["test"]],
                         "split": "test",
                     },
                 ),
@@ -275,12 +263,8 @@ class Imagenette(datasets.GeneratorBasedBuilder):
             urls = "https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz"
         elif self.config.name == "imagenet100":
             d = datasets.load_dataset("imagenet-1k")
-            d["train"] = d["train"].filter(
-                lambda example: example["label"] in _IN100_CLASSES
-            )
-            d["validation"] = d["validation"].filter(
-                lambda example: example["label"] in _IN100_CLASSES
-            )
+            d["train"] = d["train"].filter(lambda example: example["label"] in _IN100_CLASSES)
+            d["validation"] = d["validation"].filter(lambda example: example["label"] in _IN100_CLASSES)
         data_dir = Path(dl_manager.download_and_extract(urls))
         train_path = data_dir / "imagenette2" / "train"
         test_path = data_dir / "imagenette2" / "val"

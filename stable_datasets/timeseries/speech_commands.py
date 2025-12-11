@@ -1,11 +1,13 @@
 import os
-import urllib.request
-import numpy as np
 import tarfile
 import time
-from tqdm import tqdm
+
+import numpy as np
 from scipy.io.wavfile import read as wav_read
+from tqdm import tqdm
+
 from ..utils import download_dataset
+
 
 DOC = """speech commands classification
 
@@ -40,13 +42,10 @@ name2class = {
 }
 
 _dataset = "speech_commands"
-_urls = {
-    "http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz": "speech_commands_v0.01.tar.gz"
-}
+_urls = {"http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz": "speech_commands_v0.01.tar.gz"}
 
 
 def load(path=None):
-
     if path is None:
         path = os.environ["DATASET_PATH"]
     download_dataset(path, _dataset, _urls)
@@ -58,10 +57,10 @@ def load(path=None):
     tar = tarfile.open(path + "speech_commands/speech_commands_v0.01.tar.gz", "r:gz")
 
     # Load train set
-    wavs = list()
-    labels = list()
-    noises = list()
-    noise_labels = list()
+    wavs = []
+    labels = []
+    noises = []
+    noise_labels = []
     names = tar.getmembers()
     for name in tqdm(names, ascii=True):
         if "wav" not in name.name:
@@ -78,11 +77,7 @@ def load(path=None):
             labels.append(name.name.split("/")[-2])
     labels = np.array(labels)
     unique_labels = np.unique(labels)
-    y = np.squeeze(
-        np.array([np.nonzero(label == unique_labels)[0] for label in labels]).astype(
-            "int32"
-        )
-    )
+    y = np.squeeze(np.array([np.nonzero(label == unique_labels)[0] for label in labels]).astype("int32"))
 
     data = {
         "wavs": np.array(wavs).astype("float32"),
@@ -92,6 +87,6 @@ def load(path=None):
         "noises_labels": noise_labels,
     }
 
-    print("Dataset speech commands loaded in{0:.2f}s.".format(time.time() - t0))
+    print(f"Dataset speech commands loaded in{time.time() - t0:.2f}s.")
 
     return data
