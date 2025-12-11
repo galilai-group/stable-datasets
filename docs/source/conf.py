@@ -8,7 +8,7 @@ from datetime import date
 
 from sphinxawesome_theme.postprocess import Icons
 
-from stable_worldmodel import __version__
+from stable_datasets import __version__
 
 
 # -- Project information ---
