@@ -1,7 +1,7 @@
 import datasets
 from PIL import Image
 import numpy as np
-from aidatasets.images.cifar10_c import CIFAR10C
+from stable_datasets.images.cifar10_c import CIFAR10C
 
 
 def test_cifar10_c_dataset():

@@ -1,2 +1,0 @@
-include versioneer.py
-include numpy_datasets/_version.py
