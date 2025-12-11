@@ -34,8 +34,9 @@ ds_torch = ds.with_format("torch")
 ## Installation
 
 ```bash
-pip install -r requirements.txt
 pip install -e .
+# Optional (dev tools + tests):
+pip install -e ".[dev]"
 ```
 
 ## Cache layout
