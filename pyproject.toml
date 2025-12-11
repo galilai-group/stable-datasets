@@ -27,7 +27,7 @@ dependencies = [
 dynamic = ["version"]
 
 [tool.setuptools]
-packages = ["stable_datasets"]
+packages = { find = { include = ["stable_datasets*"] } }
 
 [tool.setuptools.dynamic]
 version = {attr = "stable_datasets.__version__"}

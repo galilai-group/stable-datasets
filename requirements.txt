@@ -1,17 +1,3 @@
-h5py>=2.10.0
-tables
-pandas
-matplotlib
-tabulate
-lightning
-tensorboard
-imageio>=2.6.1
-SoundFile==0.10.3.post1
-requests>=2.31.0
-pretty-midi==0.2.9
-pydub
-torchvision>=0.14
-torch>=1.13
 tqdm==4.67.1
 rich==14.2.0
 filelock==3.20.0
@@ -19,4 +5,6 @@ loguru==0.7.3
 requests-cache==1.2.1
 datasets==4.4.1
 Pillow==12.0.0
-scikit-learn==1.7.2
+numpy==2.2.6
+pandas==2.3.3
+pytest==9.0.2

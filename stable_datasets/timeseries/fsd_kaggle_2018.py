@@ -1,13 +1,21 @@
-import os
-import pickle, gzip
-import urllib.request
-import numpy as np
-import time
-import tarfile
-from tqdm import tqdm
-import zipfile
-from scipy.io.wavfile import read as wav_read
+"""Legacy FSDKaggle2018 loader (to be refactored into a StableDatasetBuilder).
+
+This module was moved under `stable_datasets.timeseries` to align the repository layout.
+It still exposes the original imperative `FSDKaggle2018.load(...)` API for now.
+"""
+
+import gzip
 import io
+import os
+import pickle
+import tarfile
+import time
+import urllib.request
+import zipfile
+
+import numpy as np
+from scipy.io.wavfile import read as wav_read
+from tqdm import tqdm
 
 
 class FSDKaggle2018:
@@ -16,7 +24,6 @@ class FSDKaggle2018:
     """
 
     def download(path):
-
         # Check if directory exists
         if not os.path.isdir(path + "FSDKaggle2018"):
             print("\tCreating FSDKaggle2018 Directory")
@@ -39,26 +46,6 @@ class FSDKaggle2018:
             urllib.request.urlretrieve(url, path + "FSDKaggle2018/meta.zip")
 
     def load(path=None):
-        """
-        Parameters
-        ----------
-
-        path: str (optional)
-                default $DATASET_path), the path to look for the data and
-                where the data will be downloaded if not present
-
-        Returns
-        -------
-
-        wavs: array
-            the wavs as a numpy array (matrix) with first dimension the data
-            and second dimension time
-
-        labels: array
-            the labels of the final classes (41 different ones) as a integer
-            vector
-        """
-
         if path is None:
             path = os.environ["DATASET_PATH"]
         FSDKaggle2018.download(path)
@@ -127,4 +114,7 @@ class FSDKaggle2018:
             "usage_test": usage,
             "fsid_test": fsid_test,
         }
+        print("Dataset FSDKaggle2018 loaded in {0:.2f}s.".format(time.time() - t0))
         return dataset
+
+

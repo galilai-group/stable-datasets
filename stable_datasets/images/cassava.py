@@ -1,11 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+"""Legacy Cassava loader (to be refactored into a StableDatasetBuilder).
+
+This module was moved under `stable_datasets.images` to align the repository layout.
+It still exposes the original imperative `cassava.load(...)` API for now.
+"""
+
 import io
 import os
 import time
-import zipfile
-import matplotlib.image as mpimg
 import urllib
+import zipfile
+
+import matplotlib.image as mpimg
 import numpy as np
 
 
@@ -18,34 +26,12 @@ class cassava:
     The data consists of two folders, a training folder that contains 5
     subfolders that contain the respective images for the different 5 classes
     and a test folder containing test images.
-
-    Participants are to train their models using the images in the training
-    folder and provide a submission file like the sample provided which contains
-    the image name exactly matching the image name in the test folder and the
-    corresponding class prediction with labels corresponding to the disease
-    categories, cmd, healthy, cgm, cbsd, cbb.
-
-    Please cite this paper if you use the dataset for your project:
-    https://arxiv.org/pdf/1908.02900.pdf
-
     """
 
     classes = ["cbb", "cmd", "cbsd", "cgm", "healthy"]
 
     @staticmethod
     def download(path):
-        """
-        Download the cassava dataset and store the result into the given
-        path
-
-        Parameters
-        ----------
-
-            path: str
-                the path where the downloaded files will be stored. If the
-                directory does not exist, it is created.
-        """
-
         # Check if directory exists
         if not os.path.isdir(path + "cassava"):
             print("Creating cassava Directory")
@@ -59,30 +45,6 @@ class cassava:
 
     @staticmethod
     def load(path=None):
-        """
-        Parameters
-        ----------
-            path: str (optional)
-                default ($DATASET_PATH), the path to look for the data and
-                where the data will be downloaded if not present
-
-        Returns
-        -------
-
-            train_images: array
-
-            train_labels: array
-
-            valid_images: array
-
-            valid_labels: array
-
-            test_images: array
-
-            test_labels: array
-
-        """
-
         if path is None:
             path = os.environ["DATASET_PATH"]
 
@@ -120,3 +82,5 @@ class cassava:
             test_images,
             test_labels,
         )
+
+

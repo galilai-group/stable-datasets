@@ -2,43 +2,54 @@
 
 # stable-datasets
 
-_All dataset utilities (downloading/loading/batching/processing) in Numpy_
+_Datasets implemented as HuggingFace `datasets` builders, with custom download & caching._
 
 </div>
 
 
-This is an under-development research project, not an official product, expect bugs and sharp edges; please help by trying it out, reporting bugs.
-[**Reference docs**](https://rbalestr-lab.github.io/stable-datasets/)
+This is an under-development research project; expect bugs and sharp edges.
 
-## What is and why doing  ?
+## What is it?
 
-* First, stable-datasets offers out-of-the-box dataset download and loading only based on Numpy and core Python libraries.
-* Second, stable-datasets offers utilities such as (mini-)batching a.k.a looping through a dataset one chunk at a time, or preprocessing techniques that are highly suited for machine learning and deep learning pipelines.
-* Third, stable-datasets offers many options to transparently deal with very large datasets. For example, automatic mini-batching with a priori caching of the next batch, online preprocessing, and the likes.
-* Fourth, stable-datasets does not only focus on computer vision datasets but also offers plenty in time-series datasets, with a constantly groing collection of implemented datasets.
+- Datasets live in `stable_datasets/images/` and `stable_datasets/timeseries/`.
+- Each dataset is a HuggingFace `datasets.GeneratorBasedBuilder` (via `StableDatasetBuilder`).
+- Downloads use local custom logic (`stable_datasets/utils.py`) rather than HuggingFace’s download manager.
+- Returned objects are `datasets.Dataset` instances (Arrow-backed), which can be formatted for NumPy / PyTorch as needed.
 
 ## Minimal Example
 
 ```python
-import stable_datasets as sds
+from stable_datasets.images.arabic_characters import ArabicCharacters
 
-mnist = sds.images.mnist.load()
-train_images = mnist['train_set/images']
-train_labels = mnist['train_set/labels']
+# First run will download + prepare cache, then return the split as a HF Dataset
+ds = ArabicCharacters(split="train")
+
+sample = ds[0]
+print(sample.keys())  # {"image", "label"}
+
+# Optional: make it PyTorch-friendly
+ds_torch = ds.with_format("torch")
 ```
 
 ## Installation
 
-Installation is direct with pip as described in this [**guide**](https://rbalestr-lab.github.io/stable-datasets/).
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
 
-# Datasets
+## Cache layout
 
-## Classification
+By default:
+- Downloads: `~/.stable_datasets/downloads/`
+- Processed Arrow cache: `~/.stable_datasets/processed/`
 
-- CIFAR10
-- CIFAR10-C
-- CIFAR100
-- CIFAR100-C
-- TinyImagenet
-- TinyImagenet-C
-- MedMnistv2.1
+## Running tests
+
+```bash
+pytest -q
+```
+
+## Datasets
+
+See the module lists under `stable_datasets/images/` and `stable_datasets/timeseries/`.
