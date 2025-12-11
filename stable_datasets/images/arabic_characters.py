@@ -3,9 +3,10 @@ from tqdm import tqdm
 from PIL import Image
 from zipfile import ZipFile
 import datasets
+from stable_datasets.utils import bulk_download, StableDatasetBuilder
 
 
-class ArabicCharacters(datasets.GeneratorBasedBuilder):
+class ArabicCharacters(StableDatasetBuilder):
     """Arabic Handwritten Characters Dataset
 
     Abstract
@@ -47,16 +48,20 @@ class ArabicCharacters(datasets.GeneratorBasedBuilder):
             "train": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Train%20Images%2013440x32x32.zip",
             "test": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Test%20Images%203360x32x32.zip"
         }
-        downloaded_files = dl_manager.download(urls)
+        split_names = list(urls.keys())          # ["train", "test"]
+        ordered_urls = [urls[s] for s in split_names]
+        local_paths = bulk_download(ordered_urls)
+
+        split_to_path = dict(zip(split_names, local_paths))
 
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
-                gen_kwargs={"archive_path": downloaded_files["train"], "split": "train"},
+                gen_kwargs={"archive_path": split_to_path["train"], "split": "train"},
             ),
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
-                gen_kwargs={"archive_path": downloaded_files["test"], "split": "test"},
+                gen_kwargs={"archive_path": split_to_path["test"], "split": "test"},
             )
         ]
 

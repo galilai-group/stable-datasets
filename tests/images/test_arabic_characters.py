@@ -1,11 +1,11 @@
-import datasets
 from PIL import Image
 import numpy as np
+from stable_datasets.images.arabic_characters import ArabicCharacters
 
 
 def test_arabic_characters_dataset():
-    # Load the ArabicCharacters dataset
-    arabic_characters = datasets.load_dataset("../../aidatasets/images/arabic_characters.py", split="train", trust_remote_code=True)
+    # ArabicCharacters(split="train") automatically downloads and loads the dataset
+    arabic_characters = ArabicCharacters(split="train")
 
     # Test 1: Check that the dataset has the expected number of samples
     expected_num_train_samples = 13440
@@ -32,7 +32,7 @@ def test_arabic_characters_dataset():
     assert 0 <= label < 28, f"Label should be between 0 and 27, got {label}."
 
     # Test 5: Check the test split
-    arabic_characters_test = datasets.load_dataset("../../aidatasets/images/arabic_characters.py", split="test", trust_remote_code=True)
+    arabic_characters_test = ArabicCharacters(split="test")
     expected_num_test_samples = 3360
     assert len(
         arabic_characters_test) == expected_num_test_samples, f"Expected {expected_num_test_samples} test samples, got {len(arabic_characters_test)}."
