@@ -18,12 +18,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=91c1d931" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=42baaae4" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=879ef6c1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=15e0fffa" />
-      <link rel="icon" href="../../../../_static/favicon.ico" />
         <link rel="search" title="Search" href="../../../../search/" />
         <link rel="index" title="Index" href="../../../../genindex/" />
 
@@ -154,8 +153,8 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.dsprites</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
 </span><span id="line-4">
 </span><span id="line-5">
@@ -226,15 +225,18 @@
 </span><span id="line-68">            <span class="n">selected_indices</span> <span class="o">=</span> <span class="n">test_indices</span>
 </span><span id="line-69">
 </span><span id="line-70">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">selected_indices</span><span class="p">:</span>
-</span><span id="line-71">            <span class="k">yield</span> <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="p">{</span>  <span class="c1"># Ensure the key is a Python native int</span>
-</span><span id="line-72">                <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">images</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
-</span><span id="line-73">                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-</span><span id="line-74">                <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-</span><span id="line-75">                <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-</span><span id="line-76">                <span class="s2">&quot;orientation&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
-</span><span id="line-77">                <span class="s2">&quot;position_x&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
-</span><span id="line-78">                <span class="s2">&quot;position_y&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
-</span><span id="line-79">            <span class="p">}</span></div>
+</span><span id="line-71">            <span class="k">yield</span> <span class="p">(</span>
+</span><span id="line-72">                <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">),</span>
+</span><span id="line-73">                <span class="p">{</span>  <span class="c1"># Ensure the key is a Python native int</span>
+</span><span id="line-74">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">images</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
+</span><span id="line-75">                    <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+</span><span id="line-76">                    <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+</span><span id="line-77">                    <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+</span><span id="line-78">                    <span class="s2">&quot;orientation&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+</span><span id="line-79">                    <span class="s2">&quot;position_x&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
+</span><span id="line-80">                    <span class="s2">&quot;position_y&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+</span><span id="line-81">                <span class="p">},</span>
+</span><span id="line-82">            <span class="p">)</span></div>
 
 </span></code></pre></div>
     </div></div>

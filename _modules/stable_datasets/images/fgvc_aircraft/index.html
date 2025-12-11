@@ -18,12 +18,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=91c1d931" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=42baaae4" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=879ef6c1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=15e0fffa" />
-      <link rel="icon" href="../../../../_static/favicon.ico" />
         <link rel="search" title="Search" href="../../../../search/" />
         <link rel="index" title="Index" href="../../../../genindex/" />
 
@@ -154,92 +153,175 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.fgvc_aircraft</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="line-4">
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-5">
+</span><span id="line-6">
 <div class="viewcode-block" id="FGVCAircraft">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft">[docs]</a>
-</span><span id="line-6"><span class="k">class</span><span class="w"> </span><span class="nc">FGVCAircraft</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-7"><span class="w">    </span><span class="sd">&quot;&quot;&quot;FGVC Aircraft Dataset.&quot;&quot;&quot;</span>
-</span><span id="line-8">
-</span><span id="line-9">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-10">
-</span><span id="line-11">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-12">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-13">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The FGVC Aircraft dataset for fine-grained visual categorization.&quot;</span><span class="p">,</span>
-</span><span id="line-14">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-15">                <span class="p">{</span>
-</span><span id="line-16">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-17">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">())</span>
-</span><span id="line-18">                <span class="p">}</span>
-</span><span id="line-19">            <span class="p">),</span>
-</span><span id="line-20">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-21">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/&quot;</span><span class="p">,</span>
-</span><span id="line-22">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@article{maji2013fgvc,</span>
-</span><span id="line-23"><span class="s2">                         title={Fine-Grained Visual Classification of Aircraft},</span>
-</span><span id="line-24"><span class="s2">                         author={Maji, Subhransu and Rahtu, Esa and Kannala, Juho and Blaschko, Matthew and Vedaldi, Andrea},</span>
-</span><span id="line-25"><span class="s2">                         journal={arXiv preprint arXiv:1306.5151},</span>
-</span><span id="line-26"><span class="s2">                         year=</span><span class="si">{2013}</span><span class="s2">}&quot;&quot;&quot;</span>
-</span><span id="line-27">        <span class="p">)</span>
-</span><span id="line-28">
-</span><span id="line-29">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-30">        <span class="n">archive_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download_and_extract</span><span class="p">(</span>
-</span><span id="line-31">            <span class="s2">&quot;https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz&quot;</span>
-</span><span id="line-32">        <span class="p">)</span>
-</span><span id="line-33">        <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;fgvc-aircraft-2013b&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">)</span>
-</span><span id="line-34">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-35">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-36">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-37">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;split_file&quot;</span><span class="p">:</span> <span class="s2">&quot;images_variant_train.txt&quot;</span><span class="p">}</span>
+</span><span id="line-7"><span class="k">class</span><span class="w"> </span><span class="nc">FGVCAircraft</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
+</span><span id="line-8"><span class="w">    </span><span class="sd">&quot;&quot;&quot;FGVC Aircraft Dataset.&quot;&quot;&quot;</span>
+</span><span id="line-9">
+</span><span id="line-10">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-11">
+</span><span id="line-12">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-13">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-14">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The FGVC Aircraft dataset for fine-grained visual categorization.&quot;</span><span class="p">,</span>
+</span><span id="line-15">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-16">                <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">())}</span>
+</span><span id="line-17">            <span class="p">),</span>
+</span><span id="line-18">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-19">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/&quot;</span><span class="p">,</span>
+</span><span id="line-20">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@article{maji2013fgvc,</span>
+</span><span id="line-21"><span class="s2">                         title={Fine-Grained Visual Classification of Aircraft},</span>
+</span><span id="line-22"><span class="s2">                         author={Maji, Subhransu and Rahtu, Esa and Kannala, Juho and Blaschko, Matthew and Vedaldi, Andrea},</span>
+</span><span id="line-23"><span class="s2">                         journal={arXiv preprint arXiv:1306.5151},</span>
+</span><span id="line-24"><span class="s2">                         year=</span><span class="si">{2013}</span><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-25">        <span class="p">)</span>
+</span><span id="line-26">
+</span><span id="line-27">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
+</span><span id="line-28">        <span class="n">archive_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download_and_extract</span><span class="p">(</span>
+</span><span id="line-29">            <span class="s2">&quot;https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz&quot;</span>
+</span><span id="line-30">        <span class="p">)</span>
+</span><span id="line-31">        <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;fgvc-aircraft-2013b&quot;</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">)</span>
+</span><span id="line-32">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-33">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-34">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span> <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;split_file&quot;</span><span class="p">:</span> <span class="s2">&quot;images_variant_train.txt&quot;</span><span class="p">}</span>
+</span><span id="line-35">            <span class="p">),</span>
+</span><span id="line-36">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-37">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;split_file&quot;</span><span class="p">:</span> <span class="s2">&quot;images_variant_test.txt&quot;</span><span class="p">}</span>
 </span><span id="line-38">            <span class="p">),</span>
 </span><span id="line-39">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-40">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-41">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;split_file&quot;</span><span class="p">:</span> <span class="s2">&quot;images_variant_test.txt&quot;</span><span class="p">}</span>
+</span><span id="line-40">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
+</span><span id="line-41">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;split_file&quot;</span><span class="p">:</span> <span class="s2">&quot;images_variant_val.txt&quot;</span><span class="p">},</span>
 </span><span id="line-42">            <span class="p">),</span>
-</span><span id="line-43">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-44">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
-</span><span id="line-45">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;split_file&quot;</span><span class="p">:</span> <span class="s2">&quot;images_variant_val.txt&quot;</span><span class="p">}</span>
-</span><span id="line-46">            <span class="p">)</span>
-</span><span id="line-47">        <span class="p">]</span>
-</span><span id="line-48">
-</span><span id="line-49">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">,</span> <span class="n">split_file</span><span class="p">):</span>
-</span><span id="line-50">        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">split_file</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span id="line-51">            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
-</span><span id="line-52">                <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-</span><span id="line-53">                <span class="n">image_id</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-54">                <span class="n">label</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span id="line-55">                <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="s1">&#39;images&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">.jpg&quot;</span><span class="p">)</span>
-</span><span id="line-56">                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">image_path</span><span class="p">):</span>
-</span><span id="line-57">                    <span class="c1"># Remove the bottom 20 pixels from the image to remove the copyright banner</span>
-</span><span id="line-58">                    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
-</span><span id="line-59">                    <span class="n">cropped_image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">crop</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">height</span> <span class="o">-</span> <span class="mi">20</span><span class="p">))</span>
-</span><span id="line-60">                    <span class="k">yield</span> <span class="n">idx</span><span class="p">,</span> <span class="p">{</span>
-</span><span id="line-61">                        <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">cropped_image</span><span class="p">,</span>
-</span><span id="line-62">                        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
-</span><span id="line-63">                    <span class="p">}</span>
-</span><span id="line-64">
-</span><span id="line-65">    <span class="nd">@staticmethod</span>
-</span><span id="line-66">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
-</span><span id="line-67">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-68">            <span class="s2">&quot;707-320&quot;</span><span class="p">,</span> <span class="s2">&quot;727-200&quot;</span><span class="p">,</span> <span class="s2">&quot;737-200&quot;</span><span class="p">,</span> <span class="s2">&quot;737-300&quot;</span><span class="p">,</span> <span class="s2">&quot;737-400&quot;</span><span class="p">,</span> <span class="s2">&quot;737-500&quot;</span><span class="p">,</span> <span class="s2">&quot;737-600&quot;</span><span class="p">,</span>
-</span><span id="line-69">            <span class="s2">&quot;737-700&quot;</span><span class="p">,</span> <span class="s2">&quot;737-800&quot;</span><span class="p">,</span> <span class="s2">&quot;737-900&quot;</span><span class="p">,</span> <span class="s2">&quot;747-100&quot;</span><span class="p">,</span> <span class="s2">&quot;747-200&quot;</span><span class="p">,</span> <span class="s2">&quot;747-300&quot;</span><span class="p">,</span> <span class="s2">&quot;747-400&quot;</span><span class="p">,</span>
-</span><span id="line-70">            <span class="s2">&quot;757-200&quot;</span><span class="p">,</span> <span class="s2">&quot;757-300&quot;</span><span class="p">,</span> <span class="s2">&quot;767-200&quot;</span><span class="p">,</span> <span class="s2">&quot;767-300&quot;</span><span class="p">,</span> <span class="s2">&quot;767-400&quot;</span><span class="p">,</span> <span class="s2">&quot;777-200&quot;</span><span class="p">,</span> <span class="s2">&quot;777-300&quot;</span><span class="p">,</span>
-</span><span id="line-71">            <span class="s2">&quot;A300B4&quot;</span><span class="p">,</span> <span class="s2">&quot;A310&quot;</span><span class="p">,</span> <span class="s2">&quot;A318&quot;</span><span class="p">,</span> <span class="s2">&quot;A319&quot;</span><span class="p">,</span> <span class="s2">&quot;A320&quot;</span><span class="p">,</span> <span class="s2">&quot;A321&quot;</span><span class="p">,</span> <span class="s2">&quot;A330-200&quot;</span><span class="p">,</span> <span class="s2">&quot;A330-300&quot;</span><span class="p">,</span>
-</span><span id="line-72">            <span class="s2">&quot;A340-200&quot;</span><span class="p">,</span> <span class="s2">&quot;A340-300&quot;</span><span class="p">,</span> <span class="s2">&quot;A340-500&quot;</span><span class="p">,</span> <span class="s2">&quot;A340-600&quot;</span><span class="p">,</span> <span class="s2">&quot;A380&quot;</span><span class="p">,</span> <span class="s2">&quot;ATR-42&quot;</span><span class="p">,</span> <span class="s2">&quot;ATR-72&quot;</span><span class="p">,</span>
-</span><span id="line-73">            <span class="s2">&quot;An-12&quot;</span><span class="p">,</span> <span class="s2">&quot;BAE 146-200&quot;</span><span class="p">,</span> <span class="s2">&quot;BAE 146-300&quot;</span><span class="p">,</span> <span class="s2">&quot;BAE-125&quot;</span><span class="p">,</span> <span class="s2">&quot;Beechcraft 1900&quot;</span><span class="p">,</span>
-</span><span id="line-74">            <span class="s2">&quot;Boeing 717&quot;</span><span class="p">,</span> <span class="s2">&quot;C-130&quot;</span><span class="p">,</span> <span class="s2">&quot;C-47&quot;</span><span class="p">,</span> <span class="s2">&quot;CRJ-200&quot;</span><span class="p">,</span> <span class="s2">&quot;CRJ-700&quot;</span><span class="p">,</span> <span class="s2">&quot;CRJ-900&quot;</span><span class="p">,</span> <span class="s2">&quot;Cessna 172&quot;</span><span class="p">,</span>
-</span><span id="line-75">            <span class="s2">&quot;Cessna 208&quot;</span><span class="p">,</span> <span class="s2">&quot;Cessna 525&quot;</span><span class="p">,</span> <span class="s2">&quot;Cessna 560&quot;</span><span class="p">,</span> <span class="s2">&quot;Challenger 600&quot;</span><span class="p">,</span> <span class="s2">&quot;DC-10&quot;</span><span class="p">,</span> <span class="s2">&quot;DC-3&quot;</span><span class="p">,</span>
-</span><span id="line-76">            <span class="s2">&quot;DC-6&quot;</span><span class="p">,</span> <span class="s2">&quot;DC-8&quot;</span><span class="p">,</span> <span class="s2">&quot;DC-9-30&quot;</span><span class="p">,</span> <span class="s2">&quot;DH-82&quot;</span><span class="p">,</span> <span class="s2">&quot;DHC-1&quot;</span><span class="p">,</span> <span class="s2">&quot;DHC-6&quot;</span><span class="p">,</span> <span class="s2">&quot;DHC-8-100&quot;</span><span class="p">,</span>
-</span><span id="line-77">            <span class="s2">&quot;DHC-8-300&quot;</span><span class="p">,</span> <span class="s2">&quot;DR-400&quot;</span><span class="p">,</span> <span class="s2">&quot;Dornier 328&quot;</span><span class="p">,</span> <span class="s2">&quot;E-170&quot;</span><span class="p">,</span> <span class="s2">&quot;E-190&quot;</span><span class="p">,</span> <span class="s2">&quot;E-195&quot;</span><span class="p">,</span> <span class="s2">&quot;EMB-120&quot;</span><span class="p">,</span>
-</span><span id="line-78">            <span class="s2">&quot;ERJ 135&quot;</span><span class="p">,</span> <span class="s2">&quot;ERJ 145&quot;</span><span class="p">,</span> <span class="s2">&quot;Embraer Legacy 600&quot;</span><span class="p">,</span> <span class="s2">&quot;Eurofighter Typhoon&quot;</span><span class="p">,</span>
-</span><span id="line-79">            <span class="s2">&quot;F-16A/B&quot;</span><span class="p">,</span> <span class="s2">&quot;F/A-18&quot;</span><span class="p">,</span> <span class="s2">&quot;Falcon 2000&quot;</span><span class="p">,</span> <span class="s2">&quot;Falcon 900&quot;</span><span class="p">,</span> <span class="s2">&quot;Fokker 100&quot;</span><span class="p">,</span> <span class="s2">&quot;Fokker 50&quot;</span><span class="p">,</span>
-</span><span id="line-80">            <span class="s2">&quot;Fokker 70&quot;</span><span class="p">,</span> <span class="s2">&quot;Global Express&quot;</span><span class="p">,</span> <span class="s2">&quot;Gulfstream IV&quot;</span><span class="p">,</span> <span class="s2">&quot;Gulfstream V&quot;</span><span class="p">,</span> <span class="s2">&quot;Hawk T1&quot;</span><span class="p">,</span>
-</span><span id="line-81">            <span class="s2">&quot;Il-76&quot;</span><span class="p">,</span> <span class="s2">&quot;L-1011&quot;</span><span class="p">,</span> <span class="s2">&quot;MD-11&quot;</span><span class="p">,</span> <span class="s2">&quot;MD-80&quot;</span><span class="p">,</span> <span class="s2">&quot;MD-87&quot;</span><span class="p">,</span> <span class="s2">&quot;MD-90&quot;</span><span class="p">,</span> <span class="s2">&quot;Metroliner&quot;</span><span class="p">,</span>
-</span><span id="line-82">            <span class="s2">&quot;Model B200&quot;</span><span class="p">,</span> <span class="s2">&quot;PA-28&quot;</span><span class="p">,</span> <span class="s2">&quot;SR-20&quot;</span><span class="p">,</span> <span class="s2">&quot;Saab 2000&quot;</span><span class="p">,</span> <span class="s2">&quot;Saab 340&quot;</span><span class="p">,</span> <span class="s2">&quot;Spitfire&quot;</span><span class="p">,</span>
-</span><span id="line-83">            <span class="s2">&quot;Tornado&quot;</span><span class="p">,</span> <span class="s2">&quot;Tu-134&quot;</span><span class="p">,</span> <span class="s2">&quot;Tu-154&quot;</span><span class="p">,</span> <span class="s2">&quot;Yak-42&quot;</span>
-</span><span id="line-84">        <span class="p">]</span></div>
+</span><span id="line-43">        <span class="p">]</span>
+</span><span id="line-44">
+</span><span id="line-45">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">,</span> <span class="n">split_file</span><span class="p">):</span>
+</span><span id="line-46">        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">split_file</span><span class="p">))</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-47">            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+</span><span id="line-48">                <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">maxsplit</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="line-49">                <span class="n">image_id</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-50">                <span class="n">label</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span id="line-51">                <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="s2">&quot;images&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">.jpg&quot;</span><span class="p">)</span>
+</span><span id="line-52">                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">image_path</span><span class="p">):</span>
+</span><span id="line-53">                    <span class="c1"># Remove the bottom 20 pixels from the image to remove the copyright banner</span>
+</span><span id="line-54">                    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+</span><span id="line-55">                    <span class="n">cropped_image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">crop</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">height</span> <span class="o">-</span> <span class="mi">20</span><span class="p">))</span>
+</span><span id="line-56">                    <span class="k">yield</span> <span class="p">(</span>
+</span><span id="line-57">                        <span class="n">idx</span><span class="p">,</span>
+</span><span id="line-58">                        <span class="p">{</span>
+</span><span id="line-59">                            <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">cropped_image</span><span class="p">,</span>
+</span><span id="line-60">                            <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
+</span><span id="line-61">                        <span class="p">},</span>
+</span><span id="line-62">                    <span class="p">)</span>
+</span><span id="line-63">
+</span><span id="line-64">    <span class="nd">@staticmethod</span>
+</span><span id="line-65">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
+</span><span id="line-66">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-67">            <span class="s2">&quot;707-320&quot;</span><span class="p">,</span>
+</span><span id="line-68">            <span class="s2">&quot;727-200&quot;</span><span class="p">,</span>
+</span><span id="line-69">            <span class="s2">&quot;737-200&quot;</span><span class="p">,</span>
+</span><span id="line-70">            <span class="s2">&quot;737-300&quot;</span><span class="p">,</span>
+</span><span id="line-71">            <span class="s2">&quot;737-400&quot;</span><span class="p">,</span>
+</span><span id="line-72">            <span class="s2">&quot;737-500&quot;</span><span class="p">,</span>
+</span><span id="line-73">            <span class="s2">&quot;737-600&quot;</span><span class="p">,</span>
+</span><span id="line-74">            <span class="s2">&quot;737-700&quot;</span><span class="p">,</span>
+</span><span id="line-75">            <span class="s2">&quot;737-800&quot;</span><span class="p">,</span>
+</span><span id="line-76">            <span class="s2">&quot;737-900&quot;</span><span class="p">,</span>
+</span><span id="line-77">            <span class="s2">&quot;747-100&quot;</span><span class="p">,</span>
+</span><span id="line-78">            <span class="s2">&quot;747-200&quot;</span><span class="p">,</span>
+</span><span id="line-79">            <span class="s2">&quot;747-300&quot;</span><span class="p">,</span>
+</span><span id="line-80">            <span class="s2">&quot;747-400&quot;</span><span class="p">,</span>
+</span><span id="line-81">            <span class="s2">&quot;757-200&quot;</span><span class="p">,</span>
+</span><span id="line-82">            <span class="s2">&quot;757-300&quot;</span><span class="p">,</span>
+</span><span id="line-83">            <span class="s2">&quot;767-200&quot;</span><span class="p">,</span>
+</span><span id="line-84">            <span class="s2">&quot;767-300&quot;</span><span class="p">,</span>
+</span><span id="line-85">            <span class="s2">&quot;767-400&quot;</span><span class="p">,</span>
+</span><span id="line-86">            <span class="s2">&quot;777-200&quot;</span><span class="p">,</span>
+</span><span id="line-87">            <span class="s2">&quot;777-300&quot;</span><span class="p">,</span>
+</span><span id="line-88">            <span class="s2">&quot;A300B4&quot;</span><span class="p">,</span>
+</span><span id="line-89">            <span class="s2">&quot;A310&quot;</span><span class="p">,</span>
+</span><span id="line-90">            <span class="s2">&quot;A318&quot;</span><span class="p">,</span>
+</span><span id="line-91">            <span class="s2">&quot;A319&quot;</span><span class="p">,</span>
+</span><span id="line-92">            <span class="s2">&quot;A320&quot;</span><span class="p">,</span>
+</span><span id="line-93">            <span class="s2">&quot;A321&quot;</span><span class="p">,</span>
+</span><span id="line-94">            <span class="s2">&quot;A330-200&quot;</span><span class="p">,</span>
+</span><span id="line-95">            <span class="s2">&quot;A330-300&quot;</span><span class="p">,</span>
+</span><span id="line-96">            <span class="s2">&quot;A340-200&quot;</span><span class="p">,</span>
+</span><span id="line-97">            <span class="s2">&quot;A340-300&quot;</span><span class="p">,</span>
+</span><span id="line-98">            <span class="s2">&quot;A340-500&quot;</span><span class="p">,</span>
+</span><span id="line-99">            <span class="s2">&quot;A340-600&quot;</span><span class="p">,</span>
+</span><span id="line-100">            <span class="s2">&quot;A380&quot;</span><span class="p">,</span>
+</span><span id="line-101">            <span class="s2">&quot;ATR-42&quot;</span><span class="p">,</span>
+</span><span id="line-102">            <span class="s2">&quot;ATR-72&quot;</span><span class="p">,</span>
+</span><span id="line-103">            <span class="s2">&quot;An-12&quot;</span><span class="p">,</span>
+</span><span id="line-104">            <span class="s2">&quot;BAE 146-200&quot;</span><span class="p">,</span>
+</span><span id="line-105">            <span class="s2">&quot;BAE 146-300&quot;</span><span class="p">,</span>
+</span><span id="line-106">            <span class="s2">&quot;BAE-125&quot;</span><span class="p">,</span>
+</span><span id="line-107">            <span class="s2">&quot;Beechcraft 1900&quot;</span><span class="p">,</span>
+</span><span id="line-108">            <span class="s2">&quot;Boeing 717&quot;</span><span class="p">,</span>
+</span><span id="line-109">            <span class="s2">&quot;C-130&quot;</span><span class="p">,</span>
+</span><span id="line-110">            <span class="s2">&quot;C-47&quot;</span><span class="p">,</span>
+</span><span id="line-111">            <span class="s2">&quot;CRJ-200&quot;</span><span class="p">,</span>
+</span><span id="line-112">            <span class="s2">&quot;CRJ-700&quot;</span><span class="p">,</span>
+</span><span id="line-113">            <span class="s2">&quot;CRJ-900&quot;</span><span class="p">,</span>
+</span><span id="line-114">            <span class="s2">&quot;Cessna 172&quot;</span><span class="p">,</span>
+</span><span id="line-115">            <span class="s2">&quot;Cessna 208&quot;</span><span class="p">,</span>
+</span><span id="line-116">            <span class="s2">&quot;Cessna 525&quot;</span><span class="p">,</span>
+</span><span id="line-117">            <span class="s2">&quot;Cessna 560&quot;</span><span class="p">,</span>
+</span><span id="line-118">            <span class="s2">&quot;Challenger 600&quot;</span><span class="p">,</span>
+</span><span id="line-119">            <span class="s2">&quot;DC-10&quot;</span><span class="p">,</span>
+</span><span id="line-120">            <span class="s2">&quot;DC-3&quot;</span><span class="p">,</span>
+</span><span id="line-121">            <span class="s2">&quot;DC-6&quot;</span><span class="p">,</span>
+</span><span id="line-122">            <span class="s2">&quot;DC-8&quot;</span><span class="p">,</span>
+</span><span id="line-123">            <span class="s2">&quot;DC-9-30&quot;</span><span class="p">,</span>
+</span><span id="line-124">            <span class="s2">&quot;DH-82&quot;</span><span class="p">,</span>
+</span><span id="line-125">            <span class="s2">&quot;DHC-1&quot;</span><span class="p">,</span>
+</span><span id="line-126">            <span class="s2">&quot;DHC-6&quot;</span><span class="p">,</span>
+</span><span id="line-127">            <span class="s2">&quot;DHC-8-100&quot;</span><span class="p">,</span>
+</span><span id="line-128">            <span class="s2">&quot;DHC-8-300&quot;</span><span class="p">,</span>
+</span><span id="line-129">            <span class="s2">&quot;DR-400&quot;</span><span class="p">,</span>
+</span><span id="line-130">            <span class="s2">&quot;Dornier 328&quot;</span><span class="p">,</span>
+</span><span id="line-131">            <span class="s2">&quot;E-170&quot;</span><span class="p">,</span>
+</span><span id="line-132">            <span class="s2">&quot;E-190&quot;</span><span class="p">,</span>
+</span><span id="line-133">            <span class="s2">&quot;E-195&quot;</span><span class="p">,</span>
+</span><span id="line-134">            <span class="s2">&quot;EMB-120&quot;</span><span class="p">,</span>
+</span><span id="line-135">            <span class="s2">&quot;ERJ 135&quot;</span><span class="p">,</span>
+</span><span id="line-136">            <span class="s2">&quot;ERJ 145&quot;</span><span class="p">,</span>
+</span><span id="line-137">            <span class="s2">&quot;Embraer Legacy 600&quot;</span><span class="p">,</span>
+</span><span id="line-138">            <span class="s2">&quot;Eurofighter Typhoon&quot;</span><span class="p">,</span>
+</span><span id="line-139">            <span class="s2">&quot;F-16A/B&quot;</span><span class="p">,</span>
+</span><span id="line-140">            <span class="s2">&quot;F/A-18&quot;</span><span class="p">,</span>
+</span><span id="line-141">            <span class="s2">&quot;Falcon 2000&quot;</span><span class="p">,</span>
+</span><span id="line-142">            <span class="s2">&quot;Falcon 900&quot;</span><span class="p">,</span>
+</span><span id="line-143">            <span class="s2">&quot;Fokker 100&quot;</span><span class="p">,</span>
+</span><span id="line-144">            <span class="s2">&quot;Fokker 50&quot;</span><span class="p">,</span>
+</span><span id="line-145">            <span class="s2">&quot;Fokker 70&quot;</span><span class="p">,</span>
+</span><span id="line-146">            <span class="s2">&quot;Global Express&quot;</span><span class="p">,</span>
+</span><span id="line-147">            <span class="s2">&quot;Gulfstream IV&quot;</span><span class="p">,</span>
+</span><span id="line-148">            <span class="s2">&quot;Gulfstream V&quot;</span><span class="p">,</span>
+</span><span id="line-149">            <span class="s2">&quot;Hawk T1&quot;</span><span class="p">,</span>
+</span><span id="line-150">            <span class="s2">&quot;Il-76&quot;</span><span class="p">,</span>
+</span><span id="line-151">            <span class="s2">&quot;L-1011&quot;</span><span class="p">,</span>
+</span><span id="line-152">            <span class="s2">&quot;MD-11&quot;</span><span class="p">,</span>
+</span><span id="line-153">            <span class="s2">&quot;MD-80&quot;</span><span class="p">,</span>
+</span><span id="line-154">            <span class="s2">&quot;MD-87&quot;</span><span class="p">,</span>
+</span><span id="line-155">            <span class="s2">&quot;MD-90&quot;</span><span class="p">,</span>
+</span><span id="line-156">            <span class="s2">&quot;Metroliner&quot;</span><span class="p">,</span>
+</span><span id="line-157">            <span class="s2">&quot;Model B200&quot;</span><span class="p">,</span>
+</span><span id="line-158">            <span class="s2">&quot;PA-28&quot;</span><span class="p">,</span>
+</span><span id="line-159">            <span class="s2">&quot;SR-20&quot;</span><span class="p">,</span>
+</span><span id="line-160">            <span class="s2">&quot;Saab 2000&quot;</span><span class="p">,</span>
+</span><span id="line-161">            <span class="s2">&quot;Saab 340&quot;</span><span class="p">,</span>
+</span><span id="line-162">            <span class="s2">&quot;Spitfire&quot;</span><span class="p">,</span>
+</span><span id="line-163">            <span class="s2">&quot;Tornado&quot;</span><span class="p">,</span>
+</span><span id="line-164">            <span class="s2">&quot;Tu-134&quot;</span><span class="p">,</span>
+</span><span id="line-165">            <span class="s2">&quot;Tu-154&quot;</span><span class="p">,</span>
+</span><span id="line-166">            <span class="s2">&quot;Yak-42&quot;</span><span class="p">,</span>
+</span><span id="line-167">        <span class="p">]</span></div>
 
 </span></code></pre></div>
     </div></div>

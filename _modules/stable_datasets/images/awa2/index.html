@@ -18,12 +18,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=91c1d931" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=42baaae4" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=879ef6c1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=15e0fffa" />
-      <link rel="icon" href="../../../../_static/favicon.ico" />
         <link rel="search" title="Search" href="../../../../search/" />
         <link rel="index" title="Index" href="../../../../genindex/" />
 
@@ -154,86 +153,124 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.awa2</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="line-5">
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-6">
+</span><span id="line-7">
 <div class="viewcode-block" id="AWA2">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.awa2.AWA2">[docs]</a>
-</span><span id="line-7"><span class="k">class</span><span class="w"> </span><span class="nc">AWA2</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-8"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="line-9"><span class="sd">    The Animals with Attributes 2 (AwA2) dataset provides images across 50 animal classes, useful for attribute-based classification</span>
-</span><span id="line-10"><span class="sd">    and zero-shot learning research. See https://cvml.ista.ac.at/AwA2/ for more information.</span>
-</span><span id="line-11"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="line-12">
-</span><span id="line-13">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-14">
-</span><span id="line-15">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-16">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-17">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The AWA2 dataset is an image classification dataset with images of 50 classes, primarily used in attribute-based image recognition research. See https://cvml.ista.ac.at/AwA2/ for more information.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-18">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-19">                <span class="p">{</span>
-</span><span id="line-20">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-21">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;antelope&#39;</span><span class="p">,</span> <span class="s1">&#39;grizzly+bear&#39;</span><span class="p">,</span> <span class="s1">&#39;killer+whale&#39;</span><span class="p">,</span> <span class="s1">&#39;beaver&#39;</span><span class="p">,</span>
-</span><span id="line-22">                                                        <span class="s1">&#39;dalmatian&#39;</span><span class="p">,</span> <span class="s1">&#39;persian+cat&#39;</span><span class="p">,</span> <span class="s1">&#39;horse&#39;</span><span class="p">,</span> <span class="s1">&#39;german+shepherd&#39;</span><span class="p">,</span>
-</span><span id="line-23">                                                        <span class="s1">&#39;blue+whale&#39;</span><span class="p">,</span> <span class="s1">&#39;siamese+cat&#39;</span><span class="p">,</span> <span class="s1">&#39;skunk&#39;</span><span class="p">,</span> <span class="s1">&#39;mole&#39;</span><span class="p">,</span> <span class="s1">&#39;tiger&#39;</span><span class="p">,</span>
-</span><span id="line-24">                                                        <span class="s1">&#39;hippopotamus&#39;</span><span class="p">,</span> <span class="s1">&#39;leopard&#39;</span><span class="p">,</span> <span class="s1">&#39;moose&#39;</span><span class="p">,</span> <span class="s1">&#39;spider+monkey&#39;</span><span class="p">,</span>
-</span><span id="line-25">                                                        <span class="s1">&#39;humpback+whale&#39;</span><span class="p">,</span> <span class="s1">&#39;elephant&#39;</span><span class="p">,</span> <span class="s1">&#39;gorilla&#39;</span><span class="p">,</span> <span class="s1">&#39;ox&#39;</span><span class="p">,</span> <span class="s1">&#39;fox&#39;</span><span class="p">,</span> <span class="s1">&#39;sheep&#39;</span><span class="p">,</span>
-</span><span id="line-26">                                                        <span class="s1">&#39;seal&#39;</span><span class="p">,</span> <span class="s1">&#39;chimpanzee&#39;</span><span class="p">,</span> <span class="s1">&#39;hamster&#39;</span><span class="p">,</span> <span class="s1">&#39;squirrel&#39;</span><span class="p">,</span> <span class="s1">&#39;rhinoceros&#39;</span><span class="p">,</span>
-</span><span id="line-27">                                                        <span class="s1">&#39;rabbit&#39;</span><span class="p">,</span> <span class="s1">&#39;bat&#39;</span><span class="p">,</span> <span class="s1">&#39;giraffe&#39;</span><span class="p">,</span> <span class="s1">&#39;wolf&#39;</span><span class="p">,</span> <span class="s1">&#39;chihuahua&#39;</span><span class="p">,</span> <span class="s1">&#39;rat&#39;</span><span class="p">,</span>
-</span><span id="line-28">                                                        <span class="s1">&#39;weasel&#39;</span><span class="p">,</span> <span class="s1">&#39;otter&#39;</span><span class="p">,</span> <span class="s1">&#39;buffalo&#39;</span><span class="p">,</span> <span class="s1">&#39;zebra&#39;</span><span class="p">,</span> <span class="s1">&#39;giant+panda&#39;</span><span class="p">,</span> <span class="s1">&#39;deer&#39;</span><span class="p">,</span>
-</span><span id="line-29">                                                        <span class="s1">&#39;bobcat&#39;</span><span class="p">,</span> <span class="s1">&#39;pig&#39;</span><span class="p">,</span> <span class="s1">&#39;lion&#39;</span><span class="p">,</span> <span class="s1">&#39;mouse&#39;</span><span class="p">,</span> <span class="s1">&#39;polar+bear&#39;</span><span class="p">,</span> <span class="s1">&#39;collie&#39;</span><span class="p">,</span>
-</span><span id="line-30">                                                        <span class="s1">&#39;walrus&#39;</span><span class="p">,</span> <span class="s1">&#39;raccoon&#39;</span><span class="p">,</span> <span class="s1">&#39;cow&#39;</span><span class="p">,</span> <span class="s1">&#39;dolphin&#39;</span><span class="p">]),</span>
-</span><span id="line-31">                <span class="p">}</span>
-</span><span id="line-32">            <span class="p">),</span>
-</span><span id="line-33">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-34">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://cvml.ista.ac.at/AwA2/&quot;</span><span class="p">,</span>
-</span><span id="line-35">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@ARTICLE{8413121,</span>
-</span><span id="line-36"><span class="s2">                         author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},</span>
-</span><span id="line-37"><span class="s2">                         journal={IEEE Transactions on Pattern Analysis and Machine Intelligence}, </span>
-</span><span id="line-38"><span class="s2">                         title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly}, </span>
-</span><span id="line-39"><span class="s2">                         year=</span><span class="si">{2019}</span><span class="s2">,</span>
-</span><span id="line-40"><span class="s2">                         volume=</span><span class="si">{41}</span><span class="s2">,</span>
-</span><span id="line-41"><span class="s2">                         number=</span><span class="si">{9}</span><span class="s2">,</span>
-</span><span id="line-42"><span class="s2">                         pages={2251-2265},</span>
-</span><span id="line-43"><span class="s2">                         keywords={Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning},</span>
-</span><span id="line-44"><span class="s2">                         doi={10.1109/TPAMI.2018.2857768}}&quot;&quot;&quot;</span>
-</span><span id="line-45">        <span class="p">)</span>
-</span><span id="line-46">
-</span><span id="line-47">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-48">        <span class="c1"># Download the dataset</span>
-</span><span id="line-49">        <span class="n">archive_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">({</span>
-</span><span id="line-50">            <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="s2">&quot;https://cvml.ista.ac.at/AwA2/AwA2-data.zip&quot;</span>
-</span><span id="line-51">        <span class="p">})</span>
-</span><span id="line-52">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-53">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-54">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-55">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_paths&quot;</span><span class="p">:</span> <span class="n">archive_path</span><span class="p">}</span>
-</span><span id="line-56">            <span class="p">)</span>
-</span><span id="line-57">        <span class="p">]</span>
-</span><span id="line-58">
-</span><span id="line-59">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_path</span><span class="p">):</span>
-</span><span id="line-60">        <span class="c1"># Open the zip file</span>
-</span><span id="line-61">        <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">z</span><span class="p">:</span>
-</span><span id="line-62">            <span class="c1"># Use the class names from DatasetInfo for consistent label order</span>
-</span><span id="line-63">            <span class="n">class_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">()</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
-</span><span id="line-64">
-</span><span id="line-65">            <span class="c1"># Create a mapping from class name to label index based on DatasetInfo order</span>
-</span><span id="line-66">            <span class="n">label_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_names</span><span class="p">)}</span>
-</span><span id="line-67">
-</span><span id="line-68">            <span class="n">root_dir</span> <span class="o">=</span> <span class="s2">&quot;Animals_with_Attributes2/JPEGImages/&quot;</span>
-</span><span id="line-69">            <span class="k">for</span> <span class="n">class_name</span> <span class="ow">in</span> <span class="n">class_names</span><span class="p">:</span>
-</span><span id="line-70">                <span class="n">class_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_dir</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
-</span><span id="line-71">
-</span><span id="line-72">                <span class="c1"># Iterate through each image in the class folder</span>
-</span><span id="line-73">                <span class="k">for</span> <span class="n">image_path</span> <span class="ow">in</span> <span class="n">z</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
-</span><span id="line-74">                    <span class="k">if</span> <span class="n">image_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">class_dir</span><span class="p">)</span> <span class="ow">and</span> <span class="n">image_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jpg&quot;</span><span class="p">):</span>
-</span><span id="line-75">                        <span class="k">with</span> <span class="n">z</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">image_file</span><span class="p">:</span>
-</span><span id="line-76">                            <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
-</span><span id="line-77">                            <span class="n">label</span> <span class="o">=</span> <span class="n">label_mapping</span><span class="p">[</span><span class="n">class_name</span><span class="p">]</span>
-</span><span id="line-78">                            <span class="k">yield</span> <span class="n">image_path</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span></div>
+</span><span id="line-8"><span class="k">class</span><span class="w"> </span><span class="nc">AWA2</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
+</span><span id="line-9"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="line-10"><span class="sd">    The Animals with Attributes 2 (AwA2) dataset provides images across 50 animal classes, useful for attribute-based classification</span>
+</span><span id="line-11"><span class="sd">    and zero-shot learning research. See https://cvml.ista.ac.at/AwA2/ for more information.</span>
+</span><span id="line-12"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-13">
+</span><span id="line-14">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-15">
+</span><span id="line-16">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-17">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-18">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The AWA2 dataset is an image classification dataset with images of 50 classes, primarily used in attribute-based image recognition research. See https://cvml.ista.ac.at/AwA2/ for more information.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-19">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-20">                <span class="p">{</span>
+</span><span id="line-21">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-22">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span>
+</span><span id="line-23">                        <span class="n">names</span><span class="o">=</span><span class="p">[</span>
+</span><span id="line-24">                            <span class="s2">&quot;antelope&quot;</span><span class="p">,</span>
+</span><span id="line-25">                            <span class="s2">&quot;grizzly+bear&quot;</span><span class="p">,</span>
+</span><span id="line-26">                            <span class="s2">&quot;killer+whale&quot;</span><span class="p">,</span>
+</span><span id="line-27">                            <span class="s2">&quot;beaver&quot;</span><span class="p">,</span>
+</span><span id="line-28">                            <span class="s2">&quot;dalmatian&quot;</span><span class="p">,</span>
+</span><span id="line-29">                            <span class="s2">&quot;persian+cat&quot;</span><span class="p">,</span>
+</span><span id="line-30">                            <span class="s2">&quot;horse&quot;</span><span class="p">,</span>
+</span><span id="line-31">                            <span class="s2">&quot;german+shepherd&quot;</span><span class="p">,</span>
+</span><span id="line-32">                            <span class="s2">&quot;blue+whale&quot;</span><span class="p">,</span>
+</span><span id="line-33">                            <span class="s2">&quot;siamese+cat&quot;</span><span class="p">,</span>
+</span><span id="line-34">                            <span class="s2">&quot;skunk&quot;</span><span class="p">,</span>
+</span><span id="line-35">                            <span class="s2">&quot;mole&quot;</span><span class="p">,</span>
+</span><span id="line-36">                            <span class="s2">&quot;tiger&quot;</span><span class="p">,</span>
+</span><span id="line-37">                            <span class="s2">&quot;hippopotamus&quot;</span><span class="p">,</span>
+</span><span id="line-38">                            <span class="s2">&quot;leopard&quot;</span><span class="p">,</span>
+</span><span id="line-39">                            <span class="s2">&quot;moose&quot;</span><span class="p">,</span>
+</span><span id="line-40">                            <span class="s2">&quot;spider+monkey&quot;</span><span class="p">,</span>
+</span><span id="line-41">                            <span class="s2">&quot;humpback+whale&quot;</span><span class="p">,</span>
+</span><span id="line-42">                            <span class="s2">&quot;elephant&quot;</span><span class="p">,</span>
+</span><span id="line-43">                            <span class="s2">&quot;gorilla&quot;</span><span class="p">,</span>
+</span><span id="line-44">                            <span class="s2">&quot;ox&quot;</span><span class="p">,</span>
+</span><span id="line-45">                            <span class="s2">&quot;fox&quot;</span><span class="p">,</span>
+</span><span id="line-46">                            <span class="s2">&quot;sheep&quot;</span><span class="p">,</span>
+</span><span id="line-47">                            <span class="s2">&quot;seal&quot;</span><span class="p">,</span>
+</span><span id="line-48">                            <span class="s2">&quot;chimpanzee&quot;</span><span class="p">,</span>
+</span><span id="line-49">                            <span class="s2">&quot;hamster&quot;</span><span class="p">,</span>
+</span><span id="line-50">                            <span class="s2">&quot;squirrel&quot;</span><span class="p">,</span>
+</span><span id="line-51">                            <span class="s2">&quot;rhinoceros&quot;</span><span class="p">,</span>
+</span><span id="line-52">                            <span class="s2">&quot;rabbit&quot;</span><span class="p">,</span>
+</span><span id="line-53">                            <span class="s2">&quot;bat&quot;</span><span class="p">,</span>
+</span><span id="line-54">                            <span class="s2">&quot;giraffe&quot;</span><span class="p">,</span>
+</span><span id="line-55">                            <span class="s2">&quot;wolf&quot;</span><span class="p">,</span>
+</span><span id="line-56">                            <span class="s2">&quot;chihuahua&quot;</span><span class="p">,</span>
+</span><span id="line-57">                            <span class="s2">&quot;rat&quot;</span><span class="p">,</span>
+</span><span id="line-58">                            <span class="s2">&quot;weasel&quot;</span><span class="p">,</span>
+</span><span id="line-59">                            <span class="s2">&quot;otter&quot;</span><span class="p">,</span>
+</span><span id="line-60">                            <span class="s2">&quot;buffalo&quot;</span><span class="p">,</span>
+</span><span id="line-61">                            <span class="s2">&quot;zebra&quot;</span><span class="p">,</span>
+</span><span id="line-62">                            <span class="s2">&quot;giant+panda&quot;</span><span class="p">,</span>
+</span><span id="line-63">                            <span class="s2">&quot;deer&quot;</span><span class="p">,</span>
+</span><span id="line-64">                            <span class="s2">&quot;bobcat&quot;</span><span class="p">,</span>
+</span><span id="line-65">                            <span class="s2">&quot;pig&quot;</span><span class="p">,</span>
+</span><span id="line-66">                            <span class="s2">&quot;lion&quot;</span><span class="p">,</span>
+</span><span id="line-67">                            <span class="s2">&quot;mouse&quot;</span><span class="p">,</span>
+</span><span id="line-68">                            <span class="s2">&quot;polar+bear&quot;</span><span class="p">,</span>
+</span><span id="line-69">                            <span class="s2">&quot;collie&quot;</span><span class="p">,</span>
+</span><span id="line-70">                            <span class="s2">&quot;walrus&quot;</span><span class="p">,</span>
+</span><span id="line-71">                            <span class="s2">&quot;raccoon&quot;</span><span class="p">,</span>
+</span><span id="line-72">                            <span class="s2">&quot;cow&quot;</span><span class="p">,</span>
+</span><span id="line-73">                            <span class="s2">&quot;dolphin&quot;</span><span class="p">,</span>
+</span><span id="line-74">                        <span class="p">]</span>
+</span><span id="line-75">                    <span class="p">),</span>
+</span><span id="line-76">                <span class="p">}</span>
+</span><span id="line-77">            <span class="p">),</span>
+</span><span id="line-78">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-79">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://cvml.ista.ac.at/AwA2/&quot;</span><span class="p">,</span>
+</span><span id="line-80">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@ARTICLE{8413121,</span>
+</span><span id="line-81"><span class="s2">                         author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},</span>
+</span><span id="line-82"><span class="s2">                         journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},</span>
+</span><span id="line-83"><span class="s2">                         title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly},</span>
+</span><span id="line-84"><span class="s2">                         year=</span><span class="si">{2019}</span><span class="s2">,</span>
+</span><span id="line-85"><span class="s2">                         volume=</span><span class="si">{41}</span><span class="s2">,</span>
+</span><span id="line-86"><span class="s2">                         number=</span><span class="si">{9}</span><span class="s2">,</span>
+</span><span id="line-87"><span class="s2">                         pages={2251-2265},</span>
+</span><span id="line-88"><span class="s2">                         keywords={Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning},</span>
+</span><span id="line-89"><span class="s2">                         doi={10.1109/TPAMI.2018.2857768}}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-90">        <span class="p">)</span>
+</span><span id="line-91">
+</span><span id="line-92">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
+</span><span id="line-93">        <span class="c1"># Download the dataset</span>
+</span><span id="line-94">        <span class="n">archive_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">({</span><span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="s2">&quot;https://cvml.ista.ac.at/AwA2/AwA2-data.zip&quot;</span><span class="p">})</span>
+</span><span id="line-95">        <span class="k">return</span> <span class="p">[</span><span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_paths&quot;</span><span class="p">:</span> <span class="n">archive_path</span><span class="p">})]</span>
+</span><span id="line-96">
+</span><span id="line-97">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_path</span><span class="p">):</span>
+</span><span id="line-98">        <span class="c1"># Open the zip file</span>
+</span><span id="line-99">        <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">z</span><span class="p">:</span>
+</span><span id="line-100">            <span class="c1"># Use the class names from DatasetInfo for consistent label order</span>
+</span><span id="line-101">            <span class="n">class_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">()</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
+</span><span id="line-102">
+</span><span id="line-103">            <span class="c1"># Create a mapping from class name to label index based on DatasetInfo order</span>
+</span><span id="line-104">            <span class="n">label_mapping</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">class_names</span><span class="p">)}</span>
+</span><span id="line-105">
+</span><span id="line-106">            <span class="n">root_dir</span> <span class="o">=</span> <span class="s2">&quot;Animals_with_Attributes2/JPEGImages/&quot;</span>
+</span><span id="line-107">            <span class="k">for</span> <span class="n">class_name</span> <span class="ow">in</span> <span class="n">class_names</span><span class="p">:</span>
+</span><span id="line-108">                <span class="n">class_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_dir</span><span class="p">,</span> <span class="n">class_name</span><span class="p">)</span>
+</span><span id="line-109">
+</span><span id="line-110">                <span class="c1"># Iterate through each image in the class folder</span>
+</span><span id="line-111">                <span class="k">for</span> <span class="n">image_path</span> <span class="ow">in</span> <span class="n">z</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
+</span><span id="line-112">                    <span class="k">if</span> <span class="n">image_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">class_dir</span><span class="p">)</span> <span class="ow">and</span> <span class="n">image_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jpg&quot;</span><span class="p">):</span>
+</span><span id="line-113">                        <span class="k">with</span> <span class="n">z</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">image_file</span><span class="p">:</span>
+</span><span id="line-114">                            <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+</span><span id="line-115">                            <span class="n">label</span> <span class="o">=</span> <span class="n">label_mapping</span><span class="p">[</span><span class="n">class_name</span><span class="p">]</span>
+</span><span id="line-116">                            <span class="k">yield</span> <span class="n">image_path</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span></div>
 
 </span></code></pre></div>
     </div></div>

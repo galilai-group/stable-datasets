@@ -18,12 +18,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=91c1d931" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=42baaae4" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=879ef6c1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=15e0fffa" />
-      <link rel="icon" href="../../../../_static/favicon.ico" />
         <link rel="search" title="Search" href="../../../../search/" />
         <link rel="index" title="Index" href="../../../../genindex/" />
 
@@ -154,184 +153,482 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.places365_small</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
-</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-5">
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-6">
+</span><span id="line-7">
 <div class="viewcode-block" id="Places365Small">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.places365_small.Places365Small">[docs]</a>
-</span><span id="line-7"><span class="k">class</span><span class="w"> </span><span class="nc">Places365Small</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-8"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="line-9"><span class="sd">    The Places365-Standard dataset (small version) for image classification.</span>
-</span><span id="line-10"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="line-11">
-</span><span id="line-12">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-13">
-</span><span id="line-14">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-15">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-16">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
-</span><span id="line-17"><span class="s2">            Places365-Standard is a large-scale dataset for scene recognition, containing 1.8 million training images </span>
-</span><span id="line-18"><span class="s2">            and 36,500 validation images over 365 scene categories.</span>
-</span><span id="line-19"><span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-20">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-21">                <span class="p">{</span>
-</span><span id="line-22">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-23">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()),</span>
-</span><span id="line-24">                <span class="p">}</span>
-</span><span id="line-25">            <span class="p">),</span>
-</span><span id="line-26">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-27">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;http://places2.csail.mit.edu/&quot;</span><span class="p">,</span>
-</span><span id="line-28">            <span class="n">license</span><span class="o">=</span><span class="s2">&quot;MIT License&quot;</span><span class="p">,</span>
-</span><span id="line-29">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@article{zhou2017places,</span>
-</span><span id="line-30"><span class="s2">                         title={Places: A 10 million Image Database for Scene Recognition},</span>
-</span><span id="line-31"><span class="s2">                         author={Zhou, Bolei and Lapedriza, Agata and Khosla, Aditya and Oliva, Aude and Torralba, Antonio},</span>
-</span><span id="line-32"><span class="s2">                         year=</span><span class="si">{2017}</span><span class="s2">}</span>
-</span><span id="line-33"><span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-34">        <span class="p">)</span>
-</span><span id="line-35">
-</span><span id="line-36">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-37">        <span class="n">train_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;http://data.csail.mit.edu/places/places365/train_256_places365standard.tar&quot;</span><span class="p">)</span>
-</span><span id="line-38">        <span class="n">val_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;http://data.csail.mit.edu/places/places365/val_256.tar&quot;</span><span class="p">)</span>
-</span><span id="line-39">        <span class="n">devkit_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;http://data.csail.mit.edu/places/places365/filelist_places365-standard.tar&quot;</span><span class="p">)</span>
-</span><span id="line-40">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-41">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-42">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-43">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">train_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">},</span>
-</span><span id="line-44">            <span class="p">),</span>
-</span><span id="line-45">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-46">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
-</span><span id="line-47">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">val_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;devkit_path&quot;</span><span class="p">:</span> <span class="n">devkit_path</span><span class="p">},</span>
-</span><span id="line-48">            <span class="p">),</span>
-</span><span id="line-49">        <span class="p">]</span>
-</span><span id="line-50">
-</span><span id="line-51">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_path</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="n">devkit_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="line-52">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
-</span><span id="line-53">            <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span><span class="p">:</span>
-</span><span id="line-54">                <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">tar</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
-</span><span id="line-55">                    <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">isfile</span><span class="p">():</span>
-</span><span id="line-56">                        <span class="c1"># Extract image as file-like object</span>
-</span><span id="line-57">                        <span class="n">file_like</span> <span class="o">=</span> <span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
-</span><span id="line-58">                        <span class="k">if</span> <span class="n">file_like</span><span class="p">:</span>
-</span><span id="line-59">                            <span class="c1"># Convert to PIL.Image</span>
-</span><span id="line-60">                            <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">file_like</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span>
-</span><span id="line-61">                            <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_train_class</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-</span><span id="line-62">                            <span class="k">yield</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
-</span><span id="line-63">
-</span><span id="line-64">            <span class="k">elif</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span>
-</span><span id="line-65">                <span class="n">folder</span> <span class="o">=</span> <span class="s2">&quot;val_256/&quot;</span>
-</span><span id="line-66">
-</span><span id="line-67">                <span class="c1"># Extract places365_val.txt from devkit</span>
-</span><span id="line-68">                <span class="n">label_mapping</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="line-69">                <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">devkit_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">devkit_tar</span><span class="p">:</span>
-</span><span id="line-70">                    <span class="n">val_label_file</span> <span class="o">=</span> <span class="n">devkit_tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="s2">&quot;places365_val.txt&quot;</span><span class="p">)</span>
-</span><span id="line-71">                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">val_label_file</span><span class="p">:</span>
-</span><span id="line-72">                        <span class="n">filename</span><span class="p">,</span> <span class="n">class_idx</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
-</span><span id="line-73">                        <span class="n">label_mapping</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">class_idx</span><span class="p">)</span>
-</span><span id="line-74">
-</span><span id="line-75">                <span class="c1"># Process validation images</span>
-</span><span id="line-76">                <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">tar</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
-</span><span id="line-77">                    <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">isfile</span><span class="p">():</span>
-</span><span id="line-78">                        <span class="n">filename</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">folder</span><span class="p">):]</span>  <span class="c1"># Remove &quot;val_256/&quot; prefix</span>
-</span><span id="line-79">                        <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">label_mapping</span><span class="p">:</span>
-</span><span id="line-80">                            <span class="c1"># Extract image as file-like object</span>
-</span><span id="line-81">                            <span class="n">file_like</span> <span class="o">=</span> <span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
-</span><span id="line-82">                            <span class="k">if</span> <span class="n">file_like</span><span class="p">:</span>
-</span><span id="line-83">                                <span class="c1"># Convert to PIL.Image</span>
-</span><span id="line-84">                                <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">file_like</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span>
-</span><span id="line-85">                                <span class="n">class_idx</span> <span class="o">=</span> <span class="n">label_mapping</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span>
-</span><span id="line-86">                                <span class="n">label_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()[</span><span class="n">class_idx</span><span class="p">]</span>  <span class="c1"># Map class index to label name</span>
-</span><span id="line-87">                                <span class="k">yield</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label_name</span><span class="p">}</span>
-</span><span id="line-88">
+</span><span id="line-8"><span class="k">class</span><span class="w"> </span><span class="nc">Places365Small</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
+</span><span id="line-9"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="line-10"><span class="sd">    The Places365-Standard dataset (small version) for image classification.</span>
+</span><span id="line-11"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-12">
+</span><span id="line-13">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-14">
+</span><span id="line-15">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-16">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-17">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="line-18"><span class="s2">            Places365-Standard is a large-scale dataset for scene recognition, containing 1.8 million training images</span>
+</span><span id="line-19"><span class="s2">            and 36,500 validation images over 365 scene categories.</span>
+</span><span id="line-20"><span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-21">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-22">                <span class="p">{</span>
+</span><span id="line-23">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-24">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()),</span>
+</span><span id="line-25">                <span class="p">}</span>
+</span><span id="line-26">            <span class="p">),</span>
+</span><span id="line-27">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-28">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;http://places2.csail.mit.edu/&quot;</span><span class="p">,</span>
+</span><span id="line-29">            <span class="n">license</span><span class="o">=</span><span class="s2">&quot;MIT License&quot;</span><span class="p">,</span>
+</span><span id="line-30">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@article{zhou2017places,</span>
+</span><span id="line-31"><span class="s2">                         title={Places: A 10 million Image Database for Scene Recognition},</span>
+</span><span id="line-32"><span class="s2">                         author={Zhou, Bolei and Lapedriza, Agata and Khosla, Aditya and Oliva, Aude and Torralba, Antonio},</span>
+</span><span id="line-33"><span class="s2">                         year=</span><span class="si">{2017}</span><span class="s2">}</span>
+</span><span id="line-34"><span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-35">        <span class="p">)</span>
+</span><span id="line-36">
+</span><span id="line-37">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
+</span><span id="line-38">        <span class="n">train_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;http://data.csail.mit.edu/places/places365/train_256_places365standard.tar&quot;</span><span class="p">)</span>
+</span><span id="line-39">        <span class="n">val_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;http://data.csail.mit.edu/places/places365/val_256.tar&quot;</span><span class="p">)</span>
+</span><span id="line-40">        <span class="n">devkit_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;http://data.csail.mit.edu/places/places365/filelist_places365-standard.tar&quot;</span><span class="p">)</span>
+</span><span id="line-41">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-42">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-43">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
+</span><span id="line-44">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">train_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">},</span>
+</span><span id="line-45">            <span class="p">),</span>
+</span><span id="line-46">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-47">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
+</span><span id="line-48">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">val_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;devkit_path&quot;</span><span class="p">:</span> <span class="n">devkit_path</span><span class="p">},</span>
+</span><span id="line-49">            <span class="p">),</span>
+</span><span id="line-50">        <span class="p">]</span>
+</span><span id="line-51">
+</span><span id="line-52">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_path</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="n">devkit_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="line-53">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+</span><span id="line-54">            <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span><span class="p">:</span>
+</span><span id="line-55">                <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">tar</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
+</span><span id="line-56">                    <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">isfile</span><span class="p">():</span>
+</span><span id="line-57">                        <span class="c1"># Extract image as file-like object</span>
+</span><span id="line-58">                        <span class="n">file_like</span> <span class="o">=</span> <span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+</span><span id="line-59">                        <span class="k">if</span> <span class="n">file_like</span><span class="p">:</span>
+</span><span id="line-60">                            <span class="c1"># Convert to PIL.Image</span>
+</span><span id="line-61">                            <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">file_like</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span>
+</span><span id="line-62">                            <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_train_class</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</span><span id="line-63">                            <span class="k">yield</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
+</span><span id="line-64">
+</span><span id="line-65">            <span class="k">elif</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span>
+</span><span id="line-66">                <span class="n">folder</span> <span class="o">=</span> <span class="s2">&quot;val_256/&quot;</span>
+</span><span id="line-67">
+</span><span id="line-68">                <span class="c1"># Extract places365_val.txt from devkit</span>
+</span><span id="line-69">                <span class="n">label_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="line-70">                <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">devkit_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">devkit_tar</span><span class="p">:</span>
+</span><span id="line-71">                    <span class="n">val_label_file</span> <span class="o">=</span> <span class="n">devkit_tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="s2">&quot;places365_val.txt&quot;</span><span class="p">)</span>
+</span><span id="line-72">                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">val_label_file</span><span class="p">:</span>
+</span><span id="line-73">                        <span class="n">filename</span><span class="p">,</span> <span class="n">class_idx</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+</span><span id="line-74">                        <span class="n">label_mapping</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">class_idx</span><span class="p">)</span>
+</span><span id="line-75">
+</span><span id="line-76">                <span class="c1"># Process validation images</span>
+</span><span id="line-77">                <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">tar</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
+</span><span id="line-78">                    <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">isfile</span><span class="p">():</span>
+</span><span id="line-79">                        <span class="n">filename</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span> <span class="p">:]</span>  <span class="c1"># Remove &quot;val_256/&quot; prefix</span>
+</span><span id="line-80">                        <span class="k">if</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">label_mapping</span><span class="p">:</span>
+</span><span id="line-81">                            <span class="c1"># Extract image as file-like object</span>
+</span><span id="line-82">                            <span class="n">file_like</span> <span class="o">=</span> <span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+</span><span id="line-83">                            <span class="k">if</span> <span class="n">file_like</span><span class="p">:</span>
+</span><span id="line-84">                                <span class="c1"># Convert to PIL.Image</span>
+</span><span id="line-85">                                <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">file_like</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span>
+</span><span id="line-86">                                <span class="n">class_idx</span> <span class="o">=</span> <span class="n">label_mapping</span><span class="p">[</span><span class="n">filename</span><span class="p">]</span>
+</span><span id="line-87">                                <span class="n">label_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()[</span><span class="n">class_idx</span><span class="p">]</span>  <span class="c1"># Map class index to label name</span>
+</span><span id="line-88">                                <span class="k">yield</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label_name</span><span class="p">}</span>
+</span><span id="line-89">
 <div class="viewcode-block" id="Places365Small.extract_train_class">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.places365_small.Places365Small.extract_train_class">[docs]</a>
-</span><span id="line-89">    <span class="nd">@staticmethod</span>
-</span><span id="line-90">    <span class="k">def</span><span class="w"> </span><span class="nf">extract_train_class</span><span class="p">(</span><span class="n">input_string</span><span class="p">):</span>
-</span><span id="line-91">        <span class="c1"># Find the first &#39;/&#39; and trim everything before it</span>
-</span><span id="line-92">        <span class="n">first_slash_index</span> <span class="o">=</span> <span class="n">input_string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
-</span><span id="line-93">        <span class="n">trimmed_start</span> <span class="o">=</span> <span class="n">input_string</span><span class="p">[</span><span class="n">first_slash_index</span><span class="p">:]</span>
-</span><span id="line-94">
-</span><span id="line-95">        <span class="c1"># Remove everything after the last &#39;/&#39;</span>
-</span><span id="line-96">        <span class="n">last_slash_index</span> <span class="o">=</span> <span class="n">trimmed_start</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
-</span><span id="line-97">        <span class="n">result</span> <span class="o">=</span> <span class="n">trimmed_start</span><span class="p">[:</span><span class="n">last_slash_index</span><span class="p">]</span>
-</span><span id="line-98">
-</span><span id="line-99">        <span class="k">return</span> <span class="n">result</span></div>
+</span><span id="line-90">    <span class="nd">@staticmethod</span>
+</span><span id="line-91">    <span class="k">def</span><span class="w"> </span><span class="nf">extract_train_class</span><span class="p">(</span><span class="n">input_string</span><span class="p">):</span>
+</span><span id="line-92">        <span class="c1"># Find the first &#39;/&#39; and trim everything before it</span>
+</span><span id="line-93">        <span class="n">first_slash_index</span> <span class="o">=</span> <span class="n">input_string</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+</span><span id="line-94">        <span class="n">trimmed_start</span> <span class="o">=</span> <span class="n">input_string</span><span class="p">[</span><span class="n">first_slash_index</span><span class="p">:]</span>
+</span><span id="line-95">
+</span><span id="line-96">        <span class="c1"># Remove everything after the last &#39;/&#39;</span>
+</span><span id="line-97">        <span class="n">last_slash_index</span> <span class="o">=</span> <span class="n">trimmed_start</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+</span><span id="line-98">        <span class="n">result</span> <span class="o">=</span> <span class="n">trimmed_start</span><span class="p">[:</span><span class="n">last_slash_index</span><span class="p">]</span>
+</span><span id="line-99">
+</span><span id="line-100">        <span class="k">return</span> <span class="n">result</span></div>
 
-</span><span id="line-100">
-</span><span id="line-101">    <span class="nd">@staticmethod</span>
-</span><span id="line-102">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
-</span><span id="line-103">        <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;/a/airfield&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/airplane_cabin&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/airport_terminal&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/alcove&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/alley&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/amphitheater&#39;</span><span class="p">,</span>
-</span><span id="line-104">                <span class="s1">&#39;/a/amusement_arcade&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/amusement_park&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/apartment_building/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/aquarium&#39;</span><span class="p">,</span>
-</span><span id="line-105">                <span class="s1">&#39;/a/aqueduct&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/arcade&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/arch&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/archaelogical_excavation&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/archive&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/arena/hockey&#39;</span><span class="p">,</span>
-</span><span id="line-106">                <span class="s1">&#39;/a/arena/performance&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/arena/rodeo&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/army_base&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/art_gallery&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/art_school&#39;</span><span class="p">,</span>
-</span><span id="line-107">                <span class="s1">&#39;/a/art_studio&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/artists_loft&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/assembly_line&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/athletic_field/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/atrium/public&#39;</span><span class="p">,</span>
-</span><span id="line-108">                <span class="s1">&#39;/a/attic&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/auditorium&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/auto_factory&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/auto_showroom&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/badlands&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bakery/shop&#39;</span><span class="p">,</span>
-</span><span id="line-109">                <span class="s1">&#39;/b/balcony/exterior&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/balcony/interior&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/ball_pit&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/ballroom&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bamboo_forest&#39;</span><span class="p">,</span>
-</span><span id="line-110">                <span class="s1">&#39;/b/bank_vault&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/banquet_hall&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bar&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/barn&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/barndoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/baseball_field&#39;</span><span class="p">,</span>
-</span><span id="line-111">                <span class="s1">&#39;/b/basement&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/basketball_court/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bathroom&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bazaar/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bazaar/outdoor&#39;</span><span class="p">,</span>
-</span><span id="line-112">                <span class="s1">&#39;/b/beach&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/beach_house&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/beauty_salon&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bedchamber&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bedroom&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/beer_garden&#39;</span><span class="p">,</span>
-</span><span id="line-113">                <span class="s1">&#39;/b/beer_hall&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/berth&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/biology_laboratory&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/boardwalk&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/boat_deck&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/boathouse&#39;</span><span class="p">,</span>
-</span><span id="line-114">                <span class="s1">&#39;/b/bookstore&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/booth/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/botanical_garden&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bow_window/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bowling_alley&#39;</span><span class="p">,</span>
-</span><span id="line-115">                <span class="s1">&#39;/b/boxing_ring&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bridge&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/building_facade&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bullring&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/burial_chamber&#39;</span><span class="p">,</span>
-</span><span id="line-116">                <span class="s1">&#39;/b/bus_interior&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/bus_station/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/butchers_shop&#39;</span><span class="p">,</span> <span class="s1">&#39;/b/butte&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/cabin/outdoor&#39;</span><span class="p">,</span>
-</span><span id="line-117">                <span class="s1">&#39;/c/cafeteria&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/campsite&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/campus&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/canal/natural&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/canal/urban&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/candy_store&#39;</span><span class="p">,</span>
-</span><span id="line-118">                <span class="s1">&#39;/c/canyon&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/car_interior&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/carrousel&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/castle&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/catacomb&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/cemetery&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/chalet&#39;</span><span class="p">,</span>
-</span><span id="line-119">                <span class="s1">&#39;/c/chemistry_lab&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/childs_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/church/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/church/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/classroom&#39;</span><span class="p">,</span>
-</span><span id="line-120">                <span class="s1">&#39;/c/clean_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/cliff&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/closet&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/clothing_store&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/coast&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/cockpit&#39;</span><span class="p">,</span>
-</span><span id="line-121">                <span class="s1">&#39;/c/coffee_shop&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/computer_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/conference_center&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/conference_room&#39;</span><span class="p">,</span>
-</span><span id="line-122">                <span class="s1">&#39;/c/construction_site&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/corn_field&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/corral&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/corridor&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/cottage&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/courthouse&#39;</span><span class="p">,</span>
-</span><span id="line-123">                <span class="s1">&#39;/c/courtyard&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/creek&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/crevasse&#39;</span><span class="p">,</span> <span class="s1">&#39;/c/crosswalk&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/dam&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/delicatessen&#39;</span><span class="p">,</span>
-</span><span id="line-124">                <span class="s1">&#39;/d/department_store&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/desert/sand&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/desert/vegetation&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/desert_road&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/diner/outdoor&#39;</span><span class="p">,</span>
-</span><span id="line-125">                <span class="s1">&#39;/d/dining_hall&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/dining_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/discotheque&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/doorway/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/dorm_room&#39;</span><span class="p">,</span>
-</span><span id="line-126">                <span class="s1">&#39;/d/downtown&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/dressing_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/driveway&#39;</span><span class="p">,</span> <span class="s1">&#39;/d/drugstore&#39;</span><span class="p">,</span> <span class="s1">&#39;/e/elevator/door&#39;</span><span class="p">,</span>
-</span><span id="line-127">                <span class="s1">&#39;/e/elevator_lobby&#39;</span><span class="p">,</span> <span class="s1">&#39;/e/elevator_shaft&#39;</span><span class="p">,</span> <span class="s1">&#39;/e/embassy&#39;</span><span class="p">,</span> <span class="s1">&#39;/e/engine_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/e/entrance_hall&#39;</span><span class="p">,</span>
-</span><span id="line-128">                <span class="s1">&#39;/e/escalator/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/e/excavation&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/fabric_store&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/farm&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/fastfood_restaurant&#39;</span><span class="p">,</span>
-</span><span id="line-129">                <span class="s1">&#39;/f/field/cultivated&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/field/wild&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/field_road&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/fire_escape&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/fire_station&#39;</span><span class="p">,</span>
-</span><span id="line-130">                <span class="s1">&#39;/f/fishpond&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/flea_market/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/florist_shop/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/food_court&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/football_field&#39;</span><span class="p">,</span>
-</span><span id="line-131">                <span class="s1">&#39;/f/forest/broadleaf&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/forest_path&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/forest_road&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/formal_garden&#39;</span><span class="p">,</span> <span class="s1">&#39;/f/fountain&#39;</span><span class="p">,</span>
-</span><span id="line-132">                <span class="s1">&#39;/g/galley&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/garage/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/garage/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/gas_station&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/gazebo/exterior&#39;</span><span class="p">,</span>
-</span><span id="line-133">                <span class="s1">&#39;/g/general_store/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/general_store/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/gift_shop&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/glacier&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/golf_course&#39;</span><span class="p">,</span>
-</span><span id="line-134">                <span class="s1">&#39;/g/greenhouse/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/greenhouse/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/grotto&#39;</span><span class="p">,</span> <span class="s1">&#39;/g/gymnasium/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/hangar/indoor&#39;</span><span class="p">,</span>
-</span><span id="line-135">                <span class="s1">&#39;/h/hangar/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/harbor&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/hardware_store&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/hayfield&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/heliport&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/highway&#39;</span><span class="p">,</span>
-</span><span id="line-136">                <span class="s1">&#39;/h/home_office&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/home_theater&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/hospital&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/hospital_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/hot_spring&#39;</span><span class="p">,</span>
-</span><span id="line-137">                <span class="s1">&#39;/h/hotel/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/hotel_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/house&#39;</span><span class="p">,</span> <span class="s1">&#39;/h/hunting_lodge/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/i/ice_cream_parlor&#39;</span><span class="p">,</span>
-</span><span id="line-138">                <span class="s1">&#39;/i/ice_floe&#39;</span><span class="p">,</span> <span class="s1">&#39;/i/ice_shelf&#39;</span><span class="p">,</span> <span class="s1">&#39;/i/ice_skating_rink/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/i/ice_skating_rink/outdoor&#39;</span><span class="p">,</span>
-</span><span id="line-139">                <span class="s1">&#39;/i/iceberg&#39;</span><span class="p">,</span> <span class="s1">&#39;/i/igloo&#39;</span><span class="p">,</span> <span class="s1">&#39;/i/industrial_area&#39;</span><span class="p">,</span> <span class="s1">&#39;/i/inn/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/i/islet&#39;</span><span class="p">,</span> <span class="s1">&#39;/j/jacuzzi/indoor&#39;</span><span class="p">,</span>
-</span><span id="line-140">                <span class="s1">&#39;/j/jail_cell&#39;</span><span class="p">,</span> <span class="s1">&#39;/j/japanese_garden&#39;</span><span class="p">,</span> <span class="s1">&#39;/j/jewelry_shop&#39;</span><span class="p">,</span> <span class="s1">&#39;/j/junkyard&#39;</span><span class="p">,</span> <span class="s1">&#39;/k/kasbah&#39;</span><span class="p">,</span>
-</span><span id="line-141">                <span class="s1">&#39;/k/kennel/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/k/kindergarden_classroom&#39;</span><span class="p">,</span> <span class="s1">&#39;/k/kitchen&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/lagoon&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/lake/natural&#39;</span><span class="p">,</span>
-</span><span id="line-142">                <span class="s1">&#39;/l/landfill&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/landing_deck&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/laundromat&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/lawn&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/lecture_room&#39;</span><span class="p">,</span>
-</span><span id="line-143">                <span class="s1">&#39;/l/legislative_chamber&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/library/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/library/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/lighthouse&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/living_room&#39;</span><span class="p">,</span>
-</span><span id="line-144">                <span class="s1">&#39;/l/loading_dock&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/lobby&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/lock_chamber&#39;</span><span class="p">,</span> <span class="s1">&#39;/l/locker_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/mansion&#39;</span><span class="p">,</span>
-</span><span id="line-145">                <span class="s1">&#39;/m/manufactured_home&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/market/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/market/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/marsh&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/martial_arts_gym&#39;</span><span class="p">,</span>
-</span><span id="line-146">                <span class="s1">&#39;/m/mausoleum&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/medina&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/mezzanine&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/moat/water&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/mosque/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/motel&#39;</span><span class="p">,</span>
-</span><span id="line-147">                <span class="s1">&#39;/m/mountain&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/mountain_path&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/mountain_snowy&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/movie_theater/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/museum/indoor&#39;</span><span class="p">,</span>
-</span><span id="line-148">                <span class="s1">&#39;/m/museum/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/m/music_studio&#39;</span><span class="p">,</span> <span class="s1">&#39;/n/natural_history_museum&#39;</span><span class="p">,</span> <span class="s1">&#39;/n/nursery&#39;</span><span class="p">,</span> <span class="s1">&#39;/n/nursing_home&#39;</span><span class="p">,</span>
-</span><span id="line-149">                <span class="s1">&#39;/o/oast_house&#39;</span><span class="p">,</span> <span class="s1">&#39;/o/ocean&#39;</span><span class="p">,</span> <span class="s1">&#39;/o/office&#39;</span><span class="p">,</span> <span class="s1">&#39;/o/office_building&#39;</span><span class="p">,</span> <span class="s1">&#39;/o/office_cubicles&#39;</span><span class="p">,</span> <span class="s1">&#39;/o/oilrig&#39;</span><span class="p">,</span>
-</span><span id="line-150">                <span class="s1">&#39;/o/operating_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/o/orchard&#39;</span><span class="p">,</span> <span class="s1">&#39;/o/orchestra_pit&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/pagoda&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/palace&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/pantry&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/park&#39;</span><span class="p">,</span>
-</span><span id="line-151">                <span class="s1">&#39;/p/parking_garage/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/parking_garage/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/parking_lot&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/pasture&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/patio&#39;</span><span class="p">,</span>
-</span><span id="line-152">                <span class="s1">&#39;/p/pavilion&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/pet_shop&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/pharmacy&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/phone_booth&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/physics_laboratory&#39;</span><span class="p">,</span>
-</span><span id="line-153">                <span class="s1">&#39;/p/picnic_area&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/pier&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/pizzeria&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/playground&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/playroom&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/plaza&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/pond&#39;</span><span class="p">,</span>
-</span><span id="line-154">                <span class="s1">&#39;/p/porch&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/promenade&#39;</span><span class="p">,</span> <span class="s1">&#39;/p/pub/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/racecourse&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/raceway&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/raft&#39;</span><span class="p">,</span>
-</span><span id="line-155">                <span class="s1">&#39;/r/railroad_track&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/rainforest&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/reception&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/recreation_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/repair_shop&#39;</span><span class="p">,</span>
-</span><span id="line-156">                <span class="s1">&#39;/r/residential_neighborhood&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/restaurant&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/restaurant_kitchen&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/restaurant_patio&#39;</span><span class="p">,</span>
-</span><span id="line-157">                <span class="s1">&#39;/r/rice_paddy&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/river&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/rock_arch&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/roof_garden&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/rope_bridge&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/ruin&#39;</span><span class="p">,</span> <span class="s1">&#39;/r/runway&#39;</span><span class="p">,</span>
-</span><span id="line-158">                <span class="s1">&#39;/s/sandbox&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/sauna&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/schoolhouse&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/science_museum&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/server_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/shed&#39;</span><span class="p">,</span>
-</span><span id="line-159">                <span class="s1">&#39;/s/shoe_shop&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/shopfront&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/shopping_mall/indoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/shower&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/ski_resort&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/ski_slope&#39;</span><span class="p">,</span>
-</span><span id="line-160">                <span class="s1">&#39;/s/sky&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/skyscraper&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/slum&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/snowfield&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/soccer_field&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/stable&#39;</span><span class="p">,</span>
-</span><span id="line-161">                <span class="s1">&#39;/s/stadium/baseball&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/stadium/football&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/stadium/soccer&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/stage/indoor&#39;</span><span class="p">,</span>
-</span><span id="line-162">                <span class="s1">&#39;/s/stage/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/staircase&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/storage_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/street&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/subway_station/platform&#39;</span><span class="p">,</span>
-</span><span id="line-163">                <span class="s1">&#39;/s/supermarket&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/sushi_bar&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/swamp&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/swimming_hole&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/swimming_pool/indoor&#39;</span><span class="p">,</span>
-</span><span id="line-164">                <span class="s1">&#39;/s/swimming_pool/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/s/synagogue/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/television_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/television_studio&#39;</span><span class="p">,</span>
-</span><span id="line-165">                <span class="s1">&#39;/t/temple/asia&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/throne_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/ticket_booth&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/topiary_garden&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/tower&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/toyshop&#39;</span><span class="p">,</span>
-</span><span id="line-166">                <span class="s1">&#39;/t/train_interior&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/train_station/platform&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/tree_farm&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/tree_house&#39;</span><span class="p">,</span> <span class="s1">&#39;/t/trench&#39;</span><span class="p">,</span>
-</span><span id="line-167">                <span class="s1">&#39;/t/tundra&#39;</span><span class="p">,</span> <span class="s1">&#39;/u/underwater/ocean_deep&#39;</span><span class="p">,</span> <span class="s1">&#39;/u/utility_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/v/valley&#39;</span><span class="p">,</span> <span class="s1">&#39;/v/vegetable_garden&#39;</span><span class="p">,</span>
-</span><span id="line-168">                <span class="s1">&#39;/v/veterinarians_office&#39;</span><span class="p">,</span> <span class="s1">&#39;/v/viaduct&#39;</span><span class="p">,</span> <span class="s1">&#39;/v/village&#39;</span><span class="p">,</span> <span class="s1">&#39;/v/vineyard&#39;</span><span class="p">,</span> <span class="s1">&#39;/v/volcano&#39;</span><span class="p">,</span>
-</span><span id="line-169">                <span class="s1">&#39;/v/volleyball_court/outdoor&#39;</span><span class="p">,</span> <span class="s1">&#39;/w/waiting_room&#39;</span><span class="p">,</span> <span class="s1">&#39;/w/water_park&#39;</span><span class="p">,</span> <span class="s1">&#39;/w/water_tower&#39;</span><span class="p">,</span> <span class="s1">&#39;/w/waterfall&#39;</span><span class="p">,</span>
-</span><span id="line-170">                <span class="s1">&#39;/w/watering_hole&#39;</span><span class="p">,</span> <span class="s1">&#39;/w/wave&#39;</span><span class="p">,</span> <span class="s1">&#39;/w/wet_bar&#39;</span><span class="p">,</span> <span class="s1">&#39;/w/wheat_field&#39;</span><span class="p">,</span> <span class="s1">&#39;/w/wind_farm&#39;</span><span class="p">,</span> <span class="s1">&#39;/w/windmill&#39;</span><span class="p">,</span> <span class="s1">&#39;/y/yard&#39;</span><span class="p">,</span>
-</span><span id="line-171">                <span class="s1">&#39;/y/youth_hostel&#39;</span><span class="p">,</span> <span class="s1">&#39;/z/zen_garden&#39;</span><span class="p">]</span></div>
+</span><span id="line-101">
+</span><span id="line-102">    <span class="nd">@staticmethod</span>
+</span><span id="line-103">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
+</span><span id="line-104">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-105">            <span class="s2">&quot;/a/airfield&quot;</span><span class="p">,</span>
+</span><span id="line-106">            <span class="s2">&quot;/a/airplane_cabin&quot;</span><span class="p">,</span>
+</span><span id="line-107">            <span class="s2">&quot;/a/airport_terminal&quot;</span><span class="p">,</span>
+</span><span id="line-108">            <span class="s2">&quot;/a/alcove&quot;</span><span class="p">,</span>
+</span><span id="line-109">            <span class="s2">&quot;/a/alley&quot;</span><span class="p">,</span>
+</span><span id="line-110">            <span class="s2">&quot;/a/amphitheater&quot;</span><span class="p">,</span>
+</span><span id="line-111">            <span class="s2">&quot;/a/amusement_arcade&quot;</span><span class="p">,</span>
+</span><span id="line-112">            <span class="s2">&quot;/a/amusement_park&quot;</span><span class="p">,</span>
+</span><span id="line-113">            <span class="s2">&quot;/a/apartment_building/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-114">            <span class="s2">&quot;/a/aquarium&quot;</span><span class="p">,</span>
+</span><span id="line-115">            <span class="s2">&quot;/a/aqueduct&quot;</span><span class="p">,</span>
+</span><span id="line-116">            <span class="s2">&quot;/a/arcade&quot;</span><span class="p">,</span>
+</span><span id="line-117">            <span class="s2">&quot;/a/arch&quot;</span><span class="p">,</span>
+</span><span id="line-118">            <span class="s2">&quot;/a/archaelogical_excavation&quot;</span><span class="p">,</span>
+</span><span id="line-119">            <span class="s2">&quot;/a/archive&quot;</span><span class="p">,</span>
+</span><span id="line-120">            <span class="s2">&quot;/a/arena/hockey&quot;</span><span class="p">,</span>
+</span><span id="line-121">            <span class="s2">&quot;/a/arena/performance&quot;</span><span class="p">,</span>
+</span><span id="line-122">            <span class="s2">&quot;/a/arena/rodeo&quot;</span><span class="p">,</span>
+</span><span id="line-123">            <span class="s2">&quot;/a/army_base&quot;</span><span class="p">,</span>
+</span><span id="line-124">            <span class="s2">&quot;/a/art_gallery&quot;</span><span class="p">,</span>
+</span><span id="line-125">            <span class="s2">&quot;/a/art_school&quot;</span><span class="p">,</span>
+</span><span id="line-126">            <span class="s2">&quot;/a/art_studio&quot;</span><span class="p">,</span>
+</span><span id="line-127">            <span class="s2">&quot;/a/artists_loft&quot;</span><span class="p">,</span>
+</span><span id="line-128">            <span class="s2">&quot;/a/assembly_line&quot;</span><span class="p">,</span>
+</span><span id="line-129">            <span class="s2">&quot;/a/athletic_field/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-130">            <span class="s2">&quot;/a/atrium/public&quot;</span><span class="p">,</span>
+</span><span id="line-131">            <span class="s2">&quot;/a/attic&quot;</span><span class="p">,</span>
+</span><span id="line-132">            <span class="s2">&quot;/a/auditorium&quot;</span><span class="p">,</span>
+</span><span id="line-133">            <span class="s2">&quot;/a/auto_factory&quot;</span><span class="p">,</span>
+</span><span id="line-134">            <span class="s2">&quot;/a/auto_showroom&quot;</span><span class="p">,</span>
+</span><span id="line-135">            <span class="s2">&quot;/b/badlands&quot;</span><span class="p">,</span>
+</span><span id="line-136">            <span class="s2">&quot;/b/bakery/shop&quot;</span><span class="p">,</span>
+</span><span id="line-137">            <span class="s2">&quot;/b/balcony/exterior&quot;</span><span class="p">,</span>
+</span><span id="line-138">            <span class="s2">&quot;/b/balcony/interior&quot;</span><span class="p">,</span>
+</span><span id="line-139">            <span class="s2">&quot;/b/ball_pit&quot;</span><span class="p">,</span>
+</span><span id="line-140">            <span class="s2">&quot;/b/ballroom&quot;</span><span class="p">,</span>
+</span><span id="line-141">            <span class="s2">&quot;/b/bamboo_forest&quot;</span><span class="p">,</span>
+</span><span id="line-142">            <span class="s2">&quot;/b/bank_vault&quot;</span><span class="p">,</span>
+</span><span id="line-143">            <span class="s2">&quot;/b/banquet_hall&quot;</span><span class="p">,</span>
+</span><span id="line-144">            <span class="s2">&quot;/b/bar&quot;</span><span class="p">,</span>
+</span><span id="line-145">            <span class="s2">&quot;/b/barn&quot;</span><span class="p">,</span>
+</span><span id="line-146">            <span class="s2">&quot;/b/barndoor&quot;</span><span class="p">,</span>
+</span><span id="line-147">            <span class="s2">&quot;/b/baseball_field&quot;</span><span class="p">,</span>
+</span><span id="line-148">            <span class="s2">&quot;/b/basement&quot;</span><span class="p">,</span>
+</span><span id="line-149">            <span class="s2">&quot;/b/basketball_court/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-150">            <span class="s2">&quot;/b/bathroom&quot;</span><span class="p">,</span>
+</span><span id="line-151">            <span class="s2">&quot;/b/bazaar/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-152">            <span class="s2">&quot;/b/bazaar/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-153">            <span class="s2">&quot;/b/beach&quot;</span><span class="p">,</span>
+</span><span id="line-154">            <span class="s2">&quot;/b/beach_house&quot;</span><span class="p">,</span>
+</span><span id="line-155">            <span class="s2">&quot;/b/beauty_salon&quot;</span><span class="p">,</span>
+</span><span id="line-156">            <span class="s2">&quot;/b/bedchamber&quot;</span><span class="p">,</span>
+</span><span id="line-157">            <span class="s2">&quot;/b/bedroom&quot;</span><span class="p">,</span>
+</span><span id="line-158">            <span class="s2">&quot;/b/beer_garden&quot;</span><span class="p">,</span>
+</span><span id="line-159">            <span class="s2">&quot;/b/beer_hall&quot;</span><span class="p">,</span>
+</span><span id="line-160">            <span class="s2">&quot;/b/berth&quot;</span><span class="p">,</span>
+</span><span id="line-161">            <span class="s2">&quot;/b/biology_laboratory&quot;</span><span class="p">,</span>
+</span><span id="line-162">            <span class="s2">&quot;/b/boardwalk&quot;</span><span class="p">,</span>
+</span><span id="line-163">            <span class="s2">&quot;/b/boat_deck&quot;</span><span class="p">,</span>
+</span><span id="line-164">            <span class="s2">&quot;/b/boathouse&quot;</span><span class="p">,</span>
+</span><span id="line-165">            <span class="s2">&quot;/b/bookstore&quot;</span><span class="p">,</span>
+</span><span id="line-166">            <span class="s2">&quot;/b/booth/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-167">            <span class="s2">&quot;/b/botanical_garden&quot;</span><span class="p">,</span>
+</span><span id="line-168">            <span class="s2">&quot;/b/bow_window/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-169">            <span class="s2">&quot;/b/bowling_alley&quot;</span><span class="p">,</span>
+</span><span id="line-170">            <span class="s2">&quot;/b/boxing_ring&quot;</span><span class="p">,</span>
+</span><span id="line-171">            <span class="s2">&quot;/b/bridge&quot;</span><span class="p">,</span>
+</span><span id="line-172">            <span class="s2">&quot;/b/building_facade&quot;</span><span class="p">,</span>
+</span><span id="line-173">            <span class="s2">&quot;/b/bullring&quot;</span><span class="p">,</span>
+</span><span id="line-174">            <span class="s2">&quot;/b/burial_chamber&quot;</span><span class="p">,</span>
+</span><span id="line-175">            <span class="s2">&quot;/b/bus_interior&quot;</span><span class="p">,</span>
+</span><span id="line-176">            <span class="s2">&quot;/b/bus_station/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-177">            <span class="s2">&quot;/b/butchers_shop&quot;</span><span class="p">,</span>
+</span><span id="line-178">            <span class="s2">&quot;/b/butte&quot;</span><span class="p">,</span>
+</span><span id="line-179">            <span class="s2">&quot;/c/cabin/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-180">            <span class="s2">&quot;/c/cafeteria&quot;</span><span class="p">,</span>
+</span><span id="line-181">            <span class="s2">&quot;/c/campsite&quot;</span><span class="p">,</span>
+</span><span id="line-182">            <span class="s2">&quot;/c/campus&quot;</span><span class="p">,</span>
+</span><span id="line-183">            <span class="s2">&quot;/c/canal/natural&quot;</span><span class="p">,</span>
+</span><span id="line-184">            <span class="s2">&quot;/c/canal/urban&quot;</span><span class="p">,</span>
+</span><span id="line-185">            <span class="s2">&quot;/c/candy_store&quot;</span><span class="p">,</span>
+</span><span id="line-186">            <span class="s2">&quot;/c/canyon&quot;</span><span class="p">,</span>
+</span><span id="line-187">            <span class="s2">&quot;/c/car_interior&quot;</span><span class="p">,</span>
+</span><span id="line-188">            <span class="s2">&quot;/c/carrousel&quot;</span><span class="p">,</span>
+</span><span id="line-189">            <span class="s2">&quot;/c/castle&quot;</span><span class="p">,</span>
+</span><span id="line-190">            <span class="s2">&quot;/c/catacomb&quot;</span><span class="p">,</span>
+</span><span id="line-191">            <span class="s2">&quot;/c/cemetery&quot;</span><span class="p">,</span>
+</span><span id="line-192">            <span class="s2">&quot;/c/chalet&quot;</span><span class="p">,</span>
+</span><span id="line-193">            <span class="s2">&quot;/c/chemistry_lab&quot;</span><span class="p">,</span>
+</span><span id="line-194">            <span class="s2">&quot;/c/childs_room&quot;</span><span class="p">,</span>
+</span><span id="line-195">            <span class="s2">&quot;/c/church/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-196">            <span class="s2">&quot;/c/church/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-197">            <span class="s2">&quot;/c/classroom&quot;</span><span class="p">,</span>
+</span><span id="line-198">            <span class="s2">&quot;/c/clean_room&quot;</span><span class="p">,</span>
+</span><span id="line-199">            <span class="s2">&quot;/c/cliff&quot;</span><span class="p">,</span>
+</span><span id="line-200">            <span class="s2">&quot;/c/closet&quot;</span><span class="p">,</span>
+</span><span id="line-201">            <span class="s2">&quot;/c/clothing_store&quot;</span><span class="p">,</span>
+</span><span id="line-202">            <span class="s2">&quot;/c/coast&quot;</span><span class="p">,</span>
+</span><span id="line-203">            <span class="s2">&quot;/c/cockpit&quot;</span><span class="p">,</span>
+</span><span id="line-204">            <span class="s2">&quot;/c/coffee_shop&quot;</span><span class="p">,</span>
+</span><span id="line-205">            <span class="s2">&quot;/c/computer_room&quot;</span><span class="p">,</span>
+</span><span id="line-206">            <span class="s2">&quot;/c/conference_center&quot;</span><span class="p">,</span>
+</span><span id="line-207">            <span class="s2">&quot;/c/conference_room&quot;</span><span class="p">,</span>
+</span><span id="line-208">            <span class="s2">&quot;/c/construction_site&quot;</span><span class="p">,</span>
+</span><span id="line-209">            <span class="s2">&quot;/c/corn_field&quot;</span><span class="p">,</span>
+</span><span id="line-210">            <span class="s2">&quot;/c/corral&quot;</span><span class="p">,</span>
+</span><span id="line-211">            <span class="s2">&quot;/c/corridor&quot;</span><span class="p">,</span>
+</span><span id="line-212">            <span class="s2">&quot;/c/cottage&quot;</span><span class="p">,</span>
+</span><span id="line-213">            <span class="s2">&quot;/c/courthouse&quot;</span><span class="p">,</span>
+</span><span id="line-214">            <span class="s2">&quot;/c/courtyard&quot;</span><span class="p">,</span>
+</span><span id="line-215">            <span class="s2">&quot;/c/creek&quot;</span><span class="p">,</span>
+</span><span id="line-216">            <span class="s2">&quot;/c/crevasse&quot;</span><span class="p">,</span>
+</span><span id="line-217">            <span class="s2">&quot;/c/crosswalk&quot;</span><span class="p">,</span>
+</span><span id="line-218">            <span class="s2">&quot;/d/dam&quot;</span><span class="p">,</span>
+</span><span id="line-219">            <span class="s2">&quot;/d/delicatessen&quot;</span><span class="p">,</span>
+</span><span id="line-220">            <span class="s2">&quot;/d/department_store&quot;</span><span class="p">,</span>
+</span><span id="line-221">            <span class="s2">&quot;/d/desert/sand&quot;</span><span class="p">,</span>
+</span><span id="line-222">            <span class="s2">&quot;/d/desert/vegetation&quot;</span><span class="p">,</span>
+</span><span id="line-223">            <span class="s2">&quot;/d/desert_road&quot;</span><span class="p">,</span>
+</span><span id="line-224">            <span class="s2">&quot;/d/diner/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-225">            <span class="s2">&quot;/d/dining_hall&quot;</span><span class="p">,</span>
+</span><span id="line-226">            <span class="s2">&quot;/d/dining_room&quot;</span><span class="p">,</span>
+</span><span id="line-227">            <span class="s2">&quot;/d/discotheque&quot;</span><span class="p">,</span>
+</span><span id="line-228">            <span class="s2">&quot;/d/doorway/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-229">            <span class="s2">&quot;/d/dorm_room&quot;</span><span class="p">,</span>
+</span><span id="line-230">            <span class="s2">&quot;/d/downtown&quot;</span><span class="p">,</span>
+</span><span id="line-231">            <span class="s2">&quot;/d/dressing_room&quot;</span><span class="p">,</span>
+</span><span id="line-232">            <span class="s2">&quot;/d/driveway&quot;</span><span class="p">,</span>
+</span><span id="line-233">            <span class="s2">&quot;/d/drugstore&quot;</span><span class="p">,</span>
+</span><span id="line-234">            <span class="s2">&quot;/e/elevator/door&quot;</span><span class="p">,</span>
+</span><span id="line-235">            <span class="s2">&quot;/e/elevator_lobby&quot;</span><span class="p">,</span>
+</span><span id="line-236">            <span class="s2">&quot;/e/elevator_shaft&quot;</span><span class="p">,</span>
+</span><span id="line-237">            <span class="s2">&quot;/e/embassy&quot;</span><span class="p">,</span>
+</span><span id="line-238">            <span class="s2">&quot;/e/engine_room&quot;</span><span class="p">,</span>
+</span><span id="line-239">            <span class="s2">&quot;/e/entrance_hall&quot;</span><span class="p">,</span>
+</span><span id="line-240">            <span class="s2">&quot;/e/escalator/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-241">            <span class="s2">&quot;/e/excavation&quot;</span><span class="p">,</span>
+</span><span id="line-242">            <span class="s2">&quot;/f/fabric_store&quot;</span><span class="p">,</span>
+</span><span id="line-243">            <span class="s2">&quot;/f/farm&quot;</span><span class="p">,</span>
+</span><span id="line-244">            <span class="s2">&quot;/f/fastfood_restaurant&quot;</span><span class="p">,</span>
+</span><span id="line-245">            <span class="s2">&quot;/f/field/cultivated&quot;</span><span class="p">,</span>
+</span><span id="line-246">            <span class="s2">&quot;/f/field/wild&quot;</span><span class="p">,</span>
+</span><span id="line-247">            <span class="s2">&quot;/f/field_road&quot;</span><span class="p">,</span>
+</span><span id="line-248">            <span class="s2">&quot;/f/fire_escape&quot;</span><span class="p">,</span>
+</span><span id="line-249">            <span class="s2">&quot;/f/fire_station&quot;</span><span class="p">,</span>
+</span><span id="line-250">            <span class="s2">&quot;/f/fishpond&quot;</span><span class="p">,</span>
+</span><span id="line-251">            <span class="s2">&quot;/f/flea_market/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-252">            <span class="s2">&quot;/f/florist_shop/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-253">            <span class="s2">&quot;/f/food_court&quot;</span><span class="p">,</span>
+</span><span id="line-254">            <span class="s2">&quot;/f/football_field&quot;</span><span class="p">,</span>
+</span><span id="line-255">            <span class="s2">&quot;/f/forest/broadleaf&quot;</span><span class="p">,</span>
+</span><span id="line-256">            <span class="s2">&quot;/f/forest_path&quot;</span><span class="p">,</span>
+</span><span id="line-257">            <span class="s2">&quot;/f/forest_road&quot;</span><span class="p">,</span>
+</span><span id="line-258">            <span class="s2">&quot;/f/formal_garden&quot;</span><span class="p">,</span>
+</span><span id="line-259">            <span class="s2">&quot;/f/fountain&quot;</span><span class="p">,</span>
+</span><span id="line-260">            <span class="s2">&quot;/g/galley&quot;</span><span class="p">,</span>
+</span><span id="line-261">            <span class="s2">&quot;/g/garage/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-262">            <span class="s2">&quot;/g/garage/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-263">            <span class="s2">&quot;/g/gas_station&quot;</span><span class="p">,</span>
+</span><span id="line-264">            <span class="s2">&quot;/g/gazebo/exterior&quot;</span><span class="p">,</span>
+</span><span id="line-265">            <span class="s2">&quot;/g/general_store/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-266">            <span class="s2">&quot;/g/general_store/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-267">            <span class="s2">&quot;/g/gift_shop&quot;</span><span class="p">,</span>
+</span><span id="line-268">            <span class="s2">&quot;/g/glacier&quot;</span><span class="p">,</span>
+</span><span id="line-269">            <span class="s2">&quot;/g/golf_course&quot;</span><span class="p">,</span>
+</span><span id="line-270">            <span class="s2">&quot;/g/greenhouse/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-271">            <span class="s2">&quot;/g/greenhouse/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-272">            <span class="s2">&quot;/g/grotto&quot;</span><span class="p">,</span>
+</span><span id="line-273">            <span class="s2">&quot;/g/gymnasium/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-274">            <span class="s2">&quot;/h/hangar/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-275">            <span class="s2">&quot;/h/hangar/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-276">            <span class="s2">&quot;/h/harbor&quot;</span><span class="p">,</span>
+</span><span id="line-277">            <span class="s2">&quot;/h/hardware_store&quot;</span><span class="p">,</span>
+</span><span id="line-278">            <span class="s2">&quot;/h/hayfield&quot;</span><span class="p">,</span>
+</span><span id="line-279">            <span class="s2">&quot;/h/heliport&quot;</span><span class="p">,</span>
+</span><span id="line-280">            <span class="s2">&quot;/h/highway&quot;</span><span class="p">,</span>
+</span><span id="line-281">            <span class="s2">&quot;/h/home_office&quot;</span><span class="p">,</span>
+</span><span id="line-282">            <span class="s2">&quot;/h/home_theater&quot;</span><span class="p">,</span>
+</span><span id="line-283">            <span class="s2">&quot;/h/hospital&quot;</span><span class="p">,</span>
+</span><span id="line-284">            <span class="s2">&quot;/h/hospital_room&quot;</span><span class="p">,</span>
+</span><span id="line-285">            <span class="s2">&quot;/h/hot_spring&quot;</span><span class="p">,</span>
+</span><span id="line-286">            <span class="s2">&quot;/h/hotel/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-287">            <span class="s2">&quot;/h/hotel_room&quot;</span><span class="p">,</span>
+</span><span id="line-288">            <span class="s2">&quot;/h/house&quot;</span><span class="p">,</span>
+</span><span id="line-289">            <span class="s2">&quot;/h/hunting_lodge/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-290">            <span class="s2">&quot;/i/ice_cream_parlor&quot;</span><span class="p">,</span>
+</span><span id="line-291">            <span class="s2">&quot;/i/ice_floe&quot;</span><span class="p">,</span>
+</span><span id="line-292">            <span class="s2">&quot;/i/ice_shelf&quot;</span><span class="p">,</span>
+</span><span id="line-293">            <span class="s2">&quot;/i/ice_skating_rink/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-294">            <span class="s2">&quot;/i/ice_skating_rink/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-295">            <span class="s2">&quot;/i/iceberg&quot;</span><span class="p">,</span>
+</span><span id="line-296">            <span class="s2">&quot;/i/igloo&quot;</span><span class="p">,</span>
+</span><span id="line-297">            <span class="s2">&quot;/i/industrial_area&quot;</span><span class="p">,</span>
+</span><span id="line-298">            <span class="s2">&quot;/i/inn/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-299">            <span class="s2">&quot;/i/islet&quot;</span><span class="p">,</span>
+</span><span id="line-300">            <span class="s2">&quot;/j/jacuzzi/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-301">            <span class="s2">&quot;/j/jail_cell&quot;</span><span class="p">,</span>
+</span><span id="line-302">            <span class="s2">&quot;/j/japanese_garden&quot;</span><span class="p">,</span>
+</span><span id="line-303">            <span class="s2">&quot;/j/jewelry_shop&quot;</span><span class="p">,</span>
+</span><span id="line-304">            <span class="s2">&quot;/j/junkyard&quot;</span><span class="p">,</span>
+</span><span id="line-305">            <span class="s2">&quot;/k/kasbah&quot;</span><span class="p">,</span>
+</span><span id="line-306">            <span class="s2">&quot;/k/kennel/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-307">            <span class="s2">&quot;/k/kindergarden_classroom&quot;</span><span class="p">,</span>
+</span><span id="line-308">            <span class="s2">&quot;/k/kitchen&quot;</span><span class="p">,</span>
+</span><span id="line-309">            <span class="s2">&quot;/l/lagoon&quot;</span><span class="p">,</span>
+</span><span id="line-310">            <span class="s2">&quot;/l/lake/natural&quot;</span><span class="p">,</span>
+</span><span id="line-311">            <span class="s2">&quot;/l/landfill&quot;</span><span class="p">,</span>
+</span><span id="line-312">            <span class="s2">&quot;/l/landing_deck&quot;</span><span class="p">,</span>
+</span><span id="line-313">            <span class="s2">&quot;/l/laundromat&quot;</span><span class="p">,</span>
+</span><span id="line-314">            <span class="s2">&quot;/l/lawn&quot;</span><span class="p">,</span>
+</span><span id="line-315">            <span class="s2">&quot;/l/lecture_room&quot;</span><span class="p">,</span>
+</span><span id="line-316">            <span class="s2">&quot;/l/legislative_chamber&quot;</span><span class="p">,</span>
+</span><span id="line-317">            <span class="s2">&quot;/l/library/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-318">            <span class="s2">&quot;/l/library/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-319">            <span class="s2">&quot;/l/lighthouse&quot;</span><span class="p">,</span>
+</span><span id="line-320">            <span class="s2">&quot;/l/living_room&quot;</span><span class="p">,</span>
+</span><span id="line-321">            <span class="s2">&quot;/l/loading_dock&quot;</span><span class="p">,</span>
+</span><span id="line-322">            <span class="s2">&quot;/l/lobby&quot;</span><span class="p">,</span>
+</span><span id="line-323">            <span class="s2">&quot;/l/lock_chamber&quot;</span><span class="p">,</span>
+</span><span id="line-324">            <span class="s2">&quot;/l/locker_room&quot;</span><span class="p">,</span>
+</span><span id="line-325">            <span class="s2">&quot;/m/mansion&quot;</span><span class="p">,</span>
+</span><span id="line-326">            <span class="s2">&quot;/m/manufactured_home&quot;</span><span class="p">,</span>
+</span><span id="line-327">            <span class="s2">&quot;/m/market/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-328">            <span class="s2">&quot;/m/market/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-329">            <span class="s2">&quot;/m/marsh&quot;</span><span class="p">,</span>
+</span><span id="line-330">            <span class="s2">&quot;/m/martial_arts_gym&quot;</span><span class="p">,</span>
+</span><span id="line-331">            <span class="s2">&quot;/m/mausoleum&quot;</span><span class="p">,</span>
+</span><span id="line-332">            <span class="s2">&quot;/m/medina&quot;</span><span class="p">,</span>
+</span><span id="line-333">            <span class="s2">&quot;/m/mezzanine&quot;</span><span class="p">,</span>
+</span><span id="line-334">            <span class="s2">&quot;/m/moat/water&quot;</span><span class="p">,</span>
+</span><span id="line-335">            <span class="s2">&quot;/m/mosque/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-336">            <span class="s2">&quot;/m/motel&quot;</span><span class="p">,</span>
+</span><span id="line-337">            <span class="s2">&quot;/m/mountain&quot;</span><span class="p">,</span>
+</span><span id="line-338">            <span class="s2">&quot;/m/mountain_path&quot;</span><span class="p">,</span>
+</span><span id="line-339">            <span class="s2">&quot;/m/mountain_snowy&quot;</span><span class="p">,</span>
+</span><span id="line-340">            <span class="s2">&quot;/m/movie_theater/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-341">            <span class="s2">&quot;/m/museum/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-342">            <span class="s2">&quot;/m/museum/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-343">            <span class="s2">&quot;/m/music_studio&quot;</span><span class="p">,</span>
+</span><span id="line-344">            <span class="s2">&quot;/n/natural_history_museum&quot;</span><span class="p">,</span>
+</span><span id="line-345">            <span class="s2">&quot;/n/nursery&quot;</span><span class="p">,</span>
+</span><span id="line-346">            <span class="s2">&quot;/n/nursing_home&quot;</span><span class="p">,</span>
+</span><span id="line-347">            <span class="s2">&quot;/o/oast_house&quot;</span><span class="p">,</span>
+</span><span id="line-348">            <span class="s2">&quot;/o/ocean&quot;</span><span class="p">,</span>
+</span><span id="line-349">            <span class="s2">&quot;/o/office&quot;</span><span class="p">,</span>
+</span><span id="line-350">            <span class="s2">&quot;/o/office_building&quot;</span><span class="p">,</span>
+</span><span id="line-351">            <span class="s2">&quot;/o/office_cubicles&quot;</span><span class="p">,</span>
+</span><span id="line-352">            <span class="s2">&quot;/o/oilrig&quot;</span><span class="p">,</span>
+</span><span id="line-353">            <span class="s2">&quot;/o/operating_room&quot;</span><span class="p">,</span>
+</span><span id="line-354">            <span class="s2">&quot;/o/orchard&quot;</span><span class="p">,</span>
+</span><span id="line-355">            <span class="s2">&quot;/o/orchestra_pit&quot;</span><span class="p">,</span>
+</span><span id="line-356">            <span class="s2">&quot;/p/pagoda&quot;</span><span class="p">,</span>
+</span><span id="line-357">            <span class="s2">&quot;/p/palace&quot;</span><span class="p">,</span>
+</span><span id="line-358">            <span class="s2">&quot;/p/pantry&quot;</span><span class="p">,</span>
+</span><span id="line-359">            <span class="s2">&quot;/p/park&quot;</span><span class="p">,</span>
+</span><span id="line-360">            <span class="s2">&quot;/p/parking_garage/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-361">            <span class="s2">&quot;/p/parking_garage/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-362">            <span class="s2">&quot;/p/parking_lot&quot;</span><span class="p">,</span>
+</span><span id="line-363">            <span class="s2">&quot;/p/pasture&quot;</span><span class="p">,</span>
+</span><span id="line-364">            <span class="s2">&quot;/p/patio&quot;</span><span class="p">,</span>
+</span><span id="line-365">            <span class="s2">&quot;/p/pavilion&quot;</span><span class="p">,</span>
+</span><span id="line-366">            <span class="s2">&quot;/p/pet_shop&quot;</span><span class="p">,</span>
+</span><span id="line-367">            <span class="s2">&quot;/p/pharmacy&quot;</span><span class="p">,</span>
+</span><span id="line-368">            <span class="s2">&quot;/p/phone_booth&quot;</span><span class="p">,</span>
+</span><span id="line-369">            <span class="s2">&quot;/p/physics_laboratory&quot;</span><span class="p">,</span>
+</span><span id="line-370">            <span class="s2">&quot;/p/picnic_area&quot;</span><span class="p">,</span>
+</span><span id="line-371">            <span class="s2">&quot;/p/pier&quot;</span><span class="p">,</span>
+</span><span id="line-372">            <span class="s2">&quot;/p/pizzeria&quot;</span><span class="p">,</span>
+</span><span id="line-373">            <span class="s2">&quot;/p/playground&quot;</span><span class="p">,</span>
+</span><span id="line-374">            <span class="s2">&quot;/p/playroom&quot;</span><span class="p">,</span>
+</span><span id="line-375">            <span class="s2">&quot;/p/plaza&quot;</span><span class="p">,</span>
+</span><span id="line-376">            <span class="s2">&quot;/p/pond&quot;</span><span class="p">,</span>
+</span><span id="line-377">            <span class="s2">&quot;/p/porch&quot;</span><span class="p">,</span>
+</span><span id="line-378">            <span class="s2">&quot;/p/promenade&quot;</span><span class="p">,</span>
+</span><span id="line-379">            <span class="s2">&quot;/p/pub/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-380">            <span class="s2">&quot;/r/racecourse&quot;</span><span class="p">,</span>
+</span><span id="line-381">            <span class="s2">&quot;/r/raceway&quot;</span><span class="p">,</span>
+</span><span id="line-382">            <span class="s2">&quot;/r/raft&quot;</span><span class="p">,</span>
+</span><span id="line-383">            <span class="s2">&quot;/r/railroad_track&quot;</span><span class="p">,</span>
+</span><span id="line-384">            <span class="s2">&quot;/r/rainforest&quot;</span><span class="p">,</span>
+</span><span id="line-385">            <span class="s2">&quot;/r/reception&quot;</span><span class="p">,</span>
+</span><span id="line-386">            <span class="s2">&quot;/r/recreation_room&quot;</span><span class="p">,</span>
+</span><span id="line-387">            <span class="s2">&quot;/r/repair_shop&quot;</span><span class="p">,</span>
+</span><span id="line-388">            <span class="s2">&quot;/r/residential_neighborhood&quot;</span><span class="p">,</span>
+</span><span id="line-389">            <span class="s2">&quot;/r/restaurant&quot;</span><span class="p">,</span>
+</span><span id="line-390">            <span class="s2">&quot;/r/restaurant_kitchen&quot;</span><span class="p">,</span>
+</span><span id="line-391">            <span class="s2">&quot;/r/restaurant_patio&quot;</span><span class="p">,</span>
+</span><span id="line-392">            <span class="s2">&quot;/r/rice_paddy&quot;</span><span class="p">,</span>
+</span><span id="line-393">            <span class="s2">&quot;/r/river&quot;</span><span class="p">,</span>
+</span><span id="line-394">            <span class="s2">&quot;/r/rock_arch&quot;</span><span class="p">,</span>
+</span><span id="line-395">            <span class="s2">&quot;/r/roof_garden&quot;</span><span class="p">,</span>
+</span><span id="line-396">            <span class="s2">&quot;/r/rope_bridge&quot;</span><span class="p">,</span>
+</span><span id="line-397">            <span class="s2">&quot;/r/ruin&quot;</span><span class="p">,</span>
+</span><span id="line-398">            <span class="s2">&quot;/r/runway&quot;</span><span class="p">,</span>
+</span><span id="line-399">            <span class="s2">&quot;/s/sandbox&quot;</span><span class="p">,</span>
+</span><span id="line-400">            <span class="s2">&quot;/s/sauna&quot;</span><span class="p">,</span>
+</span><span id="line-401">            <span class="s2">&quot;/s/schoolhouse&quot;</span><span class="p">,</span>
+</span><span id="line-402">            <span class="s2">&quot;/s/science_museum&quot;</span><span class="p">,</span>
+</span><span id="line-403">            <span class="s2">&quot;/s/server_room&quot;</span><span class="p">,</span>
+</span><span id="line-404">            <span class="s2">&quot;/s/shed&quot;</span><span class="p">,</span>
+</span><span id="line-405">            <span class="s2">&quot;/s/shoe_shop&quot;</span><span class="p">,</span>
+</span><span id="line-406">            <span class="s2">&quot;/s/shopfront&quot;</span><span class="p">,</span>
+</span><span id="line-407">            <span class="s2">&quot;/s/shopping_mall/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-408">            <span class="s2">&quot;/s/shower&quot;</span><span class="p">,</span>
+</span><span id="line-409">            <span class="s2">&quot;/s/ski_resort&quot;</span><span class="p">,</span>
+</span><span id="line-410">            <span class="s2">&quot;/s/ski_slope&quot;</span><span class="p">,</span>
+</span><span id="line-411">            <span class="s2">&quot;/s/sky&quot;</span><span class="p">,</span>
+</span><span id="line-412">            <span class="s2">&quot;/s/skyscraper&quot;</span><span class="p">,</span>
+</span><span id="line-413">            <span class="s2">&quot;/s/slum&quot;</span><span class="p">,</span>
+</span><span id="line-414">            <span class="s2">&quot;/s/snowfield&quot;</span><span class="p">,</span>
+</span><span id="line-415">            <span class="s2">&quot;/s/soccer_field&quot;</span><span class="p">,</span>
+</span><span id="line-416">            <span class="s2">&quot;/s/stable&quot;</span><span class="p">,</span>
+</span><span id="line-417">            <span class="s2">&quot;/s/stadium/baseball&quot;</span><span class="p">,</span>
+</span><span id="line-418">            <span class="s2">&quot;/s/stadium/football&quot;</span><span class="p">,</span>
+</span><span id="line-419">            <span class="s2">&quot;/s/stadium/soccer&quot;</span><span class="p">,</span>
+</span><span id="line-420">            <span class="s2">&quot;/s/stage/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-421">            <span class="s2">&quot;/s/stage/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-422">            <span class="s2">&quot;/s/staircase&quot;</span><span class="p">,</span>
+</span><span id="line-423">            <span class="s2">&quot;/s/storage_room&quot;</span><span class="p">,</span>
+</span><span id="line-424">            <span class="s2">&quot;/s/street&quot;</span><span class="p">,</span>
+</span><span id="line-425">            <span class="s2">&quot;/s/subway_station/platform&quot;</span><span class="p">,</span>
+</span><span id="line-426">            <span class="s2">&quot;/s/supermarket&quot;</span><span class="p">,</span>
+</span><span id="line-427">            <span class="s2">&quot;/s/sushi_bar&quot;</span><span class="p">,</span>
+</span><span id="line-428">            <span class="s2">&quot;/s/swamp&quot;</span><span class="p">,</span>
+</span><span id="line-429">            <span class="s2">&quot;/s/swimming_hole&quot;</span><span class="p">,</span>
+</span><span id="line-430">            <span class="s2">&quot;/s/swimming_pool/indoor&quot;</span><span class="p">,</span>
+</span><span id="line-431">            <span class="s2">&quot;/s/swimming_pool/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-432">            <span class="s2">&quot;/s/synagogue/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-433">            <span class="s2">&quot;/t/television_room&quot;</span><span class="p">,</span>
+</span><span id="line-434">            <span class="s2">&quot;/t/television_studio&quot;</span><span class="p">,</span>
+</span><span id="line-435">            <span class="s2">&quot;/t/temple/asia&quot;</span><span class="p">,</span>
+</span><span id="line-436">            <span class="s2">&quot;/t/throne_room&quot;</span><span class="p">,</span>
+</span><span id="line-437">            <span class="s2">&quot;/t/ticket_booth&quot;</span><span class="p">,</span>
+</span><span id="line-438">            <span class="s2">&quot;/t/topiary_garden&quot;</span><span class="p">,</span>
+</span><span id="line-439">            <span class="s2">&quot;/t/tower&quot;</span><span class="p">,</span>
+</span><span id="line-440">            <span class="s2">&quot;/t/toyshop&quot;</span><span class="p">,</span>
+</span><span id="line-441">            <span class="s2">&quot;/t/train_interior&quot;</span><span class="p">,</span>
+</span><span id="line-442">            <span class="s2">&quot;/t/train_station/platform&quot;</span><span class="p">,</span>
+</span><span id="line-443">            <span class="s2">&quot;/t/tree_farm&quot;</span><span class="p">,</span>
+</span><span id="line-444">            <span class="s2">&quot;/t/tree_house&quot;</span><span class="p">,</span>
+</span><span id="line-445">            <span class="s2">&quot;/t/trench&quot;</span><span class="p">,</span>
+</span><span id="line-446">            <span class="s2">&quot;/t/tundra&quot;</span><span class="p">,</span>
+</span><span id="line-447">            <span class="s2">&quot;/u/underwater/ocean_deep&quot;</span><span class="p">,</span>
+</span><span id="line-448">            <span class="s2">&quot;/u/utility_room&quot;</span><span class="p">,</span>
+</span><span id="line-449">            <span class="s2">&quot;/v/valley&quot;</span><span class="p">,</span>
+</span><span id="line-450">            <span class="s2">&quot;/v/vegetable_garden&quot;</span><span class="p">,</span>
+</span><span id="line-451">            <span class="s2">&quot;/v/veterinarians_office&quot;</span><span class="p">,</span>
+</span><span id="line-452">            <span class="s2">&quot;/v/viaduct&quot;</span><span class="p">,</span>
+</span><span id="line-453">            <span class="s2">&quot;/v/village&quot;</span><span class="p">,</span>
+</span><span id="line-454">            <span class="s2">&quot;/v/vineyard&quot;</span><span class="p">,</span>
+</span><span id="line-455">            <span class="s2">&quot;/v/volcano&quot;</span><span class="p">,</span>
+</span><span id="line-456">            <span class="s2">&quot;/v/volleyball_court/outdoor&quot;</span><span class="p">,</span>
+</span><span id="line-457">            <span class="s2">&quot;/w/waiting_room&quot;</span><span class="p">,</span>
+</span><span id="line-458">            <span class="s2">&quot;/w/water_park&quot;</span><span class="p">,</span>
+</span><span id="line-459">            <span class="s2">&quot;/w/water_tower&quot;</span><span class="p">,</span>
+</span><span id="line-460">            <span class="s2">&quot;/w/waterfall&quot;</span><span class="p">,</span>
+</span><span id="line-461">            <span class="s2">&quot;/w/watering_hole&quot;</span><span class="p">,</span>
+</span><span id="line-462">            <span class="s2">&quot;/w/wave&quot;</span><span class="p">,</span>
+</span><span id="line-463">            <span class="s2">&quot;/w/wet_bar&quot;</span><span class="p">,</span>
+</span><span id="line-464">            <span class="s2">&quot;/w/wheat_field&quot;</span><span class="p">,</span>
+</span><span id="line-465">            <span class="s2">&quot;/w/wind_farm&quot;</span><span class="p">,</span>
+</span><span id="line-466">            <span class="s2">&quot;/w/windmill&quot;</span><span class="p">,</span>
+</span><span id="line-467">            <span class="s2">&quot;/y/yard&quot;</span><span class="p">,</span>
+</span><span id="line-468">            <span class="s2">&quot;/y/youth_hostel&quot;</span><span class="p">,</span>
+</span><span id="line-469">            <span class="s2">&quot;/z/zen_garden&quot;</span><span class="p">,</span>
+</span><span id="line-470">        <span class="p">]</span></div>
 
-</span><span id="line-172">
 </span></code></pre></div>
     </div></div>
         </main>

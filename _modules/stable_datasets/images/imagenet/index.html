@@ -18,12 +18,11 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=91c1d931" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=42baaae4" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=879ef6c1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=15e0fffa" />
-      <link rel="icon" href="../../../../_static/favicon.ico" />
         <link rel="search" title="Search" href="../../../../search/" />
         <link rel="index" title="Index" href="../../../../genindex/" />
 
@@ -186,15 +185,15 @@
 </span><span id="line-30">
 </span><span id="line-31">
 </span><span id="line-32"><span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
-</span><span id="line-33"><span class="kn">import</span><span class="w"> </span><span class="nn">urllib.request</span><span class="o">,</span><span class="w"> </span><span class="nn">urllib.error</span><span class="o">,</span><span class="w"> </span><span class="nn">urllib.parse</span>
-</span><span id="line-34"><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span id="line-33"><span class="kn">import</span><span class="w"> </span><span class="nn">imghdr</span>
+</span><span id="line-34"><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 </span><span id="line-35"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="line-36"><span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+</span><span id="line-36"><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 </span><span id="line-37"><span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
-</span><span id="line-38"><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-</span><span id="line-39"><span class="kn">import</span><span class="w"> </span><span class="nn">imghdr</span>
-</span><span id="line-40"><span class="kn">import</span><span class="w"> </span><span class="nn">http.client</span>
-</span><span id="line-41"><span class="kn">from</span><span class="w"> </span><span class="nn">ssl</span><span class="w"> </span><span class="kn">import</span> <span class="n">CertificateError</span>
+</span><span id="line-38"><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span id="line-39"><span class="kn">import</span><span class="w"> </span><span class="nn">urllib.error</span>
+</span><span id="line-40"><span class="kn">import</span><span class="w"> </span><span class="nn">urllib.parse</span>
+</span><span id="line-41"><span class="kn">import</span><span class="w"> </span><span class="nn">urllib.request</span>
 </span><span id="line-42">
 </span><span id="line-43">
 <div class="viewcode-block" id="DownloadError">
@@ -210,203 +209,189 @@
 <div class="viewcode-block" id="download">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.imagenet.download">[docs]</a>
 </span><span id="line-51"><span class="k">def</span><span class="w"> </span><span class="nf">download</span><span class="p">(</span><span class="n">n_images</span><span class="p">,</span> <span class="n">min_size</span><span class="p">,</span> <span class="n">n_threads</span><span class="p">,</span> <span class="n">wnids_list</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">):</span>
-</span><span id="line-52">    <span class="n">wnid_thread_lists</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+</span><span id="line-52">    <span class="n">wnid_thread_lists</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="line-53">    <span class="n">wnid_list_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">wnids_list</span><span class="p">)</span>
 </span><span id="line-54">    <span class="n">wnid_thread_sizes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">wnid_list_len</span><span class="p">)</span> <span class="o">/</span> <span class="n">n_threads</span><span class="p">))</span>
 </span><span id="line-55">    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_threads</span><span class="p">):</span>
-</span><span id="line-56">        <span class="n">wnid_thread_lists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span id="line-57">            <span class="n">wnids_list</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">wnid_thread_sizes</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">wnid_thread_sizes</span><span class="p">]</span>
-</span><span id="line-58">        <span class="p">)</span>
-</span><span id="line-59">
-</span><span id="line-60">    <span class="c1"># Define the threads</span>
-</span><span id="line-61">    <span class="k">def</span><span class="w"> </span><span class="nf">downloader</span><span class="p">(</span><span class="n">wnid_list</span><span class="p">):</span>
-</span><span id="line-62">        <span class="k">for</span> <span class="n">wnid</span> <span class="ow">in</span> <span class="n">wnid_list</span><span class="p">:</span>
-</span><span id="line-63">            <span class="n">dir_name</span> <span class="o">=</span> <span class="n">wnid</span>
-</span><span id="line-64">            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Downloading &quot;</span> <span class="o">+</span> <span class="n">dir_name</span><span class="p">)</span>
-</span><span id="line-65">            <span class="n">dir_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">dir_name</span><span class="p">)</span>
-</span><span id="line-66">            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
-</span><span id="line-67">                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;skipping: already have &quot;</span> <span class="o">+</span> <span class="n">dir_name</span><span class="p">)</span>
-</span><span id="line-68">            <span class="k">else</span><span class="p">:</span>
-</span><span id="line-69">                <span class="n">image_url_list</span> <span class="o">=</span> <span class="n">get_image_urls</span><span class="p">(</span><span class="n">wnid</span><span class="p">)</span>
-</span><span id="line-70">                <span class="n">download_images</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">image_url_list</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">min_size</span><span class="p">)</span>
-</span><span id="line-71">
-</span><span id="line-72">    <span class="c1"># initialize the threads</span>
-</span><span id="line-73">    <span class="nb">print</span><span class="p">(</span><span class="n">wnid_thread_lists</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-</span><span id="line-74">    <span class="n">download_threads</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="line-75">        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">downloader</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">([</span><span class="n">wnid_thread_lists</span><span class="p">[</span><span class="n">i</span><span class="p">]]))</span>
-</span><span id="line-76">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_threads</span><span class="p">)</span>
-</span><span id="line-77">    <span class="p">]</span>
-</span><span id="line-78">
-</span><span id="line-79">    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">download_threads</span><span class="p">:</span>
-</span><span id="line-80">        <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-</span><span id="line-81">
-</span><span id="line-82">    <span class="n">is_alive</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span id="line-83">    <span class="k">while</span> <span class="n">is_alive</span><span class="p">:</span>
-</span><span id="line-84">        <span class="n">is_alive</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="line-85">        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">download_threads</span><span class="p">:</span>
-</span><span id="line-86">            <span class="n">is_alive</span> <span class="o">=</span> <span class="n">is_alive</span> <span class="ow">or</span> <span class="n">t</span><span class="o">.</span><span class="n">isAlive</span><span class="p">()</span>
-</span><span id="line-87">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="line-56">        <span class="n">wnid_thread_lists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wnids_list</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">wnid_thread_sizes</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">wnid_thread_sizes</span><span class="p">])</span>
+</span><span id="line-57">
+</span><span id="line-58">    <span class="c1"># Define the threads</span>
+</span><span id="line-59">    <span class="k">def</span><span class="w"> </span><span class="nf">downloader</span><span class="p">(</span><span class="n">wnid_list</span><span class="p">):</span>
+</span><span id="line-60">        <span class="k">for</span> <span class="n">wnid</span> <span class="ow">in</span> <span class="n">wnid_list</span><span class="p">:</span>
+</span><span id="line-61">            <span class="n">dir_name</span> <span class="o">=</span> <span class="n">wnid</span>
+</span><span id="line-62">            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Downloading &quot;</span> <span class="o">+</span> <span class="n">dir_name</span><span class="p">)</span>
+</span><span id="line-63">            <span class="n">dir_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="n">dir_name</span><span class="p">)</span>
+</span><span id="line-64">            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
+</span><span id="line-65">                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;skipping: already have &quot;</span> <span class="o">+</span> <span class="n">dir_name</span><span class="p">)</span>
+</span><span id="line-66">            <span class="k">else</span><span class="p">:</span>
+</span><span id="line-67">                <span class="n">image_url_list</span> <span class="o">=</span> <span class="n">get_image_urls</span><span class="p">(</span><span class="n">wnid</span><span class="p">)</span>
+</span><span id="line-68">                <span class="n">download_images</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">image_url_list</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">min_size</span><span class="p">)</span>
+</span><span id="line-69">
+</span><span id="line-70">    <span class="c1"># initialize the threads</span>
+</span><span id="line-71">    <span class="nb">print</span><span class="p">(</span><span class="n">wnid_thread_lists</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="line-72">    <span class="n">download_threads</span> <span class="o">=</span> <span class="p">[</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">downloader</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">([</span><span class="n">wnid_thread_lists</span><span class="p">[</span><span class="n">i</span><span class="p">]]))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_threads</span><span class="p">)]</span>
+</span><span id="line-73">
+</span><span id="line-74">    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">download_threads</span><span class="p">:</span>
+</span><span id="line-75">        <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span id="line-76">
+</span><span id="line-77">    <span class="n">is_alive</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span id="line-78">    <span class="k">while</span> <span class="n">is_alive</span><span class="p">:</span>
+</span><span id="line-79">        <span class="n">is_alive</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="line-80">        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">download_threads</span><span class="p">:</span>
+</span><span id="line-81">            <span class="n">is_alive</span> <span class="o">=</span> <span class="n">is_alive</span> <span class="ow">or</span> <span class="n">t</span><span class="o">.</span><span class="n">isAlive</span><span class="p">()</span>
+</span><span id="line-82">        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span id="line-83">
+</span><span id="line-84">    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">download_threads</span><span class="p">:</span>
+</span><span id="line-85">        <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</span><span id="line-86">    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;finished&quot;</span><span class="p">)</span></div>
+
+</span><span id="line-87">
 </span><span id="line-88">
-</span><span id="line-89">    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">download_threads</span><span class="p">:</span>
-</span><span id="line-90">        <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-</span><span id="line-91">    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;finished&quot;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="mkdir">
+<a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.imagenet.mkdir">[docs]</a>
+</span><span id="line-89"><span class="k">def</span><span class="w"> </span><span class="nf">mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+</span><span id="line-90">    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+</span><span id="line-91">        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
 </span><span id="line-92">
 </span><span id="line-93">
-<div class="viewcode-block" id="mkdir">
-<a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.imagenet.mkdir">[docs]</a>
-</span><span id="line-94"><span class="k">def</span><span class="w"> </span><span class="nf">mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-</span><span id="line-95">    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-</span><span id="line-96">        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
-
-</span><span id="line-97">
-</span><span id="line-98">
 <div class="viewcode-block" id="get_url_request_list_function">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.imagenet.get_url_request_list_function">[docs]</a>
-</span><span id="line-99"><span class="k">def</span><span class="w"> </span><span class="nf">get_url_request_list_function</span><span class="p">(</span><span class="n">request_url</span><span class="p">):</span>
-</span><span id="line-100">    <span class="k">def</span><span class="w"> </span><span class="nf">get_url_request_list</span><span class="p">(</span><span class="n">wnid</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">retry</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
-</span><span id="line-101">        <span class="n">url</span> <span class="o">=</span> <span class="n">request_url</span> <span class="o">+</span> <span class="n">wnid</span>
-</span><span id="line-102">        <span class="n">f</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-103">        <span class="n">response</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
-</span><span id="line-104">        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span id="line-105">        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;response: &quot;</span> <span class="o">+</span> <span class="n">response</span><span class="p">)</span>
-</span><span id="line-106">        <span class="nb">list</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-</span><span id="line-107">        <span class="k">return</span> <span class="nb">list</span>
-</span><span id="line-108">
-</span><span id="line-109">    <span class="k">return</span> <span class="n">get_url_request_list</span></div>
+</span><span id="line-94"><span class="k">def</span><span class="w"> </span><span class="nf">get_url_request_list_function</span><span class="p">(</span><span class="n">request_url</span><span class="p">):</span>
+</span><span id="line-95">    <span class="k">def</span><span class="w"> </span><span class="nf">get_url_request_list</span><span class="p">(</span><span class="n">wnid</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">retry</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+</span><span id="line-96">        <span class="n">url</span> <span class="o">=</span> <span class="n">request_url</span> <span class="o">+</span> <span class="n">wnid</span>
+</span><span id="line-97">        <span class="n">f</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-98">        <span class="n">response</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span><span id="line-99">        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span id="line-100">        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;response: &quot;</span> <span class="o">+</span> <span class="n">response</span><span class="p">)</span>
+</span><span id="line-101">        <span class="nb">list</span> <span class="o">=</span> <span class="nb">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+</span><span id="line-102">        <span class="k">return</span> <span class="nb">list</span>
+</span><span id="line-103">
+</span><span id="line-104">    <span class="k">return</span> <span class="n">get_url_request_list</span></div>
 
+</span><span id="line-105">
+</span><span id="line-106">
+</span><span id="line-107"><span class="n">get_image_urls</span> <span class="o">=</span> <span class="n">get_url_request_list_function</span><span class="p">(</span><span class="s2">&quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=&quot;</span><span class="p">)</span>
+</span><span id="line-108">
+</span><span id="line-109"><span class="n">get_subtree_wnid</span> <span class="o">=</span> <span class="n">get_url_request_list_function</span><span class="p">(</span><span class="s2">&quot;http://www.image-net.org/api/text/wordnet.structure.hyponym?wnid=&quot;</span><span class="p">)</span>
 </span><span id="line-110">
-</span><span id="line-111">
-</span><span id="line-112"><span class="n">get_image_urls</span> <span class="o">=</span> <span class="n">get_url_request_list_function</span><span class="p">(</span>
-</span><span id="line-113">    <span class="s2">&quot;http://www.image-net.org/api/text/imagenet.synset.geturls?wnid=&quot;</span>
-</span><span id="line-114"><span class="p">)</span>
+</span><span id="line-111"><span class="n">get_full_subtree_wnid</span> <span class="o">=</span> <span class="n">get_url_request_list_function</span><span class="p">(</span>
+</span><span id="line-112">    <span class="s2">&quot;http://www.image-net.org/api/text/wordnet.structure.hyponym?full=1&amp;wnid=&quot;</span>
+</span><span id="line-113"><span class="p">)</span>
+</span><span id="line-114">
 </span><span id="line-115">
-</span><span id="line-116"><span class="n">get_subtree_wnid</span> <span class="o">=</span> <span class="n">get_url_request_list_function</span><span class="p">(</span>
-</span><span id="line-117">    <span class="s2">&quot;http://www.image-net.org/api/text/wordnet.structure.hyponym?wnid=&quot;</span>
-</span><span id="line-118"><span class="p">)</span>
-</span><span id="line-119">
-</span><span id="line-120"><span class="n">get_full_subtree_wnid</span> <span class="o">=</span> <span class="n">get_url_request_list_function</span><span class="p">(</span>
-</span><span id="line-121">    <span class="s2">&quot;http://www.image-net.org/api/text/wordnet.structure.hyponym?full=1&amp;wnid=&quot;</span>
-</span><span id="line-122"><span class="p">)</span>
-</span><span id="line-123">
-</span><span id="line-124">
 <div class="viewcode-block" id="get_words_wnid">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.imagenet.get_words_wnid">[docs]</a>
-</span><span id="line-125"><span class="k">def</span><span class="w"> </span><span class="nf">get_words_wnid</span><span class="p">(</span><span class="n">wnid</span><span class="p">):</span>
-</span><span id="line-126">    <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://www.image-net.org/api/text/wordnet.synset.getwords?wnid=&quot;</span> <span class="o">+</span> <span class="n">wnid</span>
-</span><span id="line-127">    <span class="n">f</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-128">    <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
-</span><span id="line-129">    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span id="line-130">    <span class="k">return</span> <span class="n">content</span></div>
+</span><span id="line-116"><span class="k">def</span><span class="w"> </span><span class="nf">get_words_wnid</span><span class="p">(</span><span class="n">wnid</span><span class="p">):</span>
+</span><span id="line-117">    <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://www.image-net.org/api/text/wordnet.synset.getwords?wnid=&quot;</span> <span class="o">+</span> <span class="n">wnid</span>
+</span><span id="line-118">    <span class="n">f</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-119">    <span class="n">content</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</span><span id="line-120">    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span id="line-121">    <span class="k">return</span> <span class="n">content</span></div>
 
-</span><span id="line-131">
-</span><span id="line-132">
+</span><span id="line-122">
+</span><span id="line-123">
 <div class="viewcode-block" id="download_images">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.imagenet.download_images">[docs]</a>
-</span><span id="line-133"><span class="k">def</span><span class="w"> </span><span class="nf">download_images</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">image_url_list</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">min_size</span><span class="p">):</span>
-</span><span id="line-134">    <span class="n">mkdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
-</span><span id="line-135">    <span class="n">image_count</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span id="line-136">    <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">image_url_list</span><span class="p">:</span>
-</span><span id="line-137">        <span class="k">if</span> <span class="n">image_count</span> <span class="o">==</span> <span class="n">n_images</span><span class="p">:</span>
-</span><span id="line-138">            <span class="k">break</span>
-</span><span id="line-139">        <span class="k">try</span><span class="p">:</span>
-</span><span id="line-140">            <span class="n">f</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-141">            <span class="n">image</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-</span><span id="line-142">            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span id="line-143">            <span class="n">extension</span> <span class="o">=</span> <span class="n">imghdr</span><span class="o">.</span><span class="n">what</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>  <span class="c1"># check if valid image</span>
-</span><span id="line-144">            <span class="k">if</span> <span class="n">extension</span> <span class="o">==</span> <span class="s2">&quot;jpeg&quot;</span><span class="p">:</span>
-</span><span id="line-145">                <span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;jpg&quot;</span>
-</span><span id="line-146">            <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_size</span><span class="p">:</span>
-</span><span id="line-147">                <span class="n">image_name</span> <span class="o">=</span> <span class="s2">&quot;image_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">image_count</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">extension</span>
-</span><span id="line-148">                <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">image_name</span><span class="p">)</span>
-</span><span id="line-149">                <span class="n">image_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span>
-</span><span id="line-150">                <span class="n">image_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-</span><span id="line-151">                <span class="n">image_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</span><span id="line-152">                <span class="n">image_count</span> <span class="o">+=</span> <span class="mi">1</span>
-</span><span id="line-153">        <span class="k">except</span><span class="p">:</span>
-</span><span id="line-154">            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;skipping &quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span></div>
+</span><span id="line-124"><span class="k">def</span><span class="w"> </span><span class="nf">download_images</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">image_url_list</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">min_size</span><span class="p">):</span>
+</span><span id="line-125">    <span class="n">mkdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span>
+</span><span id="line-126">    <span class="n">image_count</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="line-127">    <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">image_url_list</span><span class="p">:</span>
+</span><span id="line-128">        <span class="k">if</span> <span class="n">image_count</span> <span class="o">==</span> <span class="n">n_images</span><span class="p">:</span>
+</span><span id="line-129">            <span class="k">break</span>
+</span><span id="line-130">        <span class="k">try</span><span class="p">:</span>
+</span><span id="line-131">            <span class="n">f</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-132">            <span class="n">image</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="line-133">            <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span id="line-134">            <span class="n">extension</span> <span class="o">=</span> <span class="n">imghdr</span><span class="o">.</span><span class="n">what</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>  <span class="c1"># check if valid image</span>
+</span><span id="line-135">            <span class="k">if</span> <span class="n">extension</span> <span class="o">==</span> <span class="s2">&quot;jpeg&quot;</span><span class="p">:</span>
+</span><span id="line-136">                <span class="n">extension</span> <span class="o">=</span> <span class="s2">&quot;jpg&quot;</span>
+</span><span id="line-137">            <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">image</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">min_size</span><span class="p">:</span>
+</span><span id="line-138">                <span class="n">image_name</span> <span class="o">=</span> <span class="s2">&quot;image_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">image_count</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">extension</span>
+</span><span id="line-139">                <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">image_name</span><span class="p">)</span>
+</span><span id="line-140">                <span class="n">image_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span>
+</span><span id="line-141">                <span class="n">image_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</span><span id="line-142">                <span class="n">image_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span id="line-143">                <span class="n">image_count</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="line-144">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span id="line-145">            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;skipping &quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span></div>
 
-</span><span id="line-155">
-</span><span id="line-156">
+</span><span id="line-146">
+</span><span id="line-147">
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.imagenet.main">[docs]</a>
-</span><span id="line-157"><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">wnid</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">n_threads</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">fullsubtree</span><span class="p">,</span> <span class="n">noroot</span><span class="p">,</span> <span class="n">nosubtree</span><span class="p">,</span> <span class="n">min_size</span><span class="p">):</span>
-</span><span id="line-158">
-</span><span id="line-159">    <span class="n">wnids_list</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="line-160">
-</span><span id="line-161">    <span class="c1"># First get the list of wnids</span>
-</span><span id="line-162">    <span class="k">if</span> <span class="ow">not</span> <span class="n">noroot</span><span class="p">:</span>
-</span><span id="line-163">        <span class="n">wnids_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wnid</span><span class="p">)</span>
-</span><span id="line-164">    <span class="k">if</span> <span class="ow">not</span> <span class="n">nosubtree</span><span class="p">:</span>
-</span><span id="line-165">        <span class="k">if</span> <span class="n">fullsubtree</span><span class="p">:</span>
-</span><span id="line-166">            <span class="n">subtree</span> <span class="o">=</span> <span class="n">get_full_subtree_wnid</span><span class="p">(</span><span class="n">wnid</span><span class="p">)</span>
-</span><span id="line-167">        <span class="k">else</span><span class="p">:</span>
-</span><span id="line-168">            <span class="n">subtree</span> <span class="o">=</span> <span class="n">get_subtree_wnid</span><span class="p">(</span><span class="n">wnid</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">retry</span><span class="p">)</span>
-</span><span id="line-169">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">subtree</span><span class="p">)):</span>
-</span><span id="line-170">            <span class="n">subtree</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">subtree</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>  <span class="c1"># removes dash</span>
-</span><span id="line-171">        <span class="n">wnids_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">subtree</span><span class="p">)</span>
-</span><span id="line-172">
-</span><span id="line-173">    <span class="c1"># create root directory</span>
-</span><span id="line-174">    <span class="n">mkdir</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
-</span><span id="line-175">    <span class="n">download</span><span class="p">(</span><span class="n">n_images</span><span class="p">,</span> <span class="n">min_size</span><span class="p">,</span> <span class="n">n_threads</span><span class="p">,</span> <span class="n">wnids_list</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">)</span></div>
+</span><span id="line-148"><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">wnid</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">n_threads</span><span class="p">,</span> <span class="n">n_images</span><span class="p">,</span> <span class="n">fullsubtree</span><span class="p">,</span> <span class="n">noroot</span><span class="p">,</span> <span class="n">nosubtree</span><span class="p">,</span> <span class="n">min_size</span><span class="p">):</span>
+</span><span id="line-149">    <span class="n">wnids_list</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-150">
+</span><span id="line-151">    <span class="c1"># First get the list of wnids</span>
+</span><span id="line-152">    <span class="k">if</span> <span class="ow">not</span> <span class="n">noroot</span><span class="p">:</span>
+</span><span id="line-153">        <span class="n">wnids_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wnid</span><span class="p">)</span>
+</span><span id="line-154">    <span class="k">if</span> <span class="ow">not</span> <span class="n">nosubtree</span><span class="p">:</span>
+</span><span id="line-155">        <span class="k">if</span> <span class="n">fullsubtree</span><span class="p">:</span>
+</span><span id="line-156">            <span class="n">subtree</span> <span class="o">=</span> <span class="n">get_full_subtree_wnid</span><span class="p">(</span><span class="n">wnid</span><span class="p">)</span>
+</span><span id="line-157">        <span class="k">else</span><span class="p">:</span>
+</span><span id="line-158">            <span class="n">timeout</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-159">            <span class="n">retry</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-160">            <span class="n">subtree</span> <span class="o">=</span> <span class="n">get_subtree_wnid</span><span class="p">(</span><span class="n">wnid</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">retry</span><span class="p">)</span>
+</span><span id="line-161">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">subtree</span><span class="p">)):</span>
+</span><span id="line-162">            <span class="n">subtree</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">subtree</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>  <span class="c1"># removes dash</span>
+</span><span id="line-163">        <span class="n">wnids_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">subtree</span><span class="p">)</span>
+</span><span id="line-164">
+</span><span id="line-165">    <span class="c1"># create root directory</span>
+</span><span id="line-166">    <span class="n">mkdir</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+</span><span id="line-167">    <span class="n">download</span><span class="p">(</span><span class="n">n_images</span><span class="p">,</span> <span class="n">min_size</span><span class="p">,</span> <span class="n">n_threads</span><span class="p">,</span> <span class="n">wnids_list</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">)</span></div>
 
-</span><span id="line-176">
-</span><span id="line-177">
-</span><span id="line-178"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-</span><span id="line-179">    <span class="n">p</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
-</span><span id="line-180">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;wnid&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Imagenet wnid, example n03489162&quot;</span><span class="p">)</span>
-</span><span id="line-181">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;outdir&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output directory&quot;</span><span class="p">)</span>
-</span><span id="line-182">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-</span><span id="line-183">        <span class="s2">&quot;--jobs&quot;</span><span class="p">,</span>
-</span><span id="line-184">        <span class="s2">&quot;-j&quot;</span><span class="p">,</span>
-</span><span id="line-185">        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-</span><span id="line-186">        <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-</span><span id="line-187">        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of parallel threads to download&quot;</span><span class="p">,</span>
+</span><span id="line-168">
+</span><span id="line-169">
+</span><span id="line-170"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+</span><span id="line-171">    <span class="n">p</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+</span><span id="line-172">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;wnid&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Imagenet wnid, example n03489162&quot;</span><span class="p">)</span>
+</span><span id="line-173">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;outdir&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output directory&quot;</span><span class="p">)</span>
+</span><span id="line-174">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+</span><span id="line-175">        <span class="s2">&quot;--jobs&quot;</span><span class="p">,</span>
+</span><span id="line-176">        <span class="s2">&quot;-j&quot;</span><span class="p">,</span>
+</span><span id="line-177">        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+</span><span id="line-178">        <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span id="line-179">        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of parallel threads to download&quot;</span><span class="p">,</span>
+</span><span id="line-180">    <span class="p">)</span>
+</span><span id="line-181">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+</span><span id="line-182">        <span class="s2">&quot;--images&quot;</span><span class="p">,</span>
+</span><span id="line-183">        <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
+</span><span id="line-184">        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+</span><span id="line-185">        <span class="n">default</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+</span><span id="line-186">        <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;N_IMAGES&quot;</span><span class="p">,</span>
+</span><span id="line-187">        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of images per category to download&quot;</span><span class="p">,</span>
 </span><span id="line-188">    <span class="p">)</span>
-</span><span id="line-189">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-</span><span id="line-190">        <span class="s2">&quot;--images&quot;</span><span class="p">,</span>
-</span><span id="line-191">        <span class="s2">&quot;-i&quot;</span><span class="p">,</span>
-</span><span id="line-192">        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
-</span><span id="line-193">        <span class="n">default</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-</span><span id="line-194">        <span class="n">metavar</span><span class="o">=</span><span class="s2">&quot;N_IMAGES&quot;</span><span class="p">,</span>
-</span><span id="line-195">        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of images per category to download&quot;</span><span class="p">,</span>
-</span><span id="line-196">    <span class="p">)</span>
-</span><span id="line-197">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-</span><span id="line-198">        <span class="s2">&quot;--fullsubtree&quot;</span><span class="p">,</span> <span class="s2">&quot;-F&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Downloads the full subtree&quot;</span>
-</span><span id="line-199">    <span class="p">)</span>
+</span><span id="line-189">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--fullsubtree&quot;</span><span class="p">,</span> <span class="s2">&quot;-F&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Downloads the full subtree&quot;</span><span class="p">)</span>
+</span><span id="line-190">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--noroot&quot;</span><span class="p">,</span> <span class="s2">&quot;-R&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not Downloads the root&quot;</span><span class="p">)</span>
+</span><span id="line-191">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--nosubtree&quot;</span><span class="p">,</span> <span class="s2">&quot;-S&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not Downloads the subtree&quot;</span><span class="p">)</span>
+</span><span id="line-192">
+</span><span id="line-193">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+</span><span id="line-194">        <span class="s2">&quot;--humanreadable&quot;</span><span class="p">,</span>
+</span><span id="line-195">        <span class="s2">&quot;-H&quot;</span><span class="p">,</span>
+</span><span id="line-196">        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+</span><span id="line-197">        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Makes the folders human readable&quot;</span><span class="p">,</span>
+</span><span id="line-198">    <span class="p">)</span>
+</span><span id="line-199">
 </span><span id="line-200">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-</span><span id="line-201">        <span class="s2">&quot;--noroot&quot;</span><span class="p">,</span> <span class="s2">&quot;-R&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not Downloads the root&quot;</span>
-</span><span id="line-202">    <span class="p">)</span>
-</span><span id="line-203">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-</span><span id="line-204">        <span class="s2">&quot;--nosubtree&quot;</span><span class="p">,</span> <span class="s2">&quot;-S&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Do not Downloads the subtree&quot;</span>
-</span><span id="line-205">    <span class="p">)</span>
-</span><span id="line-206">
-</span><span id="line-207">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-</span><span id="line-208">        <span class="s2">&quot;--humanreadable&quot;</span><span class="p">,</span>
-</span><span id="line-209">        <span class="s2">&quot;-H&quot;</span><span class="p">,</span>
-</span><span id="line-210">        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
-</span><span id="line-211">        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Makes the folders human readable&quot;</span><span class="p">,</span>
-</span><span id="line-212">    <span class="p">)</span>
-</span><span id="line-213">
-</span><span id="line-214">    <span class="n">p</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-</span><span id="line-215">        <span class="s2">&quot;--minsize&quot;</span><span class="p">,</span>
-</span><span id="line-216">        <span class="s2">&quot;-m&quot;</span><span class="p">,</span>
-</span><span id="line-217">        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-</span><span id="line-218">        <span class="n">default</span><span class="o">=</span><span class="mi">7000</span><span class="p">,</span>
-</span><span id="line-219">        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Min size of the images in bytes&quot;</span><span class="p">,</span>
-</span><span id="line-220">    <span class="p">)</span>
-</span><span id="line-221">
-</span><span id="line-222">    <span class="n">args</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
-</span><span id="line-223">    <span class="n">main</span><span class="p">(</span>
-</span><span id="line-224">        <span class="n">wnid</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">wnid</span><span class="p">,</span>
-</span><span id="line-225">        <span class="n">out_dir</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span>
-</span><span id="line-226">        <span class="n">n_threads</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">jobs</span><span class="p">,</span>
-</span><span id="line-227">        <span class="n">n_images</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
-</span><span id="line-228">        <span class="n">fullsubtree</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">fullsubtree</span><span class="p">,</span>
-</span><span id="line-229">        <span class="n">noroot</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">noroot</span><span class="p">,</span>
-</span><span id="line-230">        <span class="n">nosubtree</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">nosubtree</span><span class="p">,</span>
-</span><span id="line-231">        <span class="n">min_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">minsize</span><span class="p">,</span>
-</span><span id="line-232">    <span class="p">)</span>
+</span><span id="line-201">        <span class="s2">&quot;--minsize&quot;</span><span class="p">,</span>
+</span><span id="line-202">        <span class="s2">&quot;-m&quot;</span><span class="p">,</span>
+</span><span id="line-203">        <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+</span><span id="line-204">        <span class="n">default</span><span class="o">=</span><span class="mi">7000</span><span class="p">,</span>
+</span><span id="line-205">        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Min size of the images in bytes&quot;</span><span class="p">,</span>
+</span><span id="line-206">    <span class="p">)</span>
+</span><span id="line-207">
+</span><span id="line-208">    <span class="n">args</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+</span><span id="line-209">    <span class="n">main</span><span class="p">(</span>
+</span><span id="line-210">        <span class="n">wnid</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">wnid</span><span class="p">,</span>
+</span><span id="line-211">        <span class="n">out_dir</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">outdir</span><span class="p">,</span>
+</span><span id="line-212">        <span class="n">n_threads</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">jobs</span><span class="p">,</span>
+</span><span id="line-213">        <span class="n">n_images</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">images</span><span class="p">,</span>
+</span><span id="line-214">        <span class="n">fullsubtree</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">fullsubtree</span><span class="p">,</span>
+</span><span id="line-215">        <span class="n">noroot</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">noroot</span><span class="p">,</span>
+</span><span id="line-216">        <span class="n">nosubtree</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">nosubtree</span><span class="p">,</span>
+</span><span id="line-217">        <span class="n">min_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">minsize</span><span class="p">,</span>
+</span><span id="line-218">    <span class="p">)</span>
 </span></code></pre></div>
     </div></div>
         </main>

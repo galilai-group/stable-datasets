@@ -18,12 +18,11 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=91c1d931" />
       <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=42baaae4" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=879ef6c1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
       <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
       <link rel="stylesheet" type="text/css" href="../../../_static/awesome-sphinx-design.css?v=15e0fffa" />
-      <link rel="icon" href="../../../_static/favicon.ico" />
         <link rel="search" title="Search" href="../../../search/" />
         <link rel="index" title="Index" href="../../../genindex/" />
 
@@ -155,13 +154,13 @@
     <div id="content" role="main">
       <h1>Source code for stable_datasets.cassava</h1><div class="highlight"><pre>
 <span></span><code><span id="line-1"><span class="ch">#!/usr/bin/env python</span>
-</span><span id="line-2"><span class="c1"># -*- coding: utf-8 -*-</span>
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">urllib</span>
 </span><span id="line-6"><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
-</span><span id="line-7"><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.image</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpimg</span>
-</span><span id="line-8"><span class="kn">import</span><span class="w"> </span><span class="nn">urllib</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.image</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpimg</span>
 </span><span id="line-9"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="line-10">
 </span><span id="line-11">
@@ -212,77 +211,75 @@
 </span><span id="line-52">            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava&quot;</span><span class="p">)</span>
 </span><span id="line-53">        <span class="c1"># Check if file exists</span>
 </span><span id="line-54">        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava/cassavaleafdata.zip&quot;</span><span class="p">):</span>
-</span><span id="line-55">            <span class="n">url</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="line-56">                <span class="s2">&quot;https://storage.googleapis.com/emcassavadata/&quot;</span> <span class="o">+</span> <span class="s2">&quot;cassavaleafdata.zip&quot;</span>
-</span><span id="line-57">            <span class="p">)</span>
-</span><span id="line-58">            <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava/cassavaleafdata.zip&quot;</span><span class="p">)</span></div>
+</span><span id="line-55">            <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://storage.googleapis.com/emcassavadata/&quot;</span> <span class="o">+</span> <span class="s2">&quot;cassavaleafdata.zip&quot;</span>
+</span><span id="line-56">            <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava/cassavaleafdata.zip&quot;</span><span class="p">)</span></div>
 
-</span><span id="line-59">
+</span><span id="line-57">
 <div class="viewcode-block" id="cassava.load">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.cassava.cassava.load">[docs]</a>
-</span><span id="line-60">    <span class="nd">@staticmethod</span>
-</span><span id="line-61">    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="line-62"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="line-63"><span class="sd">        Parameters</span>
-</span><span id="line-64"><span class="sd">        ----------</span>
-</span><span id="line-65"><span class="sd">            path: str (optional)</span>
-</span><span id="line-66"><span class="sd">                default ($DATASET_PATH), the path to look for the data and</span>
-</span><span id="line-67"><span class="sd">                where the data will be downloaded if not present</span>
-</span><span id="line-68">
-</span><span id="line-69"><span class="sd">        Returns</span>
-</span><span id="line-70"><span class="sd">        -------</span>
+</span><span id="line-58">    <span class="nd">@staticmethod</span>
+</span><span id="line-59">    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="line-60"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="line-61"><span class="sd">        Parameters</span>
+</span><span id="line-62"><span class="sd">        ----------</span>
+</span><span id="line-63"><span class="sd">            path: str (optional)</span>
+</span><span id="line-64"><span class="sd">                default ($DATASET_PATH), the path to look for the data and</span>
+</span><span id="line-65"><span class="sd">                where the data will be downloaded if not present</span>
+</span><span id="line-66">
+</span><span id="line-67"><span class="sd">        Returns</span>
+</span><span id="line-68"><span class="sd">        -------</span>
+</span><span id="line-69">
+</span><span id="line-70"><span class="sd">            train_images: array</span>
 </span><span id="line-71">
-</span><span id="line-72"><span class="sd">            train_images: array</span>
+</span><span id="line-72"><span class="sd">            train_labels: array</span>
 </span><span id="line-73">
-</span><span id="line-74"><span class="sd">            train_labels: array</span>
+</span><span id="line-74"><span class="sd">            valid_images: array</span>
 </span><span id="line-75">
-</span><span id="line-76"><span class="sd">            valid_images: array</span>
+</span><span id="line-76"><span class="sd">            valid_labels: array</span>
 </span><span id="line-77">
-</span><span id="line-78"><span class="sd">            valid_labels: array</span>
+</span><span id="line-78"><span class="sd">            test_images: array</span>
 </span><span id="line-79">
-</span><span id="line-80"><span class="sd">            test_images: array</span>
+</span><span id="line-80"><span class="sd">            test_labels: array</span>
 </span><span id="line-81">
-</span><span id="line-82"><span class="sd">            test_labels: array</span>
+</span><span id="line-82"><span class="sd">        &quot;&quot;&quot;</span>
 </span><span id="line-83">
-</span><span id="line-84"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="line-85">
-</span><span id="line-86">        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-87">            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;DATASET_PATH&quot;</span><span class="p">]</span>
+</span><span id="line-84">        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-85">            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;DATASET_PATH&quot;</span><span class="p">]</span>
+</span><span id="line-86">
+</span><span id="line-87">        <span class="n">cassava</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 </span><span id="line-88">
-</span><span id="line-89">        <span class="n">cassava</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="line-89">        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 </span><span id="line-90">
-</span><span id="line-91">        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-</span><span id="line-92">
-</span><span id="line-93">        <span class="c1"># Loading the file</span>
-</span><span id="line-94">        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[]],</span> <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[]],</span> <span class="s2">&quot;validation&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[]]}</span>
-</span><span id="line-95">
-</span><span id="line-96">        <span class="n">f</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava/cassavaleafdata.zip&quot;</span><span class="p">)</span>
-</span><span id="line-97">        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
-</span><span id="line-98">            <span class="k">if</span> <span class="s2">&quot;.jpg&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
-</span><span id="line-99">                <span class="k">continue</span>
-</span><span id="line-100">            <span class="n">setname</span><span class="p">,</span> <span class="n">foldername</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
-</span><span id="line-101">            <span class="n">img</span> <span class="o">=</span> <span class="n">mpimg</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filename</span><span class="p">)),</span> <span class="s2">&quot;jpg&quot;</span><span class="p">)</span>
-</span><span id="line-102">            <span class="n">data</span><span class="p">[</span><span class="n">setname</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-</span><span id="line-103">            <span class="n">data</span><span class="p">[</span><span class="n">setname</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cassava</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">foldername</span><span class="p">))</span>
-</span><span id="line-104">
-</span><span id="line-105">        <span class="n">train_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</span><span id="line-106">        <span class="n">test_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</span><span id="line-107">        <span class="n">valid_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</span><span id="line-108">
-</span><span id="line-109">        <span class="n">train_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
-</span><span id="line-110">        <span class="n">test_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
-</span><span id="line-111">        <span class="n">valid_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="line-91">        <span class="c1"># Loading the file</span>
+</span><span id="line-92">        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[]],</span> <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[]],</span> <span class="s2">&quot;validation&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[]]}</span>
+</span><span id="line-93">
+</span><span id="line-94">        <span class="n">f</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava/cassavaleafdata.zip&quot;</span><span class="p">)</span>
+</span><span id="line-95">        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
+</span><span id="line-96">            <span class="k">if</span> <span class="s2">&quot;.jpg&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
+</span><span id="line-97">                <span class="k">continue</span>
+</span><span id="line-98">            <span class="n">setname</span><span class="p">,</span> <span class="n">foldername</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+</span><span id="line-99">            <span class="n">img</span> <span class="o">=</span> <span class="n">mpimg</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filename</span><span class="p">)),</span> <span class="s2">&quot;jpg&quot;</span><span class="p">)</span>
+</span><span id="line-100">            <span class="n">data</span><span class="p">[</span><span class="n">setname</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+</span><span id="line-101">            <span class="n">data</span><span class="p">[</span><span class="n">setname</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cassava</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">foldername</span><span class="p">))</span>
+</span><span id="line-102">
+</span><span id="line-103">        <span class="n">train_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="line-104">        <span class="n">test_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="line-105">        <span class="n">valid_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="line-106">
+</span><span id="line-107">        <span class="n">train_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="line-108">        <span class="n">test_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="line-109">        <span class="n">valid_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</span><span id="line-110">
+</span><span id="line-111">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset cassava loaded in </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s.&quot;</span><span class="p">)</span>
 </span><span id="line-112">
-</span><span id="line-113">        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dataset cassava loaded in </span><span class="si">{0:.2f}</span><span class="s2">s.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span><span class="p">))</span>
-</span><span id="line-114">
-</span><span id="line-115">        <span class="k">return</span> <span class="p">(</span>
-</span><span id="line-116">            <span class="n">train_images</span><span class="p">,</span>
-</span><span id="line-117">            <span class="n">train_labels</span><span class="p">,</span>
-</span><span id="line-118">            <span class="n">valid_images</span><span class="p">,</span>
-</span><span id="line-119">            <span class="n">valid_labels</span><span class="p">,</span>
-</span><span id="line-120">            <span class="n">test_images</span><span class="p">,</span>
-</span><span id="line-121">            <span class="n">test_labels</span><span class="p">,</span>
-</span><span id="line-122">        <span class="p">)</span></div>
+</span><span id="line-113">        <span class="k">return</span> <span class="p">(</span>
+</span><span id="line-114">            <span class="n">train_images</span><span class="p">,</span>
+</span><span id="line-115">            <span class="n">train_labels</span><span class="p">,</span>
+</span><span id="line-116">            <span class="n">valid_images</span><span class="p">,</span>
+</span><span id="line-117">            <span class="n">valid_labels</span><span class="p">,</span>
+</span><span id="line-118">            <span class="n">test_images</span><span class="p">,</span>
+</span><span id="line-119">            <span class="n">test_labels</span><span class="p">,</span>
+</span><span id="line-120">        <span class="p">)</span></div>
 </div>
 
 </span></code></pre></div>
