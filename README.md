@@ -39,7 +39,7 @@ ds_torch = ds.with_format("torch")
 Each dataset is a Hugging Face `datasets.GeneratorBasedBuilder` subclass that follows a simple convention:
 
 - **Define `VERSION`**: bump when your builder output changes.
-- **Define `SOURCE`** (or override `_source()`): provides at least `{"urls": {"train": "...", "test": "...", ...}}`.
+- **Define `SOURCE`** (or override `_source()`): provides at least `{"homepage": "...", "citation": "...", "download_urls": {"train": "...", "test": "...", ...}}`.
 - **Implement `_info()`**: defines features/metadata.
 - **Implement `_generate_examples(self, data_path, split)`**: yields `(key, example_dict)`; `data_path` is the downloaded artifact for that split.
 
@@ -55,7 +55,8 @@ class MyDataset(BaseDatasetBuilder):
     VERSION = datasets.Version("1.0.0")
     SOURCE = {
         "homepage": "https://example.com",
-        "urls": {
+        "citation": "TBD",
+        "download_urls": {
             "train": "https://example.com/train.zip",
             "test": "https://example.com/test.zip",
         },

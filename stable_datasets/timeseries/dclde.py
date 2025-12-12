@@ -14,7 +14,11 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 class DCLDE(BaseDatasetBuilder):
     VERSION = datasets.Version("0.0.0")
-    SOURCE = {"urls": {}}
+    SOURCE = {
+        "homepage": "TBD",
+        "citation": "TBD",
+        "download_urls": {},
+    }
 
     def _info(self) -> datasets.DatasetInfo:  # pragma: no cover
         raise NotImplementedError("DCLDE builder not implemented yet.")

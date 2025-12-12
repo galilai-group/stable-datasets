@@ -16,7 +16,11 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 class BrainMNIST(BaseDatasetBuilder):
     VERSION = datasets.Version("0.0.0")
-    SOURCE = {"urls": {}}
+    SOURCE = {
+        "homepage": "http://mindbigdata.com/opendb/index.html",
+        "citation": "TBD",
+        "download_urls": {},
+    }
 
     def _info(self) -> datasets.DatasetInfo:  # pragma: no cover
         raise NotImplementedError("BrainMNIST builder not implemented yet.")

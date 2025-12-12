@@ -26,10 +26,17 @@ class ArabicCharacters(BaseDatasetBuilder):
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
         "homepage": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset",
-        "urls": {
+        "download_urls": {
             "train": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Train%20Images%2013440x32x32.zip",
             "test": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Test%20Images%203360x32x32.zip",
         },
+        "citation": """@article{el2017arabic,
+                        title={Arabic handwritten characters recognition using convolutional neural network},
+                        author={El-Sawy, Ahmed and Loey, Mohamed and El-Bakry, Hazem},
+                        journal={WSEAS Transactions on Computer Research},
+                        volume={5},
+                        pages={11--19},
+                        year={2017}}""",
     }
 
     def _info(self):
@@ -42,13 +49,7 @@ class ArabicCharacters(BaseDatasetBuilder):
             ),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
-            citation="""@article{el2017arabic,
-                        title={Arabic handwritten characters recognition using convolutional neural network},
-                        author={El-Sawy, Ahmed and Loey, Mohamed and El-Bakry, Hazem},
-                        journal={WSEAS Transactions on Computer Research},
-                        volume={5},
-                        pages={11--19},
-                        year={2017}}""",
+            citation=self.SOURCE["citation"],
         )
 
     def _generate_examples(self, data_path, split):

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from .arabic_characters import ArabicCharacters
+from .med_mnist import MedMNIST
 
 
 # from .arabic_digits import ArabicDigits
@@ -24,7 +25,6 @@ from .arabic_characters import ArabicCharacters
 # from .imagenette import Imagenette
 # from .k_mnist import KMNIST
 # from .linnaeus5 import Linnaeus5
-# from .med_mnist import MedMNIST
 # from .mnist import MNIST
 # from .not_mnist import NotMNIST
 # from .places365_small import Places365Small
@@ -36,4 +36,5 @@ from .arabic_characters import ArabicCharacters
 
 __all__ = [
     "ArabicCharacters",
+    "MedMNIST",
 ]

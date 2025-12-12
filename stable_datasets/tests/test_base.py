@@ -8,7 +8,7 @@ class _TinyLocalBuilder(BaseDatasetBuilder):
     """A tiny local builder used to validate BaseDatasetBuilder return types."""
 
     VERSION = datasets.Version("0.0.0")
-    SOURCE = {"urls": {}}
+    SOURCE = {"homepage": "https://example.com", "citation": "TBD", "download_urls": {}}
 
     def _info(self):
         return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
@@ -31,7 +31,7 @@ class _TinyDynamicSourceBuilder(BaseDatasetBuilder):
 
     def _source(self) -> dict:
         # In real datasets this might depend on self.config; here it's static but computed at runtime.
-        return {"urls": {}}
+        return {"homepage": "https://example.com", "citation": "TBD", "download_urls": {}}
 
     def _info(self):
         return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
@@ -49,10 +49,14 @@ class _TinyDynamicSourceBuilder(BaseDatasetBuilder):
 
 
 class _TinyBaseSplitBuilder(BaseDatasetBuilder):
-    """Uses BaseDatasetBuilder's default _split_generators (SOURCE['urls'] + bulk_download)."""
+    """Uses BaseDatasetBuilder's default _split_generators (SOURCE['download_urls'] + bulk_download)."""
 
     VERSION = datasets.Version("0.0.0")
-    SOURCE = {"urls": {"train": "https://example.com/train.bin", "test": "https://example.com/test.bin"}}
+    SOURCE = {
+        "homepage": "https://example.com",
+        "citation": "TBD",
+        "download_urls": {"train": "https://example.com/train.bin", "test": "https://example.com/test.bin"},
+    }
 
     def _info(self):
         return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
@@ -112,7 +116,11 @@ def test_base_builder_requires_version():
     with pytest.raises(TypeError):
 
         class _MissingVersion(BaseDatasetBuilder):
-            SOURCE = {"urls": {"train": "https://example.com/train.bin"}}
+            SOURCE = {
+                "homepage": "https://example.com",
+                "citation": "TBD",
+                "download_urls": {"train": "https://example.com/train.bin"},
+            }
 
             def _info(self):
                 return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
@@ -151,10 +159,82 @@ def test_base_builder_source_override_must_return_dict(tmp_path):
         _BadSource(split="train", processed_cache_dir=str(tmp_path))
 
 
+def test_base_builder_requires_source_homepage(tmp_path):
+    class _MissingHomepage(BaseDatasetBuilder):
+        VERSION = datasets.Version("0.0.0")
+        SOURCE = {"citation": "TBD", "download_urls": {}}
+
+        def _info(self):
+            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+
+        def _split_generators(self, dl_manager):
+            return [datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 1})]
+
+        def _generate_examples(self, n):
+            yield 0, {"x": 0}
+
+    with pytest.raises(TypeError):
+        _MissingHomepage(split="train", processed_cache_dir=str(tmp_path))
+
+
+def test_base_builder_requires_source_citation(tmp_path):
+    class _MissingCitation(BaseDatasetBuilder):
+        VERSION = datasets.Version("0.0.0")
+        SOURCE = {"homepage": "https://example.com", "download_urls": {}}
+
+        def _info(self):
+            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+
+        def _split_generators(self, dl_manager):
+            return [datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 1})]
+
+        def _generate_examples(self, n):
+            yield 0, {"x": 0}
+
+    with pytest.raises(TypeError):
+        _MissingCitation(split="train", processed_cache_dir=str(tmp_path))
+
+
+def test_base_builder_requires_source_download_urls(tmp_path):
+    class _MissingDownloadUrls(BaseDatasetBuilder):
+        VERSION = datasets.Version("0.0.0")
+        SOURCE = {"homepage": "https://example.com", "citation": "TBD"}
+
+        def _info(self):
+            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+
+        def _split_generators(self, dl_manager):
+            return [datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 1})]
+
+        def _generate_examples(self, n):
+            yield 0, {"x": 0}
+
+    with pytest.raises(TypeError):
+        _MissingDownloadUrls(split="train", processed_cache_dir=str(tmp_path))
+
+
+def test_base_builder_validates_source_field_types(tmp_path):
+    class _BadTypes(BaseDatasetBuilder):
+        VERSION = datasets.Version("0.0.0")
+        SOURCE = {"homepage": 123, "citation": object(), "download_urls": "not-a-dict"}
+
+        def _info(self):
+            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+
+        def _split_generators(self, dl_manager):
+            return [datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 1})]
+
+        def _generate_examples(self, n):
+            yield 0, {"x": 0}
+
+    with pytest.raises(TypeError):
+        _BadTypes(split="train", processed_cache_dir=str(tmp_path))
+
+
 def test_base_builder_empty_urls_raises(tmp_path):
     class _EmptyUrls(BaseDatasetBuilder):
         VERSION = datasets.Version("0.0.0")
-        SOURCE = {"urls": {}}
+        SOURCE = {"homepage": "https://example.com", "citation": "TBD", "download_urls": {}}
 
         def _info(self):
             return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
@@ -171,7 +251,11 @@ def test_base_builder_maps_val_to_validation(monkeypatch, tmp_path):
 
     class _ValSplit(BaseDatasetBuilder):
         VERSION = datasets.Version("0.0.0")
-        SOURCE = {"urls": {"val": "https://example.com/all.bin"}}
+        SOURCE = {
+            "homepage": "https://example.com",
+            "citation": "TBD",
+            "download_urls": {"val": "https://example.com/all.bin"},
+        }
 
         def _info(self):
             return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
@@ -197,7 +281,11 @@ def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
 
     class _SharedUrl(BaseDatasetBuilder):
         VERSION = datasets.Version("0.0.0")
-        SOURCE = {"urls": {"train": "https://example.com/file.bin", "test": "https://example.com/file.bin"}}
+        SOURCE = {
+            "homepage": "https://example.com",
+            "citation": "TBD",
+            "download_urls": {"train": "https://example.com/file.bin", "test": "https://example.com/file.bin"},
+        }
 
         def _info(self):
             return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))

@@ -16,7 +16,11 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 class HighGamma(BaseDatasetBuilder):
     VERSION = datasets.Version("0.0.0")
-    SOURCE = {"urls": {}}
+    SOURCE = {
+        "homepage": "https://github.com/robintibor/high-gamma-dataset",
+        "citation": "TBD",
+        "download_urls": {},
+    }
 
     def _info(self) -> datasets.DatasetInfo:  # pragma: no cover
         raise NotImplementedError("HighGamma builder not implemented yet.")

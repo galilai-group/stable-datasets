@@ -87,27 +87,39 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
             raise TypeError(f"{self.__class__.__name__} does not define SOURCE and did not override _source().")
         return getattr(self.__class__, "SOURCE")
 
+    @staticmethod
+    def _validate_source(source: dict) -> None:
+        if not isinstance(source, dict):
+            raise TypeError("source must be a dict.")
+
+        # Required for provenance
+        if "homepage" not in source or source["homepage"] is None or not isinstance(source["homepage"], str):
+            raise TypeError("SOURCE['homepage'] must be a string and must be present.")
+        if "citation" not in source or source["citation"] is None or not isinstance(source["citation"], str):
+            raise TypeError("SOURCE['citation'] must be a string and must be present.")
+
+        # Required for downloads (even if a dataset overrides _split_generators).
+        if "download_urls" not in source or not isinstance(source["download_urls"], dict):
+            raise TypeError("SOURCE must contain a dict-valued 'download_urls' key.")
+
     def _split_generators(self, dl_manager):
         """
         Default split generator implementation.
 
         Most stable-datasets follow the pattern "one downloadable file per split", expressed
-        via `SOURCE["urls"]`. Datasets with different layouts can override this method.
+        via `SOURCE["download_urls"]`. Datasets with different layouts can override this method.
         """
         source = self._source()
         if not isinstance(source, dict):
             raise TypeError(f"{self.__class__.__name__}._source() must return a dict.")
-        if "urls" not in source or not isinstance(source["urls"], dict):
-            raise TypeError(f"{self.__class__.__name__} SOURCE must contain a dict-valued 'urls' key.")
-        if "homepage" in source and source["homepage"] is not None and not isinstance(source["homepage"], str):
-            raise TypeError(f"{self.__class__.__name__} SOURCE['homepage'] must be a string (or omitted).")
+        self._validate_source(source)
 
-        urls = source["urls"]
-        if len(urls) == 0:
-            raise ValueError(f"{self.__class__.__name__}.SOURCE['urls'] is empty; cannot infer splits.")
+        download_urls = source["download_urls"]
+        if len(download_urls) == 0:
+            raise ValueError(f"{self.__class__.__name__}.SOURCE['download_urls'] is empty; cannot infer splits.")
 
-        split_names = list(urls.keys())
-        ordered_urls = [urls[s] for s in split_names]
+        split_names = list(download_urls.keys())
+        ordered_urls = [download_urls[s] for s in split_names]
 
         # stable-datasets standardizes on our local bulk downloader (not HF dl_manager).
         # Deduplicate URLs to avoid redundant downloads for datasets where all splits share a single file.
@@ -166,6 +178,12 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
 
         # 2) Initialize builder with our processed cache_dir explicitly
         instance.__init__(*args, cache_dir=str(processed_cache_dir), **kwargs)
+
+        # 2b) Validate dataset SOURCE contract early.
+        source = instance._source()
+        if not isinstance(source, dict):
+            raise TypeError(f"{cls.__name__}._source() must return a dict.")
+        cls._validate_source(source)
 
         # 3) Explicitly tell HF to use our processed cache_dir for any dl_manager downloads
         download_config = DownloadConfig(cache_dir=str(processed_cache_dir))

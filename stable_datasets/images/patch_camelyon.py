@@ -14,7 +14,11 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 class PatchCamelyon(BaseDatasetBuilder):
     VERSION = datasets.Version("0.0.0")
-    SOURCE = {"urls": {}}
+    SOURCE = {
+        "homepage": "https://github.com/basveeling/pcam",
+        "citation": "TBD",
+        "download_urls": {},
+    }
 
     def _info(self) -> datasets.DatasetInfo:  # pragma: no cover
         raise NotImplementedError("PatchCamelyon builder not implemented yet.")

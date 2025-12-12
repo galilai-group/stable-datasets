@@ -55,10 +55,24 @@ class MedMNIST(BaseDatasetBuilder):
         variant = self.config.name
         url = f"https://zenodo.org/records/10519652/files/{variant}.npz?download=1"
         # Single NPZ contains all splits; we map each split name to the same URL.
-        return {"homepage": "https://medmnist.com/", "urls": {"train": url, "test": url, "val": url}}
+        return {
+            "homepage": "https://medmnist.com/",
+            "download_urls": {"train": url, "test": url, "val": url},
+            "citation": """@article{medmnistv2,
+                        title={MedMNIST v2-A large-scale lightweight benchmark for 2D and 3D biomedical image classification},
+                        author={Yang, Jiancheng and Shi, Rui and Wei, Donglai and Liu, Zequan and Zhao, Lin and Ke, Bilian and Pfister, Hanspeter and Ni, Bingbing},
+                        journal={Scientific Data},
+                        volume={10},
+                        number={1},
+                        pages={41},
+                        year={2023},
+                        publisher={Nature Publishing Group UK London}
+                    }""",
+        }
 
     def _info(self):
         variant = self.config.name
+        source = self._source()
 
         if getattr(self.config, "multi_label", False):  # multi-label instead of multi-class
             label_feature = datasets.Sequence(datasets.Value("int8"))
@@ -78,18 +92,9 @@ class MedMNIST(BaseDatasetBuilder):
                 }
             ),
             supervised_keys=("image", "label"),
-            homepage=self._source()["homepage"],
+            homepage=source["homepage"],
             license="CC BY 4.0",
-            citation="""@article{medmnistv2,
-                        title={MedMNIST v2-A large-scale lightweight benchmark for 2D and 3D biomedical image classification},
-                        author={Yang, Jiancheng and Shi, Rui and Wei, Donglai and Liu, Zequan and Zhao, Lin and Ke, Bilian and Pfister, Hanspeter and Ni, Bingbing},
-                        journal={Scientific Data},
-                        volume={10},
-                        number={1},
-                        pages={41},
-                        year={2023},
-                        publisher={Nature Publishing Group UK London}
-                    }""",
+            citation=source["citation"],
         )
 
     def _generate_examples(self, data_path, split):
