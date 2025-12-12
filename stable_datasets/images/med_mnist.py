@@ -57,7 +57,7 @@ class MedMNIST(BaseDatasetBuilder):
         # Single NPZ contains all splits; we map each split name to the same URL.
         return {
             "homepage": "https://medmnist.com/",
-            "download_urls": {"train": url, "test": url, "val": url},
+            "assets": {"train": url, "test": url, "val": url},
             "citation": """@article{medmnistv2,
                         title={MedMNIST v2-A large-scale lightweight benchmark for 2D and 3D biomedical image classification},
                         author={Yang, Jiancheng and Shi, Rui and Wei, Donglai and Liu, Zequan and Zhao, Lin and Ke, Bilian and Pfister, Hanspeter and Ni, Bingbing},

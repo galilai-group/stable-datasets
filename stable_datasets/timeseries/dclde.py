@@ -17,7 +17,7 @@ class DCLDE(BaseDatasetBuilder):
     SOURCE = {
         "homepage": "TBD",
         "citation": "TBD",
-        "download_urls": {},
+        "assets": {},
     }
 
     def _info(self) -> datasets.DatasetInfo:  # pragma: no cover
