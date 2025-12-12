@@ -8,7 +8,7 @@ stable-datasets
 
 .. rst-class:: lead
 
-----
+   A comprehensive collection of stable, reproducible datasets for machine learning research.
 
 Welcome to the docs for stable-datasets.
 We recommend using ``python>=3.10``, and installation using ``uv``:
@@ -36,12 +36,22 @@ If you would like to start testing or contribute to ``stable-datasets`` then ple
     cd stable-datasets
     pip install -e .
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+   :hidden:
+
+   datasets/index
+   introduction/quickstart
+   introduction/showcase
+   introduction/contributing
+
 Citation
 --------
 
 If you find this library useful in your research, please consider citing us:
 
-.. code-block::
+.. code-block:: bibtex
 
     @misc{stable-datasets,
       author = {},
