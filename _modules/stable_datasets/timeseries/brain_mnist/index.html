@@ -170,28 +170,33 @@
 </span><span id="line-5"><span class="sd">Reference:</span>
 </span><span id="line-6"><span class="sd">- http://mindbigdata.com/opendb/index.html</span>
 </span><span id="line-7">
-</span><span id="line-8"><span class="sd">TODO: Implement as a HuggingFace-compatible builder using `StableDatasetBuilder`</span>
+</span><span id="line-8"><span class="sd">TODO: Implement as a HuggingFace-compatible builder using `BaseDatasetBuilder`</span>
 </span><span id="line-9"><span class="sd">and the local download helpers in `stable_datasets.utils`.</span>
 </span><span id="line-10"><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="line-11">
 </span><span id="line-12"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
 </span><span id="line-13">
-</span><span id="line-14"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">StableDatasetBuilder</span>
+</span><span id="line-14"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
 </span><span id="line-15">
 </span><span id="line-16">
 <div class="viewcode-block" id="BrainMNIST">
 <a class="viewcode-back" href="../../../../stable_datasets.timeseries/#stable_datasets.timeseries.brain_mnist.BrainMNIST">[docs]</a>
-</span><span id="line-17"><span class="k">class</span><span class="w"> </span><span class="nc">BrainMNIST</span><span class="p">(</span><span class="n">StableDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-17"><span class="k">class</span><span class="w"> </span><span class="nc">BrainMNIST</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
 </span><span id="line-18">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;0.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-19">
-</span><span id="line-20">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-</span><span id="line-21">        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;BrainMNIST builder not implemented yet.&quot;</span><span class="p">)</span>
-</span><span id="line-22">
-</span><span id="line-23">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-</span><span id="line-24">        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;BrainMNIST builder not implemented yet.&quot;</span><span class="p">)</span>
-</span><span id="line-25">
-</span><span id="line-26">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-</span><span id="line-27">        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;BrainMNIST builder not implemented yet.&quot;</span><span class="p">)</span></div>
+</span><span id="line-19">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-20">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;http://mindbigdata.com/opendb/index.html&quot;</span><span class="p">,</span>
+</span><span id="line-21">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;TBD&quot;</span><span class="p">,</span>
+</span><span id="line-22">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{},</span>
+</span><span id="line-23">    <span class="p">}</span>
+</span><span id="line-24">
+</span><span id="line-25">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+</span><span id="line-26">        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;BrainMNIST builder not implemented yet.&quot;</span><span class="p">)</span>
+</span><span id="line-27">
+</span><span id="line-28">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+</span><span id="line-29">        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;BrainMNIST builder not implemented yet.&quot;</span><span class="p">)</span>
+</span><span id="line-30">
+</span><span id="line-31">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+</span><span id="line-32">        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;BrainMNIST builder not implemented yet.&quot;</span><span class="p">)</span></div>
 
 </span></code></pre></div>
     </div></div>
