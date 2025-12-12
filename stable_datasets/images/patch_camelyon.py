@@ -17,7 +17,7 @@ class PatchCamelyon(BaseDatasetBuilder):
     SOURCE = {
         "homepage": "https://github.com/basveeling/pcam",
         "citation": "TBD",
-        "download_urls": {},
+        "assets": {},
     }
 
     def _info(self) -> datasets.DatasetInfo:  # pragma: no cover

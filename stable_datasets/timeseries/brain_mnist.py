@@ -19,7 +19,7 @@ class BrainMNIST(BaseDatasetBuilder):
     SOURCE = {
         "homepage": "http://mindbigdata.com/opendb/index.html",
         "citation": "TBD",
-        "download_urls": {},
+        "assets": {},
     }
 
     def _info(self) -> datasets.DatasetInfo:  # pragma: no cover

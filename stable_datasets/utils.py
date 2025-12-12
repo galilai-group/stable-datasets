@@ -1,9 +1,10 @@
 import multiprocessing
 import os
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
+from types import MappingProxyType
 from urllib.parse import urlparse
 
 import datasets
@@ -49,7 +50,27 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
     # - define a class attribute SOURCE (static), or
     # - override _source(self) to compute it at runtime (e.g. from self.config)
     VERSION: datasets.Version
-    SOURCE: dict
+    SOURCE: Mapping
+
+    @staticmethod
+    def _freeze(obj):
+        """
+        Recursively freeze basic Python containers to make SOURCE effectively immutable.
+
+        - dict / Mapping -> MappingProxyType(dict(...)) (shallowly immutable mapping)
+        - list / tuple -> tuple(...)
+        - set -> frozenset(...)
+        """
+        if isinstance(obj, MappingProxyType):
+            return obj
+        if isinstance(obj, Mapping):
+            # Create a fresh dict so callers can't retain a handle to the mutable original.
+            return MappingProxyType({k: BaseDatasetBuilder._freeze(v) for k, v in dict(obj).items()})
+        if isinstance(obj, list | tuple):
+            return tuple(BaseDatasetBuilder._freeze(v) for v in obj)
+        if isinstance(obj, set):
+            return frozenset(BaseDatasetBuilder._freeze(v) for v in obj)
+        return obj
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -76,11 +97,26 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
                 f"{cls.__name__} must define SOURCE = {{...}} or override _source(self) to compute it at runtime."
             )
 
-    def _source(self) -> dict:
+        # Freeze static SOURCE at class creation time.
+        if has_static_source:
+            cls.SOURCE = cls._freeze(getattr(cls, "SOURCE"))
+
+        # If subclass overrides _source(), wrap it so the returned mapping is frozen/immutable.
+        if has_dynamic_source and not getattr(cls._source, "_stable_datasets_freezes_source", False):
+            original = cls._source
+
+            def _wrapped_source(self):
+                source = original(self)
+                return BaseDatasetBuilder._freeze(source)
+
+            _wrapped_source._stable_datasets_freezes_source = True  # type: ignore[attr-defined]
+            cls._source = _wrapped_source  # type: ignore[method-assign]
+
+    def _source(self) -> Mapping:
         """
         Return dataset provenance / download configuration.
 
-        Default: uses a class attribute SOURCE.
+        Default: uses a class attribute SOURCE (frozen into an immutable Mapping).
         Override in subclasses when the source depends on runtime config (e.g. self.config.variant).
         """
         if not hasattr(self.__class__, "SOURCE"):
@@ -88,9 +124,9 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
         return getattr(self.__class__, "SOURCE")
 
     @staticmethod
-    def _validate_source(source: dict) -> None:
-        if not isinstance(source, dict):
-            raise TypeError("source must be a dict.")
+    def _validate_source(source: Mapping) -> None:
+        if not isinstance(source, Mapping):
+            raise TypeError("source must be a mapping.")
 
         # Required for provenance
         if "homepage" not in source or source["homepage"] is None or not isinstance(source["homepage"], str):
@@ -99,27 +135,27 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
             raise TypeError("SOURCE['citation'] must be a string and must be present.")
 
         # Required for downloads (even if a dataset overrides _split_generators).
-        if "download_urls" not in source or not isinstance(source["download_urls"], dict):
-            raise TypeError("SOURCE must contain a dict-valued 'download_urls' key.")
+        if "assets" not in source or not isinstance(source["assets"], Mapping):
+            raise TypeError("SOURCE must contain a mapping-valued 'assets' key.")
 
     def _split_generators(self, dl_manager):
         """
         Default split generator implementation.
 
         Most stable-datasets follow the pattern "one downloadable file per split", expressed
-        via `SOURCE["download_urls"]`. Datasets with different layouts can override this method.
+        via `SOURCE["assets"]`. Datasets with different layouts can override this method.
         """
         source = self._source()
-        if not isinstance(source, dict):
-            raise TypeError(f"{self.__class__.__name__}._source() must return a dict.")
+        if not isinstance(source, Mapping):
+            raise TypeError(f"{self.__class__.__name__}._source() must return a mapping.")
         self._validate_source(source)
 
-        download_urls = source["download_urls"]
-        if len(download_urls) == 0:
-            raise ValueError(f"{self.__class__.__name__}.SOURCE['download_urls'] is empty; cannot infer splits.")
+        assets = source["assets"]
+        if len(assets) == 0:
+            raise ValueError(f"{self.__class__.__name__}.SOURCE['assets'] is empty; cannot infer splits.")
 
-        split_names = list(download_urls.keys())
-        ordered_urls = [download_urls[s] for s in split_names]
+        split_names = list(assets.keys())
+        ordered_urls = [assets[s] for s in split_names]
 
         # stable-datasets standardizes on our local bulk downloader (not HF dl_manager).
         # Deduplicate URLs to avoid redundant downloads for datasets where all splits share a single file.
@@ -181,8 +217,8 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
 
         # 2b) Validate dataset SOURCE contract early.
         source = instance._source()
-        if not isinstance(source, dict):
-            raise TypeError(f"{cls.__name__}._source() must return a dict.")
+        if not isinstance(source, Mapping):
+            raise TypeError(f"{cls.__name__}._source() must return a mapping.")
         cls._validate_source(source)
 
         # 3) Explicitly tell HF to use our processed cache_dir for any dl_manager downloads

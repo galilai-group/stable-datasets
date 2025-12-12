@@ -26,7 +26,7 @@ class ArabicCharacters(BaseDatasetBuilder):
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
         "homepage": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset",
-        "download_urls": {
+        "assets": {
             "train": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Train%20Images%2013440x32x32.zip",
             "test": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Test%20Images%203360x32x32.zip",
         },

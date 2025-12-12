@@ -19,7 +19,7 @@ class HighGamma(BaseDatasetBuilder):
     SOURCE = {
         "homepage": "https://github.com/robintibor/high-gamma-dataset",
         "citation": "TBD",
-        "download_urls": {},
+        "assets": {},
     }
 
     def _info(self) -> datasets.DatasetInfo:  # pragma: no cover
