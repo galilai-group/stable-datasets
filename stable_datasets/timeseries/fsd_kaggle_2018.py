@@ -1,4 +1,4 @@
-"""Legacy FSDKaggle2018 loader (to be refactored into a StableDatasetBuilder).
+"""Legacy FSDKaggle2018 loader (to be refactored into a BaseDatasetBuilder).
 
 This module was moved under `stable_datasets.timeseries` to align the repository layout.
 It still exposes the original imperative `FSDKaggle2018.load(...)` API for now.

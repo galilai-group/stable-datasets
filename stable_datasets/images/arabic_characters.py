@@ -5,10 +5,10 @@ import datasets
 from PIL import Image
 from tqdm import tqdm
 
-from stable_datasets.utils import StableDatasetBuilder, bulk_download
+from stable_datasets.utils import BaseDatasetBuilder
 
 
-class ArabicCharacters(StableDatasetBuilder):
+class ArabicCharacters(BaseDatasetBuilder):
     """Arabic Handwritten Characters Dataset
 
     Abstract
@@ -23,6 +23,15 @@ class ArabicCharacters(StableDatasetBuilder):
 
     VERSION = datasets.Version("1.0.0")
 
+    # Single source-of-truth for dataset provenance + download locations.
+    SOURCE = {
+        "homepage": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset",
+        "urls": {
+            "train": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Train%20Images%2013440x32x32.zip",
+            "test": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Test%20Images%203360x32x32.zip",
+        },
+    }
+
     def _info(self):
         return datasets.DatasetInfo(
             description="""Arabic Handwritten Characters Dataset, consisting of 16,800 characters
@@ -32,7 +41,7 @@ class ArabicCharacters(StableDatasetBuilder):
                 {"image": datasets.Image(), "label": datasets.ClassLabel(names=[str(i) for i in range(28)])}
             ),
             supervised_keys=("image", "label"),
-            homepage="https://github.com/mloey/Arabic-Handwritten-Characters-Dataset",
+            homepage=self.SOURCE["homepage"],
             citation="""@article{el2017arabic,
                         title={Arabic handwritten characters recognition using convolutional neural network},
                         author={El-Sawy, Ahmed and Loey, Mohamed and El-Bakry, Hazem},
@@ -42,31 +51,9 @@ class ArabicCharacters(StableDatasetBuilder):
                         year={2017}}""",
         )
 
-    def _split_generators(self, dl_manager):
-        urls = {
-            "train": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Train%20Images%2013440x32x32.zip",
-            "test": "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Test%20Images%203360x32x32.zip",
-        }
-        split_names = list(urls.keys())  # ["train", "test"]
-        ordered_urls = [urls[s] for s in split_names]
-        local_paths = bulk_download(ordered_urls)
-
-        split_to_path = dict(zip(split_names, local_paths))
-
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"archive_path": split_to_path["train"], "split": "train"},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"archive_path": split_to_path["test"], "split": "test"},
-            ),
-        ]
-
-    def _generate_examples(self, archive_path, split):
+    def _generate_examples(self, data_path, split):
         """Generate examples from the ZIP archives of images and labels."""
-        with ZipFile(archive_path, "r") as archive:
+        with ZipFile(data_path, "r") as archive:
             for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
                 if entry.filename.endswith(".png"):
                     content = archive.read(entry)

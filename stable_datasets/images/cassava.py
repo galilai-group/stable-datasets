@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Legacy Cassava loader (to be refactored into a StableDatasetBuilder).
+"""Legacy Cassava loader (to be refactored into a BaseDatasetBuilder).
 
 This module was moved under `stable_datasets.images` to align the repository layout.
 It still exposes the original imperative `cassava.load(...)` API for now.

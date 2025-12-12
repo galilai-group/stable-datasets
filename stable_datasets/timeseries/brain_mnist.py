@@ -5,17 +5,18 @@ Moved under `stable_datasets.timeseries` per project convention.
 Reference:
 - http://mindbigdata.com/opendb/index.html
 
-TODO: Implement as a HuggingFace-compatible builder using `StableDatasetBuilder`
+TODO: Implement as a HuggingFace-compatible builder using `BaseDatasetBuilder`
 and the local download helpers in `stable_datasets.utils`.
 """
 
 import datasets
 
-from stable_datasets.utils import StableDatasetBuilder
+from stable_datasets.utils import BaseDatasetBuilder
 
 
-class BrainMNIST(StableDatasetBuilder):
+class BrainMNIST(BaseDatasetBuilder):
     VERSION = datasets.Version("0.0.0")
+    SOURCE = {"urls": {}}
 
     def _info(self) -> datasets.DatasetInfo:  # pragma: no cover
         raise NotImplementedError("BrainMNIST builder not implemented yet.")

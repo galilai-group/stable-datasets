@@ -37,49 +37,154 @@ def _default_processed_cache_dir() -> Path:
     return Path(os.path.expanduser(DEFAULT_CACHE_DIR)) / "processed"
 
 
-class StableDatasetBuilder(datasets.GeneratorBasedBuilder):
+class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
     """
     Base class for stable-datasets that enables direct dataset loading.
     """
 
-    def __new__(cls, *args, split, cache_dir=None, **kwargs):
+    # Subclasses must define:
+    # - VERSION: datasets.Version
+    #
+    # For dataset provenance / downloads, subclasses can either:
+    # - define a class attribute SOURCE (static), or
+    # - override _source(self) to compute it at runtime (e.g. from self.config)
+    VERSION: datasets.Version
+    SOURCE: dict
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        # Don't validate the base class itself
+        if cls is BaseDatasetBuilder:
+            return
+
+        # Allow tests / internal helpers to opt out if needed
+        if getattr(cls, "_SKIP_SOURCE_VALIDATION", False):
+            return
+
+        # VERSION must exist and be a datasets.Version
+        if not hasattr(cls, "VERSION"):
+            raise TypeError(f"{cls.__name__} must define a class attribute VERSION = datasets.Version('x.y.z').")
+        if not isinstance(getattr(cls, "VERSION"), datasets.Version):
+            raise TypeError(f"{cls.__name__}.VERSION must be a datasets.Version instance.")
+
+        # Enforce that a source is provided either statically (SOURCE) or dynamically (_source override).
+        has_static_source = hasattr(cls, "SOURCE")
+        has_dynamic_source = cls._source is not BaseDatasetBuilder._source  # overridden
+        if not (has_static_source or has_dynamic_source):
+            raise TypeError(
+                f"{cls.__name__} must define SOURCE = {{...}} or override _source(self) to compute it at runtime."
+            )
+
+    def _source(self) -> dict:
+        """
+        Return dataset provenance / download configuration.
+
+        Default: uses a class attribute SOURCE.
+        Override in subclasses when the source depends on runtime config (e.g. self.config.variant).
+        """
+        if not hasattr(self.__class__, "SOURCE"):
+            raise TypeError(f"{self.__class__.__name__} does not define SOURCE and did not override _source().")
+        return getattr(self.__class__, "SOURCE")
+
+    def _split_generators(self, dl_manager):
+        """
+        Default split generator implementation.
+
+        Most stable-datasets follow the pattern "one downloadable file per split", expressed
+        via `SOURCE["urls"]`. Datasets with different layouts can override this method.
+        """
+        source = self._source()
+        if not isinstance(source, dict):
+            raise TypeError(f"{self.__class__.__name__}._source() must return a dict.")
+        if "urls" not in source or not isinstance(source["urls"], dict):
+            raise TypeError(f"{self.__class__.__name__} SOURCE must contain a dict-valued 'urls' key.")
+        if "homepage" in source and source["homepage"] is not None and not isinstance(source["homepage"], str):
+            raise TypeError(f"{self.__class__.__name__} SOURCE['homepage'] must be a string (or omitted).")
+
+        urls = source["urls"]
+        if len(urls) == 0:
+            raise ValueError(f"{self.__class__.__name__}.SOURCE['urls'] is empty; cannot infer splits.")
+
+        split_names = list(urls.keys())
+        ordered_urls = [urls[s] for s in split_names]
+
+        # stable-datasets standardizes on our local bulk downloader (not HF dl_manager).
+        # Deduplicate URLs to avoid redundant downloads for datasets where all splits share a single file.
+        unique_urls = list(dict.fromkeys(ordered_urls))
+        download_dir = getattr(self, "_raw_download_dir", None)
+        if download_dir is None:
+            download_dir = _default_dest_folder()
+        unique_paths = bulk_download(unique_urls, dest_folder=download_dir)
+        url_to_path = dict(zip(unique_urls, unique_paths))
+        local_paths = [url_to_path[u] for u in ordered_urls]
+
+        split_to_path = dict(zip(split_names, local_paths))
+
+        name_map = {
+            "train": datasets.Split.TRAIN,
+            "test": datasets.Split.TEST,
+            "val": datasets.Split.VALIDATION,
+        }
+
+        return [
+            datasets.SplitGenerator(
+                name=name_map.get(split_name, split_name),
+                gen_kwargs={"data_path": split_to_path[split_name], "split": split_name},
+            )
+            for split_name in split_names
+        ]
+
+    def __new__(cls, *args, split=None, processed_cache_dir=None, download_dir=None, **kwargs):
         """
         Automatically download, prepare, and return the dataset for the specified split.
 
         Args:
-            split: Required dataset split to load (e.g., "train", "test", "validation").
-            cache_dir: Cache directory for processed datasets. If None, defaults to
-                ~/.stable_datasets/processed/.
+            split: Dataset split to load (e.g., "train", "test", "validation"). If None,
+                loads all available splits and returns a DatasetDict.
+            processed_cache_dir: Cache directory for processed datasets (Arrow cache). If None,
+                defaults to ~/.stable_datasets/processed/.
+            download_dir: Directory for raw downloads (ZIP/NPZ/etc). If None, defaults to
+                ~/.stable_datasets/downloads/.
             **kwargs: Additional arguments passed to the dataset builder.
 
         Returns:
-            Dataset: The loaded dataset for the specified split.
+            Union[datasets.Dataset, datasets.DatasetDict]: The loaded dataset (single split)
+                or a DatasetDict (all splits).
         """
         instance = super().__new__(cls)
 
-        # 1) Decide which cache_dir we're using
-        if cache_dir is None:
-            cache_dir = str(_default_processed_cache_dir())
+        # 1) Decide cache locations
+        # Processed cache (Arrow)
+        if processed_cache_dir is None:
+            processed_cache_dir = str(_default_processed_cache_dir())
 
-        # 2) Initialize builder with our cache_dir explicitly
-        #    This controls where *both* raw and processed data go.
-        instance.__init__(*args, cache_dir=cache_dir, **kwargs)
+        # Raw downloads
+        if download_dir is None:
+            download_dir = str(_default_dest_folder())
+        instance._raw_download_dir = Path(download_dir)
 
-        # 3) Explicitly tell HF to use our cache_dir for downloads
-        download_config = DownloadConfig(cache_dir=cache_dir)
+        # 2) Initialize builder with our processed cache_dir explicitly
+        instance.__init__(*args, cache_dir=str(processed_cache_dir), **kwargs)
+
+        # 3) Explicitly tell HF to use our processed cache_dir for any dl_manager downloads
+        download_config = DownloadConfig(cache_dir=str(processed_cache_dir))
 
         instance.download_and_prepare(
             download_config=download_config,
         )
 
         # 4) Load the split from the same cache_dir
-        result = instance.as_dataset(split=split)
+        if split is None:
+            result = instance.as_dataset()
+        else:
+            result = instance.as_dataset(split=split)
         return result
 
 
 def bulk_download(
     urls: Iterable[str],
-    dest_folder: str | Path | None = None,
+    dest_folder: str | Path,
     backend: str = "filesystem",
     cache_dir: str = DEFAULT_CACHE_DIR,
 ) -> list[Path]:
@@ -88,8 +193,7 @@ def bulk_download(
 
     Args:
         urls: Iterable of URL strings to download.
-        dest_folder: Destination folder for downloads. If None, defaults to
-            ~/.stable_datasets/downloads/.
+        dest_folder: Destination folder for downloads.
         backend: requests_cache backend (e.g. "filesystem").
         cache_dir: Cache directory for requests_cache.
 
@@ -101,8 +205,6 @@ def bulk_download(
     if num_workers == 0:
         return []
 
-    if dest_folder is None:
-        dest_folder = _default_dest_folder()
     dest_folder = Path(dest_folder)
     dest_folder.mkdir(parents=True, exist_ok=True)
 

@@ -41,7 +41,3 @@ def test_arabic_characters_dataset():
     )
 
     print("All ArabicCharacters dataset tests passed successfully!")
-
-
-if __name__ == "__main__":
-    test_arabic_characters_dataset()

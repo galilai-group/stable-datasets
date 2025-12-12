@@ -1,79 +1,84 @@
 import datasets
 import numpy as np
 
+from stable_datasets.utils import BaseDatasetBuilder
+
+
+MEDMNIST_VERSION = datasets.Version("1.0.0")
+
 
 class MedMNISTConfig(datasets.BuilderConfig):
-    def __init__(self, variant, **kwargs):
-        super().__init__(version=datasets.Version("1.0.0", ""), **kwargs)
-        self.variant = variant
+    """BuilderConfig with per-variant metadata used by MedMNIST._info()."""
+
+    def __init__(self, *, num_classes: int, is_3d: bool = False, multi_label: bool = False, **kwargs):
+        super().__init__(version=MEDMNIST_VERSION, **kwargs)
+        self.num_classes = num_classes
+        self.is_3d = is_3d
+        self.multi_label = multi_label
 
 
-class MedMNIST(datasets.GeneratorBasedBuilder):
+class MedMNIST(BaseDatasetBuilder):
     """MedMNIST, a large-scale MNIST-like collection of standardized biomedical images, including 12 datasets for 2D and 6 datasets for 3D."""
+
+    VERSION = MEDMNIST_VERSION
 
     BUILDER_CONFIGS = [
         # 2D Datasets
-        MedMNISTConfig(name="pathmnist", variant="pathmnist"),
-        MedMNISTConfig(name="chestmnist", variant="chestmnist"),
-        MedMNISTConfig(name="dermamnist", variant="dermamnist"),
-        MedMNISTConfig(name="octmnist", variant="octmnist"),
-        MedMNISTConfig(name="pneumoniamnist", variant="pneumoniamnist"),
-        MedMNISTConfig(name="retinamnist", variant="retinamnist"),
-        MedMNISTConfig(name="breastmnist", variant="breastmnist"),
-        MedMNISTConfig(name="bloodmnist", variant="bloodmnist"),
-        MedMNISTConfig(name="tissuemnist", variant="tissuemnist"),
-        MedMNISTConfig(name="organamnist", variant="organamnist"),
-        MedMNISTConfig(name="organcmnist", variant="organcmnist"),
-        MedMNISTConfig(name="organsmnist", variant="organsmnist"),
+        MedMNISTConfig(name="pathmnist", description="MedMNIST PathMNIST (2D)", num_classes=9),
+        MedMNISTConfig(
+            name="chestmnist",
+            description="MedMNIST ChestMNIST (2D, multi-label)",
+            num_classes=14,
+            multi_label=True,
+        ),
+        MedMNISTConfig(name="dermamnist", description="MedMNIST DermaMNIST (2D)", num_classes=7),
+        MedMNISTConfig(name="octmnist", description="MedMNIST OCTMNIST (2D)", num_classes=4),
+        MedMNISTConfig(name="pneumoniamnist", description="MedMNIST PneumoniaMNIST (2D)", num_classes=2),
+        MedMNISTConfig(name="retinamnist", description="MedMNIST RetinaMNIST (2D)", num_classes=5),
+        MedMNISTConfig(name="breastmnist", description="MedMNIST BreastMNIST (2D)", num_classes=2),
+        MedMNISTConfig(name="bloodmnist", description="MedMNIST BloodMNIST (2D)", num_classes=8),
+        MedMNISTConfig(name="tissuemnist", description="MedMNIST TissueMNIST (2D)", num_classes=8),
+        MedMNISTConfig(name="organamnist", description="MedMNIST OrganAMNIST (2D)", num_classes=11),
+        MedMNISTConfig(name="organcmnist", description="MedMNIST OrganCMNIST (2D)", num_classes=11),
+        MedMNISTConfig(name="organsmnist", description="MedMNIST OrganSMNIST (2D)", num_classes=11),
         # 3D Datasets
-        MedMNISTConfig(name="organmnist3d", variant="organmnist3d"),
-        MedMNISTConfig(name="nodulemnist3d", variant="nodulemnist3d"),
-        MedMNISTConfig(name="adrenalmnist3d", variant="adrenalmnist3d"),
-        MedMNISTConfig(name="fracturemnist3d", variant="fracturemnist3d"),
-        MedMNISTConfig(name="vesselmnist3d", variant="vesselmnist3d"),
-        MedMNISTConfig(name="synapsemnist3d", variant="synapsemnist3d"),
+        MedMNISTConfig(name="organmnist3d", description="MedMNIST OrganMNIST3D (3D)", num_classes=11, is_3d=True),
+        MedMNISTConfig(name="nodulemnist3d", description="MedMNIST NoduleMNIST3D (3D)", num_classes=2, is_3d=True),
+        MedMNISTConfig(name="adrenalmnist3d", description="MedMNIST AdrenalMNIST3D (3D)", num_classes=2, is_3d=True),
+        MedMNISTConfig(name="fracturemnist3d", description="MedMNIST FractureMNIST3D (3D)", num_classes=3, is_3d=True),
+        MedMNISTConfig(name="vesselmnist3d", description="MedMNIST VesselMNIST3D (3D)", num_classes=2, is_3d=True),
+        MedMNISTConfig(name="synapsemnist3d", description="MedMNIST SynapseMNIST3D (3D)", num_classes=2, is_3d=True),
     ]
 
-    def _info(self):
-        variant = self.config.variant
-        num_classes = {
-            "pathmnist": 9,
-            "chestmnist": 14,
-            "dermamnist": 7,
-            "octmnist": 4,
-            "pneumoniamnist": 2,
-            "retinamnist": 5,
-            "breastmnist": 2,
-            "bloodmnist": 8,
-            "tissuemnist": 8,
-            "organamnist": 11,
-            "organcmnist": 11,
-            "organsmnist": 11,
-            "organmnist3d": 11,
-            "nodulemnist3d": 2,
-            "adrenalmnist3d": 2,
-            "fracturemnist3d": 3,
-            "vesselmnist3d": 2,
-            "synapsemnist3d": 2,
-        }.get(variant, 0)
+    def _source(self) -> dict:
+        """Variant-aware source definition (computed from self.config at runtime)."""
+        variant = self.config.name
+        url = f"https://zenodo.org/records/10519652/files/{variant}.npz?download=1"
+        # Single NPZ contains all splits; we map each split name to the same URL.
+        return {"homepage": "https://medmnist.com/", "urls": {"train": url, "test": url, "val": url}}
 
-        if variant == "chestmnist":  # multi-label instead of multi-class
+    def _info(self):
+        variant = self.config.name
+
+        if getattr(self.config, "multi_label", False):  # multi-label instead of multi-class
             label_feature = datasets.Sequence(datasets.Value("int8"))
         else:
-            label_feature = datasets.ClassLabel(num_classes=num_classes)
+            label_feature = datasets.ClassLabel(num_classes=self.config.num_classes)
 
         return datasets.DatasetInfo(
             description=f"MedMNIST variant: {variant} dataset.",
             features=datasets.Features(
                 {
-                    "image": datasets.Array3D(shape=(28, 28, 28), dtype="uint8")
-                    if "3d" in variant
-                    else datasets.Image(),
+                    "image": (
+                        datasets.Array3D(shape=(28, 28, 28), dtype="uint8")
+                        if getattr(self.config, "is_3d", False)
+                        else datasets.Image()
+                    ),
                     "label": label_feature,
                 }
             ),
             supervised_keys=("image", "label"),
-            homepage="https://medmnist.com/",
+            homepage=self._source()["homepage"],
             license="CC BY 4.0",
             citation="""@article{medmnistv2,
                         title={MedMNIST v2-A large-scale lightweight benchmark for 2D and 3D biomedical image classification},
@@ -87,28 +92,8 @@ class MedMNIST(datasets.GeneratorBasedBuilder):
                     }""",
         )
 
-    def _split_generators(self, dl_manager):
-        variant = self.config.variant
-        url = f"https://zenodo.org/records/10519652/files/{variant}.npz?download=1"
-        file_path = dl_manager.download(url)
-
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"file_path": file_path, "split": "train"},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"file_path": file_path, "split": "test"},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION,
-                gen_kwargs={"file_path": file_path, "split": "val"},
-            ),
-        ]
-
-    def _generate_examples(self, file_path, split):
-        data = np.load(file_path)
+    def _generate_examples(self, data_path, split):
+        data = np.load(data_path)
         images = data[f"{split}_images"]
         labels = data[f"{split}_labels"].squeeze()
 
