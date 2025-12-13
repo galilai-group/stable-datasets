@@ -17,6 +17,10 @@ The CIFAR-10 dataset is a widely-used image classification benchmark for single-
 - **Train**: 50,000 images (5,000 per class)
 - **Test**: 10,000 images (1,000 per class)
 
+.. image:: teasers/cifar10_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 

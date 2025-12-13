@@ -17,6 +17,10 @@ The CIFAR-100 dataset is an extended version of CIFAR-10, consisting of 60,000 3
 - **Train**: 50,000 images (500 per class)
 - **Test**: 10,000 images (100 per class)
 
+.. image:: teasers/cifar100_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 
