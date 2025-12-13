@@ -6,7 +6,6 @@ _Datasets implemented as HuggingFace `datasets` builders, with custom download &
 
 </div>
 
-
 This is an under-development research project; expect bugs and sharp edges.
 
 ## What is it?
@@ -77,6 +76,7 @@ class MyDataset(BaseDatasetBuilder):
 ### Custom cache locations
 
 By default:
+
 - Downloads: `~/.stable_datasets/downloads/`
 - Processed Arrow cache: `~/.stable_datasets/processed/`
 
@@ -108,6 +108,21 @@ Some tests download data and may be slow. You can filter by markers:
 
 - **Skip slow tests**: `pytest -m "not slow"`
 - **Run only download tests**: `pytest -m download`
+
+## Generating teaser figures
+
+Use the `generate_teaser.py` script to create visual previews of datasets for documentation:
+
+```bash
+# Generate a teaser with 5 samples
+python generate_teaser.py --name CIFAR10 --num-samples 5 --output docs/source/datasets/teasers/cifar10_teaser.png
+
+# Generate and display (without saving)
+python generate_teaser.py --name MNIST --num-samples 8
+
+# Customize figure size
+python generate_teaser.py --name CIFAR100 --num-samples 10 --figsize 2.0 --output cifar100.png
+```
 
 ## Datasets
 
