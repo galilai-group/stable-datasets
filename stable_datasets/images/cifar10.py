@@ -4,8 +4,10 @@ import tarfile
 import datasets
 import numpy as np
 
+from stable_datasets.utils import BaseDatasetBuilder
 
-class CIFAR10(datasets.GeneratorBasedBuilder):
+
+class CIFAR10(BaseDatasetBuilder):
     """Image classification.
     The `CIFAR-10 < https: // www.cs.toronto.edu/~kriz/cifar.html >`_ dataset
     was collected by Alex Krizhevsky, Vinod Nair, and Geoffrey
@@ -20,6 +22,20 @@ class CIFAR10(datasets.GeneratorBasedBuilder):
     """
 
     VERSION = datasets.Version("1.0.0")
+
+    # Single source-of-truth for dataset provenance + download locations.
+    SOURCE = {
+        "homepage": "https://www.cs.toronto.edu/~kriz/cifar.html",
+        "assets": {
+            "train": "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz",
+            "test": "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz",
+        },
+        "citation": """@article{krizhevsky2009learning,
+                         title={Learning multiple layers of features from tiny images},
+                         author={Krizhevsky, Alex and Hinton, Geoffrey and others},
+                         year={2009},
+                         publisher={Toronto, ON, Canada}}""",
+    }
 
     def _info(self):
         return datasets.DatasetInfo(
@@ -44,30 +60,14 @@ class CIFAR10(datasets.GeneratorBasedBuilder):
                 }
             ),
             supervised_keys=("image", "label"),
-            homepage="https://www.cs.toronto.edu/~kriz/cifar.html",
-            license="MIT License",
-            citation="""@article{krizhevsky2009learning,
-                         title={Learning multiple layers of features from tiny images},
-                         author={Krizhevsky, Alex and Hinton, Geoffrey and others},
-                         year={2009},
-                         publisher={Toronto, ON, Canada}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        archive_path = dl_manager.download("https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz")
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"archive_path": archive_path, "train": True},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"archive_path": archive_path, "train": False},
-            ),
-        ]
-
-    def _generate_examples(self, archive_path, train=True):
-        with tarfile.open(archive_path, "r:gz") as tar:
+    def _generate_examples(self, data_path, split):
+        """Generate examples from the tar.gz archive."""
+        with tarfile.open(data_path, "r:gz") as tar:
+            train = split == "train"
             if train:
                 train_images, train_labels = [], []
                 for batch_idx in range(1, 6):
