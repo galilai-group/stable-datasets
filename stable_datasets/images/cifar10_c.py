@@ -5,11 +5,26 @@ import datasets
 import numpy as np
 from PIL import Image
 
+from stable_datasets.utils import BaseDatasetBuilder
 
-class CIFAR10C(datasets.GeneratorBasedBuilder):
+
+class CIFAR10C(BaseDatasetBuilder):
     """CIFAR-10-C dataset with corrupted CIFAR-10 images."""
 
     VERSION = datasets.Version("1.0.0")
+
+    # Single source-of-truth for dataset provenance + download locations.
+    SOURCE = {
+        "homepage": "https://zenodo.org/records/2535967",
+        "assets": {
+            "test": "https://zenodo.org/records/2535967/files/CIFAR-10-C.tar?download=1",
+        },
+        "citation": """@article{hendrycks2019robustness,
+                        title={Benchmarking Neural Network Robustness to Common Corruptions and Perturbations},
+                        author={Dan Hendrycks and Thomas Dietterich},
+                        journal={Proceedings of the International Conference on Learning Representations},
+                        year={2019}}""",
+    }
 
     def _info(self):
         return datasets.DatasetInfo(
@@ -38,27 +53,17 @@ class CIFAR10C(datasets.GeneratorBasedBuilder):
                 }
             ),
             supervised_keys=("image", "label"),
-            homepage="https://zenodo.org/records/2535967",
+            homepage=self.SOURCE["homepage"],
             license="CC BY 4.0",
-            citation="""@article{hendrycks2019robustness,
-                        title={Benchmarking Neural Network Robustness to Common Corruptions and Perturbations},
-                        author={Dan Hendrycks and Thomas Dietterich},
-                        journal={Proceedings of the International Conference on Learning Representations},
-                        year={2019}}""",
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        archive_path = dl_manager.download("https://zenodo.org/records/2535967/files/CIFAR-10-C.tar?download=1")
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"archive_path": archive_path, "corruptions": None},
-            ),
-        ]
+    def _generate_examples(self, data_path, split, corruptions=None):
+        """Generates corrupted CIFAR-10-C examples.
 
-    def _generate_examples(self, archive_path, corruptions=None):
-        """Generates corrupted CIFAR-10-C examples."""
-        with tarfile.open(archive_path, "r") as tar:
+        Note: split parameter is unused as CIFAR-10-C only contains a test split.
+        """
+        with tarfile.open(data_path, "r") as tar:
             # Load labels
             array_file = BytesIO()
             array_file.write(tar.extractfile("CIFAR-10-C/labels.npy").read())

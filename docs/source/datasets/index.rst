@@ -22,17 +22,20 @@ All datasets can be loaded using the same consistent API:
 
 .. code-block:: python
 
-    from stable_datasets import load_dataset
+    from stable_datasets.images.<dataset_module> import <DatasetClass>
 
-    # Load a dataset
-    dataset = load_dataset('dataset_name')
-    
-    # Access splits
-    train_data = dataset['train']
-    test_data = dataset['test']
-    
+    # First run will download + prepare cache, then return the split as a HF Dataset
+    ds = <DatasetClass>(split="train")
+
+    # If you omit the split (split=None), you get a DatasetDict with all available splits
+    ds_all = <DatasetClass>(split=None)
+
     # Access individual examples
-    example = train_data[0]
+    sample = ds[0]
+    print(sample.keys())  # e.g., {"image", "label"}
+
+    # Optional: make it PyTorch-friendly
+    ds_torch = ds.with_format("torch")
 
 Available Datasets
 ------------------
@@ -42,6 +45,9 @@ Available Datasets
    :caption: Image Classification Datasets
 
    cifar10
+   cifar100
+   cifar10_c
+   cifar100_c
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
