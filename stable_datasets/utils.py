@@ -206,6 +206,7 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
         # Processed cache (Arrow)
         if processed_cache_dir is None:
             processed_cache_dir = str(_default_processed_cache_dir())
+        instance._processed_cache_dir = Path(processed_cache_dir)
 
         # Raw downloads
         if download_dir is None:
@@ -233,6 +234,17 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
             result = instance.as_dataset()
         else:
             result = instance.as_dataset(split=split)
+
+        # Expose cache locations on the returned dataset object for convenience.
+        # Note: DatasetDict may not allow attribute assignment; ignore if not supported.
+        try:
+            setattr(result, "_stable_datasets_processed_cache_dir", instance._processed_cache_dir)
+        except Exception:
+            pass
+        try:
+            setattr(result, "_stable_datasets_download_dir", instance._raw_download_dir)
+        except Exception:
+            pass
         return result
 
 

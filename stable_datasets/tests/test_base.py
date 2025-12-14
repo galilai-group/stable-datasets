@@ -95,6 +95,9 @@ def test_base_builder_processed_cache_dir_is_used(tmp_path):
     for cache_entry in ds.cache_files:
         assert cache_entry["filename"].startswith(str(tmp_path))
 
+    # stable-datasets also exposes the processed cache location as a convenience attribute.
+    assert getattr(ds, "_stable_datasets_processed_cache_dir") == tmp_path
+
 
 def test_base_builder_passes_download_dir_to_bulk_download(tmp_path, monkeypatch):
     import stable_datasets.utils as utils
