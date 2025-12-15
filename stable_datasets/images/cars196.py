@@ -47,11 +47,11 @@ class Cars196(BaseDatasetBuilder):
             for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
                 if entry.filename.endswith(".jpg"):
                     content = archive.read(entry)
-                    image = Image.open(io.BytesIO(content))
+                    image = Image.open(io.BytesIO(content)).convert("RGB")
 
                     filename = entry.filename.split("/")[-1]
                     class_part = filename.split("_", 1)[1].rsplit(".", 1)[0]
-                    label_name = class_part.lower()
+                    label_name = class_part.lower().replace("-", "_").replace(".", "")
                     if label_name not in label_to_idx:
                         raise ValueError(f"Unknown label: {label_name}")
 
