@@ -1,8 +1,9 @@
 import io
-import tarfile
+from zipfile import ZipFile
 
 import datasets
 from PIL import Image
+from tqdm import tqdm
 
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -13,8 +14,8 @@ class Food101(BaseDatasetBuilder):
     SOURCE = {
         "homepage": "https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
         "assets": {
-            "train": "https://data.vision.ee.ethz.ch/cvl/food-101.tar.gz",
-            "test": "https://data.vision.ee.ethz.ch/cvl/food-101.tar.gz",
+            "train": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_train.zip",
+            "test": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_test.zip",
         },
         "citation": """@inproceedings{bossard14,
             title = {Food-101 -- Mining Discriminative Components with Random Forests},
@@ -38,39 +39,24 @@ class Food101(BaseDatasetBuilder):
         )
 
     def _generate_examples(self, data_path, split):
-        """Generate examples from the tar.gz archive."""
-        with tarfile.open(data_path, "r:gz") as tar:
-            # Read the split file to get the list of images
-            split_file = f"food-101/meta/{split}.txt"
-            split_content = tar.extractfile(split_file).read().decode("utf-8")
-            lines = split_content.splitlines()
+        """Generate examples from the ZIP archives of images and labels."""
+        labels = self._labels()
+        label_to_idx = {name: idx for idx, name in enumerate(labels)}
+        with ZipFile(data_path, "r") as archive:
+            for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
+                if entry.filename.endswith(".jpg"):
+                    content = archive.read(entry)
+                    image = Image.open(io.BytesIO(content)).convert("RGB")
 
-            # Build index of tar members for faster lookup
-            member_dict = {member.name: member for member in tar.getmembers()}
+                    filename = entry.filename.split("/")[-1]
+                    class_part = filename.split("_", 1)[1].rsplit(".", 1)[0]
+                    label_name = class_part.lower().replace("-", "_").replace(".", "")
+                    if label_name not in label_to_idx:
+                        raise ValueError(f"Unknown label: {label_name}")
 
-            # Build label to index mapping
-            labels = self._labels()
-            label_to_idx = {name: idx for idx, name in enumerate(labels)}
+                    label = label_to_idx[label_name]
 
-            for idx, name in enumerate(lines):
-                image_path = f"food-101/images/{name}.jpg"
-                label_name = name.split("/")[0]
-
-                # Convert label name to integer index
-                label = label_to_idx[label_name]
-
-                image_member = member_dict.get(image_path)
-
-                image_file = tar.extractfile(image_member)
-                image = Image.open(io.BytesIO(image_file.read())).convert("RGB")
-
-                yield (
-                    idx,
-                    {
-                        "image": image,
-                        "label": label,
-                    },
-                )
+                    yield entry.filename, {"image": image, "label": label}
 
     @staticmethod
     def _labels():
