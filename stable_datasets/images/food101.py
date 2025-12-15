@@ -1,61 +1,76 @@
-import os
+import io
+import tarfile
 
 import datasets
+from PIL import Image
+
+from stable_datasets.utils import BaseDatasetBuilder
 
 
-class Food101(datasets.GeneratorBasedBuilder):
-    """A challenging data set of 101 food categories, with 101,000 images.
-    For each class, 250 manually reviewed test images are provided as well as 750 training images. On purpose, the
-    training images were not cleaned, and thus still contain some amount of noise. This comes mostly in the form of
-    intense colors and sometimes wrong labels. All images were rescaled to have a maximum side length of 512 pixels.
-    """
-
+class Food101(BaseDatasetBuilder):
     VERSION = datasets.Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
+        "assets": {
+            "train": "https://data.vision.ee.ethz.ch/cvl/food-101.tar.gz",
+            "test": "https://data.vision.ee.ethz.ch/cvl/food-101.tar.gz",
+        },
+        "citation": """@inproceedings{bossard14,
+            title = {Food-101 -- Mining Discriminative Components with Random Forests},
+            author = {Bossard, Lukas and Guillaumin, Matthieu and Van Gool, Luc},
+            booktitle = {European Conference on Computer Vision},
+            year = {2014}}""",
+    }
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""This is the Food 101 dataset, also available from https://www.vision.ee.ethz.ch/datasets_extra/food-101/
-            It contains images of food, organized by type of food. It was used in the Paper "Food-101 – Mining
-            Discriminative Components with Random Forests" by Lukas Bossard, Matthieu Guillaumin and Luc Van Gool. It's
-            a good (large dataset) for testing computer vision techniques.""",
+            description="Food-101 image classification dataset.",
             features=datasets.Features(
-                {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}
+                {
+                    "image": datasets.Image(),
+                    "label": datasets.ClassLabel(names=self._labels()),
+                }
             ),
             supervised_keys=("image", "label"),
-            homepage="https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
-            citation="""@inproceedings{bossard14,
-                         title = {Food-101 -- Mining Discriminative Components with Random Forests},
-                         author = {Bossard, Lukas and Guillaumin, Matthieu and Van Gool, Luc},
-                         booktitle = {European Conference on Computer Vision},
-                         year = {2014}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        archive = dl_manager.download_and_extract("http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz")
-        archive = str(archive)
-        train = open(os.path.join(archive, "food-101", "meta", "train.txt")).read().splitlines()
-        test = open(os.path.join(archive, "food-101", "meta", "test.txt")).read().splitlines()
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"root": archive, "archives": train},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"root": archive, "archives": test},
-            ),
-        ]
+    def _generate_examples(self, data_path, split):
+        """Generate examples from the tar.gz archive."""
+        with tarfile.open(data_path, "r:gz") as tar:
+            # Read the split file to get the list of images
+            split_file = f"food-101/meta/{split}.txt"
+            split_content = tar.extractfile(split_file).read().decode("utf-8")
+            lines = split_content.splitlines()
 
-    def _generate_examples(self, root, archives):
-        for key, name in enumerate(archives):
-            image_path = os.path.join(root, "food-101", "images", f"{name}.jpg")
-            yield (
-                key,
-                {
-                    "image": image_path,
-                    "label": name.split("/")[0],
-                },
-            )
+            # Build index of tar members for faster lookup
+            member_dict = {member.name: member for member in tar.getmembers()}
+
+            # Build label to index mapping
+            labels = self._labels()
+            label_to_idx = {name: idx for idx, name in enumerate(labels)}
+
+            for idx, name in enumerate(lines):
+                image_path = f"food-101/images/{name}.jpg"
+                label_name = name.split("/")[0]
+
+                # Convert label name to integer index
+                label = label_to_idx[label_name]
+
+                image_member = member_dict.get(image_path)
+
+                image_file = tar.extractfile(image_member)
+                image = Image.open(io.BytesIO(image_file.read())).convert("RGB")
+
+                yield (
+                    idx,
+                    {
+                        "image": image,
+                        "label": label,
+                    },
+                )
 
     @staticmethod
     def _labels():
