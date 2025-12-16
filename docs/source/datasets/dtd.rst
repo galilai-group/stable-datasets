@@ -35,7 +35,7 @@ When accessing an example using ``ds[i]``, you will receive a dictionary with th
      - H×W×3 RGB image
    * - ``label``
      - int
-     - Class label (0-47)
+     - Class label (0-46)
 
 Usage Example
 -------------
