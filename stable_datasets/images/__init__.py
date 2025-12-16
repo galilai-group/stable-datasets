@@ -2,6 +2,7 @@
 
 from .arabic_characters import ArabicCharacters
 from .cars196 import Cars196
+from .dtd import DTD
 from .med_mnist import MedMNIST
 
 
@@ -39,4 +40,5 @@ __all__ = [
     "ArabicCharacters",
     "MedMNIST",
     "Cars196",
+    "DTD",
 ]
