@@ -51,8 +51,6 @@ class Cars196(BaseDatasetBuilder):
 
     def _generate_examples(self, data_path, split):
         """Generate examples from the ZIP archives of images and labels."""
-        labels = self._labels()
-        label_to_idx = {name: idx for idx, name in enumerate(labels)}
         with ZipFile(data_path, "r") as archive:
             for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
                 if entry.filename.endswith(".jpg"):
@@ -62,12 +60,8 @@ class Cars196(BaseDatasetBuilder):
                     filename = entry.filename.split("/")[-1]
                     class_part = filename.split("_", 1)[1].rsplit(".", 1)[0]
                     label_name = class_part.lower().replace("-", "_").replace(".", "")
-                    if label_name not in label_to_idx:
-                        raise ValueError(f"Unknown label: {label_name}")
 
-                    label = label_to_idx[label_name]
-
-                    yield entry.filename, {"image": image, "label": label}
+                    yield entry.filename, {"image": image, "label": label_name}
 
     @staticmethod
     def _labels():
