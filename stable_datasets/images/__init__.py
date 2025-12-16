@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from .arabic_characters import ArabicCharacters
+from .cars196 import Cars196
 from .med_mnist import MedMNIST
 
 
@@ -37,4 +38,5 @@ from .med_mnist import MedMNIST
 __all__ = [
     "ArabicCharacters",
     "MedMNIST",
+    "Cars196",
 ]

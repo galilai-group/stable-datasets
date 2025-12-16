@@ -9,6 +9,16 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 
 class Cars196(BaseDatasetBuilder):
+    """Cars-196 Dataset
+    The Cars-196 dataset, also known as the Stanford Cars dataset, is a benchmark dataset for fine-grained visual classification of automobiles.
+    It contains 16,185 color images covering 196 car categories, where each category is defined by a specific combination of make, model, and year.
+    The dataset is split into 8,144 training images and 8,041 test images, with the first 98 classes used exclusively for training and the remaining 98 classes
+    reserved for testing, ensuring that training and test classes are disjoint. Images are collected from real-world scenes and exhibit significant variation in v
+    iewpoint, background, and lighting conditions. Each image is annotated with a class label and a tight bounding box around the car, making the dataset suitable
+    for fine-grained recognition tasks that require precise object localization and strong generalization to unseen categories.
+
+    """
+
     VERSION = datasets.Version("1.0.0")
 
     SOURCE = {
