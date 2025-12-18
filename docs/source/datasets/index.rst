@@ -44,10 +44,14 @@ Available Datasets
    :maxdepth: 1
    :caption: Image Classification Datasets
 
+   arabic_characters
    cifar10
    cifar100
    cifar10_c
    cifar100_c
+   cars196
+   dtd
+   medmnist
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.

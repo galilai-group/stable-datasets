@@ -34,7 +34,7 @@ When accessing an example using ``ds[i]``, you will receive a dictionary with th
      - Type
      - Description
    * - ``image``
-     - PIL Image / numpy array
+     - ``PIL.Image.Image``
      - 32×32×3 RGB image
    * - ``label``
      - int

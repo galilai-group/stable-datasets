@@ -3,8 +3,9 @@
 Generate teaser figures for datasets.
 
 Usage:
-    python generate_teaser.py --name mnist --num-samples 5
-    python generate_teaser.py --name cifar10 --num-samples 8 --output cifar10_teaser.png
+    python generate_teaser.py --name MNIST --num-samples 5
+    python generate_teaser.py --name CIFAR10 --num-samples 8 --output cifar10_teaser.png
+    python generate_teaser.py --name MedMNIST --variant dermamnist --num-samples 5 --output medmnist_dermamnist_teaser.png
 """
 
 import argparse
@@ -21,6 +22,7 @@ def generate_teaser(
     label_key: str = "label",
     output_path: str | None = None,
     figsize_per_sample: float = 1.5,
+    variant: str | None = None,
 ):
     """
     Generate a teaser figure for a dataset.
@@ -32,6 +34,7 @@ def generate_teaser(
         label_key: Key for label data in the dataset
         output_path: Path to save the figure (if None, display instead)
         figsize_per_sample: Width per sample in inches
+        variant: Optional dataset variant/config name (e.g. MedMNIST variants)
     """
     # Try to import the dataset
     try:
@@ -50,7 +53,10 @@ def generate_teaser(
 
     # Load the dataset
     print(f"Loading {dataset_name} dataset...")
-    dataset = dataset_class(split="train")
+    if variant is None:
+        dataset = dataset_class(split="train")
+    else:
+        dataset = dataset_class(split="train", config_name=variant)
 
     # Get samples from different classes
     samples = []
@@ -176,6 +182,7 @@ Examples:
   python generate_teaser.py --name MNIST --num-samples 5
   python generate_teaser.py --name CIFAR10 --num-samples 8 --output cifar10.png
   python generate_teaser.py --name ArabicCharacters --num-samples 10
+  python generate_teaser.py --name MedMNIST --variant dermamnist --num-samples 5
         """,
     )
 
@@ -190,6 +197,12 @@ Examples:
         type=int,
         default=5,
         help="Number of samples to display (default: 5)",
+    )
+    parser.add_argument(
+        "--variant",
+        type=str,
+        default=None,
+        help='Optional dataset variant/config name (e.g., "dermamnist" for MedMNIST).',
     )
     parser.add_argument(
         "--image-key",
@@ -226,6 +239,7 @@ Examples:
         label_key=args.label_key,
         output_path=args.output,
         figsize_per_sample=args.figsize,
+        variant=args.variant,
     )
 
 
