@@ -5,8 +5,10 @@ import datasets
 from PIL import Image
 from tqdm import tqdm
 
+from stable_datasets.utils import BaseDatasetBuilder
 
-class DTD(datasets.GeneratorBasedBuilder):
+
+class DTD(BaseDatasetBuilder):
     """Describable Textures Dataset (DTD)
 
     DTD is a texture database, consisting of 5640 images, organized according to a list of 47 terms (categories)
@@ -23,6 +25,20 @@ class DTD(datasets.GeneratorBasedBuilder):
 
     VERSION = datasets.Version("1.0.0")
 
+    SOURCE = {
+        "homepage": "https://www.robots.ox.ac.uk/~vgg/data/dtd/",
+        "assets": {
+            "train": "https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz",
+            "test": "https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz",
+            "val": "https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz",
+        },
+        "citation": """@InProceedings{cimpoi14describing,
+                    Author    = {M. Cimpoi and S. Maji and I. Kokkinos and S. Mohamed and and A. Vedaldi},
+                    Title     = {Describing Textures in the Wild},
+                    Booktitle = {Proceedings of the {IEEE} Conf. on Computer Vision and Pattern Recognition ({CVPR})},
+                    Year      = {2014}}""",
+    }
+
     def _info(self):
         return datasets.DatasetInfo(
             description="""Describing Textures in the Wild (DTD) is a dataset for texture classification.
@@ -30,88 +46,16 @@ class DTD(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
-                    "label": datasets.ClassLabel(
-                        names=[
-                            "banded",
-                            "blotchy",
-                            "braided",
-                            "bubbly",
-                            "bumpy",
-                            "chequered",
-                            "cobwebbed",
-                            "cracked",
-                            "crosshatched",
-                            "crystalline",
-                            "dotted",
-                            "fibrous",
-                            "flecked",
-                            "freckled",
-                            "frilly",
-                            "gauzy",
-                            "grid",
-                            "grooved",
-                            "honeycombed",
-                            "interlaced",
-                            "knitted",
-                            "lacelike",
-                            "lined",
-                            "marbled",
-                            "matted",
-                            "meshed",
-                            "paisley",
-                            "perforated",
-                            "pitted",
-                            "pleated",
-                            "polka-dotted",
-                            "porous",
-                            "potholed",
-                            "scaly",
-                            "smeared",
-                            "spiralled",
-                            "sprinkled",
-                            "stained",
-                            "stratified",
-                            "striped",
-                            "studded",
-                            "swirly",
-                            "veined",
-                            "waffled",
-                            "woven",
-                            "wrinkled",
-                            "zigzagged",
-                        ]
-                    ),
+                    "label": datasets.ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
-            homepage="https://www.robots.ox.ac.uk/~vgg/data/dtd/",
-            citation="""@InProceedings{cimpoi14describing,
-                            Author    = {M. Cimpoi and S. Maji and I. Kokkinos and S. Mohamed and and A. Vedaldi},
-                            Title     = {Describing Textures in the Wild},
-                            Booktitle = {Proceedings of the {IEEE} Conf. on Computer Vision and Pattern Recognition ({CVPR})},
-                            Year      = {2014}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        archive_path = dl_manager.download("https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz")
-
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"archive_path": archive_path, "split": "train"},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION,
-                gen_kwargs={"archive_path": archive_path, "split": "val"},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"archive_path": archive_path, "split": "test"},
-            ),
-        ]
-
-    def _generate_examples(self, archive_path, split):
-        with tarfile.open(archive_path, "r:gz") as tar:
+    def _generate_examples(self, data_path, split):
+        with tarfile.open(data_path, "r:gz") as tar:
             split_file = f"dtd/labels/{split}1.txt"
             file_names = self._read_split_file(tar, split_file)
 
@@ -132,3 +76,55 @@ class DTD(datasets.GeneratorBasedBuilder):
         """Helper function to read split file from the tar archive."""
         split_content = tar.extractfile(split_file).read().decode("utf-8")
         return split_content.splitlines()
+
+    @staticmethod
+    def _labels():
+        return [
+            "banded",
+            "blotchy",
+            "braided",
+            "bubbly",
+            "bumpy",
+            "chequered",
+            "cobwebbed",
+            "cracked",
+            "crosshatched",
+            "crystalline",
+            "dotted",
+            "fibrous",
+            "flecked",
+            "freckled",
+            "frilly",
+            "gauzy",
+            "grid",
+            "grooved",
+            "honeycombed",
+            "interlaced",
+            "knitted",
+            "lacelike",
+            "lined",
+            "marbled",
+            "matted",
+            "meshed",
+            "paisley",
+            "perforated",
+            "pitted",
+            "pleated",
+            "polka-dotted",
+            "porous",
+            "potholed",
+            "scaly",
+            "smeared",
+            "spiralled",
+            "sprinkled",
+            "stained",
+            "stratified",
+            "striped",
+            "studded",
+            "swirly",
+            "veined",
+            "waffled",
+            "woven",
+            "wrinkled",
+            "zigzagged",
+        ]
