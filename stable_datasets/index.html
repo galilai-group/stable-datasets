@@ -81,6 +81,8 @@
 <ul>
 <li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../datasets/">Datasets<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cifar10/">CIFAR-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/cifar10_c/">CIFAR-10-C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/cifar100_c/">CIFAR-100-C</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/quickstart/">Quick Start</a></li>
@@ -185,6 +187,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.cifar100_c">stable_datasets.images.cifar100_c module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C"><code class="docutils literal notranslate"><span class="pre">CIFAR100C</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C.SOURCE"><code class="docutils literal notranslate"><span class="pre">CIFAR100C.SOURCE</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C.VERSION"><code class="docutils literal notranslate"><span class="pre">CIFAR100C.VERSION</span></code></a></li>
 </ul>
 </li>
@@ -192,6 +195,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.cifar10_c">stable_datasets.images.cifar10_c module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.cifar10_c.CIFAR10C"><code class="docutils literal notranslate"><span class="pre">CIFAR10C</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.cifar10_c.CIFAR10C.SOURCE"><code class="docutils literal notranslate"><span class="pre">CIFAR10C.SOURCE</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.cifar10_c.CIFAR10C.VERSION"><code class="docutils literal notranslate"><span class="pre">CIFAR10C.VERSION</span></code></a></li>
 </ul>
 </li>
@@ -387,6 +391,20 @@
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.ArabicCharacters.VERSION"><code class="docutils literal notranslate"><span class="pre">ArabicCharacters.VERSION</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.ArabicCharacters.hash"><code class="docutils literal notranslate"><span class="pre">ArabicCharacters.hash</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.ArabicCharacters.name"><code class="docutils literal notranslate"><span class="pre">ArabicCharacters.name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR100C"><code class="docutils literal notranslate"><span class="pre">CIFAR100C</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR100C.SOURCE"><code class="docutils literal notranslate"><span class="pre">CIFAR100C.SOURCE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR100C.VERSION"><code class="docutils literal notranslate"><span class="pre">CIFAR100C.VERSION</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR100C.hash"><code class="docutils literal notranslate"><span class="pre">CIFAR100C.hash</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR100C.name"><code class="docutils literal notranslate"><span class="pre">CIFAR100C.name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR10C"><code class="docutils literal notranslate"><span class="pre">CIFAR10C</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR10C.SOURCE"><code class="docutils literal notranslate"><span class="pre">CIFAR10C.SOURCE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR10C.VERSION"><code class="docutils literal notranslate"><span class="pre">CIFAR10C.VERSION</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR10C.hash"><code class="docutils literal notranslate"><span class="pre">CIFAR10C.hash</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR10C.name"><code class="docutils literal notranslate"><span class="pre">CIFAR10C.name</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.Cars196"><code class="docutils literal notranslate"><span class="pre">Cars196</span></code></a><ul>

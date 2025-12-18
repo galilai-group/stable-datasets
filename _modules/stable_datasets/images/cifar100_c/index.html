@@ -116,6 +116,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../datasets/">Datasets</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar10/">CIFAR-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar10_c/">CIFAR-10-C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
@@ -170,218 +172,224 @@
 </span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-7">
-</span><span id="line-8">
+</span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
+</span><span id="line-9">
+</span><span id="line-10">
 <div class="viewcode-block" id="CIFAR100C">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C">[docs]</a>
-</span><span id="line-9"><span class="k">class</span><span class="w"> </span><span class="nc">CIFAR100C</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-10"><span class="w">    </span><span class="sd">&quot;&quot;&quot;CIFAR-100-C dataset with corrupted CIFAR-100 images.&quot;&quot;&quot;</span>
-</span><span id="line-11">
-</span><span id="line-12">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-11"><span class="k">class</span><span class="w"> </span><span class="nc">CIFAR100C</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-12"><span class="w">    </span><span class="sd">&quot;&quot;&quot;CIFAR-100-C dataset with corrupted CIFAR-100 images.&quot;&quot;&quot;</span>
 </span><span id="line-13">
-</span><span id="line-14">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-15">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-16">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;CIFAR-100-C is a corrupted version of the CIFAR-100 dataset, with 19 different types of</span>
-</span><span id="line-17"><span class="s2">                           corruptions applied to the images. The dataset consists of 100 classes and 5 levels</span>
-</span><span id="line-18"><span class="s2">                           of severity per corruption type.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-19">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-20">                <span class="p">{</span>
-</span><span id="line-21">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-22">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fine_labels</span><span class="p">()),</span>
-</span><span id="line-23">                    <span class="s2">&quot;corruption_name&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
-</span><span id="line-24">                    <span class="s2">&quot;corruption_level&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
-</span><span id="line-25">                <span class="p">}</span>
-</span><span id="line-26">            <span class="p">),</span>
-</span><span id="line-27">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-28">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://zenodo.org/records/3555552&quot;</span><span class="p">,</span>
-</span><span id="line-29">            <span class="n">license</span><span class="o">=</span><span class="s2">&quot;CC BY 4.0&quot;</span><span class="p">,</span>
-</span><span id="line-30">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@article{hendrycks2019robustness,</span>
-</span><span id="line-31"><span class="s2">                        title={Benchmarking Neural Network Robustness to Common Corruptions and Perturbations},</span>
-</span><span id="line-32"><span class="s2">                        author={Dan Hendrycks and Thomas Dietterich},</span>
-</span><span id="line-33"><span class="s2">                        journal={Proceedings of the International Conference on Learning Representations},</span>
-</span><span id="line-34"><span class="s2">                        year=</span><span class="si">{2019}</span><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-35">        <span class="p">)</span>
-</span><span id="line-36">
-</span><span id="line-37">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-38">        <span class="n">archive_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;https://zenodo.org/records/3555552/files/CIFAR-100-C.tar?download=1&quot;</span><span class="p">)</span>
-</span><span id="line-39">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-40">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-41">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-42">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;corruptions&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
-</span><span id="line-43">            <span class="p">),</span>
-</span><span id="line-44">        <span class="p">]</span>
-</span><span id="line-45">
-</span><span id="line-46">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_path</span><span class="p">,</span> <span class="n">corruptions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="line-47">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
-</span><span id="line-48">            <span class="n">array_file</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
-</span><span id="line-49">            <span class="n">array_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="s2">&quot;CIFAR-100-C/labels.npy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-</span><span id="line-50">            <span class="n">array_file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="line-51">            <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">array_file</span><span class="p">)</span>
-</span><span id="line-52">
-</span><span id="line-53">            <span class="c1"># Determine corruptions to load</span>
-</span><span id="line-54">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">corruptions</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-55">                <span class="n">corruptions</span> <span class="o">=</span> <span class="p">[</span><span class="n">corruptions</span><span class="p">]</span>
-</span><span id="line-56">            <span class="k">elif</span> <span class="n">corruptions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-57">                <span class="n">corruptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corruptions</span><span class="p">()</span>
-</span><span id="line-58">            <span class="n">images</span><span class="p">,</span> <span class="n">labels_list</span><span class="p">,</span> <span class="n">corruption_names</span><span class="p">,</span> <span class="n">corruption_levels</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
-</span><span id="line-59">
-</span><span id="line-60">            <span class="k">for</span> <span class="n">corruption</span> <span class="ow">in</span> <span class="n">corruptions</span><span class="p">:</span>
-</span><span id="line-61">                <span class="k">assert</span> <span class="n">corruption</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corruptions</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;Unknown corruption type: </span><span class="si">{</span><span class="n">corruption</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="line-62">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading corruption: </span><span class="si">{</span><span class="n">corruption</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="line-63">
-</span><span id="line-64">                <span class="n">array_file</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
-</span><span id="line-65">                <span class="n">array_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CIFAR-100-C/</span><span class="si">{</span><span class="n">corruption</span><span class="si">}</span><span class="s2">.npy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-</span><span id="line-66">                <span class="n">array_file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="line-67">                <span class="n">corrupted_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">array_file</span><span class="p">)</span>
-</span><span id="line-68">
-</span><span id="line-69">                <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
-</span><span id="line-70">                    <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">level</span> <span class="o">*</span> <span class="mi">10000</span>
-</span><span id="line-71">                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">corrupted_images</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:</span><span class="n">end_idx</span><span class="p">])</span>
-</span><span id="line-72">                    <span class="n">labels_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
-</span><span id="line-73">                    <span class="n">corruption_names</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">corruption</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">)</span>
-</span><span id="line-74">                    <span class="n">corruption_levels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">level</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">)</span>
-</span><span id="line-75">
-</span><span id="line-76">            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">corruption_name</span><span class="p">,</span> <span class="n">corruption_level</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
-</span><span id="line-77">                <span class="nb">zip</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels_list</span><span class="p">,</span> <span class="n">corruption_names</span><span class="p">,</span> <span class="n">corruption_levels</span><span class="p">)</span>
-</span><span id="line-78">            <span class="p">):</span>
-</span><span id="line-79">                <span class="k">yield</span> <span class="p">(</span>
-</span><span id="line-80">                    <span class="n">idx</span><span class="p">,</span>
-</span><span id="line-81">                    <span class="p">{</span>
-</span><span id="line-82">                        <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">image</span><span class="p">),</span>
-</span><span id="line-83">                        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
-</span><span id="line-84">                        <span class="s2">&quot;corruption_name&quot;</span><span class="p">:</span> <span class="n">corruption_name</span><span class="p">,</span>
-</span><span id="line-85">                        <span class="s2">&quot;corruption_level&quot;</span><span class="p">:</span> <span class="n">corruption_level</span><span class="p">,</span>
-</span><span id="line-86">                    <span class="p">},</span>
-</span><span id="line-87">                <span class="p">)</span>
-</span><span id="line-88">
-</span><span id="line-89">    <span class="nd">@staticmethod</span>
-</span><span id="line-90">    <span class="k">def</span><span class="w"> </span><span class="nf">_corruptions</span><span class="p">():</span>
-</span><span id="line-91">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-92">            <span class="s2">&quot;zoom_blur&quot;</span><span class="p">,</span>
-</span><span id="line-93">            <span class="s2">&quot;speckle_noise&quot;</span><span class="p">,</span>
-</span><span id="line-94">            <span class="s2">&quot;spatter&quot;</span><span class="p">,</span>
-</span><span id="line-95">            <span class="s2">&quot;snow&quot;</span><span class="p">,</span>
-</span><span id="line-96">            <span class="s2">&quot;shot_noise&quot;</span><span class="p">,</span>
-</span><span id="line-97">            <span class="s2">&quot;saturate&quot;</span><span class="p">,</span>
-</span><span id="line-98">            <span class="s2">&quot;pixelate&quot;</span><span class="p">,</span>
-</span><span id="line-99">            <span class="s2">&quot;motion_blur&quot;</span><span class="p">,</span>
-</span><span id="line-100">            <span class="s2">&quot;jpeg_compression&quot;</span><span class="p">,</span>
-</span><span id="line-101">            <span class="s2">&quot;impulse_noise&quot;</span><span class="p">,</span>
-</span><span id="line-102">            <span class="s2">&quot;glass_blur&quot;</span><span class="p">,</span>
-</span><span id="line-103">            <span class="s2">&quot;gaussian_noise&quot;</span><span class="p">,</span>
-</span><span id="line-104">            <span class="s2">&quot;gaussian_blur&quot;</span><span class="p">,</span>
-</span><span id="line-105">            <span class="s2">&quot;frost&quot;</span><span class="p">,</span>
-</span><span id="line-106">            <span class="s2">&quot;fog&quot;</span><span class="p">,</span>
-</span><span id="line-107">            <span class="s2">&quot;elastic_transform&quot;</span><span class="p">,</span>
-</span><span id="line-108">            <span class="s2">&quot;defocus_blur&quot;</span><span class="p">,</span>
-</span><span id="line-109">            <span class="s2">&quot;contrast&quot;</span><span class="p">,</span>
-</span><span id="line-110">            <span class="s2">&quot;brightness&quot;</span><span class="p">,</span>
-</span><span id="line-111">        <span class="p">]</span>
-</span><span id="line-112">
-</span><span id="line-113">    <span class="nd">@staticmethod</span>
-</span><span id="line-114">    <span class="k">def</span><span class="w"> </span><span class="nf">_fine_labels</span><span class="p">():</span>
-</span><span id="line-115"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the list of CIFAR-100 fine labels (100 classes).&quot;&quot;&quot;</span>
-</span><span id="line-116">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-117">            <span class="s2">&quot;apple&quot;</span><span class="p">,</span>
-</span><span id="line-118">            <span class="s2">&quot;aquarium_fish&quot;</span><span class="p">,</span>
-</span><span id="line-119">            <span class="s2">&quot;baby&quot;</span><span class="p">,</span>
-</span><span id="line-120">            <span class="s2">&quot;bear&quot;</span><span class="p">,</span>
-</span><span id="line-121">            <span class="s2">&quot;beaver&quot;</span><span class="p">,</span>
-</span><span id="line-122">            <span class="s2">&quot;bed&quot;</span><span class="p">,</span>
-</span><span id="line-123">            <span class="s2">&quot;bee&quot;</span><span class="p">,</span>
-</span><span id="line-124">            <span class="s2">&quot;beetle&quot;</span><span class="p">,</span>
-</span><span id="line-125">            <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span>
-</span><span id="line-126">            <span class="s2">&quot;bottle&quot;</span><span class="p">,</span>
-</span><span id="line-127">            <span class="s2">&quot;bowl&quot;</span><span class="p">,</span>
-</span><span id="line-128">            <span class="s2">&quot;boy&quot;</span><span class="p">,</span>
-</span><span id="line-129">            <span class="s2">&quot;bridge&quot;</span><span class="p">,</span>
-</span><span id="line-130">            <span class="s2">&quot;bus&quot;</span><span class="p">,</span>
-</span><span id="line-131">            <span class="s2">&quot;butterfly&quot;</span><span class="p">,</span>
-</span><span id="line-132">            <span class="s2">&quot;camel&quot;</span><span class="p">,</span>
-</span><span id="line-133">            <span class="s2">&quot;can&quot;</span><span class="p">,</span>
-</span><span id="line-134">            <span class="s2">&quot;castle&quot;</span><span class="p">,</span>
-</span><span id="line-135">            <span class="s2">&quot;caterpillar&quot;</span><span class="p">,</span>
-</span><span id="line-136">            <span class="s2">&quot;cattle&quot;</span><span class="p">,</span>
-</span><span id="line-137">            <span class="s2">&quot;chair&quot;</span><span class="p">,</span>
-</span><span id="line-138">            <span class="s2">&quot;chimpanzee&quot;</span><span class="p">,</span>
-</span><span id="line-139">            <span class="s2">&quot;clock&quot;</span><span class="p">,</span>
-</span><span id="line-140">            <span class="s2">&quot;cloud&quot;</span><span class="p">,</span>
-</span><span id="line-141">            <span class="s2">&quot;cockroach&quot;</span><span class="p">,</span>
-</span><span id="line-142">            <span class="s2">&quot;couch&quot;</span><span class="p">,</span>
-</span><span id="line-143">            <span class="s2">&quot;crab&quot;</span><span class="p">,</span>
-</span><span id="line-144">            <span class="s2">&quot;crocodile&quot;</span><span class="p">,</span>
-</span><span id="line-145">            <span class="s2">&quot;cup&quot;</span><span class="p">,</span>
-</span><span id="line-146">            <span class="s2">&quot;dinosaur&quot;</span><span class="p">,</span>
-</span><span id="line-147">            <span class="s2">&quot;dolphin&quot;</span><span class="p">,</span>
-</span><span id="line-148">            <span class="s2">&quot;elephant&quot;</span><span class="p">,</span>
-</span><span id="line-149">            <span class="s2">&quot;flatfish&quot;</span><span class="p">,</span>
-</span><span id="line-150">            <span class="s2">&quot;forest&quot;</span><span class="p">,</span>
-</span><span id="line-151">            <span class="s2">&quot;fox&quot;</span><span class="p">,</span>
-</span><span id="line-152">            <span class="s2">&quot;girl&quot;</span><span class="p">,</span>
-</span><span id="line-153">            <span class="s2">&quot;hamster&quot;</span><span class="p">,</span>
-</span><span id="line-154">            <span class="s2">&quot;house&quot;</span><span class="p">,</span>
-</span><span id="line-155">            <span class="s2">&quot;kangaroo&quot;</span><span class="p">,</span>
-</span><span id="line-156">            <span class="s2">&quot;keyboard&quot;</span><span class="p">,</span>
-</span><span id="line-157">            <span class="s2">&quot;lamp&quot;</span><span class="p">,</span>
-</span><span id="line-158">            <span class="s2">&quot;lawn_mower&quot;</span><span class="p">,</span>
-</span><span id="line-159">            <span class="s2">&quot;leopard&quot;</span><span class="p">,</span>
-</span><span id="line-160">            <span class="s2">&quot;lion&quot;</span><span class="p">,</span>
-</span><span id="line-161">            <span class="s2">&quot;lizard&quot;</span><span class="p">,</span>
-</span><span id="line-162">            <span class="s2">&quot;lobster&quot;</span><span class="p">,</span>
-</span><span id="line-163">            <span class="s2">&quot;man&quot;</span><span class="p">,</span>
-</span><span id="line-164">            <span class="s2">&quot;maple_tree&quot;</span><span class="p">,</span>
-</span><span id="line-165">            <span class="s2">&quot;motorcycle&quot;</span><span class="p">,</span>
-</span><span id="line-166">            <span class="s2">&quot;mountain&quot;</span><span class="p">,</span>
-</span><span id="line-167">            <span class="s2">&quot;mouse&quot;</span><span class="p">,</span>
-</span><span id="line-168">            <span class="s2">&quot;mushroom&quot;</span><span class="p">,</span>
-</span><span id="line-169">            <span class="s2">&quot;oak_tree&quot;</span><span class="p">,</span>
-</span><span id="line-170">            <span class="s2">&quot;orange&quot;</span><span class="p">,</span>
-</span><span id="line-171">            <span class="s2">&quot;orchid&quot;</span><span class="p">,</span>
-</span><span id="line-172">            <span class="s2">&quot;otter&quot;</span><span class="p">,</span>
-</span><span id="line-173">            <span class="s2">&quot;palm_tree&quot;</span><span class="p">,</span>
-</span><span id="line-174">            <span class="s2">&quot;pear&quot;</span><span class="p">,</span>
-</span><span id="line-175">            <span class="s2">&quot;pickup_truck&quot;</span><span class="p">,</span>
-</span><span id="line-176">            <span class="s2">&quot;pine_tree&quot;</span><span class="p">,</span>
-</span><span id="line-177">            <span class="s2">&quot;plain&quot;</span><span class="p">,</span>
-</span><span id="line-178">            <span class="s2">&quot;plate&quot;</span><span class="p">,</span>
-</span><span id="line-179">            <span class="s2">&quot;poppy&quot;</span><span class="p">,</span>
-</span><span id="line-180">            <span class="s2">&quot;porcupine&quot;</span><span class="p">,</span>
-</span><span id="line-181">            <span class="s2">&quot;possum&quot;</span><span class="p">,</span>
-</span><span id="line-182">            <span class="s2">&quot;rabbit&quot;</span><span class="p">,</span>
-</span><span id="line-183">            <span class="s2">&quot;raccoon&quot;</span><span class="p">,</span>
-</span><span id="line-184">            <span class="s2">&quot;ray&quot;</span><span class="p">,</span>
-</span><span id="line-185">            <span class="s2">&quot;road&quot;</span><span class="p">,</span>
-</span><span id="line-186">            <span class="s2">&quot;rocket&quot;</span><span class="p">,</span>
-</span><span id="line-187">            <span class="s2">&quot;rose&quot;</span><span class="p">,</span>
-</span><span id="line-188">            <span class="s2">&quot;sea&quot;</span><span class="p">,</span>
-</span><span id="line-189">            <span class="s2">&quot;seal&quot;</span><span class="p">,</span>
-</span><span id="line-190">            <span class="s2">&quot;shark&quot;</span><span class="p">,</span>
-</span><span id="line-191">            <span class="s2">&quot;shrew&quot;</span><span class="p">,</span>
-</span><span id="line-192">            <span class="s2">&quot;skunk&quot;</span><span class="p">,</span>
-</span><span id="line-193">            <span class="s2">&quot;skyscraper&quot;</span><span class="p">,</span>
-</span><span id="line-194">            <span class="s2">&quot;snail&quot;</span><span class="p">,</span>
-</span><span id="line-195">            <span class="s2">&quot;snake&quot;</span><span class="p">,</span>
-</span><span id="line-196">            <span class="s2">&quot;spider&quot;</span><span class="p">,</span>
-</span><span id="line-197">            <span class="s2">&quot;squirrel&quot;</span><span class="p">,</span>
-</span><span id="line-198">            <span class="s2">&quot;streetcar&quot;</span><span class="p">,</span>
-</span><span id="line-199">            <span class="s2">&quot;sunflower&quot;</span><span class="p">,</span>
-</span><span id="line-200">            <span class="s2">&quot;sweet_pepper&quot;</span><span class="p">,</span>
-</span><span id="line-201">            <span class="s2">&quot;table&quot;</span><span class="p">,</span>
-</span><span id="line-202">            <span class="s2">&quot;tank&quot;</span><span class="p">,</span>
-</span><span id="line-203">            <span class="s2">&quot;telephone&quot;</span><span class="p">,</span>
-</span><span id="line-204">            <span class="s2">&quot;television&quot;</span><span class="p">,</span>
-</span><span id="line-205">            <span class="s2">&quot;tiger&quot;</span><span class="p">,</span>
-</span><span id="line-206">            <span class="s2">&quot;tractor&quot;</span><span class="p">,</span>
-</span><span id="line-207">            <span class="s2">&quot;train&quot;</span><span class="p">,</span>
-</span><span id="line-208">            <span class="s2">&quot;trout&quot;</span><span class="p">,</span>
-</span><span id="line-209">            <span class="s2">&quot;tulip&quot;</span><span class="p">,</span>
-</span><span id="line-210">            <span class="s2">&quot;turtle&quot;</span><span class="p">,</span>
-</span><span id="line-211">            <span class="s2">&quot;wardrobe&quot;</span><span class="p">,</span>
-</span><span id="line-212">            <span class="s2">&quot;whale&quot;</span><span class="p">,</span>
-</span><span id="line-213">            <span class="s2">&quot;willow_tree&quot;</span><span class="p">,</span>
-</span><span id="line-214">            <span class="s2">&quot;wolf&quot;</span><span class="p">,</span>
-</span><span id="line-215">            <span class="s2">&quot;woman&quot;</span><span class="p">,</span>
-</span><span id="line-216">            <span class="s2">&quot;worm&quot;</span><span class="p">,</span>
-</span><span id="line-217">        <span class="p">]</span></div>
+</span><span id="line-14">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-15">
+</span><span id="line-16">    <span class="c1"># Single source-of-truth for dataset provenance + download locations.</span>
+</span><span id="line-17">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-18">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://zenodo.org/records/3555552&quot;</span><span class="p">,</span>
+</span><span id="line-19">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-20">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://zenodo.org/records/3555552/files/CIFAR-100-C.tar?download=1&quot;</span><span class="p">,</span>
+</span><span id="line-21">        <span class="p">},</span>
+</span><span id="line-22">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@article{hendrycks2019robustness,</span>
+</span><span id="line-23"><span class="s2">                        title={Benchmarking Neural Network Robustness to Common Corruptions and Perturbations},</span>
+</span><span id="line-24"><span class="s2">                        author={Dan Hendrycks and Thomas Dietterich},</span>
+</span><span id="line-25"><span class="s2">                        journal={Proceedings of the International Conference on Learning Representations},</span>
+</span><span id="line-26"><span class="s2">                        year=</span><span class="si">{2019}</span><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-27">    <span class="p">}</span>
+</span><span id="line-28">
+</span><span id="line-29">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-30">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-31">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;CIFAR-100-C is a corrupted version of the CIFAR-100 dataset, with 19 different types of</span>
+</span><span id="line-32"><span class="s2">                           corruptions applied to the images. The dataset consists of 100 classes and 5 levels</span>
+</span><span id="line-33"><span class="s2">                           of severity per corruption type.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-34">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-35">                <span class="p">{</span>
+</span><span id="line-36">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-37">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fine_labels</span><span class="p">()),</span>
+</span><span id="line-38">                    <span class="s2">&quot;corruption_name&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
+</span><span id="line-39">                    <span class="s2">&quot;corruption_level&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
+</span><span id="line-40">                <span class="p">}</span>
+</span><span id="line-41">            <span class="p">),</span>
+</span><span id="line-42">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-43">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-44">            <span class="n">license</span><span class="o">=</span><span class="s2">&quot;CC BY 4.0&quot;</span><span class="p">,</span>
+</span><span id="line-45">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-46">        <span class="p">)</span>
+</span><span id="line-47">
+</span><span id="line-48">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="n">corruptions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="line-49"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the tar archive.</span>
+</span><span id="line-50">
+</span><span id="line-51"><span class="sd">        Note: split parameter is unused as CIFAR-100-C only contains a test split.</span>
+</span><span id="line-52"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="line-53">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+</span><span id="line-54">            <span class="n">array_file</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
+</span><span id="line-55">            <span class="n">array_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="s2">&quot;CIFAR-100-C/labels.npy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</span><span id="line-56">            <span class="n">array_file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="line-57">            <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">array_file</span><span class="p">)</span>
+</span><span id="line-58">
+</span><span id="line-59">            <span class="c1"># Determine corruptions to load</span>
+</span><span id="line-60">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">corruptions</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-61">                <span class="n">corruptions</span> <span class="o">=</span> <span class="p">[</span><span class="n">corruptions</span><span class="p">]</span>
+</span><span id="line-62">            <span class="k">elif</span> <span class="n">corruptions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-63">                <span class="n">corruptions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corruptions</span><span class="p">()</span>
+</span><span id="line-64">            <span class="n">images</span><span class="p">,</span> <span class="n">labels_list</span><span class="p">,</span> <span class="n">corruption_names</span><span class="p">,</span> <span class="n">corruption_levels</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+</span><span id="line-65">
+</span><span id="line-66">            <span class="k">for</span> <span class="n">corruption</span> <span class="ow">in</span> <span class="n">corruptions</span><span class="p">:</span>
+</span><span id="line-67">                <span class="k">assert</span> <span class="n">corruption</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_corruptions</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">&quot;Unknown corruption type: </span><span class="si">{</span><span class="n">corruption</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="line-68">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading corruption: </span><span class="si">{</span><span class="n">corruption</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-69">
+</span><span id="line-70">                <span class="n">array_file</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
+</span><span id="line-71">                <span class="n">array_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CIFAR-100-C/</span><span class="si">{</span><span class="n">corruption</span><span class="si">}</span><span class="s2">.npy&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</span><span id="line-72">                <span class="n">array_file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="line-73">                <span class="n">corrupted_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">array_file</span><span class="p">)</span>
+</span><span id="line-74">
+</span><span id="line-75">                <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+</span><span id="line-76">                    <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span> <span class="o">=</span> <span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">,</span> <span class="n">level</span> <span class="o">*</span> <span class="mi">10000</span>
+</span><span id="line-77">                    <span class="n">images</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">corrupted_images</span><span class="p">[</span><span class="n">start_idx</span><span class="p">:</span><span class="n">end_idx</span><span class="p">])</span>
+</span><span id="line-78">                    <span class="n">labels_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+</span><span id="line-79">                    <span class="n">corruption_names</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">corruption</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">)</span>
+</span><span id="line-80">                    <span class="n">corruption_levels</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">level</span><span class="p">]</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">)</span>
+</span><span id="line-81">
+</span><span id="line-82">            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">corruption_name</span><span class="p">,</span> <span class="n">corruption_level</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+</span><span id="line-83">                <span class="nb">zip</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels_list</span><span class="p">,</span> <span class="n">corruption_names</span><span class="p">,</span> <span class="n">corruption_levels</span><span class="p">)</span>
+</span><span id="line-84">            <span class="p">):</span>
+</span><span id="line-85">                <span class="k">yield</span> <span class="p">(</span>
+</span><span id="line-86">                    <span class="n">idx</span><span class="p">,</span>
+</span><span id="line-87">                    <span class="p">{</span>
+</span><span id="line-88">                        <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">image</span><span class="p">),</span>
+</span><span id="line-89">                        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
+</span><span id="line-90">                        <span class="s2">&quot;corruption_name&quot;</span><span class="p">:</span> <span class="n">corruption_name</span><span class="p">,</span>
+</span><span id="line-91">                        <span class="s2">&quot;corruption_level&quot;</span><span class="p">:</span> <span class="n">corruption_level</span><span class="p">,</span>
+</span><span id="line-92">                    <span class="p">},</span>
+</span><span id="line-93">                <span class="p">)</span>
+</span><span id="line-94">
+</span><span id="line-95">    <span class="nd">@staticmethod</span>
+</span><span id="line-96">    <span class="k">def</span><span class="w"> </span><span class="nf">_corruptions</span><span class="p">():</span>
+</span><span id="line-97">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-98">            <span class="s2">&quot;zoom_blur&quot;</span><span class="p">,</span>
+</span><span id="line-99">            <span class="s2">&quot;speckle_noise&quot;</span><span class="p">,</span>
+</span><span id="line-100">            <span class="s2">&quot;spatter&quot;</span><span class="p">,</span>
+</span><span id="line-101">            <span class="s2">&quot;snow&quot;</span><span class="p">,</span>
+</span><span id="line-102">            <span class="s2">&quot;shot_noise&quot;</span><span class="p">,</span>
+</span><span id="line-103">            <span class="s2">&quot;saturate&quot;</span><span class="p">,</span>
+</span><span id="line-104">            <span class="s2">&quot;pixelate&quot;</span><span class="p">,</span>
+</span><span id="line-105">            <span class="s2">&quot;motion_blur&quot;</span><span class="p">,</span>
+</span><span id="line-106">            <span class="s2">&quot;jpeg_compression&quot;</span><span class="p">,</span>
+</span><span id="line-107">            <span class="s2">&quot;impulse_noise&quot;</span><span class="p">,</span>
+</span><span id="line-108">            <span class="s2">&quot;glass_blur&quot;</span><span class="p">,</span>
+</span><span id="line-109">            <span class="s2">&quot;gaussian_noise&quot;</span><span class="p">,</span>
+</span><span id="line-110">            <span class="s2">&quot;gaussian_blur&quot;</span><span class="p">,</span>
+</span><span id="line-111">            <span class="s2">&quot;frost&quot;</span><span class="p">,</span>
+</span><span id="line-112">            <span class="s2">&quot;fog&quot;</span><span class="p">,</span>
+</span><span id="line-113">            <span class="s2">&quot;elastic_transform&quot;</span><span class="p">,</span>
+</span><span id="line-114">            <span class="s2">&quot;defocus_blur&quot;</span><span class="p">,</span>
+</span><span id="line-115">            <span class="s2">&quot;contrast&quot;</span><span class="p">,</span>
+</span><span id="line-116">            <span class="s2">&quot;brightness&quot;</span><span class="p">,</span>
+</span><span id="line-117">        <span class="p">]</span>
+</span><span id="line-118">
+</span><span id="line-119">    <span class="nd">@staticmethod</span>
+</span><span id="line-120">    <span class="k">def</span><span class="w"> </span><span class="nf">_fine_labels</span><span class="p">():</span>
+</span><span id="line-121"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the list of CIFAR-100 fine labels (100 classes).&quot;&quot;&quot;</span>
+</span><span id="line-122">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-123">            <span class="s2">&quot;apple&quot;</span><span class="p">,</span>
+</span><span id="line-124">            <span class="s2">&quot;aquarium_fish&quot;</span><span class="p">,</span>
+</span><span id="line-125">            <span class="s2">&quot;baby&quot;</span><span class="p">,</span>
+</span><span id="line-126">            <span class="s2">&quot;bear&quot;</span><span class="p">,</span>
+</span><span id="line-127">            <span class="s2">&quot;beaver&quot;</span><span class="p">,</span>
+</span><span id="line-128">            <span class="s2">&quot;bed&quot;</span><span class="p">,</span>
+</span><span id="line-129">            <span class="s2">&quot;bee&quot;</span><span class="p">,</span>
+</span><span id="line-130">            <span class="s2">&quot;beetle&quot;</span><span class="p">,</span>
+</span><span id="line-131">            <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span>
+</span><span id="line-132">            <span class="s2">&quot;bottle&quot;</span><span class="p">,</span>
+</span><span id="line-133">            <span class="s2">&quot;bowl&quot;</span><span class="p">,</span>
+</span><span id="line-134">            <span class="s2">&quot;boy&quot;</span><span class="p">,</span>
+</span><span id="line-135">            <span class="s2">&quot;bridge&quot;</span><span class="p">,</span>
+</span><span id="line-136">            <span class="s2">&quot;bus&quot;</span><span class="p">,</span>
+</span><span id="line-137">            <span class="s2">&quot;butterfly&quot;</span><span class="p">,</span>
+</span><span id="line-138">            <span class="s2">&quot;camel&quot;</span><span class="p">,</span>
+</span><span id="line-139">            <span class="s2">&quot;can&quot;</span><span class="p">,</span>
+</span><span id="line-140">            <span class="s2">&quot;castle&quot;</span><span class="p">,</span>
+</span><span id="line-141">            <span class="s2">&quot;caterpillar&quot;</span><span class="p">,</span>
+</span><span id="line-142">            <span class="s2">&quot;cattle&quot;</span><span class="p">,</span>
+</span><span id="line-143">            <span class="s2">&quot;chair&quot;</span><span class="p">,</span>
+</span><span id="line-144">            <span class="s2">&quot;chimpanzee&quot;</span><span class="p">,</span>
+</span><span id="line-145">            <span class="s2">&quot;clock&quot;</span><span class="p">,</span>
+</span><span id="line-146">            <span class="s2">&quot;cloud&quot;</span><span class="p">,</span>
+</span><span id="line-147">            <span class="s2">&quot;cockroach&quot;</span><span class="p">,</span>
+</span><span id="line-148">            <span class="s2">&quot;couch&quot;</span><span class="p">,</span>
+</span><span id="line-149">            <span class="s2">&quot;crab&quot;</span><span class="p">,</span>
+</span><span id="line-150">            <span class="s2">&quot;crocodile&quot;</span><span class="p">,</span>
+</span><span id="line-151">            <span class="s2">&quot;cup&quot;</span><span class="p">,</span>
+</span><span id="line-152">            <span class="s2">&quot;dinosaur&quot;</span><span class="p">,</span>
+</span><span id="line-153">            <span class="s2">&quot;dolphin&quot;</span><span class="p">,</span>
+</span><span id="line-154">            <span class="s2">&quot;elephant&quot;</span><span class="p">,</span>
+</span><span id="line-155">            <span class="s2">&quot;flatfish&quot;</span><span class="p">,</span>
+</span><span id="line-156">            <span class="s2">&quot;forest&quot;</span><span class="p">,</span>
+</span><span id="line-157">            <span class="s2">&quot;fox&quot;</span><span class="p">,</span>
+</span><span id="line-158">            <span class="s2">&quot;girl&quot;</span><span class="p">,</span>
+</span><span id="line-159">            <span class="s2">&quot;hamster&quot;</span><span class="p">,</span>
+</span><span id="line-160">            <span class="s2">&quot;house&quot;</span><span class="p">,</span>
+</span><span id="line-161">            <span class="s2">&quot;kangaroo&quot;</span><span class="p">,</span>
+</span><span id="line-162">            <span class="s2">&quot;keyboard&quot;</span><span class="p">,</span>
+</span><span id="line-163">            <span class="s2">&quot;lamp&quot;</span><span class="p">,</span>
+</span><span id="line-164">            <span class="s2">&quot;lawn_mower&quot;</span><span class="p">,</span>
+</span><span id="line-165">            <span class="s2">&quot;leopard&quot;</span><span class="p">,</span>
+</span><span id="line-166">            <span class="s2">&quot;lion&quot;</span><span class="p">,</span>
+</span><span id="line-167">            <span class="s2">&quot;lizard&quot;</span><span class="p">,</span>
+</span><span id="line-168">            <span class="s2">&quot;lobster&quot;</span><span class="p">,</span>
+</span><span id="line-169">            <span class="s2">&quot;man&quot;</span><span class="p">,</span>
+</span><span id="line-170">            <span class="s2">&quot;maple_tree&quot;</span><span class="p">,</span>
+</span><span id="line-171">            <span class="s2">&quot;motorcycle&quot;</span><span class="p">,</span>
+</span><span id="line-172">            <span class="s2">&quot;mountain&quot;</span><span class="p">,</span>
+</span><span id="line-173">            <span class="s2">&quot;mouse&quot;</span><span class="p">,</span>
+</span><span id="line-174">            <span class="s2">&quot;mushroom&quot;</span><span class="p">,</span>
+</span><span id="line-175">            <span class="s2">&quot;oak_tree&quot;</span><span class="p">,</span>
+</span><span id="line-176">            <span class="s2">&quot;orange&quot;</span><span class="p">,</span>
+</span><span id="line-177">            <span class="s2">&quot;orchid&quot;</span><span class="p">,</span>
+</span><span id="line-178">            <span class="s2">&quot;otter&quot;</span><span class="p">,</span>
+</span><span id="line-179">            <span class="s2">&quot;palm_tree&quot;</span><span class="p">,</span>
+</span><span id="line-180">            <span class="s2">&quot;pear&quot;</span><span class="p">,</span>
+</span><span id="line-181">            <span class="s2">&quot;pickup_truck&quot;</span><span class="p">,</span>
+</span><span id="line-182">            <span class="s2">&quot;pine_tree&quot;</span><span class="p">,</span>
+</span><span id="line-183">            <span class="s2">&quot;plain&quot;</span><span class="p">,</span>
+</span><span id="line-184">            <span class="s2">&quot;plate&quot;</span><span class="p">,</span>
+</span><span id="line-185">            <span class="s2">&quot;poppy&quot;</span><span class="p">,</span>
+</span><span id="line-186">            <span class="s2">&quot;porcupine&quot;</span><span class="p">,</span>
+</span><span id="line-187">            <span class="s2">&quot;possum&quot;</span><span class="p">,</span>
+</span><span id="line-188">            <span class="s2">&quot;rabbit&quot;</span><span class="p">,</span>
+</span><span id="line-189">            <span class="s2">&quot;raccoon&quot;</span><span class="p">,</span>
+</span><span id="line-190">            <span class="s2">&quot;ray&quot;</span><span class="p">,</span>
+</span><span id="line-191">            <span class="s2">&quot;road&quot;</span><span class="p">,</span>
+</span><span id="line-192">            <span class="s2">&quot;rocket&quot;</span><span class="p">,</span>
+</span><span id="line-193">            <span class="s2">&quot;rose&quot;</span><span class="p">,</span>
+</span><span id="line-194">            <span class="s2">&quot;sea&quot;</span><span class="p">,</span>
+</span><span id="line-195">            <span class="s2">&quot;seal&quot;</span><span class="p">,</span>
+</span><span id="line-196">            <span class="s2">&quot;shark&quot;</span><span class="p">,</span>
+</span><span id="line-197">            <span class="s2">&quot;shrew&quot;</span><span class="p">,</span>
+</span><span id="line-198">            <span class="s2">&quot;skunk&quot;</span><span class="p">,</span>
+</span><span id="line-199">            <span class="s2">&quot;skyscraper&quot;</span><span class="p">,</span>
+</span><span id="line-200">            <span class="s2">&quot;snail&quot;</span><span class="p">,</span>
+</span><span id="line-201">            <span class="s2">&quot;snake&quot;</span><span class="p">,</span>
+</span><span id="line-202">            <span class="s2">&quot;spider&quot;</span><span class="p">,</span>
+</span><span id="line-203">            <span class="s2">&quot;squirrel&quot;</span><span class="p">,</span>
+</span><span id="line-204">            <span class="s2">&quot;streetcar&quot;</span><span class="p">,</span>
+</span><span id="line-205">            <span class="s2">&quot;sunflower&quot;</span><span class="p">,</span>
+</span><span id="line-206">            <span class="s2">&quot;sweet_pepper&quot;</span><span class="p">,</span>
+</span><span id="line-207">            <span class="s2">&quot;table&quot;</span><span class="p">,</span>
+</span><span id="line-208">            <span class="s2">&quot;tank&quot;</span><span class="p">,</span>
+</span><span id="line-209">            <span class="s2">&quot;telephone&quot;</span><span class="p">,</span>
+</span><span id="line-210">            <span class="s2">&quot;television&quot;</span><span class="p">,</span>
+</span><span id="line-211">            <span class="s2">&quot;tiger&quot;</span><span class="p">,</span>
+</span><span id="line-212">            <span class="s2">&quot;tractor&quot;</span><span class="p">,</span>
+</span><span id="line-213">            <span class="s2">&quot;train&quot;</span><span class="p">,</span>
+</span><span id="line-214">            <span class="s2">&quot;trout&quot;</span><span class="p">,</span>
+</span><span id="line-215">            <span class="s2">&quot;tulip&quot;</span><span class="p">,</span>
+</span><span id="line-216">            <span class="s2">&quot;turtle&quot;</span><span class="p">,</span>
+</span><span id="line-217">            <span class="s2">&quot;wardrobe&quot;</span><span class="p">,</span>
+</span><span id="line-218">            <span class="s2">&quot;whale&quot;</span><span class="p">,</span>
+</span><span id="line-219">            <span class="s2">&quot;willow_tree&quot;</span><span class="p">,</span>
+</span><span id="line-220">            <span class="s2">&quot;wolf&quot;</span><span class="p">,</span>
+</span><span id="line-221">            <span class="s2">&quot;woman&quot;</span><span class="p">,</span>
+</span><span id="line-222">            <span class="s2">&quot;worm&quot;</span><span class="p">,</span>
+</span><span id="line-223">        <span class="p">]</span></div>
 
 </span></code></pre></div>
     </div></div>
