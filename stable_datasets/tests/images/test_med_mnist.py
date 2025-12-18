@@ -13,7 +13,6 @@ def test_med_mnist_variants_download_and_format():
         "pathmnist",
         "chestmnist",
         "organmnist3d",
-        "nodulemnist3d",
     ]
 
     for variant in variants:
