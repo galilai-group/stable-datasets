@@ -20,7 +20,7 @@
 <link href="../../_static/awesome-sphinx-design.css?v=15e0fffa" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
-<link href="../../introduction/quickstart/" rel="next" title="Quick Start"/>
+<link href="../cars196/" rel="next" title="CARS-196"/>
 <link href="../cifar10_c/" rel="prev" title="CIFAR-10-C"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
@@ -82,10 +82,14 @@
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../">Datasets<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../arabic_characters/">Arabic Characters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar10/">CIFAR-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar100/">CIFAR-100</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar10_c/">CIFAR-10-C</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">CIFAR-100-C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cars196/">CARS-196</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../medmnist/">MedMNIST</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../introduction/quickstart/">Quick Start</a></li>
@@ -147,7 +151,7 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
-<td><p>PIL Image / numpy array</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PIL.Image.Image</span></code></p></td>
 <td><p>32×32×3 RGB corrupted image</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
