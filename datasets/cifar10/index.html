@@ -20,7 +20,7 @@
 <link href="../../_static/awesome-sphinx-design.css?v=15e0fffa" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
-<link href="../cifar10_c/" rel="next" title="CIFAR-10-C"/>
+<link href="../cifar100/" rel="next" title="CIFAR-100"/>
 <link href="../" rel="prev" title="Datasets"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
@@ -83,6 +83,7 @@
 <ul class="current">
 <li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../">Datasets<button @click.prevent.stop="expanded = !expanded" type="button"><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">CIFAR-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cifar100/">CIFAR-100</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar10_c/">CIFAR-10-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar100_c/">CIFAR-100-C</a></li>
 </ul>
@@ -126,10 +127,12 @@
 <li><p><strong>Train</strong>: 50,000 images (5,000 per class)</p></li>
 <li><p><strong>Test</strong>: 10,000 images (1,000 per class)</p></li>
 </ul>
+<a class="reference internal image-reference" href="../../_images/cifar10_teaser.png"><img alt="../../_images/cifar10_teaser.png" class="align-center" src="../../_images/cifar10_teaser.png" style="width: 90%;">
+</img></a>
 </section>
 <section id="data-structure">
 <h2>Data Structure<a class="headerlink" href="#data-structure" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#data-structure'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>When accessing an example using <code class="docutils literal notranslate"><span class="pre">dataset['train'][i]</span></code>, you will receive a dictionary with the following keys:</p>
+<p>When accessing an example using <code class="docutils literal notranslate"><span class="pre">ds[i]</span></code>, you will receive a dictionary with the following keys:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20.0%"/>
@@ -157,27 +160,26 @@
 <section id="usage-example">
 <h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage-example'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <p><strong>Basic Usage</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.cifar10</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIFAR10</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="c1"># Load the dataset</span>
-</span><span id="line-4"><span class="n">dataset</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="s1">'cifar10'</span><span class="p">)</span>
+</span><span id="line-3"><span class="c1"># First run will download + prepare cache, then return the split as a HF Dataset</span>
+</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">CIFAR10</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
 </span><span id="line-5">
-</span><span id="line-6"><span class="c1"># Access a single example</span>
-</span><span id="line-7"><span class="n">example</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">'train'</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-8"><span class="n">image</span> <span class="o">=</span> <span class="n">example</span><span class="p">[</span><span class="s1">'image'</span><span class="p">]</span>  <span class="c1"># 32x32x3 RGB image</span>
-</span><span id="line-9"><span class="n">label</span> <span class="o">=</span> <span class="n">example</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span>  <span class="c1"># integer from 0-9</span>
-</span><span id="line-10">
-</span><span id="line-11"><span class="c1"># Iterate over the dataset</span>
-</span><span id="line-12"><span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">'train'</span><span class="p">]:</span>
-</span><span id="line-13">    <span class="n">image</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">'image'</span><span class="p">],</span> <span class="n">item</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span>
-</span><span id="line-14">    <span class="c1"># Your processing here</span>
+</span><span id="line-6"><span class="c1"># If you omit the split (split=None), you get a DatasetDict with all available splits</span>
+</span><span id="line-7"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">CIFAR10</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span><span id="line-8">
+</span><span id="line-9"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-10"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label"}</span>
+</span><span id="line-11">
+</span><span id="line-12"><span class="c1"># Optional: make it PyTorch-friendly</span>
+</span><span id="line-13"><span class="n">ds_torch</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
 </section>
 <section id="related-datasets">
 <h2>Related Datasets<a class="headerlink" href="#related-datasets" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#related-datasets'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <ul class="simple">
-<li><p><strong>CIFAR-100</strong>: Extended version with 100 classes, sharing the same image dimensions</p></li>
+<li><p><a class="reference internal" href="../cifar100/"><span class="doc">CIFAR-100</span></a>: Extended version with 100 classes, sharing the same image dimensions</p></li>
 <li><p><strong>CIFAR-10-C</strong>: Corrupted version of CIFAR-10 for testing robustness (available in stable-datasets as <code class="docutils literal notranslate"><span class="pre">cifar10_c</span></code>)</p></li>
 <li><p><strong>CIFAR-100-C</strong>: Corrupted version of CIFAR-100 (available in stable-datasets as <code class="docutils literal notranslate"><span class="pre">cifar100_c</span></code>)</p></li>
 </ul>
