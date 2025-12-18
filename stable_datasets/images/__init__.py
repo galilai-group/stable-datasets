@@ -3,6 +3,8 @@
 from .arabic_characters import ArabicCharacters
 from .cifar10 import CIFAR10
 from .cifar100 import CIFAR100
+from .cars196 import Cars196
+from .dtd import DTD
 from .med_mnist import MedMNIST
 
 
@@ -11,9 +13,13 @@ from .med_mnist import MedMNIST
 # from .beans import Beans
 # from .celeb_a import CelebA
 # from .cifar10 import CIFAR10
-# from .cifar10_c import CIFAR10C
+from .cifar10_c import CIFAR10C
+
 # from .cifar100 import CIFAR100
-# from .cifar100_c import CIFAR100C
+from .cifar100_c import CIFAR100C
+from .med_mnist import MedMNIST
+
+
 # from .country211 import Country211
 # from .cub200 import CUB200
 # from .dsprites import DSprites
@@ -40,5 +46,9 @@ __all__ = [
     "ArabicCharacters",
     "CIFAR10",
     "CIFAR100",
+    "CIFAR10C",
+    "CIFAR100C",
     "MedMNIST",
+    "Cars196",
+    "DTD",
 ]

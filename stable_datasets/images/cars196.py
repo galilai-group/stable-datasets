@@ -1,7 +1,265 @@
-# The url is no longer valid. The code is commented out.
+import io
+from zipfile import ZipFile
 
-# #!/usr/bin/env python
-# # -*- coding: utf-8 -*-
-#
-# __author__ = "Randall Balestriero"
-# # https://ai.stanford.edu/%7Ejkrause/cars/car_dataset.html
+import datasets
+from PIL import Image
+from tqdm import tqdm
+
+from stable_datasets.utils import BaseDatasetBuilder
+
+
+class Cars196(BaseDatasetBuilder):
+    """Cars-196 Dataset
+    The Cars-196 dataset, also known as the Stanford Cars dataset, is a benchmark dataset for fine-grained visual classification of automobiles.
+    It contains 16,185 color images covering 196 car categories, where each category is defined by a specific combination of make, model, and year.
+    The dataset is split into 8,144 training images and 8,041 test images, with the first 98 classes used exclusively for training and the remaining 98 classes
+    reserved for testing, ensuring that training and test classes are disjoint. Images are collected from real-world scenes and exhibit significant variation in v
+    iewpoint, background, and lighting conditions. Each image is annotated with a class label and a tight bounding box around the car, making the dataset suitable
+    for fine-grained recognition tasks that require precise object localization and strong generalization to unseen categories.
+
+    """
+
+    VERSION = datasets.Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://ai.stanford.edu/~jkrause/cars/car_dataset.html",
+        "assets": {
+            "train": "https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_train.zip",
+            "test": "https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_test.zip",
+        },
+        "citation": """@inproceedings{krause20133d,
+            title={3d object representations for fine-grained categorization},
+            author={Krause, Jonathan and Stark, Michael and Deng, Jia and Fei-Fei, Li},
+            booktitle={Proceedings of the IEEE international conference on computer vision workshops},
+            pages={554--561},
+            year={2013}}""",
+    }
+
+    def _info(self):
+        return datasets.DatasetInfo(
+            description="The Cars dataset contains 16,185 images of 196 classes of cars. The data is split into 8,144 training images and 8,041 testing images, where each class has been split roughly in a 50-50 split. Classes are typically at the level of Make, Model, Year, e.g. 2012 Tesla Model S or 2012 BMW M3 coupe.",
+            features=datasets.Features(
+                {
+                    "image": datasets.Image(),
+                    "label": datasets.ClassLabel(names=self._labels()),
+                }
+            ),
+            supervised_keys=("image", "label"),
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
+        )
+
+    def _generate_examples(self, data_path, split):
+        """Generate examples from the ZIP archives of images and labels."""
+        with ZipFile(data_path, "r") as archive:
+            for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
+                if entry.filename.endswith(".jpg"):
+                    content = archive.read(entry)
+                    image = Image.open(io.BytesIO(content)).convert("RGB")
+
+                    filename = entry.filename.split("/")[-1]
+                    class_part = filename.split("_", 1)[1].rsplit(".", 1)[0]
+                    label_name = class_part.lower().replace("-", "_").replace(".", "")
+
+                    yield entry.filename, {"image": image, "label": label_name}
+
+    @staticmethod
+    def _labels():
+        return [
+            "am_general_hummer_suv_2000",
+            "acura_rl_sedan_2012",
+            "acura_tl_sedan_2012",
+            "acura_tl_type_s_2008",
+            "acura_tsx_sedan_2012",
+            "acura_integra_type_r_2001",
+            "acura_zdx_hatchback_2012",
+            "aston_martin_v8_vantage_convertible_2012",
+            "aston_martin_v8_vantage_coupe_2012",
+            "aston_martin_virage_convertible_2012",
+            "aston_martin_virage_coupe_2012",
+            "audi_rs_4_convertible_2008",
+            "audi_a5_coupe_2012",
+            "audi_tts_coupe_2012",
+            "audi_r8_coupe_2012",
+            "audi_v8_sedan_1994",
+            "audi_100_sedan_1994",
+            "audi_100_wagon_1994",
+            "audi_tt_hatchback_2011",
+            "audi_s6_sedan_2011",
+            "audi_s5_convertible_2012",
+            "audi_s5_coupe_2012",
+            "audi_s4_sedan_2012",
+            "audi_s4_sedan_2007",
+            "audi_tt_rs_coupe_2012",
+            "bmw_activehybrid_5_sedan_2012",
+            "bmw_1_series_convertible_2012",
+            "bmw_1_series_coupe_2012",
+            "bmw_3_series_sedan_2012",
+            "bmw_3_series_wagon_2012",
+            "bmw_6_series_convertible_2007",
+            "bmw_x5_suv_2007",
+            "bmw_x6_suv_2012",
+            "bmw_m3_coupe_2012",
+            "bmw_m5_sedan_2010",
+            "bmw_m6_convertible_2010",
+            "bmw_x3_suv_2012",
+            "bmw_z4_convertible_2012",
+            "bentley_continental_supersports_conv_convertible_2012",
+            "bentley_arnage_sedan_2009",
+            "bentley_mulsanne_sedan_2011",
+            "bentley_continental_gt_coupe_2012",
+            "bentley_continental_gt_coupe_2007",
+            "bentley_continental_flying_spur_sedan_2007",
+            "bugatti_veyron_164_convertible_2009",
+            "bugatti_veyron_164_coupe_2009",
+            "buick_regal_gs_2012",
+            "buick_rainier_suv_2007",
+            "buick_verano_sedan_2012",
+            "buick_enclave_suv_2012",
+            "cadillac_cts_v_sedan_2012",
+            "cadillac_srx_suv_2012",
+            "cadillac_escalade_ext_crew_cab_2007",
+            "chevrolet_silverado_1500_hybrid_crew_cab_2012",
+            "chevrolet_corvette_convertible_2012",
+            "chevrolet_corvette_zr1_2012",
+            "chevrolet_corvette_ron_fellows_edition_z06_2007",
+            "chevrolet_traverse_suv_2012",
+            "chevrolet_camaro_convertible_2012",
+            "chevrolet_hhr_ss_2010",
+            "chevrolet_impala_sedan_2007",
+            "chevrolet_tahoe_hybrid_suv_2012",
+            "chevrolet_sonic_sedan_2012",
+            "chevrolet_express_cargo_van_2007",
+            "chevrolet_avalanche_crew_cab_2012",
+            "chevrolet_cobalt_ss_2010",
+            "chevrolet_malibu_hybrid_sedan_2010",
+            "chevrolet_trailblazer_ss_2009",
+            "chevrolet_silverado_2500hd_regular_cab_2012",
+            "chevrolet_silverado_1500_classic_extended_cab_2007",
+            "chevrolet_express_van_2007",
+            "chevrolet_monte_carlo_coupe_2007",
+            "chevrolet_malibu_sedan_2007",
+            "chevrolet_silverado_1500_extended_cab_2012",
+            "chevrolet_silverado_1500_regular_cab_2012",
+            "chrysler_aspen_suv_2009",
+            "chrysler_sebring_convertible_2010",
+            "chrysler_town_and_country_minivan_2012",
+            "chrysler_300_srt_8_2010",
+            "chrysler_crossfire_convertible_2008",
+            "chrysler_pt_cruiser_convertible_2008",
+            "daewoo_nubira_wagon_2002",
+            "dodge_caliber_wagon_2012",
+            "dodge_caliber_wagon_2007",
+            "dodge_caravan_minivan_1997",
+            "dodge_ram_pickup_3500_crew_cab_2010",
+            "dodge_ram_pickup_3500_quad_cab_2009",
+            "dodge_sprinter_cargo_van_2009",
+            "dodge_journey_suv_2012",
+            "dodge_dakota_crew_cab_2010",
+            "dodge_dakota_club_cab_2007",
+            "dodge_magnum_wagon_2008",
+            "dodge_challenger_srt8_2011",
+            "dodge_durango_suv_2012",
+            "dodge_durango_suv_2007",
+            "dodge_charger_sedan_2012",
+            "dodge_charger_srt_8_2009",
+            "eagle_talon_hatchback_1998",
+            "fiat_500_abarth_2012",
+            "fiat_500_convertible_2012",
+            "ferrari_ff_coupe_2012",
+            "ferrari_california_convertible_2012",
+            "ferrari_458_italia_convertible_2012",
+            "ferrari_458_italia_coupe_2012",
+            "fisker_karma_sedan_2012",
+            "ford_f_450_super_duty_crew_cab_2012",
+            "ford_mustang_convertible_2007",
+            "ford_freestar_minivan_2007",
+            "ford_expedition_el_suv_2009",
+            "ford_edge_suv_2012",
+            "ford_ranger_supercab_2011",
+            "ford_gt_coupe_2006",
+            "ford_f_150_regular_cab_2012",
+            "ford_f_150_regular_cab_2007",
+            "ford_focus_sedan_2007",
+            "ford_e_series_wagon_van_2012",
+            "ford_fiesta_sedan_2012",
+            "gmc_terrain_suv_2012",
+            "gmc_savana_van_2012",
+            "gmc_yukon_hybrid_suv_2012",
+            "gmc_acadia_suv_2012",
+            "gmc_canyon_extended_cab_2012",
+            "geo_metro_convertible_1993",
+            "hummer_h3t_crew_cab_2010",
+            "hummer_h2_sut_crew_cab_2009",
+            "honda_odyssey_minivan_2012",
+            "honda_odyssey_minivan_2007",
+            "honda_accord_coupe_2012",
+            "honda_accord_sedan_2012",
+            "hyundai_veloster_hatchback_2012",
+            "hyundai_santa_fe_suv_2012",
+            "hyundai_tucson_suv_2012",
+            "hyundai_veracruz_suv_2012",
+            "hyundai_sonata_hybrid_sedan_2012",
+            "hyundai_elantra_sedan_2007",
+            "hyundai_accent_sedan_2012",
+            "hyundai_genesis_sedan_2012",
+            "hyundai_sonata_sedan_2012",
+            "hyundai_elantra_touring_hatchback_2012",
+            "hyundai_azera_sedan_2012",
+            "infiniti_g_coupe_ipl_2012",
+            "infiniti_qx56_suv_2011",
+            "isuzu_ascender_suv_2008",
+            "jaguar_xk_xkr_2012",
+            "jeep_patriot_suv_2012",
+            "jeep_wrangler_suv_2012",
+            "jeep_liberty_suv_2012",
+            "jeep_grand_cherokee_suv_2012",
+            "jeep_compass_suv_2012",
+            "lamborghini_reventon_coupe_2008",
+            "lamborghini_aventador_coupe_2012",
+            "lamborghini_gallardo_lp_570_4_superleggera_2012",
+            "lamborghini_diablo_coupe_2001",
+            "land_rover_range_rover_suv_2012",
+            "land_rover_lr2_suv_2012",
+            "lincoln_town_car_sedan_2011",
+            "mini_cooper_roadster_convertible_2012",
+            "maybach_landaulet_convertible_2012",
+            "mazda_tribute_suv_2011",
+            "mclaren_mp4_12c_coupe_2012",
+            "mercedes_benz_300_class_convertible_1993",
+            "mercedes_benz_c_class_sedan_2012",
+            "mercedes_benz_sl_class_coupe_2009",
+            "mercedes_benz_e_class_sedan_2012",
+            "mercedes_benz_s_class_sedan_2012",
+            "mercedes_benz_sprinter_van_2012",
+            "mitsubishi_lancer_sedan_2012",
+            "nissan_leaf_hatchback_2012",
+            "nissan_nv_passenger_van_2012",
+            "nissan_juke_hatchback_2012",
+            "nissan_240sx_coupe_1998",
+            "plymouth_neon_coupe_1999",
+            "porsche_panamera_sedan_2012",
+            "ram_c_v_cargo_van_minivan_2012",
+            "rolls_royce_phantom_drophead_coupe_convertible_2012",
+            "rolls_royce_ghost_sedan_2012",
+            "rolls_royce_phantom_sedan_2012",
+            "scion_xd_hatchback_2012",
+            "spyker_c8_convertible_2009",
+            "spyker_c8_coupe_2009",
+            "suzuki_aerio_sedan_2007",
+            "suzuki_kizashi_sedan_2012",
+            "suzuki_sx4_hatchback_2012",
+            "suzuki_sx4_sedan_2012",
+            "tesla_model_s_sedan_2012",
+            "toyota_sequoia_suv_2012",
+            "toyota_camry_sedan_2012",
+            "toyota_corolla_sedan_2012",
+            "toyota_4runner_suv_2012",
+            "volkswagen_golf_hatchback_2012",
+            "volkswagen_golf_hatchback_1991",
+            "volkswagen_beetle_hatchback_2012",
+            "volvo_c30_hatchback_2012",
+            "volvo_240_sedan_1993",
+            "volvo_xc90_suv_2007",
+            "smart_fortwo_convertible_2012",
+        ]

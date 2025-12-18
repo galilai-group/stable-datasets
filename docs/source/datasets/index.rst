@@ -46,6 +46,8 @@ Available Datasets
 
    cifar10
    cifar100
+   cifar10_c
+   cifar100_c
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
