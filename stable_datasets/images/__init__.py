@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
 from .arabic_characters import ArabicCharacters
-from .cifar10 import CIFAR10
-from .cifar100 import CIFAR100
 from .cars196 import Cars196
-from .dtd import DTD
-from .med_mnist import MedMNIST
-
+from .cifar10 import CIFAR10
 
 # from .arabic_digits import ArabicDigits
 # from .awa2 import AWA2
@@ -14,11 +10,13 @@ from .med_mnist import MedMNIST
 # from .celeb_a import CelebA
 # from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
+from .cifar100 import CIFAR100
 
 # from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
+from .clevrer import CLEVRER
+from .dtd import DTD
 from .med_mnist import MedMNIST
-
 
 # from .country211 import Country211
 # from .cub200 import CUB200
@@ -34,7 +32,9 @@ from .med_mnist import MedMNIST
 # from .k_mnist import KMNIST
 # from .linnaeus5 import Linnaeus5
 # from .mnist import MNIST
-# from .not_mnist import NotMNIST
+from .not_mnist import NotMNIST
+
+
 # from .places365_small import Places365Small
 # from .rock_paper_scissor import RockPaperScissor
 # from .stl10 import STL10
@@ -48,7 +48,9 @@ __all__ = [
     "CIFAR100",
     "CIFAR10C",
     "CIFAR100C",
+    "CLEVRER",
     "MedMNIST",
     "Cars196",
     "DTD",
+    "NotMNIST",
 ]
