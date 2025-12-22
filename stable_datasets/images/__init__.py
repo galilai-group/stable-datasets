@@ -16,6 +16,7 @@ from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .dtd import DTD
 from .fashion_mnist import FashionMNIST
+from .k_mnist import KMNIST
 from .med_mnist import MedMNIST
 
 
@@ -30,7 +31,6 @@ from .med_mnist import MedMNIST
 # from .food101 import Food101
 # from .hasy_v2 import HASYv2
 # from .imagenette import Imagenette
-# from .k_mnist import KMNIST
 # from .linnaeus5 import Linnaeus5
 # from .mnist import MNIST
 # from .not_mnist import NotMNIST
@@ -48,6 +48,7 @@ __all__ = [
     "CIFAR10C",
     "CIFAR100C",
     "FashionMNIST",
+    "KMNIST",
     "MedMNIST",
     "Cars196",
     "DTD",

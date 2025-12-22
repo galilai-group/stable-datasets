@@ -52,6 +52,7 @@ Available Datasets
    cars196
    dtd
    fashion_mnist
+   k_mnist
    medmnist
 
 .. note::

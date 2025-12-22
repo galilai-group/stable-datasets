@@ -5,6 +5,7 @@
 - datasets:
   - CIFAR10/CIFAR10C
   - CIFAR100/CIFAR100C
+  - KMNIST
   - MedMNISTv2
   - FashionMNIST
   - Food101
