@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 
 from .arabic_characters import ArabicCharacters
-from .cifar10 import CIFAR10
-from .cifar100 import CIFAR100
-from .cars196 import Cars196
-from .dtd import DTD
-from .med_mnist import MedMNIST
-
 
 # from .arabic_digits import ArabicDigits
-# from .awa2 import AWA2
-# from .beans import Beans
+from .awa2 import AWA2
+from .beans import Beans
+from .cars196 import Cars196
+from .cifar10 import CIFAR10
+
 # from .celeb_a import CelebA
 # from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
+from .cifar100 import CIFAR100
 
 # from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
+from .dtd import DTD
 from .med_mnist import MedMNIST
 
 
@@ -51,4 +50,6 @@ __all__ = [
     "MedMNIST",
     "Cars196",
     "DTD",
+    "AWA2",
+    "Beans",
 ]
