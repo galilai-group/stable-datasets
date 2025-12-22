@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from .arabic_characters import ArabicCharacters
+from .arabic_digits import ArabicDigits
 from .cifar10 import CIFAR10
 from .cifar100 import CIFAR100
 from .cars196 import Cars196
@@ -8,7 +9,6 @@ from .dtd import DTD
 from .med_mnist import MedMNIST
 
 
-# from .arabic_digits import ArabicDigits
 # from .awa2 import AWA2
 # from .beans import Beans
 # from .celeb_a import CelebA
@@ -44,6 +44,7 @@ from .med_mnist import MedMNIST
 
 __all__ = [
     "ArabicCharacters",
+    "ArabicDigits",
     "CIFAR10",
     "CIFAR100",
     "CIFAR10C",

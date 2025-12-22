@@ -45,6 +45,7 @@ Available Datasets
    :caption: Image Classification Datasets
 
    arabic_characters
+   arabic_digits
    cifar10
    cifar100
    cifar10_c
