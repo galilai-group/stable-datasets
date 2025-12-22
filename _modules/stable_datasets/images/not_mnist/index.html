@@ -172,81 +172,105 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.not_mnist</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="line-5">
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">struct</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="line-6">
+</span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span><span class="p">,</span> <span class="n">_default_dest_folder</span><span class="p">,</span> <span class="n">bulk_download</span>
+</span><span id="line-8">
+</span><span id="line-9">
 <div class="viewcode-block" id="NotMNIST">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.not_mnist.NotMNIST">[docs]</a>
-</span><span id="line-7"><span class="k">class</span><span class="w"> </span><span class="nc">NotMNIST</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-8"><span class="w">    </span><span class="sd">&quot;&quot;&quot;NotMNIST Dataset that contains images of letters A-J.&quot;&quot;&quot;</span>
-</span><span id="line-9">
-</span><span id="line-10">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-11">
-</span><span id="line-12">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-13">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-14">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;A dataset that was created by Yaroslav Bulatov by taking some publicly available fonts and</span>
-</span><span id="line-15"><span class="s2">            extracting glyphs from them to make a dataset similar to MNIST. There are 10 classes, with letters A-J.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-16">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-17">                <span class="p">{</span>
-</span><span id="line-18">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-19">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
-</span><span id="line-20">                <span class="p">}</span>
-</span><span id="line-21">            <span class="p">),</span>
-</span><span id="line-22">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-23">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://yaroslavvb.blogspot.com/2011/09/notmnist-dataset.html&quot;</span><span class="p">,</span>
-</span><span id="line-24">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@misc{bulatov2011notmnist,</span>
+</span><span id="line-10"><span class="k">class</span><span class="w"> </span><span class="nc">NotMNIST</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-11"><span class="w">    </span><span class="sd">&quot;&quot;&quot;NotMNIST Dataset that contains images of letters A-J.&quot;&quot;&quot;</span>
+</span><span id="line-12">
+</span><span id="line-13">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-14">
+</span><span id="line-15">    <span class="c1"># Single source-of-truth for dataset provenance + download locations.</span>
+</span><span id="line-16">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-17">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://yaroslavvb.blogspot.com/2011/09/notmnist-dataset.html&quot;</span><span class="p">,</span>
+</span><span id="line-18">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-19">            <span class="s2">&quot;train_images&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-images-idx3-ubyte.gz&quot;</span><span class="p">,</span>
+</span><span id="line-20">            <span class="s2">&quot;train_labels&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-labels-idx1-ubyte.gz&quot;</span><span class="p">,</span>
+</span><span id="line-21">            <span class="s2">&quot;test_images&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-images-idx3-ubyte.gz&quot;</span><span class="p">,</span>
+</span><span id="line-22">            <span class="s2">&quot;test_labels&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-labels-idx1-ubyte.gz&quot;</span><span class="p">,</span>
+</span><span id="line-23">        <span class="p">},</span>
+</span><span id="line-24">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@misc{bulatov2011notmnist,</span>
 </span><span id="line-25"><span class="s2">                          author={Yaroslav Bulatov},</span>
 </span><span id="line-26"><span class="s2">                          title={notMNIST dataset},</span>
 </span><span id="line-27"><span class="s2">                          year=</span><span class="si">{2011}</span><span class="s2">,</span>
 </span><span id="line-28"><span class="s2">                          url={http://yaroslavvb.blogspot.com/2011/09/notmnist-dataset.html}</span>
 </span><span id="line-29"><span class="s2">                        }&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-30">        <span class="p">)</span>
+</span><span id="line-30">    <span class="p">}</span>
 </span><span id="line-31">
-</span><span id="line-32">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-33">        <span class="c1"># Download IDX files from the specified links</span>
-</span><span id="line-34">        <span class="n">urls</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-35">            <span class="s2">&quot;train_images&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-images-idx3-ubyte.gz&quot;</span><span class="p">,</span>
-</span><span id="line-36">            <span class="s2">&quot;train_labels&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-labels-idx1-ubyte.gz&quot;</span><span class="p">,</span>
-</span><span id="line-37">            <span class="s2">&quot;test_images&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-images-idx3-ubyte.gz&quot;</span><span class="p">,</span>
-</span><span id="line-38">            <span class="s2">&quot;test_labels&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-labels-idx1-ubyte.gz&quot;</span><span class="p">,</span>
-</span><span id="line-39">        <span class="p">}</span>
-</span><span id="line-40">        <span class="n">downloaded_files</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download_and_extract</span><span class="p">(</span><span class="n">urls</span><span class="p">)</span>
-</span><span id="line-41">
-</span><span id="line-42">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-43">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-44">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-45">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-46">                    <span class="s2">&quot;images_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;train_images&quot;</span><span class="p">],</span>
-</span><span id="line-47">                    <span class="s2">&quot;labels_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;train_labels&quot;</span><span class="p">],</span>
-</span><span id="line-48">                <span class="p">},</span>
-</span><span id="line-49">            <span class="p">),</span>
-</span><span id="line-50">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-51">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-52">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-53">                    <span class="s2">&quot;images_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;test_images&quot;</span><span class="p">],</span>
-</span><span id="line-54">                    <span class="s2">&quot;labels_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;test_labels&quot;</span><span class="p">],</span>
-</span><span id="line-55">                <span class="p">},</span>
-</span><span id="line-56">            <span class="p">),</span>
-</span><span id="line-57">        <span class="p">]</span>
-</span><span id="line-58">
-</span><span id="line-59">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images_path</span><span class="p">,</span> <span class="n">labels_path</span><span class="p">):</span>
-</span><span id="line-60">        <span class="c1"># Read and parse the decompressed IDX files</span>
-</span><span id="line-61">        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">images_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">img_file</span><span class="p">:</span>
-</span><span id="line-62">            <span class="n">_</span><span class="p">,</span> <span class="n">num_images</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&gt;IIII&quot;</span><span class="p">,</span> <span class="n">img_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">16</span><span class="p">))</span>
-</span><span id="line-63">            <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">img_file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num_images</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
-</span><span id="line-64">
-</span><span id="line-65">        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">labels_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">lbl_file</span><span class="p">:</span>
-</span><span id="line-66">            <span class="n">_</span><span class="p">,</span> <span class="n">num_labels</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&gt;II&quot;</span><span class="p">,</span> <span class="n">lbl_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
-</span><span id="line-67">            <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">lbl_file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-</span><span id="line-68">
-</span><span id="line-69">        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="s2">&quot;Mismatch between image and label counts.&quot;</span>
-</span><span id="line-70">
-</span><span id="line-71">        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">)):</span>
-</span><span id="line-72">            <span class="c1"># Remove channel dimension for PIL compatibility</span>
-</span><span id="line-73">            <span class="k">yield</span> <span class="n">idx</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span></div>
+</span><span id="line-32">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-33">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-34">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;A dataset that was created by Yaroslav Bulatov by taking some publicly available fonts and</span>
+</span><span id="line-35"><span class="s2">            extracting glyphs from them to make a dataset similar to MNIST. There are 10 classes, with letters A-J.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-36">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-37">                <span class="p">{</span>
+</span><span id="line-38">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-39">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()),</span>
+</span><span id="line-40">                <span class="p">}</span>
+</span><span id="line-41">            <span class="p">),</span>
+</span><span id="line-42">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-43">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-44">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-45">        <span class="p">)</span>
+</span><span id="line-46">
+</span><span id="line-47">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
+</span><span id="line-48">        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">()</span>
+</span><span id="line-49">        <span class="n">assets</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">]</span>
+</span><span id="line-50">
+</span><span id="line-51">        <span class="c1"># Get all URLs and download them</span>
+</span><span id="line-52">        <span class="n">urls</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">assets</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+</span><span id="line-53">        <span class="n">download_dir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_raw_download_dir&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-54">        <span class="k">if</span> <span class="n">download_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-55">            <span class="n">download_dir</span> <span class="o">=</span> <span class="n">_default_dest_folder</span><span class="p">()</span>
+</span><span id="line-56">
+</span><span id="line-57">        <span class="n">downloaded_paths</span> <span class="o">=</span> <span class="n">bulk_download</span><span class="p">(</span><span class="n">urls</span><span class="p">,</span> <span class="n">dest_folder</span><span class="o">=</span><span class="n">download_dir</span><span class="p">)</span>
+</span><span id="line-58">        <span class="n">url_to_path</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">urls</span><span class="p">,</span> <span class="n">downloaded_paths</span><span class="p">))</span>
+</span><span id="line-59">
+</span><span id="line-60">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-61">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-62">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
+</span><span id="line-63">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-64">                    <span class="s2">&quot;images_path&quot;</span><span class="p">:</span> <span class="n">url_to_path</span><span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;train_images&quot;</span><span class="p">]],</span>
+</span><span id="line-65">                    <span class="s2">&quot;labels_path&quot;</span><span class="p">:</span> <span class="n">url_to_path</span><span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;train_labels&quot;</span><span class="p">]],</span>
+</span><span id="line-66">                    <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span>
+</span><span id="line-67">                <span class="p">},</span>
+</span><span id="line-68">            <span class="p">),</span>
+</span><span id="line-69">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-70">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
+</span><span id="line-71">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-72">                    <span class="s2">&quot;images_path&quot;</span><span class="p">:</span> <span class="n">url_to_path</span><span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;test_images&quot;</span><span class="p">]],</span>
+</span><span id="line-73">                    <span class="s2">&quot;labels_path&quot;</span><span class="p">:</span> <span class="n">url_to_path</span><span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;test_labels&quot;</span><span class="p">]],</span>
+</span><span id="line-74">                    <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
+</span><span id="line-75">                <span class="p">},</span>
+</span><span id="line-76">            <span class="p">),</span>
+</span><span id="line-77">        <span class="p">]</span>
+</span><span id="line-78">
+</span><span id="line-79">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images_path</span><span class="p">,</span> <span class="n">labels_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-80">        <span class="c1"># Read and parse the gzipped IDX files</span>
+</span><span id="line-81">        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">images_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">img_file</span><span class="p">:</span>
+</span><span id="line-82">            <span class="n">_</span><span class="p">,</span> <span class="n">num_images</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&gt;IIII&quot;</span><span class="p">,</span> <span class="n">img_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">16</span><span class="p">))</span>
+</span><span id="line-83">            <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">img_file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">num_images</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+</span><span id="line-84">
+</span><span id="line-85">        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">labels_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">lbl_file</span><span class="p">:</span>
+</span><span id="line-86">            <span class="n">_</span><span class="p">,</span> <span class="n">num_labels</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;&gt;II&quot;</span><span class="p">,</span> <span class="n">lbl_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+</span><span id="line-87">            <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">lbl_file</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+</span><span id="line-88">
+</span><span id="line-89">        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="s2">&quot;Mismatch between image and label counts.&quot;</span>
+</span><span id="line-90">
+</span><span id="line-91">        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">)):</span>
+</span><span id="line-92">            <span class="k">yield</span> <span class="n">idx</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">label</span><span class="p">)}</span>
+</span><span id="line-93">
+</span><span id="line-94">    <span class="nd">@staticmethod</span>
+</span><span id="line-95">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
+</span><span id="line-96"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the list of NotMNIST labels (letters A-J).&quot;&quot;&quot;</span>
+</span><span id="line-97">        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="s2">&quot;E&quot;</span><span class="p">,</span> <span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="s2">&quot;J&quot;</span><span class="p">]</span></div>
 
 </span></code></pre></div>
     </div></div>
