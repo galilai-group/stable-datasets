@@ -122,6 +122,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
 </ul>
 </li>
@@ -172,92 +173,90 @@
       <h1>Source code for stable_datasets.images.k_mnist</h1><div class="highlight"><pre>
 <span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
 </span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-4">
-</span><span id="line-5">
+</span><span id="line-3">
+</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="line-5">    <span class="n">BaseDatasetBuilder</span><span class="p">,</span>
+</span><span id="line-6">    <span class="n">_default_dest_folder</span><span class="p">,</span>
+</span><span id="line-7">    <span class="n">bulk_download</span><span class="p">,</span>
+</span><span id="line-8"><span class="p">)</span>
+</span><span id="line-9">
+</span><span id="line-10">
 <div class="viewcode-block" id="KMNIST">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.k_mnist.KMNIST">[docs]</a>
-</span><span id="line-6"><span class="k">class</span><span class="w"> </span><span class="nc">KMNIST</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-7"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Kuzushiji-MNIST and Kuzushiji-49 datasets.&quot;&quot;&quot;</span>
-</span><span id="line-8">
-</span><span id="line-9">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-10">
-</span><span id="line-11">    <span class="n">BUILDER_CONFIGS</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="line-12">        <span class="n">datasets</span><span class="o">.</span><span class="n">BuilderConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;kmnist&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Kuzushiji-MNIST dataset with 10 classes.&quot;</span><span class="p">),</span>
-</span><span id="line-13">        <span class="n">datasets</span><span class="o">.</span><span class="n">BuilderConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;k49mnist&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Kuzushiji-49 dataset with 49 classes.&quot;</span><span class="p">),</span>
-</span><span id="line-14">    <span class="p">]</span>
-</span><span id="line-15">
-</span><span id="line-16">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-17">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;kmnist&quot;</span><span class="p">:</span>
-</span><span id="line-18">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">10</span>
-</span><span id="line-19">        <span class="k">else</span><span class="p">:</span>  <span class="c1"># k49mnist</span>
-</span><span id="line-20">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">49</span>
-</span><span id="line-21">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-22">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Kuzushiji-MNIST and Kuzushiji-49 datasets.&quot;</span><span class="p">,</span>
-</span><span id="line-23">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-24">                <span class="p">{</span>
-</span><span id="line-25">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>  <span class="c1"># Automatically converts to PIL.Image</span>
-</span><span id="line-26">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">),</span>
-</span><span id="line-27">                <span class="p">}</span>
-</span><span id="line-28">            <span class="p">),</span>
-</span><span id="line-29">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-30">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;http://codh.rois.ac.jp/kmnist/&quot;</span><span class="p">,</span>
-</span><span id="line-31">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
-</span><span id="line-32"><span class="s2">                @online{clanuwat2018deep,</span>
-</span><span id="line-33"><span class="s2">                  author       = {Tarin Clanuwat and Mikel Bober-Irizar and Asanobu Kitamoto and Alex Lamb and Kazuaki Yamamoto and David Ha},</span>
-</span><span id="line-34"><span class="s2">                  title        = {Deep Learning for Classical Japanese Literature},</span>
-</span><span id="line-35"><span class="s2">                  date         = {2018-12-03},</span>
-</span><span id="line-36"><span class="s2">                  year         = </span><span class="si">{2018}</span><span class="s2">,</span>
-</span><span id="line-37"><span class="s2">                  eprintclass  = </span><span class="si">{cs.CV}</span><span class="s2">,</span>
-</span><span id="line-38"><span class="s2">                  eprinttype   = </span><span class="si">{arXiv}</span><span class="s2">,</span>
-</span><span id="line-39"><span class="s2">                  eprint       = {cs.CV/1812.01718},</span>
-</span><span id="line-40"><span class="s2">                }</span>
-</span><span id="line-41"><span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-42">        <span class="p">)</span>
-</span><span id="line-43">
-</span><span id="line-44">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-45">        <span class="n">urls</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-46">            <span class="s2">&quot;kmnist&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="line-47">                <span class="s2">&quot;train_imgs&quot;</span><span class="p">:</span> <span class="s2">&quot;http://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-train-imgs.npz&quot;</span><span class="p">,</span>
-</span><span id="line-48">                <span class="s2">&quot;train_labels&quot;</span><span class="p">:</span> <span class="s2">&quot;http://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-train-labels.npz&quot;</span><span class="p">,</span>
-</span><span id="line-49">                <span class="s2">&quot;test_imgs&quot;</span><span class="p">:</span> <span class="s2">&quot;http://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-test-imgs.npz&quot;</span><span class="p">,</span>
-</span><span id="line-50">                <span class="s2">&quot;test_labels&quot;</span><span class="p">:</span> <span class="s2">&quot;http://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-test-labels.npz&quot;</span><span class="p">,</span>
-</span><span id="line-51">            <span class="p">},</span>
-</span><span id="line-52">            <span class="s2">&quot;k49mnist&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="line-53">                <span class="s2">&quot;train_imgs&quot;</span><span class="p">:</span> <span class="s2">&quot;http://codh.rois.ac.jp/kmnist/dataset/k49/k49-train-imgs.npz&quot;</span><span class="p">,</span>
-</span><span id="line-54">                <span class="s2">&quot;train_labels&quot;</span><span class="p">:</span> <span class="s2">&quot;http://codh.rois.ac.jp/kmnist/dataset/k49/k49-train-labels.npz&quot;</span><span class="p">,</span>
-</span><span id="line-55">                <span class="s2">&quot;test_imgs&quot;</span><span class="p">:</span> <span class="s2">&quot;http://codh.rois.ac.jp/kmnist/dataset/k49/k49-test-imgs.npz&quot;</span><span class="p">,</span>
-</span><span id="line-56">                <span class="s2">&quot;test_labels&quot;</span><span class="p">:</span> <span class="s2">&quot;http://codh.rois.ac.jp/kmnist/dataset/k49/k49-test-labels.npz&quot;</span><span class="p">,</span>
-</span><span id="line-57">            <span class="p">},</span>
-</span><span id="line-58">        <span class="p">}</span>
-</span><span id="line-59">        <span class="n">selected_urls</span> <span class="o">=</span> <span class="n">urls</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
-</span><span id="line-60">        <span class="n">downloaded_files</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">selected_urls</span><span class="p">)</span>
-</span><span id="line-61">
-</span><span id="line-62">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-63">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-64">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-65">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-66">                    <span class="s2">&quot;images_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;train_imgs&quot;</span><span class="p">],</span>
-</span><span id="line-67">                    <span class="s2">&quot;labels_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;train_labels&quot;</span><span class="p">],</span>
-</span><span id="line-68">                <span class="p">},</span>
-</span><span id="line-69">            <span class="p">),</span>
-</span><span id="line-70">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-71">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-72">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-73">                    <span class="s2">&quot;images_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;test_imgs&quot;</span><span class="p">],</span>
-</span><span id="line-74">                    <span class="s2">&quot;labels_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;test_labels&quot;</span><span class="p">],</span>
-</span><span id="line-75">                <span class="p">},</span>
-</span><span id="line-76">            <span class="p">),</span>
-</span><span id="line-77">        <span class="p">]</span>
-</span><span id="line-78">
-</span><span id="line-79">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images_path</span><span class="p">,</span> <span class="n">labels_path</span><span class="p">):</span>
-</span><span id="line-80">        <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">images_path</span><span class="p">)[</span><span class="s2">&quot;arr_0&quot;</span><span class="p">]</span>
-</span><span id="line-81">        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">labels_path</span><span class="p">)[</span><span class="s2">&quot;arr_0&quot;</span><span class="p">]</span>
+</span><span id="line-11"><span class="k">class</span><span class="w"> </span><span class="nc">KMNIST</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-12"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Image classification.</span>
+</span><span id="line-13"><span class="sd">    The `Kuzushiji-MNIST &lt;http://codh.rois.ac.jp/kmnist/&gt;`_ dataset consists</span>
+</span><span id="line-14"><span class="sd">    of 70,000 28x28 grayscale images of 10 classes of Kuzushiji (cursive</span>
+</span><span id="line-15"><span class="sd">    Japanese) characters, with 7,000 images per class. There are 60,000</span>
+</span><span id="line-16"><span class="sd">    training images and 10,000 test images. Kuzushiji-MNIST is a drop-in</span>
+</span><span id="line-17"><span class="sd">    replacement for the MNIST dataset, providing a more challenging</span>
+</span><span id="line-18"><span class="sd">    alternative for benchmarking machine learning algorithms.</span>
+</span><span id="line-19"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-20">
+</span><span id="line-21">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-22">
+</span><span id="line-23">    <span class="c1"># Single source-of-truth for dataset provenance + download locations.</span>
+</span><span id="line-24">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-25">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;http://codh.rois.ac.jp/kmnist/&quot;</span><span class="p">,</span>
+</span><span id="line-26">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-27">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-train-imgs.npz&quot;</span><span class="p">,</span>
+</span><span id="line-28">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-test-imgs.npz&quot;</span><span class="p">,</span>
+</span><span id="line-29">        <span class="p">},</span>
+</span><span id="line-30">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@online{clanuwat2018deep,</span>
+</span><span id="line-31"><span class="s2">                         author       = {Tarin Clanuwat and Mikel Bober-Irizar and Asanobu Kitamoto and Alex Lamb and Kazuaki Yamamoto and David Ha},</span>
+</span><span id="line-32"><span class="s2">                         title        = {Deep Learning for Classical Japanese Literature},</span>
+</span><span id="line-33"><span class="s2">                         date         = {2018-12-03},</span>
+</span><span id="line-34"><span class="s2">                         year         = </span><span class="si">{2018}</span><span class="s2">,</span>
+</span><span id="line-35"><span class="s2">                         eprintclass  = </span><span class="si">{cs.CV}</span><span class="s2">,</span>
+</span><span id="line-36"><span class="s2">                         eprinttype   = </span><span class="si">{arXiv}</span><span class="s2">,</span>
+</span><span id="line-37"><span class="s2">                         eprint       = {cs.CV/1812.01718}}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-38">    <span class="p">}</span>
+</span><span id="line-39">
+</span><span id="line-40">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-41">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-42">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The Kuzushiji-MNIST dataset is an image classification dataset of 60,000 28x28 grayscale training images and 10,000 test images, labeled over 10 classes of cursive Japanese characters. See http://codh.rois.ac.jp/kmnist/ for more information.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-43">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-44">                <span class="p">{</span>
+</span><span id="line-45">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-46">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span>
+</span><span id="line-47">                        <span class="n">names</span><span class="o">=</span><span class="p">[</span>
+</span><span id="line-48">                            <span class="s2">&quot;o&quot;</span><span class="p">,</span>
+</span><span id="line-49">                            <span class="s2">&quot;ki&quot;</span><span class="p">,</span>
+</span><span id="line-50">                            <span class="s2">&quot;su&quot;</span><span class="p">,</span>
+</span><span id="line-51">                            <span class="s2">&quot;tsu&quot;</span><span class="p">,</span>
+</span><span id="line-52">                            <span class="s2">&quot;na&quot;</span><span class="p">,</span>
+</span><span id="line-53">                            <span class="s2">&quot;ha&quot;</span><span class="p">,</span>
+</span><span id="line-54">                            <span class="s2">&quot;ma&quot;</span><span class="p">,</span>
+</span><span id="line-55">                            <span class="s2">&quot;ya&quot;</span><span class="p">,</span>
+</span><span id="line-56">                            <span class="s2">&quot;re&quot;</span><span class="p">,</span>
+</span><span id="line-57">                            <span class="s2">&quot;wo&quot;</span><span class="p">,</span>
+</span><span id="line-58">                        <span class="p">]</span>
+</span><span id="line-59">                    <span class="p">),</span>
+</span><span id="line-60">                <span class="p">}</span>
+</span><span id="line-61">            <span class="p">),</span>
+</span><span id="line-62">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-63">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-64">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-65">        <span class="p">)</span>
+</span><span id="line-66">
+</span><span id="line-67">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-68"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the npz archive.&quot;&quot;&quot;</span>
+</span><span id="line-69">        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-70">        <span class="n">images</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;arr_0&quot;</span><span class="p">]</span>
+</span><span id="line-71">
+</span><span id="line-72">        <span class="c1"># Load labels from separate file</span>
+</span><span id="line-73">        <span class="n">label_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="n">split</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-imgs.npz&quot;</span><span class="p">,</span> <span class="s2">&quot;-labels.npz&quot;</span><span class="p">)</span>
+</span><span id="line-74">        <span class="n">download_dir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_raw_download_dir&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-75">        <span class="k">if</span> <span class="n">download_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-76">            <span class="n">download_dir</span> <span class="o">=</span> <span class="n">_default_dest_folder</span><span class="p">()</span>
+</span><span id="line-77">
+</span><span id="line-78">        <span class="c1"># Download label file</span>
+</span><span id="line-79">        <span class="n">label_paths</span> <span class="o">=</span> <span class="n">bulk_download</span><span class="p">([</span><span class="n">label_url</span><span class="p">],</span> <span class="n">dest_folder</span><span class="o">=</span><span class="n">download_dir</span><span class="p">)</span>
+</span><span id="line-80">        <span class="n">label_path</span> <span class="o">=</span> <span class="n">label_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-81">        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">label_path</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="s2">&quot;arr_0&quot;</span><span class="p">]</span>
 </span><span id="line-82">
 </span><span id="line-83">        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">)):</span>
-</span><span id="line-84">            <span class="c1"># Convert each image to a PIL.Image object</span>
-</span><span id="line-85">            <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;L&quot;</span><span class="p">)</span>  <span class="c1"># Mode &quot;L&quot; for grayscale images</span>
-</span><span id="line-86">            <span class="k">yield</span> <span class="n">idx</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">label</span><span class="p">)}</span></div>
+</span><span id="line-84">            <span class="k">yield</span> <span class="n">idx</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">label</span><span class="p">)}</span></div>
 
 </span></code></pre></div>
     </div></div>
