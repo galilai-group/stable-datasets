@@ -7,6 +7,7 @@ from .cifar100 import CIFAR100
 from .cars196 import Cars196
 from .dtd import DTD
 from .med_mnist import MedMNIST
+from .stl10 import STL10
 
 
 # from .awa2 import AWA2
@@ -37,7 +38,6 @@ from .med_mnist import MedMNIST
 # from .not_mnist import NotMNIST
 # from .places365_small import Places365Small
 # from .rock_paper_scissor import RockPaperScissor
-# from .stl10 import STL10
 # from .svhn import SVHN
 # from .tiny_imagenet import TinyImagenet
 # from .tiny_imagenet_c import TinyImagenetC
@@ -52,4 +52,5 @@ __all__ = [
     "MedMNIST",
     "Cars196",
     "DTD",
+    "STL10",
 ]
