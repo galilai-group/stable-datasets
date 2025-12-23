@@ -16,7 +16,7 @@ from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .clevrer import CLEVRER
 from .dtd import DTD
-from .dtd import DTD
+from .e_mnist import EMNIST
 from .fashion_mnist import FashionMNIST
 from .k_mnist import KMNIST
 from .med_mnist import MedMNIST
@@ -25,7 +25,6 @@ from .med_mnist import MedMNIST
 # from .cub200 import CUB200
 # from .dsprites import DSprites
 # from .dtd import DTD
-# from .e_mnist import EMNIST
 # from .fashion_mnist import FashionMNIST
 # from .fgvc_aircraft import FGVCAircraft
 # from .flowers102 import Flowers102
@@ -54,6 +53,7 @@ __all__ = [
     "FashionMNIST",
     "KMNIST",
     "MedMNIST",
+    "EMNIST",
     "Cars196",
     "DTD",
     "NotMNIST",
