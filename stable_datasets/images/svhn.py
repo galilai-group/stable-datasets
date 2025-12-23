@@ -1,12 +1,13 @@
 import datasets
-import numpy as np
 import scipy.io as sio
+from PIL import Image
 
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class SVHN(BaseDatasetBuilder):
     """SVHN (Street View House Numbers) Dataset for image classification.
+
     SVHN is a real-world image dataset for developing machine learning and object recognition algorithms
     with minimal requirement on data preprocessing and formatting. It can be seen as similar in flavor to MNIST,
     but incorporates an order of magnitude more labeled data (over 600,000 digit images) and comes from a significantly harder,
@@ -37,7 +38,10 @@ class SVHN(BaseDatasetBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""The SVHN dataset contains images of digits obtained from house numbers in Google Street View images. It has over 600,000 labeled digit images.""",
+            description="""The Street View House Numbers (SVHN) Dataset is a real-world image dataset
+                           for developing machine learning and object recognition algorithms with minimal
+                           requirement on data preprocessing and formatting. SVHN is obtained from house
+                           numbers in Google Street View images.""",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
@@ -49,13 +53,24 @@ class SVHN(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, file_path):
-        data = sio.loadmat(file_path)
-        images = data["X"].transpose([3, 0, 1, 2])
-        labels = np.squeeze(data["y"])
+    def _generate_examples(self, data_path, split):
+        """Generate examples from the MAT file."""
+        mat = sio.loadmat(str(data_path), squeeze_me=True)
 
-        # Convert '0' label from 10 to 0
-        labels[labels == 10] = 0
+        X = mat["X"]  # Shape: (32, 32, 3, N)
+        y = mat["y"]  # Shape: (N,)
 
-        for idx, (image, label) in enumerate(zip(images, labels)):
-            yield idx, {"image": image, "label": label}
+        # Transpose to get (N, 32, 32, 3)
+        X = X.transpose(3, 0, 1, 2)
+
+        # In SVHN, label 10 represents digit 0
+        y[y == 10] = 0
+
+        for idx in range(len(y)):
+            yield (
+                idx,
+                {
+                    "image": Image.fromarray(X[idx]),
+                    "label": int(y[idx]),
+                },
+            )
