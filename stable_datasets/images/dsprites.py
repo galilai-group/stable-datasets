@@ -16,11 +16,11 @@ class DSprites(BaseDatasetBuilder):
         "assets": {
             "train": "https://github.com/google-deepmind/dsprites-dataset/raw/refs/heads/master/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz",
         },
-        "citation": """@misc{dsprites17,
-                        author = {Loic Matthey and Irina Higgins and Demis Hassabis and Alexander Lerchner},
-                        title = {dSprites: Disentanglement testing Sprites dataset},
-                        howpublished= {https://github.com/deepmind/dsprites-dataset/},
-                        year = "2017"}""",
+        "citation": """@inproceedings{higgins2017beta,
+                    title={beta-vae: Learning basic visual concepts with a constrained variational framework},
+                    author={Higgins, Irina and Matthey, Loic and Pal, Arka and Burgess, Christopher and Glorot, Xavier and Botvinick, Matthew and Mohamed, Shakir and Lerchner, Alexander},
+                    booktitle={International conference on learning representations},
+                    year={2017}""",
     }
 
     def _info(self):
