@@ -65,7 +65,7 @@ Scream Background Visualization
 
 The background patches are sampled from a fixed Scream painting image.
 
-.. image:: imgs/scream.jpg
+.. image:: imgs/scream.png
    :align: center
    :width: 70%
 
