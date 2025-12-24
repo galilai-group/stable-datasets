@@ -16,17 +16,35 @@ def test_dsprites_dataset():
 
     # Test 2: Check sample keys and label range
     sample = dsprites_train[0]
-    expected_keys = {"image", "label"}
-    assert set(sample.keys()) == expected_keys, f"Expected keys {expected_keys}, got {set(sample.keys())}."
+    expected_keys = {
+        "image",
+        "index",
+        "label",
+        "label_values",
+        "color",
+        "shape",
+        "scale",
+        "orientation",
+        "posX",
+        "posY",
+        "colorValue",
+        "shapeValue",
+        "scaleValue",
+        "orientationValue",
+        "posXValue",
+        "posYValue",
+    }
+    assert sorted(set(sample.keys())) == sorted(set(expected_keys)), (
+        f"Expected keys {expected_keys}, got {set(sample.keys())}."
+    )
 
     # Test 3: Validate image type
     image = sample["image"]
     assert isinstance(image, Image.Image), f"Image should be a PIL.Image.Image, got {type(image)}."
-
-    # Convert to numpy for basic sanity checks
     image_np = np.array(image)
     assert image_np.ndim == 2, f"DSprites images should be HxW, got shape {image_np.shape}."
     assert image_np.dtype == np.uint8, f"Image dtype should be uint8, got {image_np.dtype}."
+    assert image_np.shape == (64, 64), f"Image should have shape (64, 64), got {image_np.shape}"
 
     # Test 4: Validate label type and range
     label = sample["label"]
@@ -55,11 +73,13 @@ def test_dsprites_dataset():
     assert 0 <= orientation < 40, f"Orientation should be in range [0, 39], got {orientation}."
     assert 0 <= posX < 32, f"PosX should be in range [0, 31], got {posX}."
     assert 0 <= posY < 32, f"PosY should be in range [0, 31], got {posY}."
-    assert 0 <= colorValue < 1, f"Color value should be in range [0, 0], got {colorValue}."
-    assert 0 <= shapeValue < 1, f"Shape value should be in range [0, 1], got {shapeValue}."
-    assert 0 <= scaleValue < 1, f"Scale value should be in range [0, 1], got {scaleValue}."
-    assert 0 <= orientationValue < 1, f"Orientation value should be in range [0, 1], got {orientationValue}."
-    assert 0 <= posXValue < 1, f"PosX value should be in range [0, 1], got {posXValue}."
-    assert 0 <= posYValue < 1, f"PosY value should be in range [0, 1], got {posYValue}."
+    assert colorValue == 1.0, f"Color value should be 1.0, got {colorValue}."
+    assert 0 <= shapeValue < 4, f"Shape value should be in [0, 1, 2], got {shapeValue}."
+    assert 0.5 <= scaleValue <= 1, f"Scale value should be in range [0.5, 1], got {scaleValue}."
+    assert 0 <= orientationValue <= 2 * np.pi, (
+        f"Orientation value should be in range [0, 2pi], got {orientationValue}."
+    )
+    assert 0 <= posXValue <= 1, f"PosX value should be in range [0, 1], got {posXValue}."
+    assert 0 <= posYValue <= 1, f"PosY value should be in range [0, 1], got {posYValue}."
 
     print("All DTD dataset tests passed successfully!")
