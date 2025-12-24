@@ -1,12 +1,12 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.dsprites import DSprites
+from stable_datasets.images.dsprites_color import DSpritesColor
 
 
 def test_dsprites_dataset():
     # Load training split
-    dsprites_train = DSprites(split="train")
+    dsprites_train = DSpritesColor(split="train")
 
     # Test 1: Check number of training samples
     expected_num_train_samples = 737280
@@ -29,6 +29,7 @@ def test_dsprites_dataset():
             "posX",
             "posY",
             "colorValue",
+            "colorRGB",
             "shapeValue",
             "scaleValue",
             "orientationValue",
@@ -36,24 +37,27 @@ def test_dsprites_dataset():
             "posYValue",
         }
         assert sorted(set(sample.keys())) == sorted(set(expected_keys)), (
-            f"Expected keys {expected_keys}, got {set(sample.keys())}."
+            f"Expected keys {sorted(set(expected_keys))}, got {sorted(set(sample.keys()))}."
         )
 
         # Test 3: Validate image type
         image = sample["image"]
         assert isinstance(image, Image.Image), f"Image should be a PIL.Image.Image, got {type(image)}."
         image_np = np.array(image)
-        assert image_np.ndim == 2, f"DSprites images should be HxW, got shape {image_np.shape}."
+        assert image_np.ndim == 3, f"DSprites images should be HxW, got shape {image_np.shape}."
         assert image_np.dtype == np.uint8, f"Image dtype should be uint8, got {image_np.dtype}."
-        assert image_np.shape == (64, 64), f"Image should have shape (64, 64), got {image_np.shape}"
+        assert image_np.shape == (64, 64, 3), f"Image should have shape (64, 64), got {image_np.shape}"
 
         # Test 4: Validate label type and range
         label = sample["label"]
         label_values = sample["label_values"]
+        colorRGB = sample["colorRGB"]
         assert isinstance(label, list), f"Label should be int, got {type(list)}."
         assert isinstance(label_values, list), f"Label values should be list, got {type(label_values)}."
+        assert isinstance(colorRGB, list), f"Color RGB should be list, got {type(colorRGB)}."
         assert len(label) == 6, f"Label should have 6 elements, got {len(label)}."
         assert len(label_values) == 6, f"Label values should have 6 elements, got {len(label_values)}."
+        assert len(colorRGB) == 3, f"Color RGB should have 3 elements, got {len(colorRGB)}."
 
         color = sample["color"]
         shape = sample["shape"]
@@ -82,5 +86,8 @@ def test_dsprites_dataset():
         )
         assert 0 <= posXValue <= 1, f"PosX value should be in range [0, 1], got {posXValue}."
         assert 0 <= posYValue <= 1, f"PosY value should be in range [0, 1], got {posYValue}."
+        assert 0.5 <= colorRGB[0] <= 1.0, f"Color RGB should be in range [0.5, 1.0], got {colorRGB}."
+        assert 0.5 <= colorRGB[1] <= 1.0, f"Color RGB should be in range [0.5, 1.0], got {colorRGB}."
+        assert 0.5 <= colorRGB[2] <= 1.0, f"Color RGB should be in range [0.5, 1.0], got {colorRGB}."
 
     print("All DTD dataset tests passed successfully!")
