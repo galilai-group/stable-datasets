@@ -11,7 +11,7 @@ _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(_THIS_DIR, "..", ".."))
 
-scream_path = os.path.join(_PROJECT_ROOT, "docs", "source", "datasets", "imgs", "scream.jpg")
+scream_path = os.path.join(_PROJECT_ROOT, "docs", "source", "datasets", "imgs", "scream.png")
 
 
 class DSpritesScream(BaseDatasetBuilder):
