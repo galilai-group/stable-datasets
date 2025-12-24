@@ -15,14 +15,18 @@ from .cifar100 import CIFAR100
 # from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .clevrer import CLEVRER
+
+# from .country211 import Country211
+# from .cub200 import CUB200
+from .dsprites import DSprites
+from .dsprites_color import DSpritesColor
+from .dsprites_noise import DSpritesNoise
+from .dsprites_scream import DSpritesScream
 from .dtd import DTD
 from .fashion_mnist import FashionMNIST
 from .k_mnist import KMNIST
 from .med_mnist import MedMNIST
 
-# from .country211 import Country211
-# from .cub200 import CUB200
-# from .dsprites import DSprites
 # from .dtd import DTD
 # from .e_mnist import EMNIST
 # from .fashion_mnist import FashionMNIST
@@ -51,11 +55,15 @@ __all__ = [
     "CIFAR10C",
     "CIFAR100C",
     "CLEVRER",
+    "DTD",
+    "DSprites",
+    "DSpritesColor",
+    "DSpritesNoise",
+    "DSpritesScream",
     "FashionMNIST",
     "KMNIST",
     "MedMNIST",
     "Cars196",
-    "DTD",
     "NotMNIST",
     "SVHN",
 ]
