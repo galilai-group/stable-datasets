@@ -82,4 +82,4 @@ def test_dsprites_dataset():
     assert 0 <= posXValue <= 1, f"PosX value should be in range [0, 1], got {posXValue}."
     assert 0 <= posYValue <= 1, f"PosY value should be in range [0, 1], got {posYValue}."
 
-    print("All DTD dataset tests passed successfully!")
+    print("All DSprites dataset tests passed successfully!")

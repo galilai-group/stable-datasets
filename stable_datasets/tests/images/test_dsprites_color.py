@@ -89,4 +89,4 @@ def test_dsprites_dataset():
     assert 0.5 <= colorRGB[1] <= 1.0, f"Color RGB should be in range [0.5, 1.0], got {colorRGB}."
     assert 0.5 <= colorRGB[2] <= 1.0, f"Color RGB should be in range [0.5, 1.0], got {colorRGB}."
 
-    print("All DTD dataset tests passed successfully!")
+    print("All DSpritesColor dataset tests passed successfully!")

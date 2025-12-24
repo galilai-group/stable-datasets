@@ -1,12 +1,12 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.dsprites_noise import DSpritesNoise
+from stable_datasets.images.dsprites_scream import DSpritesScream
 
 
 def test_dsprites_noise_dataset():
     # Load training split
-    dsprites_train = DSpritesNoise(split="train")
+    dsprites_train = DSpritesScream(split="train")
 
     # Test 1: Check number of training samples
     expected_num_train_samples = 737280
@@ -82,4 +82,4 @@ def test_dsprites_noise_dataset():
     assert 0 <= posXValue <= 1, f"PosX value should be in range [0, 1], got {posXValue}."
     assert 0 <= posYValue <= 1, f"PosY value should be in range [0, 1], got {posYValue}."
 
-    print("All DSpritesNoise dataset tests passed successfully!")
+    print("All DSpritesScream dataset tests passed successfully!")
