@@ -1,4 +1,4 @@
-Color dSprites
+Noisy dSprites
 ==============
 
 .. raw:: html
@@ -12,20 +12,20 @@ Color dSprites
 Overview
 --------
 
-The Color dSprites dataset is a synthetic benchmark designed for **disentangled and unsupervised representation learning**. It is a variant of the original dSprites dataset, where the object in each image is rendered with a **random RGB color**, while the background remains black.
+The Noisy dSprites dataset is a synthetic benchmark designed for **disentangled and unsupervised representation learning**. It is a variant of the original dSprites dataset, where **random noise is added to the background** of each image, while the object itself remains unchanged.
 
-Compared to the original grayscale dSprites, this variant introduces **random object color per sample**, enabling evaluation of **robustness to color variation** and analysis of how disentanglement methods behave under color transformations that are not part of the ground-truth generative factors.
+Compared to the original grayscale dSprites, this variant introduces **background noise as a nuisance factor**, enabling evaluation of **robustness to noisy observations** and analysis of how disentanglement methods perform when irrelevant background variation is present.
 
 The dataset contains **all possible combinations** of six latent factors of variation inherited from dSprites, with each combination appearing exactly once.
 
 - **Total images**: 737,280
-- **Image resolution**: 64×64x3 (RGB)
+- **Image resolution**: 64×64x3 (binary object with noisy background)
 
 Latent Factors of Variation
 --------------------------
 
 The dataset is generated from six independent latent factors, consistent with the original dSprites specification.  
-In this color variant, the ``color`` factor remains fixed in the labels, while the **actual applied RGB color** is provided separately.
+In this noisy variant, **no additional latent factor is introduced**; background noise is applied independently of the ground-truth factors.
 
 .. list-table::
    :header-rows: 1
@@ -33,10 +33,10 @@ In this color variant, the ``color`` factor remains fixed in the labels, while t
 
    * - Factor
      - Discrete Values
-     - Continuous / Actual Values
+     - Continuous Values
    * - ``color``
      - {0}
-     - Fixed label; actual RGB stored in ``colorRGB`` ∈ [0.5, 1.0]
+     - 1.0 (fixed, white)
    * - ``shape``
      - {0, 1, 2}
      - {1.0, 2.0, 3.0} (square, ellipse, heart)
@@ -54,9 +54,9 @@ In this color variant, the ``color`` factor remains fixed in the labels, while t
      - Normalized position in [0, 1]
 
 Each image corresponds to a **unique combination** of these six latent factors.  
-The random object color does **not** alter the factor indexing order.
+The background noise does **not** affect the factor indexing or ordering.
 
-.. image:: teasers/dsprites_color_teaser.gif
+.. image:: teasers/dsprites_noisy_teaser.gif
    :align: center
    :width: 90%
 
@@ -74,16 +74,13 @@ When accessing an example using ``ds[i]``, you will receive a dictionary with th
      - Description
    * - ``image``
      - ``PIL.Image.Image``
-     - 64×64×3 RGB image (black background)
+     - 64×64×3 image with noisy background
    * - ``label``
      - ``List[int]``
      - Discrete latent indices: ``[color, shape, scale, orientation, posX, posY]``
    * - ``label_values``
      - ``List[float]``
      - Continuous latent values corresponding to ``label``
-   * - ``colorRGB``
-     - ``List[float]``
-     - Actual RGB color applied to the object
    * - ``color`` … ``posY``
      - ``int``
      - Individual discrete latent factors
@@ -92,8 +89,8 @@ When accessing an example using ``ds[i]``, you will receive a dictionary with th
      - Individual continuous latent values
 
 **Note:**  
-The ``color`` and ``colorValue`` fields remain fixed (0 / 1.0) to preserve compatibility with the original dSprites format.  
-The actual object color is provided exclusively via ``colorRGB``.
+In this Noisy variant, the object remains white and identical to the original dSprites.  
+Only the **background pixels are replaced with random noise**, applied independently per image.
 
 Usage Example
 -------------
@@ -102,13 +99,13 @@ Usage Example
 
 .. code-block:: python
 
-    from stable_datasets.images.dsprites_color import DSpritesColor
+    from stable_datasets.images.dsprites_noisy import DSpritesNoisy
 
     # First run will download + prepare cache, then return the split as a HF Dataset
-    ds = DSpritesColor(split="train")
+    ds = DSpritesNoisy(split="train")
 
     # If you omit the split (split=None), you get a DatasetDict with all available splits
-    ds_all = DSpritesColor(split=None)
+    ds_all = DSpritesNoisy(split=None)
 
     sample = ds[0]
     print(sample.keys())
@@ -116,7 +113,6 @@ Usage Example
     image = sample["image"]
     factors = sample["label"]
     factor_values = sample["label_values"]
-    color_rgb = sample["colorRGB"]
 
     # Optional: make it PyTorch-friendly
     ds_torch = ds.with_format("torch")
@@ -124,21 +120,21 @@ Usage Example
 Why No Train/Test Split?
 -----------------------
 
-The Color dSprites dataset does not define an official train/test split.  
+The Noisy dSprites dataset does not define an official train/test split.  
 It is intended for **representation learning research**, where models are trained to capture underlying factors of variation rather than to generalize across semantic classes.
 
 Because the dataset is a complete Cartesian product of all factor combinations, common evaluation protocols rely on:
 
 - Factor-wise generalization
 - Metric-based disentanglement scores
-- Robustness analysis under nuisance variations (e.g., color)
+- Robustness to background noise
 - Controlled interventions on latent variables
 
 Related Datasets
 ----------------
 
 - **dSprites**: Original grayscale version
-- **dSprites-Noisy**: Variant with background noise
+- **dSprites-Color**: Variant with random object color
 - **dSprites-Scream**: Variant with natural image backgrounds
 
 References

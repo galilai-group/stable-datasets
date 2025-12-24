@@ -5,7 +5,7 @@ from PIL import Image
 from stable_datasets.utils import BaseDatasetBuilder
 
 
-class DSpritesColor(BaseDatasetBuilder):
+class DSpritesNoise(BaseDatasetBuilder):
     """DSprites
     dSprites is a dataset of 2D shapes procedurally generated from 6 ground truth independent latent factors. These factors are color, shape, scale, rotation, x and y positions of a sprite."""
 
@@ -30,7 +30,7 @@ class DSpritesColor(BaseDatasetBuilder):
             description=""""dSprites dataset: procedurally generated 2D shapes dataset with known ground-truth factors, "
                 "commonly used for disentangled representation learning. "
                 "Factors: color (1), shape (3), scale (6), orientation (40), position X (32), position Y (32). "
-                "Images are 64x64x3 where the object is RGB and background is black""",
+                "Images are 64x64x3. The object is white and the background is noise""",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),  # (64, 64), grayscale
@@ -44,7 +44,6 @@ class DSpritesColor(BaseDatasetBuilder):
                     "posX": datasets.Value("int32"),  # posX index (0-31)
                     "posY": datasets.Value("int32"),  # posY index (0-31)
                     "colorValue": datasets.Value("float64"),  # color value (always 1.0)
-                    "colorRGB": datasets.Sequence(datasets.Value("float32")),  # color RGB values (0.5, 1.0)
                     "shapeValue": datasets.Value("float64"),  # shape value (1.0, 2.0, 3.0)
                     "scaleValue": datasets.Value("float64"),  # scale value (0.5, 1)
                     "orientationValue": datasets.Value("float64"),  # orientation value (0, 2pi)
@@ -68,8 +67,8 @@ class DSpritesColor(BaseDatasetBuilder):
         for idx in range(len(images)):
             img = images[idx]  # (64, 64), uint8
             img = img.astype(np.float32) / 1.0
-            color_rgb = np.random.uniform(0.5, 1.0, size=(3,))
-            img_rgb = (img[..., None] * color_rgb) * 255
+            noise = np.random.uniform(0, 1, size=(64, 64, 3))
+            img_rgb = np.minimum(img[..., None] + noise, 1.0) * 255
             img_pil = Image.fromarray(img_rgb.astype(np.uint8), mode="RGB")
 
             factors_classes = latents_classes[
@@ -90,8 +89,7 @@ class DSpritesColor(BaseDatasetBuilder):
                     "orientation": factors_classes[3],
                     "posX": factors_classes[4],
                     "posY": factors_classes[5],
-                    "colorValue": factors_values[0],  # always 1.0
-                    "colorRGB": color_rgb.tolist(),  # [R, G, B], ∈ [0.5,1.0]
+                    "colorValue": factors_values[0],  # always 0.0
                     "shapeValue": factors_values[1],
                     "scaleValue": factors_values[2],
                     "orientationValue": factors_values[3],
