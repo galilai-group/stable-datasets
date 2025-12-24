@@ -1,82 +1,96 @@
 import datasets
 import numpy as np
-from sklearn.model_selection import train_test_split
+from PIL import Image
+
+from stable_datasets.utils import BaseDatasetBuilder
 
 
-class DSprites(datasets.GeneratorBasedBuilder):
-    """TODO: Short description of my dataset."""
+class DSprites(BaseDatasetBuilder):
+    """DSprites
+    dSprites is a dataset of 2D shapes procedurally generated from 6 ground truth independent latent factors. These factors are color, shape, scale, rotation, x and y positions of a sprite."""
 
     VERSION = datasets.Version("1.0.0")
 
-    def _info(self):
-        features = datasets.Features(
-            {
-                "image": datasets.Image(),
-                "orientation": datasets.Value("float"),
-                "shape": datasets.ClassLabel(names=["square", "ellipse", "heart"]),
-                "scale": datasets.Value("float"),
-                "color": datasets.ClassLabel(names=["white"]),
-                "position_x": datasets.Value("float"),
-                "position_y": datasets.Value("float"),
-            }
-        )
-
-        homepage = "https://github.com/deepmind/dsprites-dataset"
-        license = "zlib/libpng"
-        return datasets.DatasetInfo(
-            description="""dSprites is a dataset of 2D shapes procedurally generated from 6 ground truth independent latent factors. These factors are color, shape, scale, rotation, x and y positions of a sprite.
-All possible combinations of these latents are present exactly once, generating N = 737280 total images.""",
-            features=features,
-            supervised_keys=("image", "shape"),
-            homepage=homepage,
-            license=license,
-            citation="""@misc{dsprites17,
+    SOURCE = {
+        "homepage": "https://github.com/deepmind/dsprites-dataset",
+        "assets": {
+            "train": "https://github.com/google-deepmind/dsprites-dataset/raw/refs/heads/master/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz",
+        },
+        "citation": """@misc{dsprites17,
                         author = {Loic Matthey and Irina Higgins and Demis Hassabis and Alexander Lerchner},
                         title = {dSprites: Disentanglement testing Sprites dataset},
                         howpublished= {https://github.com/deepmind/dsprites-dataset/},
                         year = "2017"}""",
+    }
+
+    def _info(self):
+        return datasets.DatasetInfo(
+            description=""""dSprites dataset: procedurally generated 2D shapes dataset with known ground-truth factors, "
+                "commonly used for disentangled representation learning. "
+                "Factors: color (1), shape (3), scale (6), orientation (40), position X (32), position Y (32). "
+                "Images are 64x64 binary black-and-white.""",
+            features=datasets.Features(
+                {
+                    "image": datasets.Image(),  # (64, 64), grayscale
+                    "index": datasets.Value("int32"),  # index of the image
+                    "label": datasets.Sequence(datasets.Value("int32")),  # 6 factor indices (classes)
+                    "label_values": datasets.Sequence(datasets.Value("float32")),  # 6 factor continuous values
+                    "color": datasets.Value("int32"),  # color index (always 0)
+                    "shape": datasets.Value("int32"),  # shape index (0-2)
+                    "scale": datasets.Value("int32"),  # scale index (0-5)
+                    "orientation": datasets.Value("int32"),  # orientation index (0-39)
+                    "posX": datasets.Value("int32"),  # posX index (0-31)
+                    "posY": datasets.Value("int32"),  # posY index (0-31)
+                    "colorValue": datasets.Value("float64"),  # color index (always 0)
+                    "shapeValue": datasets.Value("float64"),  # shape index (0-2)
+                    "scaleValue": datasets.Value("float64"),  # scale index (0-5)
+                    "orientationValue": datasets.Value("float64"),  # orientation index (0-39)
+                    "posXValue": datasets.Value("float64"),  # posX index (0-31)
+                    "posYValue": datasets.Value("float64"),  # posY index (0-31)
+                }
+            ),
+            supervised_keys=("image", "label"),
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        archive = dl_manager.download(
-            "https://github.com/google-deepmind/dsprites-dataset/raw/refs/heads/master/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz"
-        )
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"archive": archive, "split": "train"},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"archive": archive, "split": "test"},
-            ),
-        ]
+    def _generate_examples(self, data_path, split):
+        # Load npz
+        data = np.load(data_path, allow_pickle=True)
+        images = data["imgs"]  # shape: (737280, 64, 64), uint8
+        latents_classes = data["latents_classes"]  # shape: (737280, 6), int64
+        latents_values = data["latents_values"]  # shape: (737280, 6), float64
 
-    # method parameters are unpacked from `gen_kwargs` as given in `_split_generators`
-    def _generate_examples(self, archive, split):
-        dataset_zip = np.load(archive, allow_pickle=True)
-        images = dataset_zip["imgs"]
-        latents_values = dataset_zip["latents_values"]
+        # Iterate over images
+        for idx in range(len(images)):
+            img = images[idx]  # (64, 64), uint8
+            img = img * 255
+            # Convert to PIL image, keep grayscale mode
+            img_pil = Image.fromarray(img, mode="L")
 
-        # Split the indices for train and test
-        indices = np.arange(len(images))
-        train_indices, test_indices = train_test_split(indices, test_size=0.3, random_state=42)
+            factors_classes = latents_classes[
+                idx
+            ].tolist()  # [color_idx, shape_idx, scale_idx, orientation_idx, posX_idx, posY_idx]
+            factors_values = latents_values[idx].tolist()
 
-        if split == "train":
-            selected_indices = train_indices
-        elif split == "test":
-            selected_indices = test_indices
-
-        for key in selected_indices:
             yield (
-                int(key),
-                {  # Ensure the key is a Python native int
-                    "image": images[key],
-                    "color": int(latents_values[key, 0]) - 1,
-                    "shape": int(latents_values[key, 1]) - 1,
-                    "scale": latents_values[key, 2],
-                    "orientation": latents_values[key, 3],
-                    "position_x": latents_values[key, 4],
-                    "position_y": latents_values[key, 5],
+                idx,
+                {
+                    "image": img_pil,
+                    "index": idx,
+                    "label": factors_classes,
+                    "label_values": factors_values,
+                    "color": factors_classes[0],  # always 0
+                    "shape": factors_classes[1],
+                    "scale": factors_classes[2],
+                    "orientation": factors_classes[3],
+                    "posX": factors_classes[4],
+                    "posY": factors_classes[5],
+                    "colorValue": factors_values[0],  # always 0.0
+                    "shapeValue": factors_values[1],
+                    "scaleValue": factors_values[2],
+                    "orientationValue": factors_values[3],
+                    "posXValue": factors_values[4],
+                    "posYValue": factors_values[5],
                 },
             )
