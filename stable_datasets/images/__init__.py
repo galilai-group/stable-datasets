@@ -50,6 +50,7 @@ from .svhn import SVHN
 
 __all__ = [
     "ArabicCharacters",
+    "Cars196",
     "CIFAR10",
     "CIFAR100",
     "CIFAR10C",
@@ -63,7 +64,6 @@ __all__ = [
     "FashionMNIST",
     "KMNIST",
     "MedMNIST",
-    "Cars196",
     "NotMNIST",
     "SVHN",
 ]
