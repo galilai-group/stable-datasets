@@ -41,12 +41,12 @@ class DSprites(BaseDatasetBuilder):
                     "orientation": datasets.Value("int32"),  # orientation index (0-39)
                     "posX": datasets.Value("int32"),  # posX index (0-31)
                     "posY": datasets.Value("int32"),  # posY index (0-31)
-                    "colorValue": datasets.Value("float64"),  # color index (always 0)
-                    "shapeValue": datasets.Value("float64"),  # shape index (0-2)
-                    "scaleValue": datasets.Value("float64"),  # scale index (0-5)
-                    "orientationValue": datasets.Value("float64"),  # orientation index (0-39)
-                    "posXValue": datasets.Value("float64"),  # posX index (0-31)
-                    "posYValue": datasets.Value("float64"),  # posY index (0-31)
+                    "colorValue": datasets.Value("float64"),  # color value (always 1.0)
+                    "shapeValue": datasets.Value("float64"),  # shape value (0, 1, 2)
+                    "scaleValue": datasets.Value("float64"),  # scale value (0.5, 1)
+                    "orientationValue": datasets.Value("float64"),  # orientation value (0, 2pi)
+                    "posXValue": datasets.Value("float64"),  # posX value (0, 1)
+                    "posYValue": datasets.Value("float64"),  # posY value (0, 1)
                 }
             ),
             supervised_keys=("image", "label"),
