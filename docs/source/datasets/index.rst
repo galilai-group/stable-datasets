@@ -54,6 +54,7 @@ Available Datasets
    fashion_mnist
    k_mnist
    medmnist
+   e_mnist
    flowers102
 
 .. note::
