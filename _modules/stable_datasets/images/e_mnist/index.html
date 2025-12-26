@@ -125,6 +125,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/flowers102/">Flowers102</a></li>
 </ul>
 </li>
@@ -173,96 +174,125 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.e_mnist</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">scipy.io</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sio</span>
-</span><span id="line-6">
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="line-6"><span class="kn">import</span><span class="w"> </span><span class="nn">scipy.io</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sio</span>
 </span><span id="line-7">
+</span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
+</span><span id="line-9">
+</span><span id="line-10">
 <div class="viewcode-block" id="EMNISTConfig">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.e_mnist.EMNISTConfig">[docs]</a>
-</span><span id="line-8"><span class="k">class</span><span class="w"> </span><span class="nc">EMNISTConfig</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">BuilderConfig</span><span class="p">):</span>
-</span><span id="line-9">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="line-10">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span id="line-11">        <span class="bp">self</span><span class="o">.</span><span class="n">variant</span> <span class="o">=</span> <span class="n">variant</span></div>
+</span><span id="line-11"><span class="k">class</span><span class="w"> </span><span class="nc">EMNISTConfig</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">BuilderConfig</span><span class="p">):</span>
+</span><span id="line-12">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variant</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="line-13">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span id="line-14">        <span class="bp">self</span><span class="o">.</span><span class="n">variant</span> <span class="o">=</span> <span class="n">variant</span></div>
 
-</span><span id="line-12">
-</span><span id="line-13">
+</span><span id="line-15">
+</span><span id="line-16">
 <div class="viewcode-block" id="EMNIST">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST">[docs]</a>
-</span><span id="line-14"><span class="k">class</span><span class="w"> </span><span class="nc">EMNIST</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-15">    <span class="n">BUILDER_CONFIGS</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="line-16">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;byclass&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;byclass&quot;</span><span class="p">),</span>
-</span><span id="line-17">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;bymerge&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;bymerge&quot;</span><span class="p">),</span>
-</span><span id="line-18">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;balanced&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;balanced&quot;</span><span class="p">),</span>
-</span><span id="line-19">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;letters&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;letters&quot;</span><span class="p">),</span>
-</span><span id="line-20">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;digits&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;digits&quot;</span><span class="p">),</span>
-</span><span id="line-21">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">),</span>
-</span><span id="line-22">    <span class="p">]</span>
-</span><span id="line-23">
-</span><span id="line-24">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-25">        <span class="n">variant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">variant</span>
-</span><span id="line-26">        <span class="k">if</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;byclass&quot;</span><span class="p">:</span>
-</span><span id="line-27">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">62</span>
-</span><span id="line-28">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;bymerge&quot;</span><span class="p">:</span>
-</span><span id="line-29">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">47</span>
-</span><span id="line-30">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;balanced&quot;</span><span class="p">:</span>
-</span><span id="line-31">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">47</span>
-</span><span id="line-32">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;letters&quot;</span><span class="p">:</span>
-</span><span id="line-33">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">26</span>
-</span><span id="line-34">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;digits&quot;</span><span class="p">:</span>
-</span><span id="line-35">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">10</span>
-</span><span id="line-36">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;mnist&quot;</span><span class="p">:</span>
-</span><span id="line-37">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">10</span>
-</span><span id="line-38">
-</span><span id="line-39">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-40">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;EMNIST dataset&quot;</span><span class="p">,</span>
-</span><span id="line-41">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-42">                <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">)}</span>
-</span><span id="line-43">            <span class="p">),</span>
-</span><span id="line-44">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-45">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://www.nist.gov/itl/iad/image-group/emnist-dataset&quot;</span><span class="p">,</span>
-</span><span id="line-46">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@misc{cohen2017emnistextensionmnisthandwritten,</span>
-</span><span id="line-47"><span class="s2">                        title={EMNIST: an extension of MNIST to handwritten letters},</span>
-</span><span id="line-48"><span class="s2">                        author={Gregory Cohen and Saeed Afshar and Jonathan Tapson and André van Schaik},</span>
-</span><span id="line-49"><span class="s2">                        year=</span><span class="si">{2017}</span><span class="s2">,</span>
-</span><span id="line-50"><span class="s2">                        eprint=</span><span class="si">{1702.05373}</span><span class="s2">,</span>
-</span><span id="line-51"><span class="s2">                        archivePrefix=</span><span class="si">{arXiv}</span><span class="s2">,</span>
-</span><span id="line-52"><span class="s2">                        primaryClass=</span><span class="si">{cs.CV}</span><span class="s2">,</span>
-</span><span id="line-53"><span class="s2">                        url={https://arxiv.org/abs/1702.05373},</span>
-</span><span id="line-54"><span class="s2">            }&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-55">        <span class="p">)</span>
-</span><span id="line-56">
-</span><span id="line-57">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-58">        <span class="n">variant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">variant</span>
-</span><span id="line-59">        <span class="c1"># Download and extract the matlab.zip file</span>
-</span><span id="line-60">        <span class="n">extracted_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download_and_extract</span><span class="p">(</span><span class="s2">&quot;https://biometrics.nist.gov/cs_links/EMNIST/matlab.zip&quot;</span><span class="p">)</span>
-</span><span id="line-61">
-</span><span id="line-62">        <span class="c1"># The extracted_path now points to the directory containing &quot;matlab&quot; folder</span>
-</span><span id="line-63">        <span class="c1"># The .mat files are likely in extracted_path/matlab/</span>
-</span><span id="line-64">        <span class="n">mat_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extracted_path</span><span class="p">,</span> <span class="s2">&quot;matlab&quot;</span><span class="p">)</span>
-</span><span id="line-65">        <span class="n">mat_file</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;emnist-</span><span class="si">{</span><span class="n">variant</span><span class="si">}</span><span class="s2">.mat&quot;</span>
-</span><span id="line-66">        <span class="n">mat_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">mat_dir</span><span class="p">,</span> <span class="n">mat_file</span><span class="p">)</span>
-</span><span id="line-67">
-</span><span id="line-68">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-69">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span> <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;mat_path&quot;</span><span class="p">:</span> <span class="n">mat_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">}),</span>
-</span><span id="line-70">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;mat_path&quot;</span><span class="p">:</span> <span class="n">mat_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">}),</span>
-</span><span id="line-71">        <span class="p">]</span>
-</span><span id="line-72">
-</span><span id="line-73">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mat_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
-</span><span id="line-74">        <span class="n">data</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">mat_path</span><span class="p">)</span>
-</span><span id="line-75">        <span class="n">dataset</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-</span><span id="line-76">        <span class="n">subset</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">split</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
-</span><span id="line-77">
-</span><span id="line-78">        <span class="n">images</span> <span class="o">=</span> <span class="n">subset</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">]</span>
-</span><span id="line-79">        <span class="n">labels</span> <span class="o">=</span> <span class="n">subset</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
-</span><span id="line-80">
-</span><span id="line-81">        <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
-</span><span id="line-82">        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-</span><span id="line-83">
-</span><span id="line-84">        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">lbl</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">)):</span>
-</span><span id="line-85">            <span class="k">yield</span> <span class="n">idx</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">img</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lbl</span><span class="p">)}</span></div>
+</span><span id="line-17"><span class="k">class</span><span class="w"> </span><span class="nc">EMNIST</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-18"><span class="w">    </span><span class="sd">&quot;&quot;&quot;EMNIST (Extended MNIST) Dataset</span>
+</span><span id="line-19">
+</span><span id="line-20"><span class="sd">    Abstract</span>
+</span><span id="line-21"><span class="sd">    EMNIST is a set of handwritten characters derived from the NIST Special Database 19 and converted to a 28x28 pixel format that directly matches the MNIST dataset. It serves as a challenging &quot;drop-in&quot; replacement for MNIST, introducing handwritten letters and a larger variety of writing styles while preserving the original file structure and pixel density.</span>
+</span><span id="line-22">
+</span><span id="line-23"><span class="sd">    Context</span>
+</span><span id="line-24"><span class="sd">    While the original MNIST dataset is considered &quot;solved&quot; by modern architectures, EMNIST restores the challenge by providing a larger, more diverse benchmark. It bridges the gap between simple digit recognition and complex handwriting tasks, offering up to 62 classes (digits + uppercase + lowercase) to test generalization and writer-independent recognition.</span>
+</span><span id="line-25">
+</span><span id="line-26"><span class="sd">    Content</span>
+</span><span id="line-27"><span class="sd">    The dataset contains up to 814,255 grayscale images (28x28). It is provided in six split configurations to suit different needs:</span>
+</span><span id="line-28"><span class="sd">    * **ByClass** &amp; **ByMerge**: Full unbalanced sets (up to 62 classes).</span>
+</span><span id="line-29"><span class="sd">    * **Balanced**: 131,600 images across 47 classes (ideal for benchmarking).</span>
+</span><span id="line-30"><span class="sd">    * **Letters**: 145,600 images across 26 classes (A-Z).</span>
+</span><span id="line-31"><span class="sd">    * **Digits** &amp; **MNIST**: 280,000+ images across 10 classes (0-9).</span>
+</span><span id="line-32"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-33">
+</span><span id="line-34">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-35">
+</span><span id="line-36">    <span class="c1"># Single source-of-truth for dataset provenance + download locations.</span>
+</span><span id="line-37">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-38">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://www.nist.gov/itl/iad/image-group/emnist-dataset&quot;</span><span class="p">,</span>
+</span><span id="line-39">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@misc{cohen2017emnistextensionmnisthandwritten,</span>
+</span><span id="line-40"><span class="s2">                        title={EMNIST: an extension of MNIST to handwritten letters},</span>
+</span><span id="line-41"><span class="s2">                        author={Gregory Cohen and Saeed Afshar and Jonathan Tapson and André van Schaik},</span>
+</span><span id="line-42"><span class="s2">                        year=</span><span class="si">{2017}</span><span class="s2">,</span>
+</span><span id="line-43"><span class="s2">                        eprint=</span><span class="si">{1702.05373}</span><span class="s2">,</span>
+</span><span id="line-44"><span class="s2">                        archivePrefix=</span><span class="si">{arXiv}</span><span class="s2">,</span>
+</span><span id="line-45"><span class="s2">                        primaryClass=</span><span class="si">{cs.CV}</span><span class="s2">,</span>
+</span><span id="line-46"><span class="s2">                        url={https://arxiv.org/abs/1702.05373},</span>
+</span><span id="line-47"><span class="s2">            }&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-48">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-49">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://biometrics.nist.gov/cs_links/EMNIST/matlab.zip&quot;</span><span class="p">,</span>
+</span><span id="line-50">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://biometrics.nist.gov/cs_links/EMNIST/matlab.zip&quot;</span><span class="p">,</span>
+</span><span id="line-51">        <span class="p">},</span>
+</span><span id="line-52">    <span class="p">}</span>
+</span><span id="line-53">
+</span><span id="line-54">    <span class="n">BUILDER_CONFIGS</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="line-55">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;byclass&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;byclass&quot;</span><span class="p">),</span>
+</span><span id="line-56">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;bymerge&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;bymerge&quot;</span><span class="p">),</span>
+</span><span id="line-57">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;balanced&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;balanced&quot;</span><span class="p">),</span>
+</span><span id="line-58">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;letters&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;letters&quot;</span><span class="p">),</span>
+</span><span id="line-59">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;digits&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;digits&quot;</span><span class="p">),</span>
+</span><span id="line-60">        <span class="n">EMNISTConfig</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;mnist&quot;</span><span class="p">),</span>
+</span><span id="line-61">    <span class="p">]</span>
+</span><span id="line-62">
+</span><span id="line-63">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-64">        <span class="n">variant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">variant</span>
+</span><span id="line-65">        <span class="k">if</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;byclass&quot;</span><span class="p">:</span>
+</span><span id="line-66">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">62</span>
+</span><span id="line-67">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;bymerge&quot;</span><span class="p">:</span>
+</span><span id="line-68">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">47</span>
+</span><span id="line-69">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;balanced&quot;</span><span class="p">:</span>
+</span><span id="line-70">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">47</span>
+</span><span id="line-71">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;letters&quot;</span><span class="p">:</span>
+</span><span id="line-72">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">26</span>
+</span><span id="line-73">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;digits&quot;</span><span class="p">:</span>
+</span><span id="line-74">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="line-75">        <span class="k">elif</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;mnist&quot;</span><span class="p">:</span>
+</span><span id="line-76">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">10</span>
+</span><span id="line-77">        <span class="k">else</span><span class="p">:</span>
+</span><span id="line-78">            <span class="n">num_classes</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="line-79">
+</span><span id="line-80">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-81">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The EMNIST dataset is an image classification dataset of 28x28 grayscale handwritten character images, organized into 6 distinct configurations (ByClass, ByMerge, Balanced, Letters, Digits, MNIST) ranging from 10 to 62 classes. See https://www.nist.gov/itl/iad/image-group/emnist-dataset for more information.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-82">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-83">                <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">)}</span>
+</span><span id="line-84">            <span class="p">),</span>
+</span><span id="line-85">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-86">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-87">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-88">        <span class="p">)</span>
+</span><span id="line-89">
+</span><span id="line-90">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-91"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the ZIP archives of images and labels.&quot;&quot;&quot;</span>
+</span><span id="line-92">        <span class="n">variant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">variant</span>
+</span><span id="line-93">        <span class="n">mat_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;matlab/emnist-</span><span class="si">{</span><span class="n">variant</span><span class="si">}</span><span class="s2">.mat&quot;</span>
+</span><span id="line-94">
+</span><span id="line-95">        <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">z</span><span class="p">:</span>
+</span><span id="line-96">            <span class="k">with</span> <span class="n">z</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">mat_filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-97">                <span class="n">mat_data_bytes</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+</span><span id="line-98">                <span class="n">data</span> <span class="o">=</span> <span class="n">sio</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">mat_data_bytes</span><span class="p">)</span>
+</span><span id="line-99">
+</span><span id="line-100">        <span class="n">dataset</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;dataset&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+</span><span id="line-101">        <span class="n">subset</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="n">split</span><span class="p">][</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+</span><span id="line-102">
+</span><span id="line-103">        <span class="n">images</span> <span class="o">=</span> <span class="n">subset</span><span class="p">[</span><span class="s2">&quot;images&quot;</span><span class="p">]</span>
+</span><span id="line-104">        <span class="n">labels</span> <span class="o">=</span> <span class="n">subset</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
+</span><span id="line-105">
+</span><span id="line-106">        <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+</span><span id="line-107">
+</span><span id="line-108">        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+</span><span id="line-109">
+</span><span id="line-110">        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">lbl</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">)):</span>
+</span><span id="line-111">            <span class="n">lbl</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lbl</span><span class="p">)</span>
+</span><span id="line-112">            <span class="k">if</span> <span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;letters&quot;</span><span class="p">:</span>
+</span><span id="line-113">                <span class="n">lbl</span> <span class="o">-=</span> <span class="mi">1</span>  <span class="c1"># Letters are 1-26 in the dataset, shift to 0-25</span>
+</span><span id="line-114">            <span class="k">yield</span> <span class="n">idx</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">img</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">lbl</span><span class="p">)}</span></div>
 
 </span></code></pre></div>
     </div></div>

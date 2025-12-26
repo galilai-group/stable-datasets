@@ -7,9 +7,9 @@
 <meta content="white" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="black" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CIFAR-100-C | stable-datasets</title>
-<meta content="CIFAR-100-C | stable-datasets" property="og:title"/>
-<meta content="CIFAR-100-C | stable-datasets" name="twitter:title"/>
+<title>EMNIST | stable-datasets</title>
+<meta content="EMNIST | stable-datasets" property="og:title"/>
+<meta content="EMNIST | stable-datasets" name="twitter:title"/>
 <link href="../../_static/pygments.css?v=91c1d931" rel="stylesheet" type="text/css"/>
 <link href="../../_static/theme.css?v=42baaae4" rel="stylesheet" type="text/css"/>
 <link href="../../_static/sphinx-design.min.css?v=95c83b7e" rel="stylesheet" type="text/css"/>
@@ -20,8 +20,8 @@
 <link href="../../_static/awesome-sphinx-design.css?v=15e0fffa" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
-<link href="../cars196/" rel="next" title="CARS-196"/>
-<link href="../cifar10_c/" rel="prev" title="CIFAR-10-C"/>
+<link href="../flowers102/" rel="next" title="Flowers102"/>
+<link href="../medmnist/" rel="prev" title="MedMNIST"/>
 <script>
     <!-- Prevent Flash of wrong theme -->
       const userPreference = localStorage.getItem('darkMode');
@@ -86,13 +86,13 @@
 <li class="toctree-l2"><a class="reference internal" href="../cifar10/">CIFAR-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar100/">CIFAR-100</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar10_c/">CIFAR-10-C</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">CIFAR-100-C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../dtd/">Describable Textures Dataset (DTD)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../medmnist/">MedMNIST</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../e_mnist/">EMNIST</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flowers102/">Flowers102</a></li>
 </ul>
 </li>
@@ -119,24 +119,77 @@
 </svg>
 </a>
 <div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../">Datasets</a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">CIFAR-100-C</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">EMNIST</span>
 </nav>
 <div id="content" role="main">
-<section id="cifar-100-c">
-<h1>CIFAR-100-C<a class="headerlink" href="#cifar-100-c" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
+<section id="emnist">
+<h1>EMNIST<a class="headerlink" href="#emnist" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
 <p style="display: flex; gap: 10px;">
-<img alt="Task: Robustness Evaluation" src="https://img.shields.io/badge/Task-Robustness%20Evaluation-blue"/>
-<img alt="Classes: 100" src="https://img.shields.io/badge/Classes-100-green"/>
-<img alt="Image Size: 32x32" src="https://img.shields.io/badge/Size-32x32-orange"/>
-<img alt="Corruptions: 19" src="https://img.shields.io/badge/Corruptions-19-red"/>
+<img alt="Task: Image Classification" src="https://img.shields.io/badge/Task-Image%20Classification-blue"/>
+<img alt="Classes: 10-62" src="https://img.shields.io/badge/Classes-10--62-green"/>
+<img alt="Image Size: 28x28" src="https://img.shields.io/badge/Size-28x28-orange"/>
 </p><section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#overview'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>CIFAR-100-C is a corrupted version of the CIFAR-100 dataset designed for benchmarking neural network robustness to common corruptions and perturbations. It consists of the CIFAR-100 test set with 19 different types of corruptions applied at 5 severity levels each.</p>
-<ul class="simple">
-<li><p><strong>Test</strong>: 950,000 images (19 corruptions × 5 severity levels × 10,000 images)</p></li>
-<li><p><strong>Train</strong>: N/A (test-only dataset for robustness evaluation)</p></li>
-</ul>
-<p>The dataset includes corruptions such as noise, blur, weather effects, and digital artifacts to evaluate how well models trained on clean CIFAR-100 data generalize to corrupted inputs.</p>
+<p>The EMNIST (Extended MNIST) dataset is a set of handwritten character digits and letters derived from the NIST Special Database 19. It is designed to follow the exact same file structure and processing as the original MNIST dataset, serving as a drop-in replacement that is significantly harder due to the inclusion of letters.</p>
+<p>The dataset includes <strong>6 different splits (configurations)</strong>. The number of images varies by configuration:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%"/>
+<col style="width: 20.0%"/>
+<col style="width: 20.0%"/>
+<col style="width: 20.0%"/>
+<col style="width: 20.0%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Config</p></th>
+<th class="head"><p>Classes</p></th>
+<th class="head"><p>Train Images</p></th>
+<th class="head"><p>Test Images</p></th>
+<th class="head"><p>Total</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>digits</strong></p></td>
+<td><p>10</p></td>
+<td><p>240,000</p></td>
+<td><p>40,000</p></td>
+<td><p>280,000</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>letters</strong></p></td>
+<td><p>26</p></td>
+<td><p>124,800</p></td>
+<td><p>20,800</p></td>
+<td><p>145,600</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>mnist</strong></p></td>
+<td><p>10</p></td>
+<td><p>60,000</p></td>
+<td><p>10,000</p></td>
+<td><p>70,000</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>balanced</strong></p></td>
+<td><p>47</p></td>
+<td><p>112,800</p></td>
+<td><p>18,800</p></td>
+<td><p>131,600</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>byclass</strong></p></td>
+<td><p>62</p></td>
+<td><p>697,932</p></td>
+<td><p>116,323</p></td>
+<td><p>814,255</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>bymerge</strong></p></td>
+<td><p>47</p></td>
+<td><p>697,932</p></td>
+<td><p>116,323</p></td>
+<td><p>814,255</p></td>
+</tr>
+</tbody>
+</table>
+<p>All images are 28×28 grayscale.</p>
+<a class="reference internal image-reference" href="../../_images/e_mnist_teaser.png"><img alt="../../_images/e_mnist_teaser.png" class="align-center" src="../../_images/e_mnist_teaser.png" style="width: 90%;">
+</img></a>
 </section>
 <section id="data-structure">
 <h2>Data Structure<a class="headerlink" href="#data-structure" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#data-structure'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
@@ -154,106 +207,55 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">PIL.Image.Image</span></code></p></td>
-<td><p>32×32×3 RGB corrupted image</p></td>
+<tr class="row-even"><td><p>image</p></td>
+<td><p>PIL.Image.Image</p></td>
+<td><p>28×28 grayscale handwritten character image</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
+<tr class="row-odd"><td><p>label</p></td>
 <td><p>int</p></td>
-<td><p>Fine-grained class label (0-99)</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">corruption_name</span></code></p></td>
-<td><p>str</p></td>
-<td><p>Type of corruption applied (e.g., “gaussian_noise”, “fog”)</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">corruption_level</span></code></p></td>
-<td><p>int</p></td>
-<td><p>Severity level of corruption (1-5, where 5 is most severe)</p></td>
+<td><p>Class label (Range depends on the selected config)</p></td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="corruption-types">
-<h2>Corruption Types<a class="headerlink" href="#corruption-types" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#corruption-types'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>The dataset includes 19 corruption types across different categories:</p>
-<p><strong>Noise:</strong>
-- <code class="docutils literal notranslate"><span class="pre">gaussian_noise</span></code>
-- <code class="docutils literal notranslate"><span class="pre">shot_noise</span></code>
-- <code class="docutils literal notranslate"><span class="pre">impulse_noise</span></code>
-- <code class="docutils literal notranslate"><span class="pre">speckle_noise</span></code></p>
-<p><strong>Blur:</strong>
-- <code class="docutils literal notranslate"><span class="pre">defocus_blur</span></code>
-- <code class="docutils literal notranslate"><span class="pre">glass_blur</span></code>
-- <code class="docutils literal notranslate"><span class="pre">motion_blur</span></code>
-- <code class="docutils literal notranslate"><span class="pre">zoom_blur</span></code>
-- <code class="docutils literal notranslate"><span class="pre">gaussian_blur</span></code></p>
-<p><strong>Weather:</strong>
-- <code class="docutils literal notranslate"><span class="pre">snow</span></code>
-- <code class="docutils literal notranslate"><span class="pre">frost</span></code>
-- <code class="docutils literal notranslate"><span class="pre">fog</span></code></p>
-<p><strong>Digital:</strong>
-- <code class="docutils literal notranslate"><span class="pre">brightness</span></code>
-- <code class="docutils literal notranslate"><span class="pre">contrast</span></code>
-- <code class="docutils literal notranslate"><span class="pre">elastic_transform</span></code>
-- <code class="docutils literal notranslate"><span class="pre">pixelate</span></code>
-- <code class="docutils literal notranslate"><span class="pre">jpeg_compression</span></code>
-- <code class="docutils literal notranslate"><span class="pre">saturate</span></code>
-- <code class="docutils literal notranslate"><span class="pre">spatter</span></code></p>
-</section>
 <section id="usage-example">
 <h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage-example'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p><strong>Basic Usage</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.cifar100_c</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIFAR100C</span>
+<section id="basic-usage">
+<h3>Basic Usage<a class="headerlink" href="#basic-usage" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#basic-usage'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h3>
+<p>You must specify a <code class="docutils literal notranslate"><span class="pre">config_name</span></code> when loading EMNIST to choose the split (e.g., <code class="docutils literal notranslate"><span class="pre">"digits"</span></code>, <code class="docutils literal notranslate"><span class="pre">"letters"</span></code>, <code class="docutils literal notranslate"><span class="pre">"balanced"</span></code>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.e_mnist</span><span class="w"> </span><span class="kn">import</span> <span class="n">EMNIST</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="c1"># Load the test set (only split available)</span>
-</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">CIFAR100C</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
-</span><span id="line-5">
-</span><span id="line-6"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-7"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label", "corruption_name", "corruption_level"}</span>
-</span><span id="line-8"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Corruption: </span><span class="si">{</span><span class="n">sample</span><span class="p">[</span><span class="s1">'corruption_name'</span><span class="p">]</span><span class="si">}</span><span class="s2"> at level </span><span class="si">{</span><span class="n">sample</span><span class="p">[</span><span class="s1">'corruption_level'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-3"><span class="c1"># Load the 'digits' variant (0-9)</span>
+</span><span id="line-4"><span class="n">ds_train</span> <span class="o">=</span> <span class="n">EMNIST</span><span class="p">(</span><span class="n">config_name</span><span class="o">=</span><span class="s2">"digits"</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
+</span><span id="line-5"><span class="n">ds_test</span> <span class="o">=</span> <span class="n">EMNIST</span><span class="p">(</span><span class="n">config_name</span><span class="o">=</span><span class="s2">"digits"</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="c1"># Load the 'letters' variant (A-Z)</span>
+</span><span id="line-8"><span class="n">ds_letters</span> <span class="o">=</span> <span class="n">EMNIST</span><span class="p">(</span><span class="n">config_name</span><span class="o">=</span><span class="s2">"letters"</span><span class="p">,</span> <span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
 </span><span id="line-9">
-</span><span id="line-10"><span class="c1"># Optional: make it PyTorch-friendly</span>
-</span><span id="line-11"><span class="n">ds_torch</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
-</span></code></pre></div>
-</div>
-<p><strong>Typical Workflow</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.cifar100</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIFAR100</span>
-</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.cifar100_c</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIFAR100C</span>
-</span><span id="line-3">
-</span><span id="line-4"><span class="c1"># Train on clean CIFAR-100</span>
-</span><span id="line-5"><span class="n">train_data</span> <span class="o">=</span> <span class="n">CIFAR100</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
-</span><span id="line-6"><span class="c1"># ... train your model ...</span>
-</span><span id="line-7">
-</span><span id="line-8"><span class="c1"># Evaluate robustness on CIFAR-100-C</span>
-</span><span id="line-9"><span class="n">test_data</span> <span class="o">=</span> <span class="n">CIFAR100C</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
-</span><span id="line-10"><span class="c1"># ... evaluate on corrupted images ...</span>
+</span><span id="line-10"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds_train</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-11"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label"}</span>
+</span><span id="line-12">
+</span><span id="line-13"><span class="c1"># Optional: make it PyTorch-friendly</span>
+</span><span id="line-14"><span class="n">ds_train_torch</span> <span class="o">=</span> <span class="n">ds_train</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
 </section>
-<section id="related-datasets">
-<h2>Related Datasets<a class="headerlink" href="#related-datasets" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#related-datasets'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="../cifar100/"><span class="doc">CIFAR-100</span></a>: Original clean CIFAR-100 dataset for training</p></li>
-<li><p><a class="reference internal" href="../cifar10/"><span class="doc">CIFAR-10</span></a>: Simplified version with 10 classes</p></li>
-<li><p><a class="reference internal" href="../cifar10_c/"><span class="doc">CIFAR-10-C</span></a>: Corrupted version of CIFAR-10 for robustness evaluation</p></li>
-</ul>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#references'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<ul class="simple">
-<li><p>Paper: Benchmarking Neural Network Robustness to Common Corruptions and Perturbations (ICLR 2019)</p></li>
-<li><p>Zenodo: <a class="reference external" href="https://zenodo.org/records/3555552" rel="nofollow noopener">https://zenodo.org/records/3555552<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
-<li><p>License: CC BY 4.0</p></li>
-</ul>
+<p>Official website: <a class="reference external" href="https://www.nist.gov/itl/iad/image-group/emnist-dataset" rel="nofollow noopener">https://www.nist.gov/itl/iad/image-group/emnist-dataset<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@article</span><span class="p">{</span><span class="nl">hendrycks2019robustness</span><span class="p">,</span>
-</span><span id="line-2"><span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{Benchmarking Neural Network Robustness to Common Corruptions and Perturbations}</span><span class="p">,</span>
-</span><span id="line-3"><span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Dan Hendrycks and Thomas Dietterich}</span><span class="p">,</span>
-</span><span id="line-4"><span class="w">  </span><span class="na">journal</span><span class="p">=</span><span class="s">{Proceedings of the International Conference on Learning Representations}</span><span class="p">,</span>
-</span><span id="line-5"><span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2019}</span>
-</span><span id="line-6"><span class="p">}</span>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@misc</span><span class="p">{</span><span class="nl">cohen2017emnistextensionmnisthandwritten</span><span class="p">,</span>
+</span><span id="line-2"><span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{EMNIST: an extension of MNIST to handwritten letters}</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Gregory Cohen and Saeed Afshar and Jonathan Tapson and André van Schaik}</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2017}</span><span class="p">,</span>
+</span><span id="line-5"><span class="w">  </span><span class="na">eprint</span><span class="p">=</span><span class="s">{1702.05373}</span><span class="p">,</span>
+</span><span id="line-6"><span class="w">  </span><span class="na">archivePrefix</span><span class="p">=</span><span class="s">{arXiv}</span><span class="p">,</span>
+</span><span id="line-7"><span class="w">  </span><span class="na">primaryClass</span><span class="p">=</span><span class="s">{cs.CV}</span><span class="p">,</span>
+</span><span id="line-8"><span class="w">  </span><span class="na">url</span><span class="p">=</span><span class="s">{https://arxiv.org/abs/1702.05373}</span><span class="p">,</span>
+</span><span id="line-9"><span class="p">}</span>
 </span></code></pre></div>
 </div>
 </section>
@@ -263,9 +265,10 @@
 <ul>
 <li><a :data-current="activeSection === '#overview'" class="reference internal" href="#overview">Overview</a></li>
 <li><a :data-current="activeSection === '#data-structure'" class="reference internal" href="#data-structure">Data Structure</a></li>
-<li><a :data-current="activeSection === '#corruption-types'" class="reference internal" href="#corruption-types">Corruption Types</a></li>
-<li><a :data-current="activeSection === '#usage-example'" class="reference internal" href="#usage-example">Usage Example</a></li>
-<li><a :data-current="activeSection === '#related-datasets'" class="reference internal" href="#related-datasets">Related Datasets</a></li>
+<li><a :data-current="activeSection === '#usage-example'" class="reference internal" href="#usage-example">Usage Example</a><ul>
+<li><a :data-current="activeSection === '#basic-usage'" class="reference internal" href="#basic-usage">Basic Usage</a></li>
+</ul>
+</li>
 <li><a :data-current="activeSection === '#references'" class="reference internal" href="#references">References</a></li>
 <li><a :data-current="activeSection === '#citation'" class="reference internal" href="#citation">Citation</a></li>
 </ul>
