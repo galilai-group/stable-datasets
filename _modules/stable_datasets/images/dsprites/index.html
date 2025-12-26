@@ -174,88 +174,102 @@
       <h1>Source code for stable_datasets.images.dsprites</h1><div class="highlight"><pre>
 <span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
 </span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-4">
-</span><span id="line-5">
+</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
+</span><span id="line-6">
+</span><span id="line-7">
 <div class="viewcode-block" id="DSprites">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.dsprites.DSprites">[docs]</a>
-</span><span id="line-6"><span class="k">class</span><span class="w"> </span><span class="nc">DSprites</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-7"><span class="w">    </span><span class="sd">&quot;&quot;&quot;TODO: Short description of my dataset.&quot;&quot;&quot;</span>
-</span><span id="line-8">
-</span><span id="line-9">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-10">
-</span><span id="line-11">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-12">        <span class="n">features</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-13">            <span class="p">{</span>
-</span><span id="line-14">                <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-15">                <span class="s2">&quot;orientation&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">),</span>
-</span><span id="line-16">                <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;square&quot;</span><span class="p">,</span> <span class="s2">&quot;ellipse&quot;</span><span class="p">,</span> <span class="s2">&quot;heart&quot;</span><span class="p">]),</span>
-</span><span id="line-17">                <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">),</span>
-</span><span id="line-18">                <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;white&quot;</span><span class="p">]),</span>
-</span><span id="line-19">                <span class="s2">&quot;position_x&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">),</span>
-</span><span id="line-20">                <span class="s2">&quot;position_y&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">),</span>
-</span><span id="line-21">            <span class="p">}</span>
-</span><span id="line-22">        <span class="p">)</span>
-</span><span id="line-23">
-</span><span id="line-24">        <span class="n">homepage</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/deepmind/dsprites-dataset&quot;</span>
-</span><span id="line-25">        <span class="n">license</span> <span class="o">=</span> <span class="s2">&quot;zlib/libpng&quot;</span>
-</span><span id="line-26">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-27">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;dSprites is a dataset of 2D shapes procedurally generated from 6 ground truth independent latent factors. These factors are color, shape, scale, rotation, x and y positions of a sprite.</span>
-</span><span id="line-28"><span class="s2">All possible combinations of these latents are present exactly once, generating N = 737280 total images.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-29">            <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
-</span><span id="line-30">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">),</span>
-</span><span id="line-31">            <span class="n">homepage</span><span class="o">=</span><span class="n">homepage</span><span class="p">,</span>
-</span><span id="line-32">            <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
-</span><span id="line-33">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@misc{dsprites17,</span>
-</span><span id="line-34"><span class="s2">                        author = {Loic Matthey and Irina Higgins and Demis Hassabis and Alexander Lerchner},</span>
-</span><span id="line-35"><span class="s2">                        title = {dSprites: Disentanglement testing Sprites dataset},</span>
-</span><span id="line-36"><span class="s2">                        howpublished= {https://github.com/deepmind/dsprites-dataset/},</span>
-</span><span id="line-37"><span class="s2">                        year = &quot;2017&quot;}&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-38">        <span class="p">)</span>
-</span><span id="line-39">
-</span><span id="line-40">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-41">        <span class="n">archive</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span>
-</span><span id="line-42">            <span class="s2">&quot;https://github.com/google-deepmind/dsprites-dataset/raw/refs/heads/master/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz&quot;</span>
-</span><span id="line-43">        <span class="p">)</span>
-</span><span id="line-44">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-45">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-46">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-47">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive&quot;</span><span class="p">:</span> <span class="n">archive</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">},</span>
-</span><span id="line-48">            <span class="p">),</span>
-</span><span id="line-49">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-50">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-51">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive&quot;</span><span class="p">:</span> <span class="n">archive</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">},</span>
-</span><span id="line-52">            <span class="p">),</span>
-</span><span id="line-53">        <span class="p">]</span>
-</span><span id="line-54">
-</span><span id="line-55">    <span class="c1"># method parameters are unpacked from `gen_kwargs` as given in `_split_generators`</span>
-</span><span id="line-56">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
-</span><span id="line-57">        <span class="n">dataset_zip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-58">        <span class="n">images</span> <span class="o">=</span> <span class="n">dataset_zip</span><span class="p">[</span><span class="s2">&quot;imgs&quot;</span><span class="p">]</span>
-</span><span id="line-59">        <span class="n">latents_values</span> <span class="o">=</span> <span class="n">dataset_zip</span><span class="p">[</span><span class="s2">&quot;latents_values&quot;</span><span class="p">]</span>
-</span><span id="line-60">
-</span><span id="line-61">        <span class="c1"># Split the indices for train and test</span>
-</span><span id="line-62">        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">))</span>
-</span><span id="line-63">        <span class="n">train_indices</span><span class="p">,</span> <span class="n">test_indices</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
-</span><span id="line-64">
-</span><span id="line-65">        <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span><span class="p">:</span>
-</span><span id="line-66">            <span class="n">selected_indices</span> <span class="o">=</span> <span class="n">train_indices</span>
-</span><span id="line-67">        <span class="k">elif</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;test&quot;</span><span class="p">:</span>
-</span><span id="line-68">            <span class="n">selected_indices</span> <span class="o">=</span> <span class="n">test_indices</span>
-</span><span id="line-69">
-</span><span id="line-70">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">selected_indices</span><span class="p">:</span>
-</span><span id="line-71">            <span class="k">yield</span> <span class="p">(</span>
-</span><span id="line-72">                <span class="nb">int</span><span class="p">(</span><span class="n">key</span><span class="p">),</span>
-</span><span id="line-73">                <span class="p">{</span>  <span class="c1"># Ensure the key is a Python native int</span>
-</span><span id="line-74">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">images</span><span class="p">[</span><span class="n">key</span><span class="p">],</span>
-</span><span id="line-75">                    <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-</span><span id="line-76">                    <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
-</span><span id="line-77">                    <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-</span><span id="line-78">                    <span class="s2">&quot;orientation&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
-</span><span id="line-79">                    <span class="s2">&quot;position_x&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
-</span><span id="line-80">                    <span class="s2">&quot;position_y&quot;</span><span class="p">:</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">key</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
-</span><span id="line-81">                <span class="p">},</span>
-</span><span id="line-82">            <span class="p">)</span></div>
+</span><span id="line-8"><span class="k">class</span><span class="w"> </span><span class="nc">DSprites</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-9"><span class="w">    </span><span class="sd">&quot;&quot;&quot;DSprites</span>
+</span><span id="line-10"><span class="sd">    dSprites is a dataset of 2D shapes procedurally generated from 6 ground truth independent latent factors. These factors are color, shape, scale, rotation, x and y positions of a sprite.&quot;&quot;&quot;</span>
+</span><span id="line-11">
+</span><span id="line-12">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-13">
+</span><span id="line-14">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-15">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/deepmind/dsprites-dataset&quot;</span><span class="p">,</span>
+</span><span id="line-16">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-17">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/google-deepmind/dsprites-dataset/raw/refs/heads/master/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz&quot;</span><span class="p">,</span>
+</span><span id="line-18">        <span class="p">},</span>
+</span><span id="line-19">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@inproceedings{higgins2017beta,</span>
+</span><span id="line-20"><span class="s2">                    title={beta-vae: Learning basic visual concepts with a constrained variational framework},</span>
+</span><span id="line-21"><span class="s2">                    author={Higgins, Irina and Matthey, Loic and Pal, Arka and Burgess, Christopher and Glorot, Xavier and Botvinick, Matthew and Mohamed, Shakir and Lerchner, Alexander},</span>
+</span><span id="line-22"><span class="s2">                    booktitle={International conference on learning representations},</span>
+</span><span id="line-23"><span class="s2">                    year=</span><span class="si">{2017}</span><span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-24">    <span class="p">}</span>
+</span><span id="line-25">
+</span><span id="line-26">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-27">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-28">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;&quot;dSprites dataset: procedurally generated 2D shapes dataset with known ground-truth factors, &quot;</span>
+</span><span id="line-29"><span class="s2">                &quot;commonly used for disentangled representation learning. &quot;</span>
+</span><span id="line-30"><span class="s2">                &quot;Factors: color (1), shape (3), scale (6), orientation (40), position X (32), position Y (32). &quot;</span>
+</span><span id="line-31"><span class="s2">                &quot;Images are 64x64 binary black-and-white.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-32">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-33">                <span class="p">{</span>
+</span><span id="line-34">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>  <span class="c1"># (64, 64), grayscale</span>
+</span><span id="line-35">                    <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>  <span class="c1"># index of the image</span>
+</span><span id="line-36">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Sequence</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)),</span>  <span class="c1"># 6 factor indices (classes)</span>
+</span><span id="line-37">                    <span class="s2">&quot;label_values&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Sequence</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)),</span>  <span class="c1"># 6 factor continuous values</span>
+</span><span id="line-38">                    <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>  <span class="c1"># color index (always 0)</span>
+</span><span id="line-39">                    <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>  <span class="c1"># shape index (0-2)</span>
+</span><span id="line-40">                    <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>  <span class="c1"># scale index (0-5)</span>
+</span><span id="line-41">                    <span class="s2">&quot;orientation&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>  <span class="c1"># orientation index (0-39)</span>
+</span><span id="line-42">                    <span class="s2">&quot;posX&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>  <span class="c1"># posX index (0-31)</span>
+</span><span id="line-43">                    <span class="s2">&quot;posY&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>  <span class="c1"># posY index (0-31)</span>
+</span><span id="line-44">                    <span class="s2">&quot;colorValue&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">),</span>  <span class="c1"># color value (always 1.0)</span>
+</span><span id="line-45">                    <span class="s2">&quot;shapeValue&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">),</span>  <span class="c1"># shape value (1.0, 2.0, 3.0)</span>
+</span><span id="line-46">                    <span class="s2">&quot;scaleValue&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">),</span>  <span class="c1"># scale value (0.5, 1)</span>
+</span><span id="line-47">                    <span class="s2">&quot;orientationValue&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">),</span>  <span class="c1"># orientation value (0, 2pi)</span>
+</span><span id="line-48">                    <span class="s2">&quot;posXValue&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">),</span>  <span class="c1"># posX value (0, 1)</span>
+</span><span id="line-49">                    <span class="s2">&quot;posYValue&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float64&quot;</span><span class="p">),</span>  <span class="c1"># posY value (0, 1)</span>
+</span><span id="line-50">                <span class="p">}</span>
+</span><span id="line-51">            <span class="p">),</span>
+</span><span id="line-52">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-53">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-54">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-55">        <span class="p">)</span>
+</span><span id="line-56">
+</span><span id="line-57">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-58">        <span class="c1"># Load npz</span>
+</span><span id="line-59">        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-60">        <span class="n">images</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;imgs&quot;</span><span class="p">]</span>  <span class="c1"># shape: (737280, 64, 64), uint8</span>
+</span><span id="line-61">        <span class="n">latents_classes</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;latents_classes&quot;</span><span class="p">]</span>  <span class="c1"># shape: (737280, 6), int64</span>
+</span><span id="line-62">        <span class="n">latents_values</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;latents_values&quot;</span><span class="p">]</span>  <span class="c1"># shape: (737280, 6), float64</span>
+</span><span id="line-63">
+</span><span id="line-64">        <span class="c1"># Iterate over images</span>
+</span><span id="line-65">        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)):</span>
+</span><span id="line-66">            <span class="n">img</span> <span class="o">=</span> <span class="n">images</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>  <span class="c1"># (64, 64), uint8</span>
+</span><span id="line-67">            <span class="n">img</span> <span class="o">=</span> <span class="n">img</span> <span class="o">*</span> <span class="mi">255</span>
+</span><span id="line-68">            <span class="c1"># Convert to PIL image, keep grayscale mode</span>
+</span><span id="line-69">            <span class="n">img_pil</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;L&quot;</span><span class="p">)</span>
+</span><span id="line-70">
+</span><span id="line-71">            <span class="n">factors_classes</span> <span class="o">=</span> <span class="n">latents_classes</span><span class="p">[</span>
+</span><span id="line-72">                <span class="n">idx</span>
+</span><span id="line-73">            <span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># [color_idx, shape_idx, scale_idx, orientation_idx, posX_idx, posY_idx]</span>
+</span><span id="line-74">            <span class="n">factors_values</span> <span class="o">=</span> <span class="n">latents_values</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</span><span id="line-75">
+</span><span id="line-76">            <span class="k">yield</span> <span class="p">(</span>
+</span><span id="line-77">                <span class="n">idx</span><span class="p">,</span>
+</span><span id="line-78">                <span class="p">{</span>
+</span><span id="line-79">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">img_pil</span><span class="p">,</span>
+</span><span id="line-80">                    <span class="s2">&quot;index&quot;</span><span class="p">:</span> <span class="n">idx</span><span class="p">,</span>
+</span><span id="line-81">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">factors_classes</span><span class="p">,</span>
+</span><span id="line-82">                    <span class="s2">&quot;label_values&quot;</span><span class="p">:</span> <span class="n">factors_values</span><span class="p">,</span>
+</span><span id="line-83">                    <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">factors_classes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c1"># always 0</span>
+</span><span id="line-84">                    <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">factors_classes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+</span><span id="line-85">                    <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">factors_classes</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span id="line-86">                    <span class="s2">&quot;orientation&quot;</span><span class="p">:</span> <span class="n">factors_classes</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+</span><span id="line-87">                    <span class="s2">&quot;posX&quot;</span><span class="p">:</span> <span class="n">factors_classes</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+</span><span id="line-88">                    <span class="s2">&quot;posY&quot;</span><span class="p">:</span> <span class="n">factors_classes</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+</span><span id="line-89">                    <span class="s2">&quot;colorValue&quot;</span><span class="p">:</span> <span class="n">factors_values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>  <span class="c1"># always 0.0</span>
+</span><span id="line-90">                    <span class="s2">&quot;shapeValue&quot;</span><span class="p">:</span> <span class="n">factors_values</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+</span><span id="line-91">                    <span class="s2">&quot;scaleValue&quot;</span><span class="p">:</span> <span class="n">factors_values</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span id="line-92">                    <span class="s2">&quot;orientationValue&quot;</span><span class="p">:</span> <span class="n">factors_values</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+</span><span id="line-93">                    <span class="s2">&quot;posXValue&quot;</span><span class="p">:</span> <span class="n">factors_values</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+</span><span id="line-94">                    <span class="s2">&quot;posYValue&quot;</span><span class="p">:</span> <span class="n">factors_values</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+</span><span id="line-95">                <span class="p">},</span>
+</span><span id="line-96">            <span class="p">)</span></div>
 
 </span></code></pre></div>
     </div></div>
