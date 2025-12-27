@@ -5,7 +5,7 @@ from PIL import Image
 from stable_datasets.utils import BaseDatasetBuilder
 
 
-class DSprites(BaseDatasetBuilder):
+class DSpritesNoise(BaseDatasetBuilder):
     """DSprites
     dSprites is a dataset of 2D shapes procedurally generated from 6 ground truth independent latent factors. These factors are color, shape, scale, rotation, x and y positions of a sprite."""
 
@@ -16,11 +16,13 @@ class DSprites(BaseDatasetBuilder):
         "assets": {
             "train": "https://github.com/google-deepmind/dsprites-dataset/raw/refs/heads/master/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz",
         },
-        "citation": """@inproceedings{higgins2017beta,
-                    title={beta-vae: Learning basic visual concepts with a constrained variational framework},
-                    author={Higgins, Irina and Matthey, Loic and Pal, Arka and Burgess, Christopher and Glorot, Xavier and Botvinick, Matthew and Mohamed, Shakir and Lerchner, Alexander},
-                    booktitle={International conference on learning representations},
-                    year={2017}""",
+        "citation": """@inproceedings{locatello2019challenging,
+                    title={Challenging Common Assumptions in the Unsupervised Learning of Disentangled Representations},
+                    author={Locatello, Francesco and Bauer, Stefan and Lucic, Mario and Raetsch, Gunnar and Gelly, Sylvain and Sch{\"o}lkopf, Bernhard and Bachem, Olivier},
+                    booktitle={International Conference on Machine Learning},
+                    pages={4114--4124},
+                    year={2019}
+                    }""",
     }
 
     def _info(self):
@@ -28,7 +30,7 @@ class DSprites(BaseDatasetBuilder):
             description=""""dSprites dataset: procedurally generated 2D shapes dataset with known ground-truth factors, "
                 "commonly used for disentangled representation learning. "
                 "Factors: color (1), shape (3), scale (6), orientation (40), position X (32), position Y (32). "
-                "Images are 64x64 binary black-and-white.""",
+                "Images are 64x64x3. The object is white and the background is noise""",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),  # (64, 64), grayscale
@@ -64,9 +66,10 @@ class DSprites(BaseDatasetBuilder):
         # Iterate over images
         for idx in range(len(images)):
             img = images[idx]  # (64, 64), uint8
-            img = img * 255
-            # Convert to PIL image, keep grayscale mode
-            img_pil = Image.fromarray(img, mode="L")
+            img = img.astype(np.float32) / 1.0
+            noise = np.random.uniform(0, 1, size=(64, 64, 3))
+            img_rgb = np.minimum(img[..., None] + noise, 1.0) * 255
+            img_pil = Image.fromarray(img_rgb.astype(np.uint8), mode="RGB")
 
             factors_classes = latents_classes[
                 idx

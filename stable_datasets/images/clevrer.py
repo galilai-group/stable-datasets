@@ -12,9 +12,6 @@ from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder
 
 def _wget_download(url: str, dest_folder: Path) -> Path:
     """Download a file using wget with resume support.
-
-    More reliable for large files and handles redirects properly.
-    Uses wget -c to resume partial downloads.
     """
     dest_folder = Path(dest_folder)
     dest_folder.mkdir(parents=True, exist_ok=True)
@@ -22,8 +19,6 @@ def _wget_download(url: str, dest_folder: Path) -> Path:
     filename = os.path.basename(urlparse(url).path)
     local_path = dest_folder / filename
 
-    # Use wget -c (continue) with -P (directory prefix)
-    # Note: -c and -O together don't work well for resume
     cmd = ["wget", "-c", "--progress=bar:force:noscroll", "-P", str(dest_folder), url]
 
     print(f"Downloading (or resuming): {url}")

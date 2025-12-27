@@ -51,7 +51,11 @@ Available Datasets
    cifar100_c
    cars196
    dtd
+   fashion_mnist
+   k_mnist
    medmnist
+   e_mnist
+   flowers102
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
