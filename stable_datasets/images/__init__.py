@@ -8,22 +8,26 @@ from .cifar10_c import CIFAR10C
 from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .clevrer import CLEVRER
+from .dsprites import DSprites
+from .dsprites_color import DSpritesColor
+from .dsprites_noise import DSpritesNoise
+from .dsprites_scream import DSpritesScream
 from .dtd import DTD
+from .e_mnist import EMNIST
 from .fashion_mnist import FashionMNIST
+from .flowers102 import Flowers102
 from .k_mnist import KMNIST
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
 from .stl10 import STL10
+from .svhn import SVHN
 
 # from .awa2 import AWA2
 # from .beans import Beans
 # from .celeb_a import CelebA
 # from .country211 import Country211
 # from .cub200 import CUB200
-# from .dsprites import DSprites
-# from .e_mnist import EMNIST
 # from .fgvc_aircraft import FGVCAircraft
-# from .flowers102 import Flowers102
 # from .food101 import Food101
 # from .hasy_v2 import HASYv2
 # from .imagenette import Imagenette
@@ -31,7 +35,6 @@ from .stl10 import STL10
 # from .mnist import MNIST
 # from .places365_small import Places365Small
 # from .rock_paper_scissor import RockPaperScissor
-# from .svhn import SVHN
 # from .tiny_imagenet import TinyImagenet
 # from .tiny_imagenet_c import TinyImagenetC
 
@@ -44,10 +47,17 @@ __all__ = [
     "CIFAR100",
     "CIFAR100C",
     "CLEVRER",
+    "DSprites",
+    "DSpritesColor",
+    "DSpritesNoise",
+    "DSpritesScream",
     "DTD",
+    "EMNIST",
     "FashionMNIST",
+    "Flowers102",
     "KMNIST",
     "MedMNIST",
     "NotMNIST",
     "STL10",
+    "SVHN",
 ]

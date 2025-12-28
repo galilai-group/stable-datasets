@@ -1,3 +1,5 @@
+import os
+
 import datasets
 import numpy as np
 from PIL import Image
@@ -5,7 +7,14 @@ from PIL import Image
 from stable_datasets.utils import BaseDatasetBuilder
 
 
-class DSprites(BaseDatasetBuilder):
+_THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+
+_PROJECT_ROOT = os.path.abspath(os.path.join(_THIS_DIR, "..", ".."))
+
+scream_path = os.path.join(_PROJECT_ROOT, "docs", "source", "datasets", "imgs", "scream.png")
+
+
+class DSpritesScream(BaseDatasetBuilder):
     """DSprites
     dSprites is a dataset of 2D shapes procedurally generated from 6 ground truth independent latent factors. These factors are color, shape, scale, rotation, x and y positions of a sprite."""
 
@@ -55,22 +64,39 @@ class DSprites(BaseDatasetBuilder):
         )
 
     def _generate_examples(self, data_path, split):
-        # Load npz
+        # Load dSprites data
         data = np.load(data_path, allow_pickle=True)
         images = data["imgs"]  # shape: (737280, 64, 64), uint8
         latents_classes = data["latents_classes"]  # shape: (737280, 6), int64
         latents_values = data["latents_values"]  # shape: (737280, 6), float64
 
+        # Load Scream image once
+        scream_img = Image.open(scream_path).convert("RGB")
+        scream_img = scream_img.resize((350, 274))
+        scream = np.array(scream_img).astype(np.float32) / 255.0  # (H, W, 3)
+
         # Iterate over images
         for idx in range(len(images)):
-            img = images[idx]  # (64, 64), uint8
-            img = img * 255
-            # Convert to PIL image, keep grayscale mode
-            img_pil = Image.fromarray(img, mode="L")
+            img = images[idx].astype(np.float32)  # (64, 64), float32
 
-            factors_classes = latents_classes[
-                idx
-            ].tolist()  # [color_idx, shape_idx, scale_idx, orientation_idx, posX_idx, posY_idx]
+            # Random scream patch
+            x_crop = np.random.randint(0, scream.shape[0] - 64)
+            y_crop = np.random.randint(0, scream.shape[1] - 64)
+            background_patch = scream[x_crop : x_crop + 64, y_crop : y_crop + 64]  # (64, 64, 3)
+
+            # Create mask
+            mask = img == 1
+            mask = mask[..., None]  # (64, 64, 1)
+
+            # Invert object region
+            output_img = np.copy(background_patch)
+            output_img[mask.squeeze()] = 1.0 - background_patch[mask.squeeze()]
+
+            # Convert to RGB PIL
+            img_pil = Image.fromarray((output_img * 255).astype(np.uint8), mode="RGB")
+
+            # Labels
+            factors_classes = latents_classes[idx].tolist()
             factors_values = latents_values[idx].tolist()
 
             yield (
@@ -80,13 +106,13 @@ class DSprites(BaseDatasetBuilder):
                     "index": idx,
                     "label": factors_classes,
                     "label_values": factors_values,
-                    "color": factors_classes[0],  # always 0
+                    "color": factors_classes[0],
                     "shape": factors_classes[1],
                     "scale": factors_classes[2],
                     "orientation": factors_classes[3],
                     "posX": factors_classes[4],
                     "posY": factors_classes[5],
-                    "colorValue": factors_values[0],  # always 0.0
+                    "colorValue": factors_values[0],
                     "shapeValue": factors_values[1],
                     "scaleValue": factors_values[2],
                     "orientationValue": factors_values[3],
