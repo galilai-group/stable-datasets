@@ -50,6 +50,7 @@ dev = [
     "codecov",
     "pre-commit",
     "ruff",
+    "stable-pretraining",
 ]
 
 # Documentation tools
