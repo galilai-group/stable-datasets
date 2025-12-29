@@ -196,17 +196,21 @@ def main(args):
         "max_epochs": args.max_epochs,
     }
 
+    # Use multi-optimizer format (even with single optimizer) to ensure Lightning returns a list
     module = spt.Module(
         backbone=backbone,
         forward=forward,
         hparams=hparams,
         optim={
-            "optimizer": partial(
-                torch.optim.AdamW,
-                lr=args.lr,
-                weight_decay=args.weight_decay,
-            ),
-            "scheduler": "LinearWarmupCosineAnnealing",
+            "main": {
+                "modules": ".*",  # Match all modules
+                "optimizer": partial(
+                    torch.optim.AdamW,
+                    lr=args.lr,
+                    weight_decay=args.weight_decay,
+                ),
+                "scheduler": "LinearWarmupCosineAnnealing",
+            }
         },
     )
 
