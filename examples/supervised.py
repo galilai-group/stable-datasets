@@ -12,6 +12,7 @@ from functools import partial
 
 import lightning as pl
 import torch
+import torchmetrics
 from lightning.pytorch.loggers import WandbLogger
 from transformers import AutoConfig, AutoModelForImageClassification
 import stable_pretraining as spt
@@ -172,12 +173,30 @@ def main(args):
     # Define forward function
     def forward(self, batch, stage):
         batch["logits"] = self.backbone(batch["image"])["logits"]
-        if self.training:
-            loss = torch.nn.functional.cross_entropy(
-                batch["logits"],
-                batch["label"],
-            )
-            batch["loss"] = loss
+
+        # Compute loss
+        loss = torch.nn.functional.cross_entropy(
+            batch["logits"],
+            batch["label"],
+        )
+        batch["loss"] = loss
+
+        # Log loss
+        if stage == "fit":
+            self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        elif stage == "validate":
+            self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        elif stage == "test":
+            self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+
+        # Compute and log accuracy for validation/test
+        if stage in ["validate", "test"]:
+            preds = torch.argmax(batch["logits"], dim=1)
+            # Update metric (accumulates correctly across batches for epoch-level accuracy)
+            self.val_accuracy(preds, batch["label"])
+            # Log the metric - Lightning will compute epoch-level value automatically
+            self.log(f"{stage}_accuracy", self.val_accuracy, on_step=False, on_epoch=True, prog_bar=True)
+
         return batch
 
     # Create backbone
@@ -197,10 +216,12 @@ def main(args):
     }
 
     # Use multi-optimizer format (even with single optimizer) to ensure Lightning returns a list
+    # Add accuracy metric as module attribute for proper epoch-level computation
     module = spt.Module(
         backbone=backbone,
         forward=forward,
         hparams=hparams,
+        val_accuracy=torchmetrics.Accuracy(task="multiclass", num_classes=num_classes),
         optim={
             "optimizer": partial(
                 torch.optim.AdamW,
