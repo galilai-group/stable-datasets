@@ -46,8 +46,8 @@ from .not_mnist import NotMNIST
 from .svhn import SVHN
 
 
-# from .tiny_imagenet import TinyImagenet
-# from .tiny_imagenet_c import TinyImagenetC
+from .tiny_imagenet import TinyImagenet
+from .tiny_imagenet_c import TinyImagenetC
 
 __all__ = [
     "ArabicCharacters",
@@ -71,4 +71,6 @@ __all__ = [
     "NotMNIST",
     "Flowers102",
     "SVHN",
+    "TinyImagenet",
+    "TinyImagenetC",
 ]
