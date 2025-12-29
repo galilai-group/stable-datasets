@@ -1,11 +1,11 @@
-import os
-from pathlib import Path
-import subprocess
-
 import glob
-from loguru import logger as logging
+import os
+import subprocess
+from pathlib import Path
 
 import datasets
+from loguru import logger as logging
+
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder
 
 
@@ -61,13 +61,14 @@ class TinyImagenetC(BaseDatasetBuilder):
         if not (download_dir / filename).exists():
             try:
                 downloaded_file = dl_manager.download(assets["test"])
-            except: 
+            except Exception:
                 # wget fallback directly
-                logging.info(f"[tiny_imagenet_c] ⚠️ Download failed since the data provider killed the connection (Reason: ffspec timeout)\n")
+                logging.info(
+                    "[tiny_imagenet_c] ⚠️ Download failed since the data provider killed the connection (Reason: ffspec timeout)\n"
+                )
                 logging.info(f"[tiny_imagenet_c] 🧪 Fallback: wget downloading {assets['test']} to {download_dir}\n")
         downloaded_file = download_dir / filename
         subprocess.run(["wget", "-c", assets["test"], "-O", str(downloaded_file)], check=True)
-            
 
         url_to_path = {assets["test"]: downloaded_file}
         return [
@@ -79,27 +80,26 @@ class TinyImagenetC(BaseDatasetBuilder):
                 },
             ),
         ]
+
     def _generate_examples(self, data_path, split=None):
-        
-        logging.info(f"[tiny_imagenet_c] Searching for extracted dataset...")
-        if len(glob.glob(os.path.join(data_path._str[:-4], "Tiny-ImageNet-C", "*/*/*/*")))==750000:
+        logging.info("[tiny_imagenet_c] Searching for extracted dataset...")
+        if len(glob.glob(os.path.join(data_path._str[:-4], "Tiny-ImageNet-C", "*/*/*/*"))) == 750000:
             base_path = os.path.join(data_path._str[:-4], "Tiny-ImageNet-C")
             logging.info(f"[tiny_imagenet_c] Extracted dataset found at {base_path} : Total 750,000 images")
         elif os.path.isfile(data_path) and data_path._str.lower().endswith(".tar"):
-            extract_dir = Path(os.path.join(os.path.dirname(data_path), os.path.splitext(os.path.basename(data_path))[0]))
+            extract_dir = Path(
+                os.path.join(os.path.dirname(data_path), os.path.splitext(os.path.basename(data_path))[0])
+            )
             extract_dir.mkdir(parents=True, exist_ok=True)
-            logging.info(f"[tiny_imagenet_c] Extracting dataset... (this may take a while)")
+            logging.info("[tiny_imagenet_c] Extracting dataset... (this may take a while)")
             cmd = f"pv {data_path} | tar -x -C {extract_dir} --skip-old-files"
 
-            subprocess.run(cmd,shell=True)
+            subprocess.run(cmd, shell=True)
             base_path = os.path.join(data_path._str[:-4], "Tiny-ImageNet-C")
-        
-            
 
         print(f"[tiny_imagenet_c] Generating examples from {base_path}")
-       
+
         if split == "test":
-            
             corruption_types = [
                 "gaussian_noise",
                 "shot_noise",
@@ -130,16 +130,20 @@ class TinyImagenetC(BaseDatasetBuilder):
                     # Each corruption/level folder contains subfolders per label (e.g., n01443537)
                     for label_dir in sorted(os.listdir(corruption_dir)):
                         label_path = os.path.join(corruption_dir, label_dir)
-                        if not os.path.isdir(label_path): continue
+                        if not os.path.isdir(label_path):
+                            continue
                         for i, image_file in enumerate(sorted(os.listdir(label_path))):
                             image_path = os.path.join(label_path, image_file)
                             label_str = label_dir
-                            yield f"{corruption_name}_{level}_{label_dir}_{image_file}", {
-                                "image": image_path,
-                                "label": label_str,
-                                "corruption_name": corruption_name,
-                                "corruption_level": level,
-                            }
+                            yield (
+                                f"{corruption_name}_{level}_{label_dir}_{image_file}",
+                                {
+                                    "image": image_path,
+                                    "label": label_str,
+                                    "corruption_name": corruption_name,
+                                    "corruption_level": level,
+                                },
+                            )
         else:
             raise ValueError(f"Unknown split: {split} | expected 'test'")
 

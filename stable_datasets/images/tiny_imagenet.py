@@ -3,6 +3,7 @@ import subprocess
 from pathlib import Path
 
 import datasets
+
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -46,18 +47,24 @@ class TinyImagenet(BaseDatasetBuilder):
         )
 
     def _generate_examples(self, data_path, split):
-
         if os.path.isfile(data_path) and data_path._str.lower().endswith(".zip"):
-            extract_dir = Path(os.path.join(os.path.dirname(data_path), os.path.splitext(os.path.basename(data_path))[0]))
-            extract_dir.mkdir(parents=True, exist_ok=True)
-            print(f"[tiny_imagenet] Extracting dataset... (this may take a while)")
-            subprocess.run(
-                ["unzip", "-nq", data_path, "-d", str(extract_dir)],
-                check=True
+            extract_dir = Path(
+                os.path.join(os.path.dirname(data_path), os.path.splitext(os.path.basename(data_path))[0])
             )
-            base_path = os.path.join(extract_dir, "tiny-imagenet-200") if os.path.isdir(os.path.join(extract_dir, "tiny-imagenet-200")) else extract_dir
+            extract_dir.mkdir(parents=True, exist_ok=True)
+            print("[tiny_imagenet] Extracting dataset... (this may take a while)")
+            subprocess.run(["unzip", "-nq", data_path, "-d", str(extract_dir)], check=True)
+            base_path = (
+                os.path.join(extract_dir, "tiny-imagenet-200")
+                if os.path.isdir(os.path.join(extract_dir, "tiny-imagenet-200"))
+                else extract_dir
+            )
         else:
-            base_path = os.path.join(data_path, "tiny-imagenet-200") if os.path.isdir(os.path.join(data_path, "tiny-imagenet-200")) else data_path
+            base_path = (
+                os.path.join(data_path, "tiny-imagenet-200")
+                if os.path.isdir(os.path.join(data_path, "tiny-imagenet-200"))
+                else data_path
+            )
 
         print(f"[tiny_imagenet] generating examples for split={split} from {base_path}")
 
@@ -300,4 +307,3 @@ class TinyImagenet(BaseDatasetBuilder):
             "n07715103",
             "n02504458",
         ]
-
