@@ -32,7 +32,7 @@ def test_country211_dataset():
     # Test 4: Validate label type and range
     label = sample["label"]
     assert isinstance(label, int), f"Label should be int, got {type(label)}."
-    assert 0 <= label < 212, f"Label should be in range [0, 199], got {label}."
+    assert 0 <= label < 212, f"Label should be in range [0, 211], got {label}."
 
     # Test 5: Load and validate test split
     country211_test = Country211(split="test")
