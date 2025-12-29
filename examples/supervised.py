@@ -202,15 +202,12 @@ def main(args):
         forward=forward,
         hparams=hparams,
         optim={
-            "main": {
-                "modules": ".*",  # Match all modules
-                "optimizer": partial(
-                    torch.optim.AdamW,
-                    lr=args.lr,
-                    weight_decay=args.weight_decay,
-                ),
-                "scheduler": "LinearWarmupCosineAnnealing",
-            }
+            "optimizer": partial(
+                torch.optim.AdamW,
+                lr=args.lr,
+                weight_decay=args.weight_decay,
+            ),
+            "scheduler": "LinearWarmupCosineAnnealing",
         },
     )
 
