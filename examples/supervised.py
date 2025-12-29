@@ -7,6 +7,7 @@ with stable-pretraining, using datasets from stable-datasets.
 """
 
 import argparse
+import os
 from functools import partial
 
 import lightning as pl
@@ -16,6 +17,18 @@ from transformers import AutoConfig, AutoModelForImageClassification
 import stable_pretraining as spt
 
 from stable_pretraining.data import transforms
+
+# Set SLURM_NTASKS_PER_NODE if SLURM_NTASKS is set but SLURM_NTASKS_PER_NODE is not
+# This prevents Lightning from erroring when it detects SLURM but can't find the expected variable
+if "SLURM_NTASKS" in os.environ and "SLURM_NTASKS_PER_NODE" not in os.environ:
+    if "SLURM_NNODES" in os.environ:
+        # Calculate tasks per node
+        ntasks = int(os.environ.get("SLURM_NTASKS", "1"))
+        nnodes = int(os.environ.get("SLURM_NNODES", "1"))
+        os.environ["SLURM_NTASKS_PER_NODE"] = str(ntasks // nnodes)
+    else:
+        # If we can't determine nodes, just set it to the same as NTASKS
+        os.environ["SLURM_NTASKS_PER_NODE"] = os.environ.get("SLURM_NTASKS", "1")
 
 
 def get_dataset_class(dataset_name: str):
@@ -215,8 +228,6 @@ def main(args):
     logger.log_hyperparams(hparams)
 
     trainer = pl.Trainer(
-        accelerator="gpu" if torch.cuda.is_available() else "cpu",
-        devices=1,
         max_epochs=args.max_epochs,
         num_sanity_val_steps=1,
         callbacks=[lr_monitor],
