@@ -215,6 +215,8 @@ def main(args):
     logger.log_hyperparams(hparams)
 
     trainer = pl.Trainer(
+        accelerator="gpu" if torch.cuda.is_available() else "cpu",
+        devices=1,
         max_epochs=args.max_epochs,
         num_sanity_val_steps=1,
         callbacks=[lr_monitor],

@@ -52,6 +52,7 @@ dev = [
     "ruff",
     "stable-pretraining",
     "transformers",
+    "wandb",
 ]
 
 # Documentation tools
