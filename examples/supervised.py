@@ -246,6 +246,9 @@ def main(args):
         name=run_name,
     )
 
+    # Configure WandB to use epoch as x-axis
+    logger.experiment.define_metric("*", step_metric="epoch")
+
     # Log hyperparameters to wandb
     logger.log_hyperparams(hparams)
 
