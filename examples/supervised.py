@@ -61,6 +61,30 @@ def get_num_classes(dataset):
     raise ValueError("Could not determine number of classes from dataset label feature")
 
 
+class HFDatasetWrapper(spt.data.Dataset):
+    """Wrapper for pre-loaded HuggingFace datasets with transform support."""
+
+    def __init__(self, hf_dataset, transform=None):
+        super().__init__(transform)
+        self.hf_dataset = hf_dataset
+        # Add sample_idx if not present
+        if "sample_idx" not in hf_dataset.column_names:
+            self.hf_dataset = hf_dataset.add_column(
+                "sample_idx", list(range(hf_dataset.num_rows))
+            )
+
+    def __getitem__(self, idx):
+        sample = self.hf_dataset[idx]
+        return self.process_sample(sample)
+
+    def __len__(self):
+        return len(self.hf_dataset)
+
+    @property
+    def column_names(self):
+        return self.hf_dataset.column_names
+
+
 def get_data_loaders(args, dataset_class):
     """Get train and validation data loaders for the specified dataset."""
     # Load the dataset
@@ -90,8 +114,8 @@ def get_data_loaders(args, dataset_class):
     )
 
     # Wrap the HuggingFace dataset for stable-pretraining
-    train_dataset = spt.data.HFDataset(
-        dataset=train_dataset_raw,
+    train_dataset = HFDatasetWrapper(
+        hf_dataset=train_dataset_raw,
         transform=train_transform,
     )
 
@@ -110,8 +134,8 @@ def get_data_loaders(args, dataset_class):
         transforms.ToImage(mean=mean, std=std),
     )
 
-    val_dataset = spt.data.HFDataset(
-        dataset=test_dataset_raw,
+    val_dataset = HFDatasetWrapper(
+        hf_dataset=test_dataset_raw,
         transform=val_transform,
     )
 
