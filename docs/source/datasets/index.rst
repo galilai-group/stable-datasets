@@ -56,6 +56,7 @@ Available Datasets
    medmnist
    e_mnist
    flowers102
+   linnaeus5
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.

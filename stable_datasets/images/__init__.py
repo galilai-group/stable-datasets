@@ -15,8 +15,6 @@ from .cifar100 import CIFAR100
 # from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .clevrer import CLEVRER
-from .dtd import DTD
-from .e_mnist import EMNIST
 
 # from .country211 import Country211
 # from .cub200 import CUB200
@@ -25,9 +23,11 @@ from .dsprites_color import DSpritesColor
 from .dsprites_noise import DSpritesNoise
 from .dsprites_scream import DSpritesScream
 from .dtd import DTD
+from .e_mnist import EMNIST
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
 from .k_mnist import KMNIST
+from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 
 # from .dtd import DTD
@@ -36,7 +36,6 @@ from .med_mnist import MedMNIST
 # from .food101 import Food101
 # from .hasy_v2 import HASYv2
 # from .imagenette import Imagenette
-# from .linnaeus5 import Linnaeus5
 # from .mnist import MNIST
 from .not_mnist import NotMNIST
 
@@ -71,4 +70,5 @@ __all__ = [
     "NotMNIST",
     "Flowers102",
     "SVHN",
+    "Linnaeus5",
 ]

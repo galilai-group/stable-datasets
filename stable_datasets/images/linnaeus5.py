@@ -1,15 +1,8 @@
 import io
 
 import datasets
+import rarfile
 from PIL import Image
-
-
-# We use rarfile because the original source only provides a RAR archive.
-# Ensure you have 'rarfile' installed and the 'unrar' system executable available.
-try:
-    import rarfile
-except ImportError:
-    raise ImportError("To use the Linnaeus 5 dataset, you must install the 'rarfile' package: pip install rarfile")
 
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -40,7 +33,6 @@ class Linnaeus5(BaseDatasetBuilder):
                       journal={chaladze.com},
                       year={2017}}""",
         "assets": {
-            # Direct link to the 256x256 version (approx 433 MB)
             "data": "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar",
         },
     }
@@ -60,12 +52,6 @@ class Linnaeus5(BaseDatasetBuilder):
         )
 
     def _split_generators(self, dl_manager):
-        """
-        Download the RAR archive.
-        Note: We do not use 'download_and_extract' because standard Python zip/tar
-        tools generally do not support RAR. We pass the archive path to _generate_examples
-        and handle extraction there using 'rarfile'.
-        """
         source = self._source()
         url = source["assets"]["data"]
 
@@ -91,31 +77,20 @@ class Linnaeus5(BaseDatasetBuilder):
     def _generate_examples(self, archive_path, split_name):
         """Iterate over the RAR archive and yield images matching the split."""
 
-        # Expected structure inside RAR:
-        # Linnaeus 5 256X256/train/berry/image.jpg
-        # Linnaeus 5 256X256/test/berry/image.jpg
-
         with rarfile.RarFile(archive_path) as rf:
-            # Filter the list to avoid iterating unnecessary files
             for member in rf.infolist():
                 if member.isdir():
                     continue
 
                 filename = member.filename
-                # Simple check: path must contain the split name (e.g. "/train/") and be an image
                 if f"/{split_name}/" in filename.lower() and filename.lower().endswith((".jpg", ".jpeg")):
-                    # Path is likely: "Linnaeus 5 256X256/train/berry/123.jpg"
-                    # We extract the label from the parent folder name
                     try:
-                        # Split path components
                         parts = filename.replace("\\", "/").split("/")
-                        # Label is the folder name immediately preceding the filename
                         label_name = parts[-2]
                     except IndexError:
                         continue
 
                     if label_name in self._labels():
-                        # Read file bytes
                         with rf.open(member) as f:
                             image_bytes = f.read()
 
