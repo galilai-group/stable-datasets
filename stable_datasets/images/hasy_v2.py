@@ -1,38 +1,28 @@
 import csv
+import io
 import os
+import tarfile
 
 import datasets
 from PIL import Image
 
-from stable_datasets.utils import BaseDatasetBuilder
-
-
-class HASYv2Config(datasets.BuilderConfig):
-    """BuilderConfig for HASYv2."""
-
-    def __init__(self, fold_id=1, **kwargs):
-        """
-        Args:
-            fold_id: int, the fold number (1-10) to use for the split.
-            **kwargs: keyword arguments forwarded to super.
-        """
-        super().__init__(version=datasets.Version("1.0.0"), **kwargs)
-        self.fold_id = fold_id
+from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
 class HASYv2(BaseDatasetBuilder):
     """HASYv2 Dataset
 
     Abstract
-    The HASYv2 dataset contains handwritten symbol images of 369 classes. It includes over 168,000 samples categorized into various classes like Latin characters, numerals, and symbols. Each image is 32x32 pixels in size.
+    The HASYv2 dataset contains handwritten symbol images of 369 classes. It includes over 168,000 samples categorized into various classes like Latin characters, numerals, and symbols. Each image is 32x32 pixels in size. The dataset was created to benchmark the classification of mathematical symbols and handwritten characters.
 
     Context
-    Recognizing handwritten mathematical symbols is challenging due to class similarity and quantity. HASYv2 provides a benchmark for this with 10 pre-defined cross-validation folds.
+    Recognizing handwritten mathematical symbols is a challenging task due to the similarity between classes (e.g., '1', 'l', '|') and the large number of unique symbols used in scientific notation. HASYv2 serves as a standard benchmark for testing classifiers on a large number of classes (369) with low resolution (32x32).
 
     Content
-    - **Images:** 168,236 black-and-white images (32x32).
+    The dataset consists of:
+    - **Images:** 168,236 black-and-white images (32x32 pixels).
     - **Labels:** 369 distinct classes.
-    - **Splits:** 10 pre-defined folds. The configuration determines which fold is loaded.
+    - **Splits:** The dataset includes 10 pre-defined folds. This implementation uses 'Fold 1' as the standard train/test split.
     """
 
     VERSION = datasets.Version("1.0.0")
@@ -47,18 +37,9 @@ class HASYv2(BaseDatasetBuilder):
         "assets": {"data": "https://zenodo.org/record/259444/files/HASYv2.tar.bz2?download=1"},
     }
 
-    # Create configs for fold-1 through fold-10
-    BUILDER_CONFIGS = [
-        HASYv2Config(name=f"fold-{i}", description=f"Use pre-defined cross-validation fold {i}", fold_id=i)
-        for i in range(1, 11)
-    ]
-
-    # Default to fold-1 if no config is specified
-    DEFAULT_CONFIG_NAME = "fold-1"
-
     def _info(self):
         return datasets.DatasetInfo(
-            description=f"HASYv2 dataset (Fold {self.config.fold_id}) with 369 classes.",
+            description="HASYv2 dataset with 369 classes of handwritten symbols.",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
@@ -74,46 +55,68 @@ class HASYv2(BaseDatasetBuilder):
         source = self._source()
         url = source["assets"]["data"]
 
-        base_path = dl_manager.download_and_extract(url)
-
-        # Dynamically select the folder based on the selected config
-        fold_id = self.config.fold_id
-        fold_dir = os.path.join(base_path, "classification-task", f"fold-{fold_id}")
+        local_paths = bulk_download([url], dest_folder=self._raw_download_dir)
+        archive_path = local_paths[0]
 
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
                 gen_kwargs={
-                    "csv_path": os.path.join(fold_dir, "train.csv"),
-                    "base_dir": base_path,
+                    "archive_path": archive_path,
+                    "split_name": "train",
                 },
             ),
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
-                    "csv_path": os.path.join(fold_dir, "test.csv"),
-                    "base_dir": base_path,
+                    "archive_path": archive_path,
+                    "split_name": "test",
                 },
             ),
         ]
 
-    def _generate_examples(self, csv_path, base_dir):
-        with open(csv_path, encoding="utf-8") as f:
-            reader = csv.DictReader(f)
+    def _generate_examples(self, archive_path, split_name):
+        csv_internal_path = f"classification-task/fold-1/{split_name}.csv"
 
-            for idx, row in enumerate(reader):
-                rel_path = row["path"].replace("../", "")
-                image_path = os.path.join(base_dir, rel_path)
+        image_label_map = {}
 
-                if os.path.exists(image_path):
-                    image = Image.open(image_path).convert("RGB")
-                    yield (
-                        idx,
-                        {
-                            "image": image,
-                            "label": str(row["symbol_id"]),
-                        },
-                    )
+        with tarfile.open(archive_path, "r:bz2") as tar:
+            csv_member = None
+            for member in tar.getmembers():
+                if member.name.endswith(csv_internal_path):
+                    csv_member = member
+                    break
+
+            if csv_member:
+                f = tar.extractfile(csv_member)
+                content = f.read().decode("utf-8").splitlines()
+                reader = csv.DictReader(content)
+                for row in reader:
+                    filename = os.path.basename(row["path"])
+                    symbol_id = str(row["symbol_id"])
+                    image_label_map[filename] = symbol_id
+
+            for member in tar.getmembers():
+                if not member.isfile():
+                    continue
+
+                member_filename = os.path.basename(member.name)
+
+                if member_filename in image_label_map:
+                    f = tar.extractfile(member)
+                    if f:
+                        image_bytes = f.read()
+                        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+
+                        label = image_label_map[member_filename]
+
+                        yield (
+                            member.name,
+                            {
+                                "image": image,
+                                "label": label,
+                            },
+                        )
 
     @staticmethod
     def _labels():
