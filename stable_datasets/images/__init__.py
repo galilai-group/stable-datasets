@@ -49,6 +49,10 @@ from .svhn import SVHN
 # from .tiny_imagenet import TinyImagenet
 # from .tiny_imagenet_c import TinyImagenetC
 
+
+from .rsscn7 import RSSCN7
+from .resisc45 import RESISC45
+
 __all__ = [
     "ArabicCharacters",
     "Cars196",
