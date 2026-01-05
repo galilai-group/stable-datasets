@@ -103,6 +103,7 @@ Usage Example
 
     # Load training split
     ds = SmallNORB(split="train")
+    ds_test = SmallNORB(split="test")
 
     # Load both splits
     ds_all = SmallNORB(split=None)
