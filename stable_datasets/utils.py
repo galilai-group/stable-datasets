@@ -332,92 +332,6 @@ def bulk_download(
     return results
 
 
-# def download(
-#     url: str,
-#     dest_folder: str | Path | None = None,
-#     backend: str = "filesystem",
-#     cache_dir: str = DEFAULT_CACHE_DIR,
-#     progress_bar: bool = True,
-#     _progress_dict=None,
-#     _task_id=None,
-# ) -> Path:
-#     """
-#     Download a single file from a URL with caching and optional progress tracking.
-
-#     Args:
-#         url: URL to download from.
-#         dest_folder: Destination folder for the downloaded file. If None,
-#             defaults to ~/.stable_datasets/downloads/.
-#         backend: requests_cache backend (e.g. "filesystem").
-#         cache_dir: Cache directory for requests_cache.
-#         progress_bar: Whether to show a tqdm progress bar (for standalone use).
-#         _progress_dict: Internal shared dict for bulk_download progress reporting.
-#         _task_id: Internal task ID key for bulk_download progress reporting.
-
-#     Returns:
-#         Path: Local path to the downloaded file.
-
-#     Raises:
-#         Exception: Any exception from network/file operations is logged and re-raised.
-#     """
-#     try:
-#         if dest_folder is None:
-#             dest_folder = _default_dest_folder()
-#         dest_folder = Path(dest_folder)
-#         dest_folder.mkdir(parents=True, exist_ok=True)
-
-#         filename = os.path.basename(urlparse(url).path)
-#         local_filename = dest_folder / filename
-#         lock_filename = dest_folder / f"{filename}.lock"
-
-#         # prevent concurrent downloads of the same file
-#         with FileLock(lock_filename):
-#             session = CachedSession(cache_dir, backend=backend)
-#             logging.info(f"Downloading: {url}")
-
-#             head = session.head(url)
-#             total_size = int(head.headers.get("content-length", 0) or 0)
-#             logging.info(f"Total size: {total_size} bytes")
-
-#             response = session.get(url, stream=True)
-#             downloaded = 0
-
-#             with (
-#                 open(local_filename, "wb") as f,
-#                 tqdm(
-#                     desc=local_filename.name,
-#                     total=total_size or None,  # None if size unknown
-#                     unit="B",
-#                     unit_scale=True,
-#                     unit_divisor=1024,
-#                     disable=not progress_bar,
-#                 ) as bar,
-#             ):
-#                 for chunk in response.iter_content(chunk_size=8192):
-#                     if not chunk:
-#                         continue
-#                     f.write(chunk)
-#                     downloaded += len(chunk)
-#                     bar.update(len(chunk))
-
-#                     if _progress_dict is not None and _task_id is not None:
-#                         _progress_dict[_task_id] = {
-#                             "progress": downloaded,
-#                             "total": total_size,
-#                         }
-
-#             if total_size and downloaded != total_size:
-#                 logging.error(f"Download incomplete: got {downloaded} of {total_size} bytes for {url}")
-#             else:
-#                 logging.info(f"Download finished: {local_filename}")
-
-#             return local_filename
-
-#     except Exception as e:
-#         logging.error(f"Error downloading {url}: {e}")
-#         raise e
-
-
 def download(
     url: str,
     dest_folder: str | Path | None = None,
@@ -427,58 +341,81 @@ def download(
     _progress_dict=None,
     _task_id=None,
 ) -> Path:
-    if dest_folder is None:
-        dest_folder = _default_dest_folder()
-    dest_folder = Path(dest_folder)
-    dest_folder.mkdir(parents=True, exist_ok=True)
+    """
+    Download a single file from a URL with caching and optional progress tracking.
 
-    filename = os.path.basename(urlparse(url).path)
-    local_filename = dest_folder / filename
-    lock_filename = dest_folder / f"{filename}.lock"
+    Args:
+        url: URL to download from.
+        dest_folder: Destination folder for the downloaded file. If None,
+            defaults to ~/.stable_datasets/downloads/.
+        backend: requests_cache backend (e.g. "filesystem").
+        cache_dir: Cache directory for requests_cache.
+        progress_bar: Whether to show a tqdm progress bar (for standalone use).
+        _progress_dict: Internal shared dict for bulk_download progress reporting.
+        _task_id: Internal task ID key for bulk_download progress reporting.
 
-    with FileLock(lock_filename):
-        if local_filename.exists() and local_filename.stat().st_size > 0:
-            if local_filename.suffix in {".npz", ".zip"}:
-                with open(local_filename, "rb") as f:
-                    magic = f.read(4)
-                    if magic[:2] != b"PK":
-                        raise RuntimeError(
-                            f"Cached file exists but does not look like a valid ZIP archive: {local_filename}"
-                        )
+    Returns:
+        Path: Local path to the downloaded file.
+
+    Raises:
+        Exception: Any exception from network/file operations is logged and re-raised.
+    """
+    try:
+        if dest_folder is None:
+            dest_folder = _default_dest_folder()
+        dest_folder = Path(dest_folder)
+        dest_folder.mkdir(parents=True, exist_ok=True)
+
+        filename = os.path.basename(urlparse(url).path)
+        local_filename = dest_folder / filename
+        lock_filename = dest_folder / f"{filename}.lock"
+
+        # prevent concurrent downloads of the same file
+        with FileLock(lock_filename):
+            session = CachedSession(cache_dir, backend=backend)
+            logging.info(f"Downloading: {url}")
+
+            head = session.head(url)
+            total_size = int(head.headers.get("content-length", 0) or 0)
+            logging.info(f"Total size: {total_size} bytes")
+
+            response = session.get(url, stream=True)
+            downloaded = 0
+
+            with (
+                open(local_filename, "wb") as f,
+                tqdm(
+                    desc=local_filename.name,
+                    total=total_size or None,  # None if size unknown
+                    unit="B",
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    disable=not progress_bar,
+                ) as bar,
+            ):
+                for chunk in response.iter_content(chunk_size=8192):
+                    if not chunk:
+                        continue
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    bar.update(len(chunk))
+
+                    if _progress_dict is not None and _task_id is not None:
+                        _progress_dict[_task_id] = {
+                            "progress": downloaded,
+                            "total": total_size,
+                        }
+
+            if total_size and downloaded != total_size:
+                logging.error(f"Download incomplete: got {downloaded} of {total_size} bytes for {url}")
+            else:
+                logging.info(f"Download finished: {local_filename}")
+
             return local_filename
 
-        session = CachedSession(cache_dir, backend=backend)
-        logging.info(f"Downloading: {url}")
-
-        head = session.head(url, allow_redirects=True)
-        total_size = int(head.headers.get("content-length", 0) or 0)
-        logging.info(f"Total size: {total_size} bytes")
-
-        response = session.get(url, stream=True)
-        response.raise_for_status()
-
-        downloaded = 0
-        with (
-            open(local_filename, "wb") as f,
-            tqdm(
-                desc=local_filename.name,
-                total=total_size or None,
-                unit="B",
-                unit_scale=True,
-                unit_divisor=1024,
-                disable=not progress_bar,
-            ) as bar,
-        ):
-            for chunk in response.iter_content(chunk_size=8192):
-                if not chunk:
-                    continue
-                f.write(chunk)
-                downloaded += len(chunk)
-                bar.update(len(chunk))
-                if _progress_dict is not None and _task_id is not None:
-                    _progress_dict[_task_id] = {"progress": downloaded, "total": total_size}
-
-        return local_filename
+    except Exception as e:
+        logging.error(f"Error downloading {url}: {e}")
+        raise e
 
 
 def load_from_tsfile_to_dataframe(
