@@ -27,6 +27,7 @@ from .dtd import DTD
 from .e_mnist import EMNIST
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
+from .food101 import Food101
 from .k_mnist import KMNIST
 from .med_mnist import MedMNIST
 
@@ -73,6 +74,7 @@ __all__ = [
     "DTD",
     "NotMNIST",
     "Flowers102",
+    "Food101",
     "SVHN",
     "Shapes3D",
     "SmallNORB",
