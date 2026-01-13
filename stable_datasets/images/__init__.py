@@ -15,8 +15,6 @@ from .cifar100 import CIFAR100
 # from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .clevrer import CLEVRER
-from .dtd import DTD
-from .e_mnist import EMNIST
 
 # from .country211 import Country211
 # from .cub200 import CUB200
@@ -25,6 +23,8 @@ from .dsprites_color import DSpritesColor
 from .dsprites_noise import DSpritesNoise
 from .dsprites_scream import DSpritesScream
 from .dtd import DTD
+from .e_mnist import EMNIST
+from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
 from .k_mnist import KMNIST
@@ -41,7 +41,8 @@ from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
 
 # from .places365_small import Places365Small
-# from .rock_paper_scissor import RockPaperScissor
+from .rock_paper_scissor import RockPaperScissor
+
 # from .stl10 import STL10
 from .svhn import SVHN
 
@@ -62,6 +63,7 @@ __all__ = [
     "DSpritesColor",
     "DSpritesNoise",
     "DSpritesScream",
+    "FacePointing",
     "FashionMNIST",
     "KMNIST",
     "MedMNIST",
@@ -70,5 +72,6 @@ __all__ = [
     "DTD",
     "NotMNIST",
     "Flowers102",
+    "RockPaperScissor",
     "SVHN",
 ]
