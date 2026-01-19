@@ -23,6 +23,8 @@ def generate_teaser(
     output_path: str | None = None,
     figsize_per_sample: float = 1.5,
     variant: str | None = None,
+    download_dir: str | None = None,
+    processed_cache_dir: str | None = None,
 ):
     """
     Generate a teaser figure for a dataset.
@@ -35,6 +37,8 @@ def generate_teaser(
         output_path: Path to save the figure (if None, display instead)
         figsize_per_sample: Width per sample in inches
         variant: Optional dataset variant/config name (e.g. MedMNIST variants)
+        download_dir: Directory for raw downloads used for building the dataset
+        processed_cache_dir: Directory for Arrow cache files from processing the dataset
     """
     # Try to import the dataset
     try:
@@ -53,10 +57,14 @@ def generate_teaser(
 
     # Load the dataset
     print(f"Loading {dataset_name} dataset...")
-    if variant is None:
-        dataset = dataset_class(split="train")
-    else:
-        dataset = dataset_class(split="train", config_name=variant)
+    dataset_kwargs = {"split": "train"}
+    if variant is not None:
+        dataset_kwargs["config_name"] = variant
+    if download_dir is not None:
+        dataset_kwargs["download_dir"] = download_dir
+    if processed_cache_dir is not None:
+        dataset_kwargs["processed_cache_dir"] = processed_cache_dir
+    dataset = dataset_class(**dataset_kwargs)
 
     # Get samples from different classes
     samples = []
@@ -229,6 +237,18 @@ Examples:
         default=1.5,
         help="Width per sample in inches (default: 1.5)",
     )
+    parser.add_argument(
+        "--download-dir",
+        type=str,
+        default=None,
+        help="Directory for raw downloads used for building the dataset",
+    )
+    parser.add_argument(
+        "--processed-cache-dir",
+        type=str,
+        default=None,
+        help="Directory for Arrow cache files from processing the dataset",
+    )
 
     args = parser.parse_args()
 
@@ -240,6 +260,8 @@ Examples:
         output_path=args.output,
         figsize_per_sample=args.figsize,
         variant=args.variant,
+        download_dir=args.download_dir,
+        processed_cache_dir=args.processed_cache_dir,
     )
 
 
