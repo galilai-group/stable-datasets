@@ -15,8 +15,8 @@ import torch
 import torchmetrics
 from lightning.pytorch.loggers import WandbLogger
 from transformers import AutoConfig, AutoModelForImageClassification
-import stable_pretraining as spt
 
+import stable_pretraining as spt
 from stable_pretraining.data import transforms
 
 # Set SLURM_NTASKS_PER_NODE if SLURM_NTASKS is set but SLURM_NTASKS_PER_NODE is not
@@ -100,10 +100,53 @@ class HFDatasetWrapper(spt.data.Dataset):
 
 
 def get_data_loaders(args, dataset_class):
-    """Get train and validation data loaders for the specified dataset."""
-    # Load the dataset
-    train_dataset_raw = dataset_class(split="train")
-    test_dataset_raw = dataset_class(split="test")
+    """Get train, validation, and test data loaders for the specified dataset."""
+    # Load the dataset to check available splits
+    all_splits = dataset_class(split=None)
+
+    # Check if validation split exists
+    has_validation = False
+    if isinstance(all_splits, dict):
+        # Check for common validation split names
+        validation_split_name = None
+        for split_name in ["validation", "val", "valid"]:
+            if split_name in all_splits:
+                validation_split_name = split_name
+                has_validation = True
+                break
+
+        if has_validation:
+            # Use existing validation split
+            train_dataset_raw = all_splits["train"]
+            val_dataset_raw = all_splits[validation_split_name]
+            test_dataset_raw = all_splits["test"]
+        else:
+            # Split train dataset to create validation set
+            train_dataset_raw = all_splits["train"]
+            test_dataset_raw = all_splits["test"]
+            # Use 80% for training, 20% for validation
+            split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=42)
+            train_dataset_raw = split_dict["train"]
+            val_dataset_raw = split_dict["test"]
+    else:
+        # Fallback: load individually and split if needed
+        train_dataset_raw = dataset_class(split="train")
+        test_dataset_raw = dataset_class(split="test")
+        # Try to load validation split with different name variations
+        val_dataset_raw = None
+        for split_name in ["validation", "val", "valid"]:
+            try:
+                val_dataset_raw = dataset_class(split=split_name)
+                has_validation = True
+                break
+            except (ValueError, KeyError):
+                continue
+        
+        if not has_validation:
+            # Split train dataset to create validation set
+            split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=42)
+            train_dataset_raw = split_dict["train"]
+            val_dataset_raw = split_dict["test"]
 
     # Infer number of classes from the dataset
     num_classes = get_num_classes(train_dataset_raw)
@@ -149,7 +192,7 @@ def get_data_loaders(args, dataset_class):
     )
 
     val_dataset = HFDatasetWrapper(
-        hf_dataset=test_dataset_raw,
+        hf_dataset=val_dataset_raw,
         transform=val_transform,
     )
 
@@ -159,7 +202,19 @@ def get_data_loaders(args, dataset_class):
         num_workers=args.num_workers,
     )
 
-    return train_loader, val_loader, num_classes
+    # Create test loader
+    test_dataset = HFDatasetWrapper(
+        hf_dataset=test_dataset_raw,
+        transform=val_transform,
+    )
+
+    test_loader = torch.utils.data.DataLoader(
+        dataset=test_dataset,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+    )
+
+    return train_loader, val_loader, test_loader, num_classes
 
 
 def main(args):
@@ -167,8 +222,8 @@ def main(args):
     dataset_class = get_dataset_class(args.dataset)
 
     # Get data loaders
-    train_loader, val_loader, num_classes = get_data_loaders(args, dataset_class)
-    data_module = spt.data.DataModule(train=train_loader, val=val_loader)
+    train_loader, val_loader, test_loader, num_classes = get_data_loaders(args, dataset_class)
+    data_module = spt.data.DataModule(train=train_loader, val=val_loader, test=test_loader)
 
     # Define forward function
     def forward(self, batch, stage):
@@ -242,7 +297,7 @@ def main(args):
     run_name = f"{model_name}-{args.dataset.lower()}"
 
     logger = WandbLogger(
-        project=args.wandb_project if args.wandb_project else "stable-datasets-testing",
+        project=args.wandb_project,
         name=run_name,
     )
 
@@ -252,20 +307,57 @@ def main(args):
     # Log hyperparameters to wandb
     logger.log_hyperparams(hparams)
 
+    # Setup checkpoint callback to save best model based on validation accuracy
+    # Include model and dataset name in filename, but don't include epoch/accuracy to avoid multiple checkpoints
+    checkpoint_filename = f"best-{model_name}-{args.dataset.lower()}"
+    checkpoint_callback = pl.pytorch.callbacks.ModelCheckpoint(
+        monitor="val_accuracy",
+        mode="max",
+        save_top_k=1,
+        filename=checkpoint_filename,
+    )
+
     trainer = pl.Trainer(
         max_epochs=args.max_epochs,
         num_sanity_val_steps=1,
-        callbacks=[lr_monitor],
+        callbacks=[lr_monitor, checkpoint_callback],
         precision="16-mixed",
         logger=logger,
         sync_batchnorm=True,
-        enable_checkpointing=False,
+        enable_checkpointing=True,
     )
 
     # Train and validate
     manager = spt.Manager(trainer=trainer, module=module, data=data_module)
     manager()
-    manager.validate()
+
+    # Load best checkpoint and evaluate on test set
+    if checkpoint_callback.best_model_path and checkpoint_callback.best_model_path != "":
+        print(f"Loading best checkpoint: {checkpoint_callback.best_model_path}")
+        # Load best module from checkpoint
+        best_module = spt.Module.load_from_checkpoint(
+            checkpoint_callback.best_model_path,
+            backbone=backbone,
+            forward=forward,
+            hparams=hparams,
+            val_accuracy=torchmetrics.Accuracy(task="multiclass", num_classes=num_classes),
+            optim={
+                "optimizer": partial(
+                    torch.optim.AdamW,
+                    lr=args.lr,
+                    weight_decay=args.weight_decay,
+                ),
+                "scheduler": "LinearWarmupCosineAnnealing",
+            },
+        )
+
+        # Evaluate on test set with best checkpoint using the same data_module
+        test_manager = spt.Manager(trainer=trainer, module=best_module, data=data_module)
+        test_manager.test()
+    else:
+        print("No checkpoint saved, evaluating on test set with current model")
+        test_manager = spt.Manager(trainer=trainer, module=module, data=data_module)
+        test_manager.test()
 
 
 if __name__ == "__main__":
@@ -299,8 +391,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--image_size",
         type=int,
-        default=32,
-        help="Image size (default: 32)",
+        default=224,
+        help="Image size (default: 224)",
     )
     parser.add_argument(
         "--lr",
@@ -323,8 +415,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--wandb_project",
         type=str,
-        default=None,
-        help="W&B project name (default: stable-datasets-testing)",
+        default="stable-datasets",
+        help="W&B project name (default: stable-datasets)",
     )
 
     args = parser.parse_args()
