@@ -318,30 +318,46 @@ def main(args):
         args.image_size, args.batch_size, args.lr, args.weight_decay, args.max_epochs, args.seed
     )
 
+    # Create a unique key for this hyperparams combination (sorted tuple for consistency)
+    hyperparams_key = tuple(sorted(hyperparams.items()))
+
     # Check if results already exist
     results_file = args.results_file
     results = load_results(results_file)
 
-    # Check if this model/dataset combination already exists with same hyperparams
+    # Check if this exact model/dataset/hyperparams combination already exists
     model_results = results.get(model_name, {})
     if dataset_name in model_results:
-        existing_entry = model_results[dataset_name]
-        existing_hyperparams = existing_entry.get("hyperparams", {})
-
-        # Compare hyperparameters
-        if existing_hyperparams == hyperparams:
-            print(f"Results already exist for {model_name}/{dataset_name} with matching hyperparameters:")
-            print(json.dumps(existing_entry, indent=2))
-            if not args.force_rerun:
-                print("Skipping training. Use --force_rerun to override.")
-                return
-            else:
-                print("--force_rerun specified, continuing with training...")
+        dataset_results = model_results[dataset_name]
+        # Check if it's a dict with hyperparams key (new format) or old format (single entry)
+        if isinstance(dataset_results, dict) and "entries" in dataset_results:
+            # New format: multiple entries per dataset
+            entries = dataset_results["entries"]
+            for entry in entries:
+                existing_hyperparams = entry.get("hyperparams", {})
+                existing_key = tuple(sorted(existing_hyperparams.items()))
+                if existing_key == hyperparams_key:
+                    print(f"Results already exist for {model_name}/{dataset_name} with matching hyperparameters:")
+                    print(json.dumps(entry, indent=2))
+                    if not args.force_rerun:
+                        print("Skipping training. Use --force_rerun to override.")
+                        return
+                    else:
+                        print("--force_rerun specified, continuing with training...")
+                        break
         else:
-            print(f"Results exist for {model_name}/{dataset_name} but with different hyperparameters:")
-            print(f"Existing: {existing_hyperparams}")
-            print(f"Current: {hyperparams}")
-            print("Continuing with training with new hyperparameters...")
+            # Old format: single entry, check if hyperparams match
+            existing_entry = dataset_results if isinstance(dataset_results, dict) else {}
+            existing_hyperparams = existing_entry.get("hyperparams", {})
+            existing_key = tuple(sorted(existing_hyperparams.items()))
+            if existing_key == hyperparams_key:
+                print(f"Results already exist for {model_name}/{dataset_name} with matching hyperparameters:")
+                print(json.dumps(existing_entry, indent=2))
+                if not args.force_rerun:
+                    print("Skipping training. Use --force_rerun to override.")
+                    return
+                else:
+                    print("--force_rerun specified, continuing with training...")
 
     # Load dataset class
     dataset_class = get_dataset_class(args.dataset)
@@ -515,7 +531,7 @@ def main(args):
         print("Warning: test_accuracy not found in metrics")
         test_accuracy = 0.0
 
-    # Save results in nested structure: model -> dataset -> entry
+    # Save results in nested structure: model -> dataset -> entries (list)
     result_entry = {
         "hyperparams": hyperparams,
         "test_accuracy": test_accuracy,
@@ -525,7 +541,39 @@ def main(args):
     if model_name not in results:
         results[model_name] = {}
 
-    results[model_name][dataset_name] = result_entry
+    if dataset_name not in results[model_name]:
+        # First entry for this dataset
+        results[model_name][dataset_name] = {"entries": [result_entry]}
+    else:
+        # Check if we need to update existing entry or add new one
+        dataset_results = results[model_name][dataset_name]
+        if isinstance(dataset_results, dict) and "entries" in dataset_results:
+            # New format: list of entries
+            entries = dataset_results["entries"]
+            # Check if entry with same hyperparams exists
+            found = False
+            for i, entry in enumerate(entries):
+                existing_hyperparams = entry.get("hyperparams", {})
+                existing_key = tuple(sorted(existing_hyperparams.items()))
+                if existing_key == hyperparams_key:
+                    # Update existing entry
+                    entries[i] = result_entry
+                    found = True
+                    break
+            if not found:
+                # Add new entry
+                entries.append(result_entry)
+        else:
+            # Old format: convert to new format
+            existing_entry = dataset_results if isinstance(dataset_results, dict) else {}
+            existing_hyperparams = existing_entry.get("hyperparams", {})
+            existing_key = tuple(sorted(existing_hyperparams.items()))
+            if existing_key == hyperparams_key:
+                # Same hyperparams, update
+                results[model_name][dataset_name] = {"entries": [result_entry]}
+            else:
+                # Different hyperparams, add as new entry
+                results[model_name][dataset_name] = {"entries": [existing_entry, result_entry]}
 
     save_results(results, results_file)
     print(f"\nResults saved for {model_name}/{dataset_name}:")
