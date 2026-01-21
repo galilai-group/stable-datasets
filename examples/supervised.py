@@ -12,7 +12,6 @@ import os
 import random
 from functools import partial
 from pathlib import Path
-
 import lightning as pl
 import numpy as np
 import torch
@@ -176,7 +175,7 @@ class HFDatasetWrapper(spt.data.Dataset):
 
 def get_data_loaders(args, dataset_class, seed=42):
     """Get train, validation, and test data loaders for the specified dataset.
-    
+
     Args:
         args: Arguments object containing dataset configuration
         dataset_class: Dataset class to instantiate
@@ -222,7 +221,7 @@ def get_data_loaders(args, dataset_class, seed=42):
                 break
             except (ValueError, KeyError):
                 continue
-        
+
         if not has_validation:
             # Split train dataset to create validation set
             split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=seed)
@@ -322,13 +321,13 @@ def main(args):
     # Check if results already exist
     results_file = args.results_file
     results = load_results(results_file)
-    
+
     # Check if this model/dataset combination already exists with same hyperparams
     model_results = results.get(model_name, {})
     if dataset_name in model_results:
         existing_entry = model_results[dataset_name]
         existing_hyperparams = existing_entry.get("hyperparams", {})
-        
+
         # Compare hyperparameters
         if existing_hyperparams == hyperparams:
             print(f"Results already exist for {model_name}/{dataset_name} with matching hyperparameters:")
@@ -493,45 +492,41 @@ def main(args):
         test_manager.test()
         test_trainer = test_manager._trainer
 
-    # Extract test_accuracy from the module's metric directly (most reliable)
-    # The metric is stored as val_accuracy in the module and accumulates during test_step
+    # Extract test_accuracy from trainer metrics (most reliable after test completes)
     test_accuracy = None
-    test_module = test_manager.instantiated_module
-    if hasattr(test_module, "val_accuracy"):
-        try:
-            test_accuracy = float(test_module.val_accuracy.compute().item())
-        except Exception as e:
-            print(f"Warning: Could not compute metric from module: {e}")
-    
-    # Fallback: check trainer metrics if direct access failed
-    if test_accuracy is None:
-        if hasattr(test_trainer, "logged_metrics") and "test_accuracy" in test_trainer.logged_metrics:
-            value = test_trainer.logged_metrics["test_accuracy"]
-            if torch.is_tensor(value):
-                value = value.item()
-            test_accuracy = float(value)
-        elif hasattr(test_trainer, "callback_metrics") and "test_accuracy" in test_trainer.callback_metrics:
-            value = test_trainer.callback_metrics["test_accuracy"]
-            if torch.is_tensor(value):
-                value = value.item()
-            test_accuracy = float(value)
-    
+
+    # Debug: print available metrics
+    print(f"Available logged_metrics: {list(test_trainer.logged_metrics.keys()) if hasattr(test_trainer, 'logged_metrics') else 'None'}")
+    print(f"Available callback_metrics: {list(test_trainer.callback_metrics.keys()) if hasattr(test_trainer, 'callback_metrics') else 'None'}")
+
+    # Check trainer metrics first (where Lightning stores final test results)
+    if hasattr(test_trainer, "logged_metrics") and "test_accuracy" in test_trainer.logged_metrics:
+        value = test_trainer.logged_metrics["test_accuracy"]
+        if torch.is_tensor(value):
+            value = value.item()
+        test_accuracy = float(value)
+    elif hasattr(test_trainer, "callback_metrics") and "test_accuracy" in test_trainer.callback_metrics:
+        value = test_trainer.callback_metrics["test_accuracy"]
+        if torch.is_tensor(value):
+            value = value.item()
+        test_accuracy = float(value)
+
     if test_accuracy is None:
         print("Warning: test_accuracy not found in metrics")
         test_accuracy = 0.0
-    
+
     # Save results in nested structure: model -> dataset -> entry
     result_entry = {
         "hyperparams": hyperparams,
         "test_accuracy": test_accuracy,
     }
-    
+
     # Initialize nested structure if needed
     if model_name not in results:
         results[model_name] = {}
-    
+
     results[model_name][dataset_name] = result_entry
-    
+
     save_results(results, results_file)
     print(f"\nResults saved for {model_name}/{dataset_name}:")
     print(json.dumps(result_entry, indent=2))
