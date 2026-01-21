@@ -481,11 +481,15 @@ def main(args):
 
         # Evaluate on test set with best checkpoint using the same data_module
         test_manager = spt.Manager(trainer=trainer, module=best_module, data=data_module)
+        # Set _trainer manually since we're not calling __call__ which would set it
+        test_manager._trainer = trainer
         test_manager.test()
         test_trainer = test_manager._trainer
     else:
         print("No checkpoint saved, evaluating on test set with current model")
         test_manager = spt.Manager(trainer=trainer, module=module, data=data_module)
+        # Set _trainer manually since we're not calling __call__ which would set it
+        test_manager._trainer = trainer
         test_manager.test()
         test_trainer = test_manager._trainer
 
