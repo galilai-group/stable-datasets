@@ -47,9 +47,13 @@ def main(kwargs, job_dir):
 
     # Build command
     script_path = Path(__file__).parent / "supervised.py"
+    # Fix libstdc++ compatibility: conda activate in non-interactive shells may not set LD_LIBRARY_PATH
+    # Explicitly set it to use conda's libstdc++ instead of system's older version
+    conda_prefix = "/users/hleyang/miniconda3/envs/sdata"
     command = (
         "source /users/hleyang/miniconda3/etc/profile.d/conda.sh && "
         "conda activate sdata && "
+        f"export LD_LIBRARY_PATH={conda_prefix}/lib:$LD_LIBRARY_PATH && "
         f"python -u {script_path} "
         f"--dataset {dataset} "
         f"--model {model} "
