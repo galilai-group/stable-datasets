@@ -429,14 +429,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         type=str,
-        default="microsoft/resnet-18",
+        default="microsoft/resnet-50",
         help="Model name from HuggingFace (default: microsoft/resnet-18)",
     )
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=512,
-        help="Batch size (default: 512)",
+        default=128,
+        help="Batch size (default: 128)",
     )
     parser.add_argument(
         "--num_workers",
@@ -453,20 +453,20 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lr",
         type=float,
-        default=1e-3,
-        help="Learning rate (default: 1e-3)",
+        default=5e-4,
+        help="Learning rate (default: 5e-4)",
     )
     parser.add_argument(
         "--weight_decay",
         type=float,
-        default=5e-4,
-        help="Weight decay (default: 5e-4)",
+        default=0.02,
+        help="Weight decay (default: 0.02)",
     )
     parser.add_argument(
         "--max_epochs",
         type=int,
-        default=50,
-        help="Maximum number of epochs (default: 50)",
+        default=100,
+        help="Maximum number of epochs (default: 100)",
     )
     parser.add_argument(
         "--wandb_project",
