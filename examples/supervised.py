@@ -52,7 +52,7 @@ def get_dataset_class(dataset_name: str):
         )
 
 
-def get_hyperparams_dict(image_size, batch_size, lr, weight_decay, max_epochs):
+def get_hyperparams_dict(image_size, batch_size, lr, weight_decay, max_epochs, seed):
     """Generate hyperparameters dictionary."""
     return {
         "image_size": image_size,
@@ -60,6 +60,7 @@ def get_hyperparams_dict(image_size, batch_size, lr, weight_decay, max_epochs):
         "lr": lr,
         "weight_decay": weight_decay,
         "max_epochs": max_epochs,
+        "seed": seed,
     }
 
 
@@ -108,12 +109,13 @@ def get_num_classes(dataset):
     raise ValueError("Could not determine number of classes from dataset label feature")
 
 
-def compute_normalization_stats(dataset, sample_size=10000):
+def compute_normalization_stats(dataset, sample_size=10000, seed=42):
     """Compute mean and standard deviation for normalization from a dataset.
 
     Args:
         dataset: HuggingFace dataset containing 'image' field
         sample_size: Number of samples to use for computation (default: 10000)
+        seed: Random seed for reproducibility (default: 42)
 
     Returns:
         tuple: (mean, std) as lists of length 3 for RGB channels
@@ -126,8 +128,8 @@ def compute_normalization_stats(dataset, sample_size=10000):
 
     # Sample subset for faster computation
     actual_sample_size = min(sample_size, len(dataset))
-    random.seed(42)
-    np.random.seed(42)
+    random.seed(seed)
+    np.random.seed(seed)
     indices = np.random.choice(len(dataset), actual_sample_size, replace=False)
 
     for idx in indices:
@@ -172,8 +174,14 @@ class HFDatasetWrapper(spt.data.Dataset):
         return self.hf_dataset.column_names
 
 
-def get_data_loaders(args, dataset_class):
-    """Get train, validation, and test data loaders for the specified dataset."""
+def get_data_loaders(args, dataset_class, seed=42):
+    """Get train, validation, and test data loaders for the specified dataset.
+    
+    Args:
+        args: Arguments object containing dataset configuration
+        dataset_class: Dataset class to instantiate
+        seed: Random seed for data splitting (default: 42)
+    """
     # Load the dataset to check available splits
     all_splits = dataset_class(split=None)
 
@@ -198,7 +206,7 @@ def get_data_loaders(args, dataset_class):
             train_dataset_raw = all_splits["train"]
             test_dataset_raw = all_splits["test"]
             # Use 80% for training, 20% for validation
-            split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=42)
+            split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=seed)
             train_dataset_raw = split_dict["train"]
             val_dataset_raw = split_dict["test"]
     else:
@@ -217,7 +225,7 @@ def get_data_loaders(args, dataset_class):
         
         if not has_validation:
             # Split train dataset to create validation set
-            split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=42)
+            split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=seed)
             train_dataset_raw = split_dict["train"]
             val_dataset_raw = split_dict["test"]
 
@@ -228,7 +236,7 @@ def get_data_loaders(args, dataset_class):
     image_size = args.image_size
 
     # Compute normalization statistics from training set
-    mean, std = compute_normalization_stats(train_dataset_raw)
+    mean, std = compute_normalization_stats(train_dataset_raw, seed=seed)
 
     # Scale GaussianBlur kernel size with image size
     # Use (3, 3) for small images, (5, 5) for larger images
@@ -308,7 +316,7 @@ def main(args):
     model_name = args.model.split("/")[-1] if "/" in args.model else args.model
     dataset_name = args.dataset.lower()
     hyperparams = get_hyperparams_dict(
-        args.image_size, args.batch_size, args.lr, args.weight_decay, args.max_epochs
+        args.image_size, args.batch_size, args.lr, args.weight_decay, args.max_epochs, args.seed
     )
 
     # Check if results already exist
@@ -340,7 +348,7 @@ def main(args):
     dataset_class = get_dataset_class(args.dataset)
 
     # Get data loaders
-    train_loader, val_loader, test_loader, num_classes = get_data_loaders(args, dataset_class)
+    train_loader, val_loader, test_loader, num_classes = get_data_loaders(args, dataset_class, seed=args.seed)
     data_module = spt.data.DataModule(train=train_loader, val=val_loader, test=test_loader)
 
     # Define forward function
@@ -386,6 +394,7 @@ def main(args):
         "lr": args.lr,
         "weight_decay": args.weight_decay,
         "max_epochs": args.max_epochs,
+        "seed": args.seed,
     }
 
     # Use multi-optimizer format (even with single optimizer) to ensure Lightning returns a list
@@ -445,7 +454,7 @@ def main(args):
     )
 
     # Train and validate
-    manager = spt.Manager(trainer=trainer, module=module, data=data_module)
+    manager = spt.Manager(trainer=trainer, module=module, data=data_module, seed=args.seed)
     manager()
 
     # Load best checkpoint and evaluate on test set
@@ -590,6 +599,12 @@ if __name__ == "__main__":
         "--force_rerun",
         action="store_true",
         help="Force re-run training even if results already exist",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility (default: 42)",
     )
 
     args = parser.parse_args()
