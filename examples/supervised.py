@@ -7,9 +7,11 @@ with stable-pretraining, using datasets from stable-datasets.
 """
 
 import argparse
+import fcntl
 import json
 import os
 import random
+import time
 from functools import partial
 from pathlib import Path
 import lightning as pl
@@ -63,21 +65,62 @@ def get_hyperparams_dict(image_size, batch_size, lr, weight_decay, max_epochs, s
     }
 
 
-def load_results(results_file="results.json"):
-    """Load results from JSON file."""
+def load_results(results_file="results.json", max_retries=10, retry_delay=0.1):
+    """Load results from JSON file with file locking to prevent race conditions."""
     results_path = Path(results_file)
-    if results_path.exists():
-        with open(results_path, "r") as f:
-            return json.load(f)
+    if not results_path.exists():
+        return {}
+
+    for attempt in range(max_retries):
+        try:
+            with open(results_path, "r") as f:
+                # Acquire shared lock for reading
+                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                try:
+                    return json.load(f)
+                finally:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        except (IOError, OSError, json.JSONDecodeError) as e:
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                continue
+            else:
+                print(f"Warning: Failed to load results after {max_retries} attempts: {e}")
+                return {}
     return {}
 
 
-def save_results(results, results_file="results.json"):
-    """Save results to JSON file."""
+def save_results(results, results_file="results.json", max_retries=10, retry_delay=0.1):
+    """Save results to JSON file with file locking to prevent race conditions."""
     results_path = Path(results_file)
     results_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(results_path, "w") as f:
-        json.dump(results, f, indent=2)
+
+    # Use atomic write: write to temp file first, then rename
+    temp_path = results_path.with_suffix('.tmp')
+
+    for attempt in range(max_retries):
+        try:
+            # Write to temp file with exclusive lock
+            with open(temp_path, "w") as f:
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                try:
+                    json.dump(results, f, indent=2)
+                    f.flush()
+                    os.fsync(f.fileno())  # Ensure data is written to disk
+                finally:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+
+            # Atomic rename (rename is atomic on Unix)
+            temp_path.replace(results_path)
+            return
+
+        except (IOError, OSError) as e:
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                continue
+            else:
+                print(f"Error: Failed to save results after {max_retries} attempts: {e}")
+                raise
 
 
 def get_num_classes(dataset):
@@ -536,6 +579,10 @@ def main(args):
         "hyperparams": hyperparams,
         "test_accuracy": test_accuracy,
     }
+
+    # Reload results right before saving to merge with any concurrent updates
+    # This prevents overwriting results from other jobs that finished during training
+    results = load_results(results_file)
 
     # Initialize nested structure if needed
     if model_name not in results:
