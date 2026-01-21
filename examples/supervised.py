@@ -7,9 +7,11 @@ with stable-pretraining, using datasets from stable-datasets.
 """
 
 import argparse
+import json
 import os
 import random
 from functools import partial
+from pathlib import Path
 
 import lightning as pl
 import numpy as np
@@ -48,6 +50,34 @@ def get_dataset_class(dataset_name: str):
             f"Dataset '{dataset_name}' not found in stable_datasets.images. "
             f"Error: {e}"
         )
+
+
+def get_hyperparams_dict(image_size, batch_size, lr, weight_decay, max_epochs):
+    """Generate hyperparameters dictionary."""
+    return {
+        "image_size": image_size,
+        "batch_size": batch_size,
+        "lr": lr,
+        "weight_decay": weight_decay,
+        "max_epochs": max_epochs,
+    }
+
+
+def load_results(results_file="results.json"):
+    """Load results from JSON file."""
+    results_path = Path(results_file)
+    if results_path.exists():
+        with open(results_path, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def save_results(results, results_file="results.json"):
+    """Save results to JSON file."""
+    results_path = Path(results_file)
+    results_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(results_path, "w") as f:
+        json.dump(results, f, indent=2)
 
 
 def get_num_classes(dataset):
@@ -274,6 +304,38 @@ def get_data_loaders(args, dataset_class):
 
 
 def main(args):
+    # Create results keys
+    model_name = args.model.split("/")[-1] if "/" in args.model else args.model
+    dataset_name = args.dataset.lower()
+    hyperparams = get_hyperparams_dict(
+        args.image_size, args.batch_size, args.lr, args.weight_decay, args.max_epochs
+    )
+
+    # Check if results already exist
+    results_file = args.results_file
+    results = load_results(results_file)
+    
+    # Check if this model/dataset combination already exists with same hyperparams
+    model_results = results.get(model_name, {})
+    if dataset_name in model_results:
+        existing_entry = model_results[dataset_name]
+        existing_hyperparams = existing_entry.get("hyperparams", {})
+        
+        # Compare hyperparameters
+        if existing_hyperparams == hyperparams:
+            print(f"Results already exist for {model_name}/{dataset_name} with matching hyperparameters:")
+            print(json.dumps(existing_entry, indent=2))
+            if not args.force_rerun:
+                print("Skipping training. Use --force_rerun to override.")
+                return
+            else:
+                print("--force_rerun specified, continuing with training...")
+        else:
+            print(f"Results exist for {model_name}/{dataset_name} but with different hyperparameters:")
+            print(f"Existing: {existing_hyperparams}")
+            print(f"Current: {hyperparams}")
+            print("Continuing with training with new hyperparameters...")
+
     # Load dataset class
     dataset_class = get_dataset_class(args.dataset)
 
@@ -349,7 +411,6 @@ def main(args):
     )
 
     # Create run name from model and dataset
-    model_name = args.model.split("/")[-1] if "/" in args.model else args.model
     run_name = f"{model_name}-{args.dataset.lower()}"
 
     logger = WandbLogger(
@@ -410,10 +471,55 @@ def main(args):
         # Evaluate on test set with best checkpoint using the same data_module
         test_manager = spt.Manager(trainer=trainer, module=best_module, data=data_module)
         test_manager.test()
+        test_trainer = test_manager._trainer
     else:
         print("No checkpoint saved, evaluating on test set with current model")
         test_manager = spt.Manager(trainer=trainer, module=module, data=data_module)
         test_manager.test()
+        test_trainer = test_manager._trainer
+
+    # Extract test_accuracy from the module's metric directly (most reliable)
+    # The metric is stored as val_accuracy in the module and accumulates during test_step
+    test_accuracy = None
+    test_module = test_manager.instantiated_module
+    if hasattr(test_module, "val_accuracy"):
+        try:
+            test_accuracy = float(test_module.val_accuracy.compute().item())
+        except Exception as e:
+            print(f"Warning: Could not compute metric from module: {e}")
+    
+    # Fallback: check trainer metrics if direct access failed
+    if test_accuracy is None:
+        if hasattr(test_trainer, "logged_metrics") and "test_accuracy" in test_trainer.logged_metrics:
+            value = test_trainer.logged_metrics["test_accuracy"]
+            if torch.is_tensor(value):
+                value = value.item()
+            test_accuracy = float(value)
+        elif hasattr(test_trainer, "callback_metrics") and "test_accuracy" in test_trainer.callback_metrics:
+            value = test_trainer.callback_metrics["test_accuracy"]
+            if torch.is_tensor(value):
+                value = value.item()
+            test_accuracy = float(value)
+    
+    if test_accuracy is None:
+        print("Warning: test_accuracy not found in metrics")
+        test_accuracy = 0.0
+    
+    # Save results in nested structure: model -> dataset -> entry
+    result_entry = {
+        "hyperparams": hyperparams,
+        "test_accuracy": test_accuracy,
+    }
+    
+    # Initialize nested structure if needed
+    if model_name not in results:
+        results[model_name] = {}
+    
+    results[model_name][dataset_name] = result_entry
+    
+    save_results(results, results_file)
+    print(f"\nResults saved for {model_name}/{dataset_name}:")
+    print(json.dumps(result_entry, indent=2))
 
 
 if __name__ == "__main__":
@@ -473,6 +579,17 @@ if __name__ == "__main__":
         type=str,
         default="stable-datasets",
         help="W&B project name (default: stable-datasets)",
+    )
+    parser.add_argument(
+        "--results_file",
+        type=str,
+        default="supervised_results.json",
+        help="Path to JSON file for storing/loading results (default: supervised_results.json)",
+    )
+    parser.add_argument(
+        "--force_rerun",
+        action="store_true",
+        help="Force re-run training even if results already exist",
     )
 
     args = parser.parse_args()
