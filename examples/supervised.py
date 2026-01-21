@@ -376,7 +376,9 @@ def main(args):
             # Update metric (accumulates correctly across batches for epoch-level accuracy)
             self.val_accuracy(preds, batch["label"])
             # Log the metric - Lightning will compute epoch-level value automatically
-            self.log(f"{stage}_accuracy", self.val_accuracy, on_step=False, on_epoch=True, prog_bar=True)
+            # Use consistent naming: "val_accuracy" for validation, "test_accuracy" for test
+            metric_name = "val_accuracy" if stage == "validate" else "test_accuracy"
+            self.log(metric_name, self.val_accuracy, on_step=False, on_epoch=True, prog_bar=True)
 
         return batch
 
