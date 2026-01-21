@@ -46,7 +46,7 @@ def main(kwargs, job_dir):
     )
 
     # Build command
-    script_path = Path(__file__).parent / "examples" / "supervised.py"
+    script_path = Path(__file__).parent / "supervised.py"
     command = (
         "source /users/hleyang/miniconda3/etc/profile.d/conda.sh && "
         "conda activate gpu && "
