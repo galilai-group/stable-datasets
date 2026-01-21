@@ -8,12 +8,15 @@ with stable-pretraining, using datasets from stable-datasets.
 
 import argparse
 import os
+import random
 from functools import partial
 
 import lightning as pl
+import numpy as np
 import torch
 import torchmetrics
 from lightning.pytorch.loggers import WandbLogger
+from PIL import Image
 from transformers import AutoConfig, AutoModelForImageClassification
 
 import stable_pretraining as spt
@@ -73,6 +76,46 @@ def get_num_classes(dataset):
         return len(label_feature.names)
 
     raise ValueError("Could not determine number of classes from dataset label feature")
+
+
+def compute_normalization_stats(dataset, sample_size=10000):
+    """Compute mean and standard deviation for normalization from a dataset.
+
+    Args:
+        dataset: HuggingFace dataset containing 'image' field
+        sample_size: Number of samples to use for computation (default: 10000)
+
+    Returns:
+        tuple: (mean, std) as lists of length 3 for RGB channels
+    """
+    print(f"Computing normalization statistics from {min(sample_size, len(dataset))} samples...")
+
+    mean_sum = np.zeros(3, dtype=np.float64)
+    std_sum = np.zeros(3, dtype=np.float64)
+    count = 0
+
+    # Sample subset for faster computation
+    actual_sample_size = min(sample_size, len(dataset))
+    random.seed(42)
+    np.random.seed(42)
+    indices = np.random.choice(len(dataset), actual_sample_size, replace=False)
+
+    for idx in indices:
+        sample = dataset[int(idx)]
+        img = sample["image"]
+        if not isinstance(img, Image.Image):
+            # Convert to PIL if needed
+            img = Image.fromarray(img)
+        img_array = np.array(img.convert("RGB"), dtype=np.float32) / 255.0
+        mean_sum += img_array.mean(axis=(0, 1))
+        std_sum += img_array.std(axis=(0, 1))
+        count += 1
+
+    mean = (mean_sum / count).tolist()
+    std = (std_sum / count).tolist()
+    print(f"Computed mean: {mean}, std: {std}")
+
+    return mean, std
 
 
 class HFDatasetWrapper(spt.data.Dataset):
@@ -154,9 +197,12 @@ def get_data_loaders(args, dataset_class):
     # Get image size from config
     image_size = args.image_size
 
-    # Use default normalization values (can be made dataset-specific later)
-    mean = [0.485, 0.456, 0.406]
-    std = [0.229, 0.224, 0.225]
+    # Compute normalization statistics from training set
+    mean, std = compute_normalization_stats(train_dataset_raw)
+
+    # Scale GaussianBlur kernel size with image size
+    # Use (3, 3) for small images, (5, 5) for larger images
+    blur_kernel_size = (3, 3) if image_size <= 64 else (5, 5)
 
     train_transform = transforms.Compose(
         transforms.RGB(),
@@ -166,7 +212,7 @@ def get_data_loaders(args, dataset_class):
             brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
         ),
         transforms.RandomGrayscale(p=0.2),
-        transforms.GaussianBlur(kernel_size=(3, 3), p=0.5),
+        transforms.GaussianBlur(kernel_size=blur_kernel_size, p=0.5),
         transforms.ToImage(mean=mean, std=std),
     )
 
@@ -185,11 +231,21 @@ def get_data_loaders(args, dataset_class):
         pin_memory=True,
     )
 
-    val_transform = transforms.Compose(
-        transforms.RGB(),
-        transforms.Resize((image_size, image_size)),
-        transforms.ToImage(mean=mean, std=std),
-    )
+    # Validation transform: use CenterCrop for larger images to avoid distortion
+    if image_size >= 224:
+        val_transform = transforms.Compose(
+            transforms.RGB(),
+            transforms.Resize((256, 256)),  # Resize to slightly larger than target
+            transforms.CenterCrop((image_size, image_size)),
+            transforms.ToImage(mean=mean, std=std),
+        )
+    else:
+        # For smaller images, just resize
+        val_transform = transforms.Compose(
+            transforms.RGB(),
+            transforms.Resize((image_size, image_size)),
+            transforms.ToImage(mean=mean, std=std),
+        )
 
     val_dataset = HFDatasetWrapper(
         hf_dataset=val_dataset_raw,
