@@ -49,7 +49,7 @@ def main(kwargs, job_dir):
     script_path = Path(__file__).parent / "supervised.py"
     command = (
         "source /users/hleyang/miniconda3/etc/profile.d/conda.sh && "
-        "conda activate gpu && "
+        "conda activate sdata && "
         f"python -u {script_path} "
         f"--dataset {dataset} "
         f"--model {model} "
