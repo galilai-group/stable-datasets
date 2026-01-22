@@ -53,9 +53,9 @@ def get_dataset_class(dataset_name: str):
         )
 
 
-def get_hyperparams_dict(image_size, batch_size, lr, weight_decay, max_epochs, seed):
+def get_hyperparams_dict(image_size, batch_size, lr, weight_decay, max_epochs, seed, config_name=None):
     """Generate hyperparameters dictionary."""
-    return {
+    hyperparams = {
         "image_size": image_size,
         "batch_size": batch_size,
         "lr": lr,
@@ -63,6 +63,9 @@ def get_hyperparams_dict(image_size, batch_size, lr, weight_decay, max_epochs, s
         "max_epochs": max_epochs,
         "seed": seed,
     }
+    if config_name is not None:
+        hyperparams["config_name"] = config_name
+    return hyperparams
 
 
 def load_results(results_file="results.json", max_retries=10, retry_delay=0.1):
@@ -216,7 +219,7 @@ class HFDatasetWrapper(spt.data.Dataset):
         return self.hf_dataset.column_names
 
 
-def get_data_loaders(args, dataset_class, seed=42):
+def get_data_loaders(args, dataset_class, seed=42, config_name=None):
     """Get train, validation, and test data loaders for the specified dataset.
 
     Handles cases where dataset has:
@@ -229,16 +232,24 @@ def get_data_loaders(args, dataset_class, seed=42):
         args: Arguments object containing dataset configuration
         dataset_class: Dataset class to instantiate
         seed: Random seed for data splitting (default: 42)
+        config_name: Optional config name for datasets with multiple configurations
+            (e.g., 'balanced' for EMNIST, 'pathmnist' for MedMNIST)
     """
     # Load the dataset to check available splits
     try:
-        all_splits = dataset_class(split=None)
+        if config_name is not None:
+            all_splits = dataset_class(split=None, config_name=config_name)
+        else:
+            all_splits = dataset_class(split=None)
     except Exception:
         # If split=None fails, try to detect available splits manually
         all_splits = {}
         for split_name in ["train", "test", "validation", "val", "valid"]:
             try:
-                all_splits[split_name] = dataset_class(split=split_name)
+                if config_name is not None:
+                    all_splits[split_name] = dataset_class(split=split_name, config_name=config_name)
+                else:
+                    all_splits[split_name] = dataset_class(split=split_name)
             except (ValueError, KeyError):
                 continue
 
@@ -260,14 +271,20 @@ def get_data_loaders(args, dataset_class, seed=42):
     else:
         # Fallback: try loading individually
         try:
-            all_splits = {"train": dataset_class(split="train")}
+            if config_name is not None:
+                all_splits = {"train": dataset_class(split="train", config_name=config_name)}
+            else:
+                all_splits = {"train": dataset_class(split="train")}
             has_train = True
         except (ValueError, KeyError):
             pass
         try:
             if not isinstance(all_splits, dict):
                 all_splits = {}
-            all_splits["test"] = dataset_class(split="test")
+            if config_name is not None:
+                all_splits["test"] = dataset_class(split="test", config_name=config_name)
+            else:
+                all_splits["test"] = dataset_class(split="test")
             has_test = True
         except (ValueError, KeyError):
             pass
@@ -276,7 +293,10 @@ def get_data_loaders(args, dataset_class, seed=42):
             try:
                 if not isinstance(all_splits, dict):
                     all_splits = {}
-                all_splits[split_name] = dataset_class(split=split_name)
+                if config_name is not None:
+                    all_splits[split_name] = dataset_class(split=split_name, config_name=config_name)
+                else:
+                    all_splits[split_name] = dataset_class(split=split_name)
                 validation_split_name = split_name
                 has_validation = True
                 break
@@ -415,7 +435,7 @@ def main(args):
     model_name = args.model.split("/")[-1] if "/" in args.model else args.model
     dataset_name = args.dataset.lower()
     hyperparams = get_hyperparams_dict(
-        args.image_size, args.batch_size, args.lr, args.weight_decay, args.max_epochs, args.seed
+        args.image_size, args.batch_size, args.lr, args.weight_decay, args.max_epochs, args.seed, args.config_name
     )
 
     # Create a unique key for this hyperparams combination (sorted tuple for consistency)
@@ -463,7 +483,9 @@ def main(args):
     dataset_class = get_dataset_class(args.dataset)
 
     # Get data loaders
-    train_loader, val_loader, test_loader, num_classes = get_data_loaders(args, dataset_class, seed=args.seed)
+    train_loader, val_loader, test_loader, num_classes = get_data_loaders(
+        args, dataset_class, seed=args.seed, config_name=args.config_name
+    )
     data_module = spt.data.DataModule(train=train_loader, val=val_loader, test=test_loader)
 
     # Define forward function
@@ -758,6 +780,12 @@ if __name__ == "__main__":
         type=int,
         default=42,
         help="Random seed for reproducibility (default: 42)",
+    )
+    parser.add_argument(
+        "--config_name",
+        type=str,
+        default=None,
+        help="Config name for datasets with multiple configurations (e.g., 'balanced' for EMNIST, 'pathmnist' for MedMNIST). Required for EMNIST and MedMNIST.",
     )
 
     args = parser.parse_args()

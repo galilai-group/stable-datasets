@@ -22,6 +22,7 @@ def main(kwargs, job_dir):
     weight_decay = kwargs.get('weight_decay', 0.02)
     max_epochs = kwargs.get('max_epochs', 100)
     wandb_project = kwargs.get('wandb_project', 'stable-datasets')
+    config_name = kwargs.get('config_name', None)
 
     # Set up the executor folder to include the job ID placeholder
     executor = submitit.AutoExecutor(folder=job_dir / "%j")
@@ -40,7 +41,7 @@ def main(kwargs, job_dir):
         nodes=1,                      # Number of nodes
         timeout_min=timeout_min,      # Maximum duration in minutes
         slurm_partition=partition,    # Partition name
-        slurm_job_name=f"supervised_{model.split('/')[-1]}_{dataset}_seed{seed}",  # Job name
+        slurm_job_name=f"supervised_{model.split('/')[-1]}_{dataset}{f'_{config_name}' if config_name else ''}_seed{seed}",  # Job name
         slurm_mail_type="ALL",        # Email settings
         slurm_mail_user="leyang_hu@brown.edu",  # Email address
     )
@@ -67,10 +68,14 @@ def main(kwargs, job_dir):
         f"--wandb_project {wandb_project} "
         f"--results_file {results_file}"
     )
+    # Add config_name if provided
+    if config_name is not None:
+        command += f" --config_name {config_name}"
 
     # Submit the job
     job = executor.submit(os.system, command)
-    print(f"Job submitted for {model}/{dataset} with seed {seed}, job ID: {job.job_id}")
+    config_str = f" (config: {config_name})" if config_name else ""
+    print(f"Job submitted for {model}/{dataset}{config_str} with seed {seed}, job ID: {job.job_id}")
 
 
 def job_completed(model, dataset, seed, results_file, hyperparams):
@@ -102,17 +107,12 @@ def job_completed(model, dataset, seed, results_file, hyperparams):
             entries = dataset_results["entries"]
             for entry in entries:
                 existing_hyperparams = entry.get("hyperparams", {})
-                # Compare hyperparams (excluding test_accuracy)
+                # Compare hyperparams (including config_name if present)
                 if existing_hyperparams == hyperparams:
-                    print(f"✓ Job already completed: {model}/{dataset} (seed {seed})")
+                    config_name = hyperparams.get("config_name")
+                    config_str = f" (config: {config_name})" if config_name else ""
+                    print(f"✓ Job already completed: {model}/{dataset}{config_str} (seed {seed})")
                     return True
-
-        # Check old format (single entry)
-        elif isinstance(dataset_results, dict) and "hyperparams" in dataset_results:
-            existing_hyperparams = dataset_results.get("hyperparams", {})
-            if existing_hyperparams == hyperparams:
-                print(f"✓ Job already completed: {model}/{dataset} (seed {seed})")
-                return True
 
         return False
     except (json.JSONDecodeError, KeyError) as e:
@@ -152,6 +152,16 @@ if __name__ == "__main__":
         "SVHN",
     ]
 
+    # Config names for datasets that require them
+    dataset_configs = {
+        "EMNIST": ["byclass", "bymerge", "balanced", "letters", "digits", "mnist"],
+        "MedMNIST": [
+            "pathmnist", "dermamnist", "octmnist", "pneumoniamnist",
+            "breastmnist", "bloodmnist", "tissuemnist", "organamnist",
+            "organcmnist", "organsmnist",
+        ], #skipping chestmnist (multi-label classification task), retinamnist (ordinal regression task), and all 3D variants (organmnist3d, nodulemnist3d, adrenalmnist3d, fracturemnist3d, vesselmnist3d, synapsemnist3d)
+    }
+
     # Seeds for reproducibility
     seed_list = [42]
 
@@ -174,6 +184,14 @@ if __name__ == "__main__":
         with open(results_path, 'w') as f:
             json.dump({}, f)
 
+    # Calculate total jobs
+    total_jobs = 0
+    for dataset in dataset_list:
+        if dataset in dataset_configs:
+            total_jobs += len(model_list) * len(dataset_configs[dataset]) * len(seed_list)
+        else:
+            total_jobs += len(model_list) * len(seed_list)
+
     # Submit jobs
     print(f"{'='*60}")
     print(f"Submitting Supervised Learning Evaluation Jobs")
@@ -181,29 +199,38 @@ if __name__ == "__main__":
     print(f"Models: {len(model_list)}")
     print(f"Datasets: {len(dataset_list)}")
     print(f"Seeds: {len(seed_list)}")
-    print(f"Total jobs: {len(model_list) * len(dataset_list) * len(seed_list)}")
+    print(f"Total jobs: {total_jobs}")
     print(f"{'='*60}\n")
 
     submitted_count = 0
     skipped_count = 0
 
     for seed in seed_list:
-        hyperparams = {**default_hyperparams, "seed": seed}
         for model in model_list:
             for dataset in dataset_list:
-                # Check if job already completed
-                if not job_completed(model, dataset, seed, results_file, hyperparams):
-                    kwargs = {
-                        'dataset': dataset,
-                        'model': model,
-                        'seed': seed,
-                        'results_file': results_file,
-                        **default_hyperparams,
-                    }
-                    main(kwargs, job_dir)
-                    submitted_count += 1
-                else:
-                    skipped_count += 1
+                # Get configs for this dataset (empty list if no configs needed)
+                configs = dataset_configs.get(dataset, [None])
+
+                for config_name in configs:
+                    # Build hyperparams including config_name
+                    hyperparams = {**default_hyperparams, "seed": seed}
+                    if config_name is not None:
+                        hyperparams["config_name"] = config_name
+
+                    # Check if job already completed
+                    if not job_completed(model, dataset, seed, results_file, hyperparams):
+                        kwargs = {
+                            'dataset': dataset,
+                            'model': model,
+                            'seed': seed,
+                            'results_file': results_file,
+                            'config_name': config_name,
+                            **default_hyperparams,
+                        }
+                        main(kwargs, job_dir)
+                        submitted_count += 1
+                    else:
+                        skipped_count += 1
 
     print(f"\n{'='*60}")
     print(f"Submission Summary")
