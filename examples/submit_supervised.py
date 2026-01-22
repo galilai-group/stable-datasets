@@ -146,7 +146,7 @@ if __name__ == "__main__":
         "NotMNIST",
         "Country211",
         "CUB200",
-        "DSprites",
+        # "DSprites",
         "EMNIST",
         "Flowers102",
         "SVHN",
