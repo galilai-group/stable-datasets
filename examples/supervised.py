@@ -219,57 +219,114 @@ class HFDatasetWrapper(spt.data.Dataset):
 def get_data_loaders(args, dataset_class, seed=42):
     """Get train, validation, and test data loaders for the specified dataset.
 
+    Handles cases where dataset has:
+    - Only train split: splits 80% train, 10% val, 10% test
+    - Only test split: splits 80% train, 10% val, 10% test
+    - Both train and test: uses test as-is, splits train 80/20 (train/val)
+    - All three splits: uses them as-is
+
     Args:
         args: Arguments object containing dataset configuration
         dataset_class: Dataset class to instantiate
         seed: Random seed for data splitting (default: 42)
     """
     # Load the dataset to check available splits
-    all_splits = dataset_class(split=None)
+    try:
+        all_splits = dataset_class(split=None)
+    except Exception:
+        # If split=None fails, try to detect available splits manually
+        all_splits = {}
+        for split_name in ["train", "test", "validation", "val", "valid"]:
+            try:
+                all_splits[split_name] = dataset_class(split=split_name)
+            except (ValueError, KeyError):
+                continue
 
-    # Check if validation split exists
+    # Determine available splits
+    has_train = False
+    has_test = False
     has_validation = False
+    validation_split_name = None
+
     if isinstance(all_splits, dict):
-        # Check for common validation split names
-        validation_split_name = None
+        has_train = "train" in all_splits
+        has_test = "test" in all_splits
+        # Check for validation split
         for split_name in ["validation", "val", "valid"]:
             if split_name in all_splits:
                 validation_split_name = split_name
                 has_validation = True
                 break
-
-        if has_validation:
-            # Use existing validation split
-            train_dataset_raw = all_splits["train"]
-            val_dataset_raw = all_splits[validation_split_name]
-            test_dataset_raw = all_splits["test"]
-        else:
-            # Split train dataset to create validation set
-            train_dataset_raw = all_splits["train"]
-            test_dataset_raw = all_splits["test"]
-            # Use 80% for training, 20% for validation
-            split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=seed)
-            train_dataset_raw = split_dict["train"]
-            val_dataset_raw = split_dict["test"]
     else:
-        # Fallback: load individually and split if needed
-        train_dataset_raw = dataset_class(split="train")
-        test_dataset_raw = dataset_class(split="test")
-        # Try to load validation split with different name variations
-        val_dataset_raw = None
+        # Fallback: try loading individually
+        try:
+            all_splits = {"train": dataset_class(split="train")}
+            has_train = True
+        except (ValueError, KeyError):
+            pass
+        try:
+            if not isinstance(all_splits, dict):
+                all_splits = {}
+            all_splits["test"] = dataset_class(split="test")
+            has_test = True
+        except (ValueError, KeyError):
+            pass
+        # Try validation splits
         for split_name in ["validation", "val", "valid"]:
             try:
-                val_dataset_raw = dataset_class(split=split_name)
+                if not isinstance(all_splits, dict):
+                    all_splits = {}
+                all_splits[split_name] = dataset_class(split=split_name)
+                validation_split_name = split_name
                 has_validation = True
                 break
             except (ValueError, KeyError):
                 continue
 
-        if not has_validation:
-            # Split train dataset to create validation set
-            split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=seed)
-            train_dataset_raw = split_dict["train"]
-            val_dataset_raw = split_dict["test"]
+    # Handle different split scenarios
+    if has_validation and has_train and has_test:
+        # All three splits exist - use them as-is
+        train_dataset_raw = all_splits["train"]
+        val_dataset_raw = all_splits[validation_split_name]
+        test_dataset_raw = all_splits["test"]
+        print(f"Using existing train/val/test splits")
+    elif has_train and has_test:
+        # Both train and test exist - use test as-is, split train 80/20
+        train_dataset_raw = all_splits["train"]
+        test_dataset_raw = all_splits["test"]
+        # Split train: 80% train, 20% val
+        split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=seed)
+        train_dataset_raw = split_dict["train"]
+        val_dataset_raw = split_dict["test"]
+        print(f"Using existing train/test splits, splitting train 80/20 for train/val")
+    elif has_train:
+        # Only train exists - split 80/10/10
+        train_dataset_raw = all_splits["train"]
+        # First split: 80% train, 20% temp
+        split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=seed)
+        train_dataset_raw = split_dict["train"]
+        temp_dataset = split_dict["test"]
+        # Second split: split temp 50/50 for val/test (10% each of original)
+        split_dict2 = temp_dataset.train_test_split(test_size=0.5, seed=seed)
+        val_dataset_raw = split_dict2["train"]
+        test_dataset_raw = split_dict2["test"]
+        print(f"Only train split available, splitting 80/10/10 for train/val/test")
+    elif has_test:
+        # Only test exists - split 80/10/10
+        test_dataset_raw = all_splits["test"]
+        # First split: 80% train, 20% temp
+        split_dict = test_dataset_raw.train_test_split(test_size=0.2, seed=seed)
+        train_dataset_raw = split_dict["train"]
+        temp_dataset = split_dict["test"]
+        # Second split: split temp 50/50 for val/test (10% each of original)
+        split_dict2 = temp_dataset.train_test_split(test_size=0.5, seed=seed)
+        val_dataset_raw = split_dict2["train"]
+        test_dataset_raw = split_dict2["test"]
+        print(f"Only test split available, splitting 80/10/10 for train/val/test")
+    else:
+        raise ValueError(
+            f"Dataset {dataset_class.__name__} must have at least 'train' or 'test' split"
+        )
 
     # Infer number of classes from the dataset
     num_classes = get_num_classes(train_dataset_raw)
