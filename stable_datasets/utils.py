@@ -373,13 +373,15 @@ def download(
         # prevent concurrent downloads of the same file
         with FileLock(lock_filename):
             session = CachedSession(cache_dir, backend=backend)
+            session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"})
             logging.info(f"Downloading: {url}")
 
-            head = session.head(url)
-            total_size = int(head.headers.get("content-length", 0) or 0)
+            response = session.get(url, stream=True, allow_redirects=True)
+            response.raise_for_status()
+            
+            total_size = int(response.headers.get("content-length", 0) or 0)
             logging.info(f"Total size: {total_size} bytes")
 
-            response = session.get(url, stream=True)
             downloaded = 0
 
             with (
