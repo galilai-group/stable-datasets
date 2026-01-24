@@ -4,70 +4,70 @@ import os
 from functools import partial
 
 # Third-party imports
-from pathlib import Path
-from urllib.parse import urlparse
+import asyncio
+import aiohttp
 import datasets
 from loguru import logger as logging
+from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
-from joblib import Parallel, delayed
-from concurrent.futures import ProcessPoolExecutor
-from typing import Any
+from urllib.parse import urlparse
 
 # Local imports
-from stable_datasets.utils import download, _default_dest_folder, BaseDatasetBuilder
+from stable_datasets.utils import _default_dest_folder, BaseDatasetBuilder
 
 
-def call_with_timeout(func, timeout=10, log_timeout=False, *args, **kwargs) -> Any:
-    with ProcessPoolExecutor(max_workers=1) as executor:
-        future = executor.submit(func, *args, **kwargs)
-        try:
-            return future.result(timeout=timeout)
-        except TimeoutError:
-            if log_timeout:
-                logging.warning(f"{func.__name__} timed out after {timeout} seconds")
-            return None
-
-
-def safe_download(url, dest_folder, log_failure=False) -> Path | None:
+async def safe_download(url, dest_folder, session, log_failure=False) -> bool:
+    filename = os.path.basename(urlparse(url).path)
+    dest_path = dest_folder / filename
     try:
-        return call_with_timeout(
-            download,
-            url=url,
-            dest_folder=dest_folder,
-            progress_bar=False,
-            disable_logging=True,
-        )
+        async with session.get(url) as response:
+            if response.status == 200:
+                dest_path.write_bytes(await response.read())
+                return True
+    except asyncio.CancelledError:
+        if log_failure:
+            logging.warning(f"Received `asyncio.CancelledError` while downloading {url}")
+
+        # In case the download was interrupted while writing bytes to the file,
+        # remove the file so that the download isn't seen as successfully finished
+        # later on
+        if os.path.isfile(dest_path):
+            os.remove(dest_path)
     except Exception as e:
         if log_failure:
             logging.warning(f"Failed to download {url}: {e}")
-        return None
+    return False
 
 
-def safe_bulk_download(
-    urls,
-    dest_folder,
-    num_processes=None,
-    log_failure=False,
-    parallel=False,
-) -> list[Path | None]:
-    if num_processes is None:
-        num_processes = os.cpu_count() // 2
-    
-    download_func = partial(
-        safe_download,
-        dest_folder=dest_folder,
-        log_failure=log_failure
-    )
+async def safe_bulk_download(urls, dest_folder, concurrency=100, timeout_seconds=15, log_failures=False):
+    # Makes sure that the destination folder exists
+    dest_folder.mkdir(parents=True, exist_ok=True)
 
-    if parallel:
-        results = Parallel(n_jobs=num_processes)(
-            delayed(download_func)(url)
-            for url in tqdm(urls, desc=f"Downloading {len(urls)} images")
-        )
-    else:
-        results = [download_func(url) for url in tqdm(urls, desc=f"Downloading {len(urls)} images")]
-    return results
+    # Creates a client session with a timeout and a concurrency limit
+    timeout = aiohttp.ClientTimeout(total=timeout_seconds)
+    connector = aiohttp.TCPConnector(limit=concurrency)
+    async with aiohttp.ClientSession(
+        connector=connector,
+        timeout=timeout,
+    ) as session:
+        # Limits the number of concurrent downloads by using a semaphore
+        semaphore = asyncio.Semaphore(concurrency)
+        async def sem_download(url):
+            async with semaphore:
+                return await safe_download(url, dest_folder, session, log_failure=log_failures)
+
+        # Creates the list of tasks to download the URLs
+        tasks = [asyncio.create_task(sem_download(url)) for url in urls]
+
+        # Waits for the tasks to complete and returns the results
+        results = []
+        with tqdm(total=len(tasks), desc="Downloading images") as pbar:
+            for coroutine in asyncio.as_completed(tasks):
+                result = await coroutine
+                results.append(result)
+                pbar.update(1)
+        return results
 
 
 class CC3M(BaseDatasetBuilder):
@@ -168,15 +168,18 @@ class CC3M(BaseDatasetBuilder):
                 logging.info(
                     f"In batch {batch_idx} of split {split}, "
                     f"there are {len(urls_to_download)} non-skipped images to download "
-                    f"and {skipped_downloads} already-downloaded images"
+                    f"and {curr_batch_size - len(urls_to_download)} already-downloaded images"
                 )
-                results = safe_bulk_download(
-                    urls_to_download,
-                    dest_folder=images_dir,
-                    log_failure=log_failures,
+                results = asyncio.run(
+                    safe_bulk_download(
+                        urls_to_download,
+                        dest_folder=images_dir,
+                        log_failures=log_failures,
+                    )
                 )
-                successful_downloads += sum(1 for r in results if r is not None)
-                failed_downloads += sum(1 for r in results if r is None)
+                num_succeeded = sum(results)
+                successful_downloads += num_succeeded
+                failed_downloads += len(results) - num_succeeded
         logging.info(f"Successfully downloaded {successful_downloads} {split} images.")
         logging.info(f"Failed downloads: {failed_downloads}")
 
@@ -187,12 +190,18 @@ class CC3M(BaseDatasetBuilder):
             reader = csv.reader(f, delimiter='\t')
             for row in reader:  # Re-reads file instead of using `results` to simplify logic
                 caption, image_url = row
-                
+
                 # Skips if the image wasn't downloaded
                 filename = os.path.basename(urlparse(image_url).path)
                 image_path = images_dir / filename
-                if not image_path.is_file():
-                    continue
+                try:
+                    if not image_path.is_file():
+                        continue
+                except OSError as e:
+                    if e.errno == 36:  # "File name too long" to check if the path is a file
+                        continue
+                    else:
+                        raise e
                 
                 # Tries to open the image
                 try:
