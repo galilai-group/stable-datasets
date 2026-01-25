@@ -3,6 +3,8 @@ import numpy as np
 from loguru import logger as logging
 from PIL import Image
 from tqdm import tqdm
+import torch
+import datasets
 from stable_datasets.images.cc3m import CC3M
 
 SAMPLES_TO_CHECK = 128
@@ -47,7 +49,15 @@ def test_cc3m_dataset():
     assert image_np.shape[2] == 3, f"Image should have 3 channels, got {image_np.shape[2]} channels"
     assert image_np.dtype == np.uint8, f"Image should have dtype uint8, got {image_np.dtype}"
 
-    # Test 6: Checks that the training dataset is not empty
+    # Test 6: Checks conversion to PyTorch
+    validation_dataset_torch = validation_dataset.with_format("torch")
+    first_torch_sample = validation_dataset_torch[0]
+    assert set(first_torch_sample.keys()) == set(first_sample.keys()), f"Keys do not match when converting to PyTorch"
+    assert type(first_torch_sample["image"]) == torch.Tensor, f"Image should be of type torch.Tensor, got {type(first_torch_sample['image'])}"
+    assert first_torch_sample["image"].shape[0] == 3, f"Image should have 3 channels, got {first_torch_sample['image'].shape[0]} channels"
+    assert first_torch_sample["image"].shape[1:] == image_np.shape[0:2], f"Image shape does not match when converting to PyTorch"
+
+    # Test 7: Checks that the training dataset is not empty
     train_dataset = CC3M(
         split="train",
         download_dir=download_dir,
@@ -55,6 +65,16 @@ def test_cc3m_dataset():
     )
     assert len(train_dataset) > 0, f"Training dataset should not be empty"
     logging.info(f"Loaded {len(train_dataset)} examples from train split.")
+
+    # Test 8: Checks the "all" split
+    dataset = CC3M(
+        split=None,
+        download_dir=download_dir,
+        processed_cache_dir=processed_cache_dir,
+    )
+    expected_keys = {"train", "validation"}
+    assert type(dataset) == datasets.DatasetDict, f"Combined dataset should be of type datasets.DatasetDict, got {type(dataset)}"
+    assert set(dataset.keys()) == expected_keys, f"Expected keys {expected_keys}, got {set(dataset.keys())}"
 
     # Can't be tested deterministically:
     # - Image labels, because the link to the dataset containing image labels (located on the

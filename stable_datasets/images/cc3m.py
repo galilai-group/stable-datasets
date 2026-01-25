@@ -23,6 +23,7 @@ DOWNLOAD_BATCH_SIZE = 65536
 FIRST_N_IMAGES_PER_SPLIT = 0  # 0 takes all the images in the split
 LOG_FAILURES = False
 
+
 def get_unique_filename(url: str) -> str:
     url_hash = hashlib.sha256(url.encode()).hexdigest()
     original_filename = os.path.basename(urlparse(url).path)
