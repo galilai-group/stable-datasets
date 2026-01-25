@@ -302,6 +302,7 @@ def bulk_download(
                         backend,
                         cache_dir,
                         False,  # disable per-file tqdm; Rich handles progress
+                        False,
                         _progress,
                         task_id,
                     )
