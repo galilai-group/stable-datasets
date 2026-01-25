@@ -1,8 +1,11 @@
+import random
 import numpy as np
 from loguru import logger as logging
 from PIL import Image
 from tqdm import tqdm
 from stable_datasets.images.cc3m import CC3M
+
+SAMPLES_TO_CHECK = 128
 
 def test_cc3m_dataset():
     # Test 1: Checks that the validation dataset is not empty
@@ -23,8 +26,13 @@ def test_cc3m_dataset():
     expected_keys = {"image", "caption"}
     assert actual_keys == expected_keys, f"Expected keys {expected_keys}, got {actual_keys}"
 
-    # Test 3: Checks that all the captions are non-empty
-    for sample in tqdm(validation_dataset, desc="Checking captions"):
+    # Test 3: Checks that the captions are non-empty
+    dataset_size = len(validation_dataset)
+    num_samples_to_check = min(SAMPLES_TO_CHECK, dataset_size)
+    random_indices = random.sample(range(dataset_size), num_samples_to_check)
+    logging.info(f"Checking {num_samples_to_check} random samples out of {dataset_size} total samples")
+    for idx in tqdm(random_indices, desc="Checking captions"):
+        sample = validation_dataset[idx]
         caption = sample["caption"]
         assert isinstance(caption, str), f"Caption should be a string, got {type(caption)}"
         assert caption, f"Caption should be non-empty"

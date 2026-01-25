@@ -18,10 +18,9 @@ from stable_datasets.utils import _default_dest_folder, BaseDatasetBuilder
 
 
 # Constants for downloading images
-DOWNLOAD_BATCH_SIZE = 16384
+DOWNLOAD_BATCH_SIZE = 65536
 FIRST_N_IMAGES_PER_SPLIT = None
 LOG_FAILURES = False
-
 
 async def safe_download(url, dest_folder, session, log_failure=False) -> bool:
     # Makes sure that the destination folder exists
@@ -130,8 +129,9 @@ class CC3M(BaseDatasetBuilder):
         total_lines = sum(1 for _ in open(data_path))
         assert total_lines != 0, f"No {split} images found in {data_path}"
         logging.info(f"Total number of {split} images: {total_lines}")
-        if FIRST_N_IMAGES_PER_SPLIT is not None:
-            total_lines = min(total_lines, FIRST_N_IMAGES_PER_SPLIT)
+        if FIRST_N_IMAGES_PER_SPLIT is not None and FIRST_N_IMAGES_PER_SPLIT < total_lines:
+            assert FIRST_N_IMAGES_PER_SPLIT > 0, f"Cannot only take 0 images from split {split}"
+            total_lines = FIRST_N_IMAGES_PER_SPLIT
             logging.info(f"Using only the first {total_lines} images from {split} split.")
         else:
             logging.info(f"Using all {total_lines} images from {split} split.")
