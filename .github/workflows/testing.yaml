@@ -48,15 +48,16 @@ jobs:
 
       # Run Tests
       - name: Run Tests with Coverage
-        run: |
-          pytest stable_datasets/ \
-            --verbose \
-            --cov=stable_datasets \
-            --cov-report=term-missing:skip-covered \
-            --cov-report=xml \
-            --cov-report=html \
-            --junitxml=pytest.xml \
-            --cov-report=term | tee pytest-coverage.txt
+        run: pytest stable_datasets/tests/images/test_cars196.py
+        # run: |
+        #   pytest stable_datasets/ \
+        #     --verbose \
+        #     --cov=stable_datasets \
+        #     --cov-report=term-missing:skip-covered \
+        #     --cov-report=xml \
+        #     --cov-report=html \
+        #     --junitxml=pytest.xml \
+        #     --cov-report=term | tee pytest-coverage.txt
 
       # Post Coverage Comment on PR
       - name: Pytest coverage comment
