@@ -1,3 +1,4 @@
+import hashlib
 import multiprocessing
 import os
 import time
@@ -6,15 +7,15 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from types import MappingProxyType
 from urllib.parse import urlparse
-import hashlib
+
 import datasets
 import numpy as np
 import pandas as pd
+import requests
 import rich.progress
 from datasets import DownloadConfig
 from filelock import FileLock
 from loguru import logger as logging
-import requests
 from rich.progress import (
     BarColumn,
     MofNCompleteColumn,
@@ -400,9 +401,7 @@ def download(
 
             # Validate *on disk*
             if total_size and tmp.stat().st_size != total_size:
-                raise RuntimeError(
-                    f"Download incomplete for {url}: got {tmp.stat().st_size} of {total_size} bytes"
-                )
+                raise RuntimeError(f"Download incomplete for {url}: got {tmp.stat().st_size} of {total_size} bytes")
 
             tmp.replace(dest)  # atomic rename
             logging.info(f"Download finished: {dest}")
