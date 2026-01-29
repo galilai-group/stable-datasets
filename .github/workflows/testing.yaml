@@ -49,6 +49,7 @@ jobs:
       # Run Tests
       - name: Run Tests with Coverage
         run: |
+          set -o pipefail
           pytest stable_datasets/ \
             --verbose \
             --durations=0 \
