@@ -4,7 +4,7 @@ from PIL import Image
 from stable_datasets.images.dsprites_scream import DSpritesScream
 
 
-def test_dsprites_noise_dataset():
+def test_dsprites_scream_dataset():
     # Load training split
     dsprites_train = DSpritesScream(split="train")
 
