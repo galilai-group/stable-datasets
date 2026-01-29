@@ -51,6 +51,7 @@ jobs:
         run: |
           pytest stable_datasets/ \
             --verbose \
+            --durations=0 \
             --cov=stable_datasets \
             --cov-report=term-missing:skip-covered \
             --cov-report=xml \
