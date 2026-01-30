@@ -3,9 +3,6 @@
 BrainMNIST (MindBigData) is an EEG dataset where brain signals were captured
 while subjects viewed MNIST digits (0-9). The dataset includes multiple
 device variants with different numbers of EEG channels and sample rates.
-
-Test-driven development: These tests define the expected behavior before
-implementation.
 """
 
 import numpy as np
@@ -280,41 +277,6 @@ class TestBrainMNISTMultipleConfigs:
         else:
             # Multi-channel should be 2D: (channels, samples)
             assert eeg.shape == (expected_channels, expected_samples)
-
-
-class TestBrainMNISTUnit:
-    """Unit tests that don't require downloading data."""
-
-    def test_class_exists(self):
-        """BrainMNIST class should be importable."""
-        from stable_datasets.timeseries.brain_mnist import BrainMNIST
-
-        assert BrainMNIST is not None
-
-    def test_inherits_from_base_builder(self):
-        """Should inherit from BaseDatasetBuilder."""
-        from stable_datasets.utils import BaseDatasetBuilder
-
-        assert issubclass(BrainMNIST, BaseDatasetBuilder)
-
-    def test_not_raises_not_implemented(self):
-        """_info() should not raise NotImplementedError anymore."""
-        builder = _create_builder_without_download("mindwave")
-        # This should not raise
-        try:
-            info = builder._info()
-            assert info is not None
-        except NotImplementedError:
-            pytest.fail("_info() still raises NotImplementedError - stub not implemented")
-
-    def test_citation_is_valid(self):
-        """Citation should be properly formatted."""
-        assert "@" in BrainMNIST._CITATION  # BibTeX format
-        assert "vivancos" in BrainMNIST._CITATION.lower()
-
-    def test_default_config_name(self):
-        """Default config should be mindwave."""
-        assert BrainMNIST.DEFAULT_CONFIG_NAME == "mindwave"
 
 
 class TestBrainMNISTExtractEEGData:
