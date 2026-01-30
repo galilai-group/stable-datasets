@@ -339,8 +339,10 @@ def download(
     dest_folder.mkdir(parents=True, exist_ok=True)
 
     filename = os.path.basename(urlparse(url).path)
+    p = Path(filename)
     h = hashlib.sha256(url.encode("utf-8")).hexdigest()[:10]
-    dest = dest_folder / f"{filename}.{h}"
+    # Keep original extension at the end: e.g. cars196_test.0275d128da.zip
+    dest = dest_folder / f"{p.stem}.{h}{p.suffix}"
     lock = dest.with_suffix(dest.suffix + ".lock")
     tmp = dest.with_suffix(dest.suffix + ".tmp")
 
@@ -416,6 +418,13 @@ def download(
                 pass
             logging.error(f"Error downloading {url}: {e}")
             raise
+        finally:
+            # Remove lock file so download dir stays clean (FileLock may leave it on some platforms / crash)
+            try:
+                if lock.exists():
+                    lock.unlink()
+            except Exception:
+                pass
 
 
 def load_from_tsfile_to_dataframe(
