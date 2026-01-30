@@ -3,6 +3,10 @@ from PIL import Image
 
 from stable_datasets.images.cars196 import Cars196
 
+import pytest
+
+pytestmark = pytest.mark.large
+
 
 def test_cars196_dataset():
     # Load training split

@@ -51,6 +51,7 @@ jobs:
         run: |
           set -o pipefail
           pytest stable_datasets/ \
+            -m "not large" \
             --verbose \
             --durations=0 \
             --cov=stable_datasets \
