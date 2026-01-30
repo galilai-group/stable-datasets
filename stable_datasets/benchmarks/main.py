@@ -65,12 +65,19 @@ def main() -> None:
         model_names = MODELS
 
     datasets_loaded = [create_dataset(name) for name in dataset_names]
+    
+    experiments = [
+        (
+            create_experiment(model_name=model_name, data_module=data, config=config),
+            model_name, data
+        )
+        for model_name   in model_names
+        for data, config in datasets_loaded
+    ]
 
-    for model_name in model_names:
-        for data, config in datasets_loaded:
-            logging.info(f'Running experiment "{model_name}" on dataset "{config.name}"')
-            experiment = create_experiment(model_name=model_name, data_module=data, config=config)
-            experiment()
+    for experiment, model_name, data_cfg in experiments:
+        logging.info(f'Running {experiment} with {model_name=} and dataset "{data_cfg.name}"')
+        experiment()
 
 
 if __name__ == "__main__":
