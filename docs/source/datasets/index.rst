@@ -57,5 +57,11 @@ Available Datasets
    e_mnist
    flowers102
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Time-Series Datasets
+
+   esc50
+
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
