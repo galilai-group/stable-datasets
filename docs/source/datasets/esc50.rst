@@ -18,6 +18,8 @@ The ESC-50 dataset is a dataset of audio clips widely used for sound classificat
    :align: center
    :width: 90%
 
+A sample audio clip from the dataset can be heard at ``docs/source/datasets/teasers/esc50_teaser.wav``.
+
 Data Structure
 --------------
 
