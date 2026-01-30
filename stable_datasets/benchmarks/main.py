@@ -7,7 +7,42 @@ Usage:
 
 from __future__ import annotations
 
-import logging, argparse, stable_datasets as sds
+import logging, argparse, sys
+from pathlib import Path
+from unittest.mock import patch
+
+import stable_datasets as sds
+
+
+def _mock_downloads_on_macos():
+    """Mock download functions on MacOS to skip actual downloads."""
+    if sys.platform != "darwin":
+        return None
+
+    logging.info("MacOS detected: mocking download functions")
+
+    def mock_download(url, dest_folder=None, **kwargs) -> Path:
+        """Mock download that returns a fake path."""
+        from urllib.parse import urlparse
+        import os
+        filename = os.path.basename(urlparse(url).path)
+        if dest_folder is None:
+            dest_folder = Path.home() / ".stable_datasets" / "downloads"
+        return Path(dest_folder) / filename
+
+    def mock_bulk_download(urls, dest_folder, **kwargs) -> list[Path]:
+        """Mock bulk download that returns fake paths."""
+        return [mock_download(url, dest_folder) for url in urls]
+
+    # Patch the download functions in stable_datasets.utils
+    patches = [
+        patch("stable_datasets.utils.download", mock_download),
+        patch("stable_datasets.utils.bulk_download", mock_bulk_download),
+    ]
+    for p in patches:
+        p.start()
+
+    return patches
 
 from stable_datasets.benchmarks.dataset_factory       import create_dataset
 from stable_datasets.benchmarks.experiment_factory    import AVAILABLE_MODELS, create_experiment
@@ -52,6 +87,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     """Run SSL baseline experiments."""
     logging.basicConfig(level=logging.INFO)
+    _mock_downloads_on_macos()
     args = parse_args()
 
     all_dataset_names = [cls.__name__.lower() for cls in DATASET_CLASSES]
