@@ -50,13 +50,18 @@ Available Datasets
    cifar10_c
    cifar100_c
    cars196
-   cc3m
    dtd
    fashion_mnist
    k_mnist
    medmnist
    e_mnist
    flowers102
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Image Captioning Datasets
+
+   cc3m
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.

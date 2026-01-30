@@ -92,7 +92,7 @@ async def safe_bulk_download(urls, dest_folder, concurrency=100, timeout_seconds
 
 
 class CC3M(BaseDatasetBuilder):
-    """CC3M"""
+    """CC3M (Conceptual Captions)"""
 
     VERSION = datasets.Version("1.0.0")
 
