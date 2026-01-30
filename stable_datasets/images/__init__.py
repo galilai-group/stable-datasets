@@ -2,6 +2,7 @@
 
 from .arabic_characters import ArabicCharacters
 from .cars196 import Cars196
+from .cc3m import CC3M
 from .cifar10 import CIFAR10
 
 # from .arabic_digits import ArabicDigits
@@ -52,6 +53,7 @@ from .svhn import SVHN
 __all__ = [
     "ArabicCharacters",
     "Cars196",
+    "CC3M",
     "CIFAR10",
     "CIFAR100",
     "CIFAR10C",
