@@ -26,6 +26,7 @@ from .dtd import DTD
 from .e_mnist import EMNIST
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
+from .hasy_v2 import HASYv2
 from .k_mnist import KMNIST
 from .med_mnist import MedMNIST
 
@@ -33,7 +34,6 @@ from .med_mnist import MedMNIST
 # from .fashion_mnist import FashionMNIST
 # from .fgvc_aircraft import FGVCAircraft
 # from .food101 import Food101
-# from .hasy_v2 import HASYv2
 # from .imagenette import Imagenette
 # from .linnaeus5 import Linnaeus5
 # from .mnist import MNIST
@@ -70,4 +70,5 @@ __all__ = [
     "NotMNIST",
     "Flowers102",
     "SVHN",
+    "HASYv2",
 ]
