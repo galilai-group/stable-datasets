@@ -8,6 +8,7 @@ so we use HuggingFace's native transform functionality.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import torchcodec
 
 import numpy as np
 import stable_datasets as sds
@@ -27,6 +28,7 @@ class DatasetConfig:
     mean: list[float]
     std: list[float]
     low_resolution: bool
+    num_frames: int 
 
 
 NORMALIZATION_STATS: dict[str, dict] = {
@@ -92,7 +94,21 @@ def extract_config_from_dataset(name: str, dataset) -> DatasetConfig:
         num_classes = label_feature.num_classes
 
     sample = dataset[0]
-    h, w, channels = _extract_image_dimensions(sample["image"])
+    if 'image' in sample:
+        image = sample['image']
+        h, w, channels = _extract_image_dimensions(image)
+        num_frames = 1
+
+    if 'video' in sample:
+        sample = sample['video']
+        if isinstance(sample, torchcodec.decoders.VideoDecoder):
+            num_frames = sample._num_frames
+            frame = sample.get_frame_at(0)
+            shape = frame.data.shape
+            channels, h, w = shape
+        else: 
+            num_frames, h, w, channels = sample.data.shape
+
     mean, std = _get_normalization_stats(name_lower, channels)
 
     return DatasetConfig(
@@ -103,6 +119,7 @@ def extract_config_from_dataset(name: str, dataset) -> DatasetConfig:
         mean=mean,
         std=std,
         low_resolution=max(h, w) <= 64,
+        num_frames=num_frames,
     )
 
 
