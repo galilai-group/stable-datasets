@@ -8,16 +8,12 @@ from .cifar10 import CIFAR10
 # from .awa2 import AWA2
 # from .beans import Beans
 # from .celeb_a import CelebA
-# from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
 from .cifar100 import CIFAR100
-
-# from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .clevrer import CLEVRER
-
-# from .country211 import Country211
-# from .cub200 import CUB200
+from .country211 import Country211
+from .cub200 import CUB200
 from .dsprites import DSprites
 from .dsprites_color import DSpritesColor
 from .dsprites_noise import DSpritesNoise
@@ -29,8 +25,6 @@ from .flowers102 import Flowers102
 from .k_mnist import KMNIST
 from .med_mnist import MedMNIST
 
-# from .dtd import DTD
-# from .fashion_mnist import FashionMNIST
 # from .fgvc_aircraft import FGVCAircraft
 # from .food101 import Food101
 # from .hasy_v2 import HASYv2
@@ -65,9 +59,9 @@ __all__ = [
     "KMNIST",
     "MedMNIST",
     "EMNIST",
-    "Cars196",
-    "DTD",
     "NotMNIST",
     "Flowers102",
     "SVHN",
+    "CUB200",
+    "Country211",
 ]

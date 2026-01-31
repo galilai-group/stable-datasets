@@ -211,3 +211,5 @@ logs/
 .vscode/
 *.sh
 *.lock
+
+.DS_Store
