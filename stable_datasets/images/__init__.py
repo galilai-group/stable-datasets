@@ -5,8 +5,11 @@ from .cars196 import Cars196
 from .cifar10 import CIFAR10
 
 # from .arabic_digits import ArabicDigits
-# from .awa2 import AWA2
-# from .beans import Beans
+from .awa2 import AWA2
+from .beans import Beans
+from .cars196 import Cars196
+from .cifar10 import CIFAR10
+
 # from .celeb_a import CelebA
 # from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C

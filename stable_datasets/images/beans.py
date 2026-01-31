@@ -3,11 +3,29 @@ import zipfile
 import datasets
 from PIL import Image
 
+from stable_datasets.utils import BaseDatasetBuilder
 
-class Beans(datasets.GeneratorBasedBuilder):
+
+class Beans(BaseDatasetBuilder):
     """Bean disease dataset for classification of three classes: Angular Leaf Spot, Bean Rust, and Healthy leaves."""
 
     VERSION = datasets.Version("1.0.0")
+
+    # Single source-of-truth for dataset provenance + download locations.
+    SOURCE = {
+        "homepage": "https://github.com/AI-Lab-Makerere/ibean/",
+        "assets": {
+            "train": "https://storage.googleapis.com/ibeans/train.zip",
+            "test": "https://storage.googleapis.com/ibeans/test.zip",
+            "validation": "https://storage.googleapis.com/ibeans/validation.zip",
+        },
+        "citation": """@misc{makerere2020beans,
+                         author = "{Makerere AI Lab}",
+                         title = "{Bean Disease Dataset}",
+                         year = "2020",
+                         month = "January",
+                         url = "https://github.com/AI-Lab-Makerere/ibean/"}""",
+    }
 
     def _info(self):
         return datasets.DatasetInfo(
@@ -21,40 +39,13 @@ class Beans(datasets.GeneratorBasedBuilder):
                 }
             ),
             supervised_keys=("image", "label"),
+            homepage=self.SOURCE["homepage"],
             license="MIT License",
-            citation="""@misc{makerere2020beans,
-                         author = "{Makerere AI Lab}",
-                         title = "{Bean Disease Dataset}",
-                         year = "2020",
-                         month = "January",
-                         url = "https://github.com/AI-Lab-Makerere/ibean/"}""",
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        urls = {
-            "train": "https://storage.googleapis.com/ibeans/train.zip",
-            "test": "https://storage.googleapis.com/ibeans/test.zip",
-            "validation": "https://storage.googleapis.com/ibeans/validation.zip",
-        }
-        downloaded_files = dl_manager.download(urls)
-
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"zip_path": downloaded_files["train"]},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"zip_path": downloaded_files["test"]},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION,
-                gen_kwargs={"zip_path": downloaded_files["validation"]},
-            ),
-        ]
-
-    def _generate_examples(self, zip_path):
-        with zipfile.ZipFile(zip_path, "r") as archive:
+    def _generate_examples(self, data_path, split):
+        with zipfile.ZipFile(data_path, "r") as archive:
             for file_name in archive.namelist():
                 if file_name.endswith(".jpg"):
                     with archive.open(file_name) as file:
