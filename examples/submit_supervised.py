@@ -4,25 +4,26 @@ Submitit script for launching supervised learning evaluations on a SLURM cluster
 This script submits jobs to evaluate models on multiple datasets from stable-datasets.
 """
 
-import submitit
-import os
 import json
+import os
 from pathlib import Path
+
+import submitit
 
 
 def main(kwargs, job_dir):
-    dataset = kwargs['dataset']
-    model = kwargs['model']
-    seed = kwargs['seed']
-    results_file = kwargs['results_file']
-    batch_size = kwargs.get('batch_size', 128)
-    num_workers = kwargs.get('num_workers', 8)
-    image_size = kwargs.get('image_size', 224)
-    lr = kwargs.get('lr', 5e-4)
-    weight_decay = kwargs.get('weight_decay', 0.02)
-    max_epochs = kwargs.get('max_epochs', 100)
-    wandb_project = kwargs.get('wandb_project', 'stable-datasets')
-    config_name = kwargs.get('config_name', None)
+    dataset = kwargs["dataset"]
+    model = kwargs["model"]
+    seed = kwargs["seed"]
+    results_file = kwargs["results_file"]
+    batch_size = kwargs.get("batch_size", 128)
+    num_workers = kwargs.get("num_workers", 8)
+    image_size = kwargs.get("image_size", 224)
+    lr = kwargs.get("lr", 5e-4)
+    weight_decay = kwargs.get("weight_decay", 0.02)
+    max_epochs = kwargs.get("max_epochs", 100)
+    wandb_project = kwargs.get("wandb_project", "stable-datasets")
+    config_name = kwargs.get("config_name", None)
 
     # Set up the executor folder to include the job ID placeholder
     executor = submitit.AutoExecutor(folder=job_dir / "%j")
@@ -34,15 +35,15 @@ def main(kwargs, job_dir):
     partition = "gpu"
 
     executor.update_parameters(
-        mem_gb=mem_gb,                # Memory allocation
-        slurm_ntasks_per_node=1,      # Number of tasks per node
-        cpus_per_task=6,              # Number of CPUs per task
+        mem_gb=mem_gb,  # Memory allocation
+        slurm_ntasks_per_node=1,  # Number of tasks per node
+        cpus_per_task=6,  # Number of CPUs per task
         gpus_per_node=gpus_per_node,  # Number of GPUs to use
-        nodes=1,                      # Number of nodes
-        timeout_min=timeout_min,      # Maximum duration in minutes
-        slurm_partition=partition,    # Partition name
+        nodes=1,  # Number of nodes
+        timeout_min=timeout_min,  # Maximum duration in minutes
+        slurm_partition=partition,  # Partition name
         slurm_job_name=f"supervised_{model.split('/')[-1]}_{dataset}{f'_{config_name}' if config_name else ''}_seed{seed}",  # Job name
-        slurm_mail_type="ALL",        # Email settings
+        slurm_mail_type="ALL",  # Email settings
         slurm_mail_user="leyang_hu@brown.edu",  # Email address
     )
 
@@ -86,7 +87,7 @@ def job_completed(model, dataset, seed, results_file, hyperparams):
         return False
 
     try:
-        with open(results_path, 'r') as f:
+        with open(results_path) as f:
             results = json.load(f)
 
         model_name = model.split("/")[-1]
@@ -156,10 +157,17 @@ if __name__ == "__main__":
     dataset_configs = {
         "EMNIST": ["byclass", "bymerge", "balanced", "letters", "digits", "mnist"],
         "MedMNIST": [
-            "pathmnist", "dermamnist", "octmnist", "pneumoniamnist",
-            "breastmnist", "bloodmnist", "tissuemnist", "organamnist",
-            "organcmnist", "organsmnist",
-        ], #skipping chestmnist (multi-label classification task), retinamnist (ordinal regression task), and all 3D variants (organmnist3d, nodulemnist3d, adrenalmnist3d, fracturemnist3d, vesselmnist3d, synapsemnist3d)
+            "pathmnist",
+            "dermamnist",
+            "octmnist",
+            "pneumoniamnist",
+            "breastmnist",
+            "bloodmnist",
+            "tissuemnist",
+            "organamnist",
+            "organcmnist",
+            "organsmnist",
+        ],  # skipping chestmnist (multi-label classification task), retinamnist (ordinal regression task), and all 3D variants (organmnist3d, nodulemnist3d, adrenalmnist3d, fracturemnist3d, vesselmnist3d, synapsemnist3d)
     }
 
     # Seeds for reproducibility
@@ -181,7 +189,7 @@ if __name__ == "__main__":
     results_path = Path(results_file)
     if not results_path.exists():
         results_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(results_path, 'w') as f:
+        with open(results_path, "w") as f:
             json.dump({}, f)
 
     # Calculate total jobs
@@ -193,14 +201,14 @@ if __name__ == "__main__":
             total_jobs += len(model_list) * len(seed_list)
 
     # Submit jobs
-    print(f"{'='*60}")
-    print(f"Submitting Supervised Learning Evaluation Jobs")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
+    print("Submitting Supervised Learning Evaluation Jobs")
+    print(f"{'=' * 60}")
     print(f"Models: {len(model_list)}")
     print(f"Datasets: {len(dataset_list)}")
     print(f"Seeds: {len(seed_list)}")
     print(f"Total jobs: {total_jobs}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     submitted_count = 0
     skipped_count = 0
@@ -220,11 +228,11 @@ if __name__ == "__main__":
                     # Check if job already completed
                     if not job_completed(model, dataset, seed, results_file, hyperparams):
                         kwargs = {
-                            'dataset': dataset,
-                            'model': model,
-                            'seed': seed,
-                            'results_file': results_file,
-                            'config_name': config_name,
+                            "dataset": dataset,
+                            "model": model,
+                            "seed": seed,
+                            "results_file": results_file,
+                            "config_name": config_name,
                             **default_hyperparams,
                         }
                         main(kwargs, job_dir)
@@ -232,9 +240,9 @@ if __name__ == "__main__":
                     else:
                         skipped_count += 1
 
-    print(f"\n{'='*60}")
-    print(f"Submission Summary")
-    print(f"{'='*60}")
+    print(f"\n{'=' * 60}")
+    print("Submission Summary")
+    print(f"{'=' * 60}")
     print(f"Jobs submitted: {submitted_count}")
     print(f"Jobs skipped (already completed): {skipped_count}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")

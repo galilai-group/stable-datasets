@@ -15,16 +15,12 @@ from .cifar100 import CIFAR100
 # from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .clevrer import CLEVRER
-from .dtd import DTD
-from .e_mnist import EMNIST
-
-from .country211 import Country211
-from .cub200 import CUB200
 from .dsprites import DSprites
 from .dsprites_color import DSpritesColor
 from .dsprites_noise import DSpritesNoise
 from .dsprites_scream import DSpritesScream
 from .dtd import DTD
+from .e_mnist import EMNIST
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
 from .k_mnist import KMNIST

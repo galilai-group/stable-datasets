@@ -14,16 +14,17 @@ import random
 import time
 from functools import partial
 from pathlib import Path
+
 import lightning as pl
 import numpy as np
+import stable_pretraining as spt
 import torch
 import torchmetrics
 from lightning.pytorch.loggers import WandbLogger
 from PIL import Image
+from stable_pretraining.data import transforms
 from transformers import AutoConfig, AutoModelForImageClassification
 
-import stable_pretraining as spt
-from stable_pretraining.data import transforms
 
 # Set SLURM_NTASKS_PER_NODE if SLURM_NTASKS is set but SLURM_NTASKS_PER_NODE is not
 # This prevents Lightning from erroring when it detects SLURM but can't find the expected variable
@@ -47,10 +48,7 @@ def get_dataset_class(dataset_name: str):
         dataset_class = getattr(module, dataset_name)
         return dataset_class
     except (ImportError, AttributeError) as e:
-        raise ValueError(
-            f"Dataset '{dataset_name}' not found in stable_datasets.images. "
-            f"Error: {e}"
-        )
+        raise ValueError(f"Dataset '{dataset_name}' not found in stable_datasets.images. Error: {e}")
 
 
 def get_hyperparams_dict(image_size, batch_size, lr, weight_decay, max_epochs, seed, config_name=None):
@@ -76,14 +74,14 @@ def load_results(results_file="results.json", max_retries=10, retry_delay=0.1):
 
     for attempt in range(max_retries):
         try:
-            with open(results_path, "r") as f:
+            with open(results_path) as f:
                 # Acquire shared lock for reading
                 fcntl.flock(f.fileno(), fcntl.LOCK_SH)
                 try:
                     return json.load(f)
                 finally:
                     fcntl.flock(f.fileno(), fcntl.LOCK_UN)
-        except (IOError, OSError, json.JSONDecodeError) as e:
+        except (OSError, json.JSONDecodeError) as e:
             if attempt < max_retries - 1:
                 time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
                 continue
@@ -99,7 +97,7 @@ def save_results(results, results_file="results.json", max_retries=10, retry_del
     results_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Use atomic write: write to temp file first, then rename
-    temp_path = results_path.with_suffix('.tmp')
+    temp_path = results_path.with_suffix(".tmp")
 
     for attempt in range(max_retries):
         try:
@@ -117,7 +115,7 @@ def save_results(results, results_file="results.json", max_retries=10, retry_del
             temp_path.replace(results_path)
             return
 
-        except (IOError, OSError) as e:
+        except OSError as e:
             if attempt < max_retries - 1:
                 time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
                 continue
@@ -203,9 +201,7 @@ class HFDatasetWrapper(spt.data.Dataset):
         self.hf_dataset = hf_dataset
         # Add sample_idx if not present
         if "sample_idx" not in hf_dataset.column_names:
-            self.hf_dataset = hf_dataset.add_column(
-                "sample_idx", list(range(hf_dataset.num_rows))
-            )
+            self.hf_dataset = hf_dataset.add_column("sample_idx", list(range(hf_dataset.num_rows)))
 
     def __getitem__(self, idx):
         sample = self.hf_dataset[idx]
@@ -309,7 +305,7 @@ def get_data_loaders(args, dataset_class, seed=42, config_name=None):
         train_dataset_raw = all_splits["train"]
         val_dataset_raw = all_splits[validation_split_name]
         test_dataset_raw = all_splits["test"]
-        print(f"Using existing train/val/test splits")
+        print("Using existing train/val/test splits")
     elif has_train and has_test:
         # Both train and test exist - use test as-is, split train 80/20
         train_dataset_raw = all_splits["train"]
@@ -318,7 +314,7 @@ def get_data_loaders(args, dataset_class, seed=42, config_name=None):
         split_dict = train_dataset_raw.train_test_split(test_size=0.2, seed=seed)
         train_dataset_raw = split_dict["train"]
         val_dataset_raw = split_dict["test"]
-        print(f"Using existing train/test splits, splitting train 80/20 for train/val")
+        print("Using existing train/test splits, splitting train 80/20 for train/val")
     elif has_train:
         # Only train exists - split 80/10/10
         train_dataset_raw = all_splits["train"]
@@ -330,7 +326,7 @@ def get_data_loaders(args, dataset_class, seed=42, config_name=None):
         split_dict2 = temp_dataset.train_test_split(test_size=0.5, seed=seed)
         val_dataset_raw = split_dict2["train"]
         test_dataset_raw = split_dict2["test"]
-        print(f"Only train split available, splitting 80/10/10 for train/val/test")
+        print("Only train split available, splitting 80/10/10 for train/val/test")
     elif has_test:
         # Only test exists - split 80/10/10
         test_dataset_raw = all_splits["test"]
@@ -342,11 +338,9 @@ def get_data_loaders(args, dataset_class, seed=42, config_name=None):
         split_dict2 = temp_dataset.train_test_split(test_size=0.5, seed=seed)
         val_dataset_raw = split_dict2["train"]
         test_dataset_raw = split_dict2["test"]
-        print(f"Only test split available, splitting 80/10/10 for train/val/test")
+        print("Only test split available, splitting 80/10/10 for train/val/test")
     else:
-        raise ValueError(
-            f"Dataset {dataset_class.__name__} must have at least 'train' or 'test' split"
-        )
+        raise ValueError(f"Dataset {dataset_class.__name__} must have at least 'train' or 'test' split")
 
     # Infer number of classes from the dataset
     num_classes = get_num_classes(train_dataset_raw)
@@ -365,9 +359,7 @@ def get_data_loaders(args, dataset_class, seed=42, config_name=None):
         transforms.RGB(),
         transforms.RandomResizedCrop((image_size, image_size)),
         transforms.RandomHorizontalFlip(p=0.5),
-        transforms.ColorJitter(
-            brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
-        ),
+        transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8),
         transforms.RandomGrayscale(p=0.2),
         transforms.GaussianBlur(kernel_size=blur_kernel_size, p=0.5),
         transforms.ToImage(mean=mean, std=std),
@@ -634,8 +626,12 @@ def main(args):
     test_accuracy = None
 
     # Debug: print available metrics
-    print(f"Available logged_metrics: {list(test_trainer.logged_metrics.keys()) if hasattr(test_trainer, 'logged_metrics') else 'None'}")
-    print(f"Available callback_metrics: {list(test_trainer.callback_metrics.keys()) if hasattr(test_trainer, 'callback_metrics') else 'None'}")
+    print(
+        f"Available logged_metrics: {list(test_trainer.logged_metrics.keys()) if hasattr(test_trainer, 'logged_metrics') else 'None'}"
+    )
+    print(
+        f"Available callback_metrics: {list(test_trainer.callback_metrics.keys()) if hasattr(test_trainer, 'callback_metrics') else 'None'}"
+    )
 
     # Check trainer metrics first (where Lightning stores final test results)
     if hasattr(test_trainer, "logged_metrics") and "test_accuracy" in test_trainer.logged_metrics:
@@ -707,9 +703,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Supervised learning training script with stable-datasets"
-    )
+    parser = argparse.ArgumentParser(description="Supervised learning training script with stable-datasets")
     parser.add_argument(
         "--dataset",
         type=str,
@@ -790,4 +784,3 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args)
-
