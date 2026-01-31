@@ -266,7 +266,7 @@ VIT_CONFIGS = {
 
 def create_vit(
     size: str = "base",
-    img_size: int = 224,
+    img_size: Union[int, Tuple[int, int]] = 224,
     patch_size: int = 16,
     in_chans: int = 3,
     **kwargs,
@@ -275,7 +275,7 @@ def create_vit(
 
     Args:
         size: Model size - "tiny", "small", "base", or "large"
-        img_size: Input image size
+        img_size: Input image size (int for square, tuple for rectangular)
         patch_size: Size of image patches
         in_chans: Number of input channels
         **kwargs: Additional kwargs passed to VisionTransformer
@@ -299,25 +299,25 @@ def create_vit(
 
 def create_vit_base(
     patch_size: int = 16,
-    img_size: int = 224,
+    img_size: Union[int, Tuple[int, int]] = 224,
     pretrained: bool = False,
     in_chans: int = 3,
 ) -> nn.Module:
     """Create a ViT-Base model.
 
-    Uses timm for standard configurations when pretrained weights are available,
-    otherwise falls back to custom implementation for arbitrary sizes.
+    Uses timm for standard square configurations when pretrained weights are available,
+    otherwise falls back to custom implementation for arbitrary/rectangular sizes.
 
     Args:
         patch_size: Size of image patches
-        img_size: Input image size
+        img_size: Input image size (int for square, tuple for rectangular)
         pretrained: Whether to load pretrained weights (only for standard sizes)
         in_chans: Number of input channels
 
     Returns:
         A ViT-Base model configured for the given patch size and image size
     """
-    # Standard timm configurations that have pretrained weights
+    # Standard timm configurations that have pretrained weights (square only)
     timm_configs = {
         (16, 224): "vit_base_patch16_224",
         (16, 384): "vit_base_patch16_384",
@@ -326,17 +326,18 @@ def create_vit_base(
         (14, 224): "vit_base_patch14_224",
     }
 
-    key = (patch_size, img_size)
-    if key in timm_configs and (pretrained or in_chans == 3):
-        # Use timm for standard configurations
-        return timm.create_model(
-            timm_configs[key],
-            pretrained=pretrained,
-            num_classes=0,
-            in_chans=in_chans,
-        )
+    # Only use timm for square images with standard configurations
+    if isinstance(img_size, int):
+        key = (patch_size, img_size)
+        if key in timm_configs and (pretrained or in_chans == 3):
+            return timm.create_model(
+                timm_configs[key],
+                pretrained=pretrained,
+                num_classes=0,
+                in_chans=in_chans,
+            )
 
-    # Custom implementation for non-standard configurations
+    # Custom implementation for non-standard/rectangular configurations
     return create_vit(
         size="base",
         img_size=img_size,
