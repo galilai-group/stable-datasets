@@ -43,6 +43,7 @@ from .not_mnist import NotMNIST
 # from .rock_paper_scissor import RockPaperScissor
 # from .stl10 import STL10
 from .svhn import SVHN
+from .uc_merced import UCMerced
 
 
 # from .tiny_imagenet import TinyImagenet
@@ -70,4 +71,5 @@ __all__ = [
     "NotMNIST",
     "Flowers102",
     "SVHN",
+    "UCMerced",
 ]
