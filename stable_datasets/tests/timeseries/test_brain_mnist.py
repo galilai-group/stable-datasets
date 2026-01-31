@@ -8,7 +8,7 @@ device variants with different numbers of EEG channels and sample rates.
 import numpy as np
 import pytest
 
-from stable_datasets.timeseries.brain_mnist import BrainMNIST, BrainMNISTConfig
+from stable_datasets.timeseries.brain_mnist import BrainMNIST
 
 
 def _create_builder_without_download(config_name: str = "mindwave") -> BrainMNIST:
@@ -255,18 +255,18 @@ class TestBrainMNISTMultipleConfigs:
     def test_config_eeg_shape(self, config_name, expected_channels, expected_samples):
         """Each config should produce EEG data with the correct shape."""
         import datasets as hf_datasets
-        
+
         # Get the HuggingFace dataset ID for this config
         configs = {c.name: c for c in BrainMNIST.BUILDER_CONFIGS}
         config = configs[config_name]
-        
+
         # Load just the first row using split slicing (avoids full dataset load)
         hf_ds = hf_datasets.load_dataset(
             config.hf_dataset_id,
             split="train[:1]",
         )
         row = hf_ds[0]
-        
+
         # Extract EEG data from the row
         builder = _create_builder_without_download(config_name)
         eeg = builder._extract_eeg_data(row)

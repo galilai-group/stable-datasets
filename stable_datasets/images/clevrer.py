@@ -11,8 +11,7 @@ from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder
 
 
 def _wget_download(url: str, dest_folder: Path) -> Path:
-    """Download a file using wget with resume support.
-    """
+    """Download a file using wget with resume support."""
     dest_folder = Path(dest_folder)
     dest_folder.mkdir(parents=True, exist_ok=True)
 

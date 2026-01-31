@@ -40,7 +40,7 @@ class BrainMNIST(BaseDatasetBuilder):
 
     EEG signals captured while subjects viewed MNIST digits (0-9). The dataset
     includes recordings from multiple consumer EEG devices with different numbers
-    of channels and sampling rates, making it suitable for brain-computer 
+    of channels and sampling rates, making it suitable for brain-computer
     interface research and neural decoding experiments.
 
     Reference:
@@ -106,10 +106,7 @@ class BrainMNIST(BaseDatasetBuilder):
             description="Emotiv EPOC - 14 EEG channels, 256 samples at 128Hz",
             num_channels=14,
             num_samples=256,
-            channel_names=[
-                "AF3", "F7", "F3", "FC5", "T7", "P7", "O1",
-                "O2", "P8", "T8", "FC6", "F4", "F8", "AF4"
-            ],
+            channel_names=["AF3", "F7", "F3", "FC5", "T7", "P7", "O1", "O2", "P8", "T8", "FC6", "F4", "F8", "AF4"],
             sampling_rate=128,
             hf_dataset_id="DavidVivancos/MindBigData2022_MNIST_EP",
         ),
@@ -166,15 +163,17 @@ class BrainMNIST(BaseDatasetBuilder):
                 dtype="float32",
             )
 
-        features = datasets.Features({
-            "eeg": eeg_feature,
-            "label": datasets.ClassLabel(names=label_names),
-        })
+        features = datasets.Features(
+            {
+                "eeg": eeg_feature,
+                "label": datasets.ClassLabel(names=label_names),
+            }
+        )
 
         return datasets.DatasetInfo(
             description=f"""BrainMNIST ({self.config.name}): EEG signals captured while viewing MNIST digits.
 Device: {self.config.description}
-Channels: {self.config.num_channels} ({', '.join(self.config.channel_names)})
+Channels: {self.config.num_channels} ({", ".join(self.config.channel_names)})
 Samples per recording: {self.config.num_samples}
 Sampling rate: {self.config.sampling_rate} Hz
 Labels: 0-9 (digits), 10 (no stimulus)""",
@@ -227,10 +226,13 @@ Labels: 0-9 (digits), 10 (no stimulus)""",
             # Column naming: ChannelName-SampleNum (e.g., FP1-0, FP1-1, ..., FP1-1023)
             eeg_data = self._extract_eeg_data(row)
 
-            yield idx, {
-                "eeg": eeg_data,
-                "label": label,
-            }
+            yield (
+                idx,
+                {
+                    "eeg": eeg_data,
+                    "label": label,
+                },
+            )
 
     def _extract_eeg_data(self, row: dict) -> np.ndarray:
         """Extract EEG signal data from a row.
@@ -249,10 +251,13 @@ Labels: 0-9 (digits), 10 (no stimulus)""",
         if num_channels == 1:
             # Single channel: extract as 1D array
             channel_name = channel_names[0]
-            eeg_data = np.array([
-                row.get(f"{channel_name}-{i}", row.get(f"{channel_name.lower()}-{i}", 0.0))
-                for i in range(num_samples)
-            ], dtype=np.float32)
+            eeg_data = np.array(
+                [
+                    row.get(f"{channel_name}-{i}", row.get(f"{channel_name.lower()}-{i}", 0.0))
+                    for i in range(num_samples)
+                ],
+                dtype=np.float32,
+            )
         else:
             # Multi-channel: extract as 2D array (channels x samples)
             eeg_data = np.zeros((num_channels, num_samples), dtype=np.float32)
