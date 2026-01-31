@@ -11,12 +11,108 @@ Usage:
 import argparse
 import importlib
 
+from loguru import logger as logging
 import matplotlib.pyplot as plt
 import numpy as np
 
 
+def audiodecoder_to_rgb_spectrogram(
+    decoder,
+    *,
+    channel_mode = "mono",  # "mono" | "first" | "per_channel"
+    n_fft = 2205,
+    hop_length = 441,
+    cmap = "viridis",
+    eps = 1e-8,
+):
+    """
+    Convert audio from a torchcodec AudioDecoder into an RGB mel spectrogram image.
+
+    Args:
+        decoder:
+            An initialized torchcodec.AudioDecoder.
+        channel_mode:
+            How to handle multiple channels:
+            - "mono": average all channels (default, librosa-style)
+            - "first": use channel 0 only
+            - "per_channel": return one RGB image per channel
+        n_fft:
+            FFT window size.
+        hop_length:
+            Hop length between frames.
+        cmap:
+            Matplotlib colormap name.
+        eps:
+            Small constant to avoid divide-by-zero.
+
+    Returns:
+        If channel_mode != "per_channel":
+            np.ndarray of shape (H, W, 3), dtype uint8
+        If channel_mode == "per_channel":
+            list[np.ndarray], each of shape (H, W, 3)
+    """
+    # Imports that are only needed for audio teasers
+    from torchcodec.decoders import AudioDecoder
+    import librosa
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # Decodes audio
+    audio = decoder.get_all_samples()
+    waveform = audio.data  # torch.Tensor, shape (C, T)
+    sr = audio.sample_rate
+    if sr is None:
+        raise ValueError("AudioDecoder sample_rate is None")
+    waveform = waveform.cpu().numpy()
+    num_channels, _ = waveform.shape
+
+    # Handles channels
+    if channel_mode == "mono":
+        signals = [np.mean(waveform, axis=0)]
+    elif channel_mode == "first":
+        signals = [waveform[0]]
+    elif channel_mode == "per_channel":
+        signals = [waveform[c] for c in range(num_channels)]
+    else:
+        raise ValueError(
+            f"Invalid channel_mode: {channel_mode}. "
+            "Choose from {'mono', 'first', 'per_channel'}."
+        )
+
+    # Computes spectrogram(s)
+    images = []
+
+    for y in signals:
+        # Mel spectrogram
+        mel = librosa.feature.melspectrogram(
+            y=y,
+            sr=sr,
+            n_fft=n_fft,
+            hop_length=hop_length,
+        )
+
+        # Convert to log scale (dB)
+        mel_db = librosa.power_to_db(mel, ref=np.max)
+
+        # Normalize to [0, 1]
+        mel_norm = (mel_db - mel_db.min()) / (mel_db.max() - mel_db.min() + eps)
+
+        # Maps to RGB and adds image
+        cmap_fn = plt.get_cmap(cmap)
+        rgb = cmap_fn(mel_norm)[..., :3]  # drop alpha
+        rgb = (rgb * 255).astype(np.uint8)
+        images.append(rgb)
+
+    # Returns
+    if channel_mode == "per_channel":
+        return images
+    else:
+        return images[0]
+
+
 def generate_teaser(
     dataset_name: str,
+    split: str = "train",
     num_samples: int = 5,
     image_key: str = "image",
     label_key: str = "label",
@@ -29,6 +125,7 @@ def generate_teaser(
 
     Args:
         dataset_name: Name of the dataset (e.g., 'CIFAR10', 'MNIST')
+        split: Split of the dataset to use (e.g., 'train', 'test', 'val')
         num_samples: Number of samples to display
         image_key: Key for image data in the dataset
         label_key: Key for label data in the dataset
@@ -54,9 +151,9 @@ def generate_teaser(
     # Load the dataset
     print(f"Loading {dataset_name} dataset...")
     if variant is None:
-        dataset = dataset_class(split="train")
+        dataset = dataset_class(split=split)
     else:
-        dataset = dataset_class(split="train", config_name=variant)
+        dataset = dataset_class(split=split, config_name=variant)
 
     # Get samples from different classes
     samples = []
@@ -83,7 +180,9 @@ def generate_teaser(
             idx += 1
 
     # Create figure
-    fig = plt.figure(figsize=(figsize_per_sample * num_samples, figsize_per_sample * 1.1))
+    # Spectrograms are wide but short, so use a much smaller height multiplier
+    height_multiplier = 0.4 if image_key == "audio" else 1.1
+    fig = plt.figure(figsize=(figsize_per_sample * num_samples, figsize_per_sample * height_multiplier))
     gs = fig.add_gridspec(
         2,
         num_samples,
@@ -134,13 +233,18 @@ def generate_teaser(
         ax_image.axis("off")
         ax_image.margins(0)
 
-        image = sample[image_key]
+        # Handles both image and audio data
+        if image_key == "audio":
+            logging.info(f"Making spectrogram from audio data")
+            image = audiodecoder_to_rgb_spectrogram(sample[image_key])
+        else:
+            image = sample[image_key]
 
-        # Convert PIL Image to numpy if needed
-        if hasattr(image, "numpy"):
-            image = image.numpy()
-        elif hasattr(image, "convert"):  # PIL Image
-            image = np.array(image)
+            # Convert PIL Image to numpy if needed
+            if hasattr(image, "numpy"):
+                image = image.numpy()
+            elif hasattr(image, "convert"):  # PIL Image
+                image = np.array(image)
 
         # Handle different image formats
         if len(image.shape) == 3:
@@ -193,6 +297,12 @@ Examples:
         help="Name of the dataset (e.g., MNIST, CIFAR10, CIFAR100)",
     )
     parser.add_argument(
+        "--split",
+        type=str,
+        default="train",
+        help="Split of the dataset to use (e.g., 'train', 'test', 'val')",
+    )
+    parser.add_argument(
         "--num-samples",
         type=int,
         default=5,
@@ -234,6 +344,7 @@ Examples:
 
     generate_teaser(
         dataset_name=args.name,
+        split=args.split,
         num_samples=args.num_samples,
         image_key=args.image_key,
         label_key=args.label_key,

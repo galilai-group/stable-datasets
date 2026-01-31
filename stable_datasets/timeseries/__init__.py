@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+from .esc50 import ESC50
+
+__all__ = [
+    "ESC50",
+]
+
 # from . import (
 #    VoiceGenderDetection,
 #    JapaneseVowels,
