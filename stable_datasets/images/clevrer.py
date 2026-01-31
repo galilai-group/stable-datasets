@@ -5,27 +5,7 @@ from pathlib import Path
 
 import datasets
 
-<<<<<<< HEAD
-from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder
-
-
-def _wget_download(url: str, dest_folder: Path) -> Path:
-    """Download a file using wget with resume support."""
-    dest_folder = Path(dest_folder)
-    dest_folder.mkdir(parents=True, exist_ok=True)
-
-    filename = os.path.basename(urlparse(url).path)
-    local_path = dest_folder / filename
-
-    cmd = ["wget", "-c", "--progress=bar:force:noscroll", "-P", str(dest_folder), url]
-
-    print(f"Downloading (or resuming): {url}")
-    subprocess.run(cmd, check=True, cwd=str(dest_folder))
-
-    return local_path
-=======
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
->>>>>>> 31c8c120d9c8f9b3288110e0fc1c16ab4b516ed0
 
 
 class CLEVRER(BaseDatasetBuilder):
