@@ -1,12 +1,11 @@
 import json
 import os
-import subprocess
 import zipfile
 from pathlib import Path
-from urllib.parse import urlparse
 
 import datasets
 
+<<<<<<< HEAD
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder
 
 
@@ -24,6 +23,9 @@ def _wget_download(url: str, dest_folder: Path) -> Path:
     subprocess.run(cmd, check=True, cwd=str(dest_folder))
 
     return local_path
+=======
+from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
+>>>>>>> 31c8c120d9c8f9b3288110e0fc1c16ab4b516ed0
 
 
 class CLEVRER(BaseDatasetBuilder):
@@ -96,10 +98,10 @@ class CLEVRER(BaseDatasetBuilder):
             download_dir = _default_dest_folder()
         download_dir = Path(download_dir)
 
-        # Download all files sequentially using wget (handles redirects, supports resume)
-        url_to_path = {}
-        for key, url in assets.values():
-            url_to_path[url] = _wget_download(url, download_dir)
+        # Download all files concurrently using bulk_download
+        urls = list(assets.values())
+        downloaded_paths = bulk_download(urls, dest_folder=download_dir)
+        url_to_path = dict(zip(urls, downloaded_paths))
 
         return [
             datasets.SplitGenerator(
