@@ -125,8 +125,8 @@ def main() -> None:
         for data, config in datasets_loaded
     ]
 
-    for experiment, model_name, data_cfg in experiments:
-        logging.info(f'Running {experiment} with {model_name=} and dataset "{data_cfg.name}"')
+    for (experiment, experiment_info), model_name, data_cfg in experiments:
+        logging.info(f'Running {experiment} with {model_name=} and dataset "{data_cfg.name}" {experiment_info=}')
         experiment()
 
 
