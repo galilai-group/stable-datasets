@@ -107,7 +107,14 @@ def main() -> None:
     if 'all' in model_names:
         model_names = MODELS
 
-    datasets_loaded = [create_dataset(name) for name in dataset_names]
+    datasets_loaded = []
+    for name in dataset_names:
+        if name == 'emnist':
+            datasets_loaded.append(create_dataset(name, config_name="balanced"))
+        elif name == 'medmnist':
+            datasets_loaded.append(create_dataset(name, config_name="pneumoniamnist"))
+        else:
+            datasets_loaded.append(create_dataset(name))
     
     experiments = [
         (

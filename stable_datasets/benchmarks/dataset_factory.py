@@ -12,6 +12,8 @@ import torchcodec
 
 import numpy as np
 import stable_datasets as sds
+import sys ; sys.path.append("/root/stable-datasets/stable-pretraining") # so u can use mae code wthout new release (gitmodule)
+
 import stable_pretraining as spt
 import torch
 from stable_pretraining.data import transforms
