@@ -15,6 +15,7 @@ from stable_pretraining import forward
 from torch import nn
 
 from .dataset_factory import DatasetConfig
+from .models import create_vit_base
 
 
 DEFAULT_EMBED_DIM = 512
@@ -178,11 +179,11 @@ def create_mae_module(
     num_patches = (h // patch_size) * (w // patch_size)
     output_dim = patch_size * patch_size * config.channels
 
-    masking = spt.backbone.PatchMasking(mask_ratio=mask_ratio)
+    masking = spt.data.transforms.PatchMasking(patch_size=patch_size, drop_ratio=mask_ratio)
+    vit_model = create_vit_base(patch_size=patch_size, img_size=h, pretrained=False)
     encoder = spt.backbone.MaskedEncoder(
-        model_or_model_name=f"vit_base_patch{patch_size}_{h}",
+        model_or_model_name=vit_model,
         masking=masking,
-        pretrained=False,
     )
 
     decoder = spt.backbone.MAEDecoder(
@@ -223,30 +224,38 @@ def create_evaluation_callbacks(
     """Create evaluation callbacks (linear probe, KNN probe)."""
     num_classes = config.num_classes
 
-    linear_probe = spt.callbacks.OnlineProbe(
-        module,
-        name="linear_probe",
-        input="embedding",
-        target="label",
-        probe=nn.Linear(embed_dim, num_classes),
-        loss_fn=nn.CrossEntropyLoss(),
-        metrics={
+    evals, metrics = [], {}
+
+    if num_classes > 0:
+        metrics = {
             "top1": torchmetrics.classification.MulticlassAccuracy(num_classes),
             "top5": torchmetrics.classification.MulticlassAccuracy(num_classes, top_k=min(5, num_classes)),
-        },
-    )
+        }
+
+    if num_classes > 0:
+        linear_probe = spt.callbacks.OnlineProbe(
+            module,
+            name="linear_probe",
+            input="embedding",
+            target="label",
+            probe=nn.Linear(embed_dim, num_classes),
+            loss_fn=nn.CrossEntropyLoss(),
+            metrics=metrics,
+        )
+        evals.append(linear_probe)
 
     knn_probe = spt.callbacks.OnlineKNN(
         name="knn_probe",
         input="embedding",
         target="label",
         queue_length=20000,
-        metrics={"accuracy": torchmetrics.classification.MulticlassAccuracy(num_classes)},
+        metrics=metrics,
         input_dim=embed_dim,
         k=10,
     )
 
-    return [linear_probe, knn_probe]
+    evals.append(knn_probe)
+    return evals
 
 
 AVAILABLE_MODELS = ("simclr", "mae")
