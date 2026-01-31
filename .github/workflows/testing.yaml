@@ -62,8 +62,9 @@ jobs:
             --cov-report=term | tee pytest-coverage.txt
 
       # Post Coverage Comment on PR
+      # Only run if the PR is not from a fork
       - name: Pytest coverage comment
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
         uses: MishaKav/pytest-coverage-comment@main
         with:
           pytest-coverage-path: ./pytest-coverage.txt
