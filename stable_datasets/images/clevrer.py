@@ -99,7 +99,7 @@ class CLEVRER(BaseDatasetBuilder):
 
         # Download all files sequentially using wget (handles redirects, supports resume)
         url_to_path = {}
-        for key, url in assets.values():
+        for key, url in assets.items():
             url_to_path[url] = _wget_download(url, download_dir)
 
         return [

@@ -52,7 +52,14 @@ def _get_all_dataset_classes() -> list[type]:
     """Return all dataset builder classes from stable_datasets.images."""
     return [
         cls for cls in vars(sds.images).values()
-        if isinstance(cls, type) and issubclass(cls, sds.BaseDatasetBuilder)
+        if (
+            isinstance(cls, type) 
+            and issubclass(cls, sds.BaseDatasetBuilder) 
+            # below takes too long
+            and cls.__name__.lower() != 'cars196' 
+            and cls.__name__.lower() != 'cifar10c'
+            and cls.__name__.lower() != 'cifar100c'
+        )
     ]
 
 

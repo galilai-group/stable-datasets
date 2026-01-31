@@ -45,11 +45,12 @@ DEFAULT_STATS = {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
 
 def get_dataset_classes() -> dict[str, type]:
     """Return all available dataset classes from stable_datasets.images."""
-    return {
+    classes = {
         name.lower(): cls
         for name, cls in vars(sds.images).items()
         if isinstance(cls, type) and issubclass(cls, sds.BaseDatasetBuilder)
     }
+    return classes
 
 
 def _extract_image_dimensions(image) -> tuple[int, int, int]:
