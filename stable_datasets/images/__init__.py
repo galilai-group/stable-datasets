@@ -22,6 +22,7 @@ from .not_mnist import NotMNIST
 from .stl10 import STL10
 from .svhn import SVHN
 
+
 # from .awa2 import AWA2
 # from .beans import Beans
 # from .celeb_a import CelebA

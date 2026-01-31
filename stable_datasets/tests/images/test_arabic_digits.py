@@ -41,4 +41,3 @@ def test_arabic_digits_dataset():
     )
 
     print("All ArabicDigits dataset tests passed successfully!")
-

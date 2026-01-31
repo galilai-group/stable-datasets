@@ -39,4 +39,3 @@ def test_stl10_dataset():
     assert unlabeled_sample["label"] == -1, "Unlabeled samples should have label -1."
 
     print("All STL10 dataset tests passed successfully!")
-
