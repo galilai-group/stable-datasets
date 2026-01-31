@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from .arabic_characters import ArabicCharacters
+from .cars3d import CARS3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
 
@@ -26,6 +27,7 @@ from .dtd import DTD
 from .e_mnist import EMNIST
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
+from .food101 import Food101
 from .k_mnist import KMNIST
 from .med_mnist import MedMNIST
 
@@ -42,6 +44,8 @@ from .not_mnist import NotMNIST
 # from .places365_small import Places365Small
 # from .rock_paper_scissor import RockPaperScissor
 # from .stl10 import STL10
+from .shapes3d import Shapes3D
+from .small_norb import SmallNORB
 from .svhn import SVHN
 
 
@@ -51,6 +55,7 @@ from .svhn import SVHN
 __all__ = [
     "ArabicCharacters",
     "Cars196",
+    "CARS3D",
     "CIFAR10",
     "CIFAR100",
     "CIFAR10C",
@@ -69,5 +74,8 @@ __all__ = [
     "DTD",
     "NotMNIST",
     "Flowers102",
+    "Food101",
     "SVHN",
+    "Shapes3D",
+    "SmallNORB",
 ]

@@ -18,6 +18,10 @@ Describable Textures Dataset (DTD) is a texture database, consisting of 5640 ima
 - **Validation**: 1880 images
 - **Test**: 1880 images
 
+.. image:: teasers/dtd_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 
