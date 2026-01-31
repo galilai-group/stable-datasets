@@ -87,11 +87,7 @@ python_functions = "test_*"
 
 # Custom markers
 markers = [
-    "unit: Unit tests (fast, no GPU required)",
-    "integration: Integration tests (slow, may require GPU)",
-    "gpu: Tests that require GPU",
-    "slow: Tests that take a long time to run",
-    "download: Tests that download data from the internet",
+    "large: Tests for datasets too large to run in CI",
 ]
 
 #####################
