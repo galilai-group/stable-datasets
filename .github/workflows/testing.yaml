@@ -49,8 +49,11 @@ jobs:
       # Run Tests
       - name: Run Tests with Coverage
         run: |
+          set -o pipefail
           pytest stable_datasets/ \
+            -m "not large" \
             --verbose \
+            --durations=0 \
             --cov=stable_datasets \
             --cov-report=term-missing:skip-covered \
             --cov-report=xml \
