@@ -176,11 +176,12 @@ def create_mae_module(
         config, patch_size, embed_dim, depth, decoder_embed_dim, decoder_depth
     )
 
-    num_patches = (h // patch_size) * (w // patch_size)
+    grid_size = (h // patch_size, w // patch_size)
+    num_patches = grid_size[0] * grid_size[1]
     output_dim = patch_size * patch_size * config.channels
 
     masking = spt.data.transforms.PatchMasking(patch_size=patch_size, drop_ratio=mask_ratio)
-    vit_model = create_vit_base(patch_size=patch_size, img_size=h, pretrained=False)
+    vit_model = create_vit_base(patch_size=patch_size, img_size=(h, w), pretrained=False)
     encoder = spt.backbone.MaskedEncoder(
         model_or_model_name=vit_model,
         masking=masking,
@@ -191,6 +192,7 @@ def create_mae_module(
         decoder_embed_dim=decoder_embed_dim,
         output_dim=output_dim,
         num_patches=num_patches,
+        grid_size=grid_size,
         depth=decoder_depth,
         num_heads=decoder_num_heads,
     )
