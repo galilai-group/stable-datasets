@@ -56,6 +56,8 @@ Available Datasets
    medmnist
    awa2
    beans
+   e_mnist
+   flowers102
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
