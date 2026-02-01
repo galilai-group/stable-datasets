@@ -45,6 +45,7 @@ Available Datasets
    :caption: Image Classification Datasets
 
    arabic_characters
+   arabic_digits
    cifar10
    cifar100
    cifar10_c
@@ -54,6 +55,7 @@ Available Datasets
    fashion_mnist
    k_mnist
    medmnist
+   stl10
    e_mnist
    flowers102
    linnaeus5
