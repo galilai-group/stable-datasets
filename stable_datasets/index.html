@@ -84,6 +84,7 @@
 <ul>
 <li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../datasets/">Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="../datasets/arabic_characters/">Arabic Characters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/arabic_digits/">Arabic Digits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cifar10/">CIFAR-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cifar100/">CIFAR-100</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cifar10_c/">CIFAR-10-C</a></li>
@@ -93,6 +94,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/medmnist/">MedMNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/stl10/">STL-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/flowers102/">Flowers102</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/linnaeus5/">Linnaeus 5</a></li>
@@ -141,6 +143,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.arabic_digits">stable_datasets.images.arabic_digits module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.arabic_digits.ArabicDigits"><code class="docutils literal notranslate"><span class="pre">ArabicDigits</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.arabic_digits.ArabicDigits.SOURCE"><code class="docutils literal notranslate"><span class="pre">ArabicDigits.SOURCE</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.arabic_digits.ArabicDigits.VERSION"><code class="docutils literal notranslate"><span class="pre">ArabicDigits.VERSION</span></code></a></li>
 </ul>
 </li>
@@ -413,6 +416,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.stl10">stable_datasets.images.stl10 module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.stl10.STL10"><code class="docutils literal notranslate"><span class="pre">STL10</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.stl10.STL10.SOURCE"><code class="docutils literal notranslate"><span class="pre">STL10.SOURCE</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.stl10.STL10.VERSION"><code class="docutils literal notranslate"><span class="pre">STL10.VERSION</span></code></a></li>
 </ul>
 </li>
@@ -444,6 +448,11 @@
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.ArabicCharacters"><code class="docutils literal notranslate"><span class="pre">ArabicCharacters</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.ArabicCharacters.SOURCE"><code class="docutils literal notranslate"><span class="pre">ArabicCharacters.SOURCE</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.ArabicCharacters.VERSION"><code class="docutils literal notranslate"><span class="pre">ArabicCharacters.VERSION</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.ArabicDigits"><code class="docutils literal notranslate"><span class="pre">ArabicDigits</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.ArabicDigits.SOURCE"><code class="docutils literal notranslate"><span class="pre">ArabicDigits.SOURCE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.ArabicDigits.VERSION"><code class="docutils literal notranslate"><span class="pre">ArabicDigits.VERSION</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.CIFAR10"><code class="docutils literal notranslate"><span class="pre">CIFAR10</span></code></a><ul>
@@ -535,6 +544,11 @@
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.NotMNIST"><code class="docutils literal notranslate"><span class="pre">NotMNIST</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.NotMNIST.SOURCE"><code class="docutils literal notranslate"><span class="pre">NotMNIST.SOURCE</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.NotMNIST.VERSION"><code class="docutils literal notranslate"><span class="pre">NotMNIST.VERSION</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.STL10"><code class="docutils literal notranslate"><span class="pre">STL10</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.STL10.SOURCE"><code class="docutils literal notranslate"><span class="pre">STL10.SOURCE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.STL10.VERSION"><code class="docutils literal notranslate"><span class="pre">STL10.VERSION</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/#stable_datasets.images.SVHN"><code class="docutils literal notranslate"><span class="pre">SVHN</span></code></a><ul>

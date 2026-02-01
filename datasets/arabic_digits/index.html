@@ -21,9 +21,9 @@
 <meta content="#ffffff" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="#030711" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CIFAR-100 | stable-datasets</title>
-<meta content="CIFAR-100 | stable-datasets" property="og:title"/>
-<meta content="CIFAR-100 | stable-datasets" name="twitter:title"/>
+<title>Arabic Digits | stable-datasets</title>
+<meta content="Arabic Digits | stable-datasets" property="og:title"/>
+<meta content="Arabic Digits | stable-datasets" name="twitter:title"/>
 <link href="../../_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="../../_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
 <link href="../../_static/theme.css?v=73505e79" rel="stylesheet" type="text/css"/>
@@ -35,8 +35,8 @@
 <link href="../../_static/awesome-sphinx-design.css?v=c54898a4" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
-<link href="../cifar10_c/" rel="next" title="CIFAR-10-C"/>
-<link href="../cifar10/" rel="prev" title="CIFAR-10"/>
+<link href="../cifar10/" rel="next" title="CIFAR-10"/>
+<link href="../arabic_characters/" rel="prev" title="Arabic Characters"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" @scroll.window="showScrollTop = pageYOffset &gt; 100" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -86,9 +86,9 @@
 <ul class="current">
 <li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../">Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="../arabic_characters/">Arabic Characters</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../arabic_digits/">Arabic Digits</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Arabic Digits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar10/">CIFAR-10</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">CIFAR-100</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cifar100/">CIFAR-100</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar10_c/">CIFAR-10-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cars196/">CARS-196</a></li>
@@ -125,23 +125,23 @@
 </svg>
 </a>
 <div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../">Datasets</a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">CIFAR-100</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Arabic Digits</span>
 </nav>
 <div id="content" role="main">
-<section id="cifar-100">
-<h1>CIFAR-100<a class="headerlink" href="#cifar-100" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
+<section id="arabic-digits">
+<h1>Arabic Digits<a class="headerlink" href="#arabic-digits" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
 <p style="display: flex; gap: 10px;">
 <img alt="Task: Image Classification" src="https://img.shields.io/badge/Task-Image%20Classification-blue"/>
-<img alt="Classes: 100" src="https://img.shields.io/badge/Classes-100-green"/>
-<img alt="Image Size: 32x32" src="https://img.shields.io/badge/Size-32x32-orange"/>
+<img alt="Classes: 10" src="https://img.shields.io/badge/Classes-10-green"/>
+<img alt="Image Size: 28x28" src="https://img.shields.io/badge/Size-28x28-orange"/>
 </p><section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#overview'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>The CIFAR-100 dataset is an extended version of CIFAR-10, consisting of 60,000 32×32 RGB color images across 100 fine-grained classes, grouped into 20 superclasses. Each fine class contains 600 images, and each superclass contains 3,000 images.</p>
+<p>The Arabic Handwritten Digits dataset is a single-label image classification benchmark consisting of 70,000 handwritten digit images across 10 classes (0–9). Images are provided as 28×28 grayscale PNGs. The dataset was written by 700 participants from different institutions to ensure diversity in handwriting styles, with each digit written ten times per writer. Derived from the MADBase database.</p>
 <ul class="simple">
-<li><p><strong>Train</strong>: 50,000 images (500 per class)</p></li>
-<li><p><strong>Test</strong>: 10,000 images (100 per class)</p></li>
+<li><p><strong>Train</strong>: 60,000 images (6,000 per class)</p></li>
+<li><p><strong>Test</strong>: 10,000 images (1,000 per class)</p></li>
 </ul>
-<a class="reference internal image-reference" href="../../_images/cifar100_teaser.png"><img alt="../../_images/cifar100_teaser.png" class="align-center" src="../../_images/cifar100_teaser.png" style="width: 90%;">
+<a class="reference internal image-reference" href="../../_images/arabic_digits_teaser.png"><img alt="../../_images/arabic_digits_teaser.png" class="align-center" src="../../_images/arabic_digits_teaser.png" style="width: 90%;">
 </img></a>
 </section>
 <section id="data-structure">
@@ -162,15 +162,11 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">PIL.Image.Image</span></code></p></td>
-<td><p>32×32×3 RGB image</p></td>
+<td><p>28×28 grayscale handwritten digit image</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
 <td><p>int</p></td>
-<td><p>Fine-grained class label (0-99)</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">superclass</span></code></p></td>
-<td><p>int</p></td>
-<td><p>Coarse superclass label (0-19)</p></td>
+<td><p>Class label (0-9)</p></td>
 </tr>
 </tbody>
 </table>
@@ -178,50 +174,40 @@
 <section id="usage-example">
 <h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage-example'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <p><strong>Basic Usage</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.cifar100</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIFAR100</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.arabic_digits</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArabicDigits</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="c1"># First run will download + prepare cache, then return the split as a HF Dataset</span>
-</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">CIFAR100</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
-</span><span id="line-5">
-</span><span id="line-6"><span class="c1"># If you omit the split (split=None), you get a DatasetDict with all available splits</span>
-</span><span id="line-7"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">CIFAR100</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</span><span id="line-8">
-</span><span id="line-9"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-10"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label", "superclass"}</span>
-</span><span id="line-11">
-</span><span id="line-12"><span class="c1"># Optional: make it PyTorch-friendly</span>
-</span><span id="line-13"><span class="n">ds_torch</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span><span id="line-4"><span class="n">ds_train</span> <span class="o">=</span> <span class="n">ArabicDigits</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
+</span><span id="line-5"><span class="n">ds_test</span> <span class="o">=</span> <span class="n">ArabicDigits</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="c1"># If you omit the split (split=None), you get a DatasetDict with all available splits</span>
+</span><span id="line-8"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">ArabicDigits</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds_train</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-11"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label"}</span>
+</span><span id="line-12">
+</span><span id="line-13"><span class="c1"># Optional: make it PyTorch-friendly</span>
+</span><span id="line-14"><span class="n">ds_train_torch</span> <span class="o">=</span> <span class="n">ds_train</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span><span id="line-15"><span class="n">ds_test_torch</span> <span class="o">=</span> <span class="n">ds_test</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
-</section>
-<section id="related-datasets">
-<h2>Related Datasets<a class="headerlink" href="#related-datasets" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#related-datasets'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<ul class="simple">
-<li><p><a class="reference internal" href="../cifar10/"><span class="doc">CIFAR-10</span></a>: Simplified version with 10 classes, sharing the same image dimensions</p></li>
-<li><p><strong>CIFAR-10-C</strong>: Corrupted version of CIFAR-10 for testing robustness (available in stable-datasets as <code class="docutils literal notranslate"><span class="pre">cifar10_c</span></code>)</p></li>
-<li><p><strong>CIFAR-100-C</strong>: Corrupted version of CIFAR-100 (available in stable-datasets as <code class="docutils literal notranslate"><span class="pre">cifar100_c</span></code>)</p></li>
-</ul>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#references'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <ul class="simple">
-<li><p>Official website: <a class="reference external" href="https://www.cs.toronto.edu/~kriz/cifar.html" rel="nofollow noopener">https://www.cs.toronto.edu/~kriz/cifar.html<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
-<li><p>License: MIT License</p></li>
+<li><p>Official website: <a class="reference external" href="https://github.com/mloey/Arabic-Handwritten-Digits-Dataset" rel="nofollow noopener">https://github.com/mloey/Arabic-Handwritten-Digits-Dataset<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
 </ul>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@Techreport</span><span class="p">{</span><span class="nl">krizhevsky2009learning</span><span class="p">,</span>
-</span><span id="line-2"><span class="na">author</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Krizhevsky, Alex and Hinton, Geoffrey}</span><span class="p">,</span>
-</span><span id="line-3"><span class="na">address</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Toronto, Ontario}</span><span class="p">,</span>
-</span><span id="line-4"><span class="na">institution</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{University of Toronto}</span><span class="p">,</span>
-</span><span id="line-5"><span class="na">number</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{0}</span><span class="p">,</span>
-</span><span id="line-6"><span class="na">publisher</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Technical report, University of Toronto}</span><span class="p">,</span>
-</span><span id="line-7"><span class="na">title</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Learning multiple layers of features from tiny images}</span><span class="p">,</span>
-</span><span id="line-8"><span class="na">year</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{2009}</span><span class="p">,</span>
-</span><span id="line-9"><span class="na">title_with_no_special_chars</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Learning multiple layers of features from tiny images}</span><span class="p">,</span>
-</span><span id="line-10"><span class="na">url</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{https://www.cs.toronto.edu/~kriz/learning-features-2009-TR.pdf}</span>
-</span><span id="line-11"><span class="p">}</span>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">el2016cnn</span><span class="p">,</span>
+</span><span id="line-2"><span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{CNN for handwritten arabic digits recognition based on LeNet-5}</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{El-Sawy, Ahmed and Hazem, EL-Bakry and Loey, Mohamed}</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">  </span><span class="na">booktitle</span><span class="p">=</span><span class="s">{International conference on advanced intelligent systems and informatics}</span><span class="p">,</span>
+</span><span id="line-5"><span class="w">  </span><span class="na">pages</span><span class="p">=</span><span class="s">{566--575}</span><span class="p">,</span>
+</span><span id="line-6"><span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2016}</span><span class="p">,</span>
+</span><span id="line-7"><span class="w">  </span><span class="na">organization</span><span class="p">=</span><span class="s">{Springer}</span>
+</span><span id="line-8"><span class="p">}</span>
 </span></code></pre></div>
 </div>
 </section>
@@ -232,7 +218,6 @@
 <li><a :data-current="activeSection === '#overview'" class="reference internal" href="#overview">Overview</a></li>
 <li><a :data-current="activeSection === '#data-structure'" class="reference internal" href="#data-structure">Data Structure</a></li>
 <li><a :data-current="activeSection === '#usage-example'" class="reference internal" href="#usage-example">Usage Example</a></li>
-<li><a :data-current="activeSection === '#related-datasets'" class="reference internal" href="#related-datasets">Related Datasets</a></li>
 <li><a :data-current="activeSection === '#references'" class="reference internal" href="#references">References</a></li>
 <li><a :data-current="activeSection === '#citation'" class="reference internal" href="#citation">Citation</a></li>
 </ul>
