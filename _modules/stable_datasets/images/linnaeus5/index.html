@@ -131,6 +131,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/flowers102/">Flowers102</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
@@ -178,67 +179,117 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.linnaeus5</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
 </span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">rarfile</span>
-</span><span id="line-5">
+</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-6">
+</span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
+</span><span id="line-8">
+</span><span id="line-9">
 <div class="viewcode-block" id="Linnaeus5">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.linnaeus5.Linnaeus5">[docs]</a>
-</span><span id="line-7"><span class="k">class</span><span class="w"> </span><span class="nc">Linnaeus5</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-8"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Linnaeus 5 Dataset: RGB images (256x256) for classification across 5 categories.&quot;&quot;&quot;</span>
-</span><span id="line-9">
-</span><span id="line-10">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-11">
-</span><span id="line-12">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-13">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-14">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;Linnaeus 5 dataset contains RGB images (256x256) for classification across 5 categories:</span>
-</span><span id="line-15"><span class="s2">                           berry, bird, dog, flower, and other (negative set). It includes 1200 training images</span>
-</span><span id="line-16"><span class="s2">                           and 400 test images per class.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-17">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-18">                <span class="p">{</span>
-</span><span id="line-19">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-20">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;berry&quot;</span><span class="p">,</span> <span class="s2">&quot;bird&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;flower&quot;</span><span class="p">,</span> <span class="s2">&quot;other&quot;</span><span class="p">]),</span>
-</span><span id="line-21">                <span class="p">}</span>
-</span><span id="line-22">            <span class="p">),</span>
-</span><span id="line-23">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-24">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;http://chaladze.com/l5/&quot;</span><span class="p">,</span>
-</span><span id="line-25">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@article{chaladze2017linnaeus,</span>
-</span><span id="line-26"><span class="s2">                      title={Linnaeus 5 dataset for machine learning},</span>
-</span><span id="line-27"><span class="s2">                      author={Chaladze, G and Kalatozishvili, L},</span>
-</span><span id="line-28"><span class="s2">                      journal={chaladze. com},</span>
-</span><span id="line-29"><span class="s2">                      year=</span><span class="si">{2017}</span><span class="s2">}</span>
-</span><span id="line-30"><span class="s2">                      &quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-31">        <span class="p">)</span>
-</span><span id="line-32">
-</span><span id="line-33">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-34">        <span class="n">archive_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;http://chaladze.com/l5/img/Linnaeus</span><span class="si">%205%</span><span class="s2">20256X256.rar&quot;</span><span class="p">)</span>
-</span><span id="line-35">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-36">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-37">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-38">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">},</span>
-</span><span id="line-39">            <span class="p">),</span>
-</span><span id="line-40">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-41">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-42">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">},</span>
-</span><span id="line-43">            <span class="p">),</span>
-</span><span id="line-44">        <span class="p">]</span>
-</span><span id="line-45">
-</span><span id="line-46">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
-</span><span id="line-47">        <span class="k">with</span> <span class="n">rarfile</span><span class="o">.</span><span class="n">RarFile</span><span class="p">(</span><span class="n">archive_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">rar</span><span class="p">:</span>
-</span><span id="line-48">            <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">rar</span><span class="o">.</span><span class="n">infolist</span><span class="p">():</span>
-</span><span id="line-49">                <span class="k">if</span> <span class="n">split</span> <span class="ow">in</span> <span class="n">member</span><span class="o">.</span><span class="n">filename</span> <span class="ow">and</span> <span class="n">member</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jpg&quot;</span><span class="p">):</span>
-</span><span id="line-50">                    <span class="n">label</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
-</span><span id="line-51">                    <span class="k">with</span> <span class="n">rar</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">member</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-</span><span id="line-52">                        <span class="n">image_bytes</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
-</span><span id="line-53">                        <span class="k">yield</span> <span class="p">(</span>
-</span><span id="line-54">                            <span class="n">member</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span>
-</span><span id="line-55">                            <span class="p">{</span>
-</span><span id="line-56">                                <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image_bytes</span><span class="p">,</span>
-</span><span id="line-57">                                <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
-</span><span id="line-58">                            <span class="p">},</span>
-</span><span id="line-59">                        <span class="p">)</span></div>
+</span><span id="line-10"><span class="k">class</span><span class="w"> </span><span class="nc">Linnaeus5</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-11"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Linnaeus 5 Dataset</span>
+</span><span id="line-12">
+</span><span id="line-13"><span class="sd">    Abstract</span>
+</span><span id="line-14"><span class="sd">    The Linnaeus 5 dataset contains 1,600 RGB images sized 256x256 pixels, categorized into 5 classes: berry, bird, dog, flower, and other (negative set). It was created to benchmark fine-grained classification and object recognition tasks.</span>
+</span><span id="line-15">
+</span><span id="line-16"><span class="sd">    Context</span>
+</span><span id="line-17"><span class="sd">    While many datasets focus on broad object categories (like CIFAR-10), Linnaeus 5 offers a focused challenge on specific natural objects plus a &quot;negative&quot; class (&#39;other&#39;). It serves as a good middle-ground benchmark between simple digit recognition (MNIST) and large-scale natural image classification (ImageNet).</span>
+</span><span id="line-18">
+</span><span id="line-19"><span class="sd">    Content</span>
+</span><span id="line-20"><span class="sd">    The dataset consists of:</span>
+</span><span id="line-21"><span class="sd">    - **Images:** 8,000 color images (256x256 pixels).</span>
+</span><span id="line-22"><span class="sd">    - **Classes:** 5 categories (berry, bird, dog, flower, other).</span>
+</span><span id="line-23"><span class="sd">    - **Splits:** Pre-split into Training (1,200 images per class) and Test (400 images per class).</span>
+</span><span id="line-24"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-25">
+</span><span id="line-26">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-27">
+</span><span id="line-28">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-29">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;http://chaladze.com/l5/&quot;</span><span class="p">,</span>
+</span><span id="line-30">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@article{chaladze2017linnaeus,</span>
+</span><span id="line-31"><span class="s2">                      title={Linnaeus 5 dataset for machine learning},</span>
+</span><span id="line-32"><span class="s2">                      author={Chaladze, G and Kalatozishvili, L},</span>
+</span><span id="line-33"><span class="s2">                      journal=</span><span class="si">{chaladze.com}</span><span class="s2">,</span>
+</span><span id="line-34"><span class="s2">                      year=</span><span class="si">{2017}</span><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-35">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-36">            <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="s2">&quot;http://chaladze.com/l5/img/Linnaeus</span><span class="si">%205%</span><span class="s2">20256X256.rar&quot;</span><span class="p">,</span>
+</span><span id="line-37">        <span class="p">},</span>
+</span><span id="line-38">    <span class="p">}</span>
+</span><span id="line-39">
+</span><span id="line-40">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-41">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-42">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Linnaeus 5 dataset with 5 classes (berry, bird, dog, flower, other).&quot;</span><span class="p">,</span>
+</span><span id="line-43">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-44">                <span class="p">{</span>
+</span><span id="line-45">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-46">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()),</span>
+</span><span id="line-47">                <span class="p">}</span>
+</span><span id="line-48">            <span class="p">),</span>
+</span><span id="line-49">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-50">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-51">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-52">        <span class="p">)</span>
+</span><span id="line-53">
+</span><span id="line-54">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
+</span><span id="line-55">        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">()</span>
+</span><span id="line-56">        <span class="n">url</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
+</span><span id="line-57">
+</span><span id="line-58">        <span class="n">archive_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-59">
+</span><span id="line-60">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-61">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-62">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
+</span><span id="line-63">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-64">                    <span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">archive_path</span><span class="p">,</span>
+</span><span id="line-65">                    <span class="s2">&quot;split_name&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span>
+</span><span id="line-66">                <span class="p">},</span>
+</span><span id="line-67">            <span class="p">),</span>
+</span><span id="line-68">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-69">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
+</span><span id="line-70">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-71">                    <span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">archive_path</span><span class="p">,</span>
+</span><span id="line-72">                    <span class="s2">&quot;split_name&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
+</span><span id="line-73">                <span class="p">},</span>
+</span><span id="line-74">            <span class="p">),</span>
+</span><span id="line-75">        <span class="p">]</span>
+</span><span id="line-76">
+</span><span id="line-77">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_path</span><span class="p">,</span> <span class="n">split_name</span><span class="p">):</span>
+</span><span id="line-78"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterate over the RAR archive and yield images matching the split.&quot;&quot;&quot;</span>
+</span><span id="line-79">
+</span><span id="line-80">        <span class="k">with</span> <span class="n">rarfile</span><span class="o">.</span><span class="n">RarFile</span><span class="p">(</span><span class="n">archive_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">rf</span><span class="p">:</span>
+</span><span id="line-81">            <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">rf</span><span class="o">.</span><span class="n">infolist</span><span class="p">():</span>
+</span><span id="line-82">                <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">isdir</span><span class="p">():</span>
+</span><span id="line-83">                    <span class="k">continue</span>
+</span><span id="line-84">
+</span><span id="line-85">                <span class="n">filename</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="n">filename</span>
+</span><span id="line-86">                <span class="k">if</span> <span class="sa">f</span><span class="s2">&quot;/</span><span class="si">{</span><span class="n">split_name</span><span class="si">}</span><span class="s2">/&quot;</span> <span class="ow">in</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;.jpeg&quot;</span><span class="p">)):</span>
+</span><span id="line-87">                    <span class="k">try</span><span class="p">:</span>
+</span><span id="line-88">                        <span class="n">parts</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+</span><span id="line-89">                        <span class="n">label_name</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+</span><span id="line-90">                    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+</span><span id="line-91">                        <span class="k">continue</span>
+</span><span id="line-92">
+</span><span id="line-93">                    <span class="k">if</span> <span class="n">label_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">():</span>
+</span><span id="line-94">                        <span class="k">with</span> <span class="n">rf</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">member</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-95">                            <span class="n">image_bytes</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="line-96">
+</span><span id="line-97">                        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">))</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+</span><span id="line-98">
+</span><span id="line-99">                        <span class="k">yield</span> <span class="p">(</span>
+</span><span id="line-100">                            <span class="n">filename</span><span class="p">,</span>
+</span><span id="line-101">                            <span class="p">{</span>
+</span><span id="line-102">                                <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
+</span><span id="line-103">                                <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label_name</span><span class="p">,</span>
+</span><span id="line-104">                            <span class="p">},</span>
+</span><span id="line-105">                        <span class="p">)</span>
+</span><span id="line-106">
+</span><span id="line-107">    <span class="nd">@staticmethod</span>
+</span><span id="line-108">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
+</span><span id="line-109">        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;berry&quot;</span><span class="p">,</span> <span class="s2">&quot;bird&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;flower&quot;</span><span class="p">,</span> <span class="s2">&quot;other&quot;</span><span class="p">]</span></div>
 
 </span></code></pre></div>
     </div></div>

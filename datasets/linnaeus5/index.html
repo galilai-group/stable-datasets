@@ -21,9 +21,9 @@
 <meta content="#ffffff" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="#030711" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>dSprites | stable-datasets</title>
-<meta content="dSprites | stable-datasets" property="og:title"/>
-<meta content="dSprites | stable-datasets" name="twitter:title"/>
+<title>Linnaeus 5 | stable-datasets</title>
+<meta content="Linnaeus 5 | stable-datasets" property="og:title"/>
+<meta content="Linnaeus 5 | stable-datasets" name="twitter:title"/>
 <link href="../../_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="../../_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
 <link href="../../_static/theme.css?v=73505e79" rel="stylesheet" type="text/css"/>
@@ -35,6 +35,8 @@
 <link href="../../_static/awesome-sphinx-design.css?v=c54898a4" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
+<link href="../../introduction/quickstart/" rel="next" title="Quick Start"/>
+<link href="../flowers102/" rel="prev" title="Flowers102"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" @scroll.window="showScrollTop = pageYOffset &gt; 100" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -81,8 +83,8 @@
 <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0">
 <div class="overflow-y-auto h-full w-full relative pr-6"><nav class="table w-full min-w-full my-6 lg:my-8">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../">Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<ul class="current">
+<li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../">Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="../arabic_characters/">Arabic Characters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar10/">CIFAR-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar100/">CIFAR-100</a></li>
@@ -95,7 +97,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../medmnist/">MedMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flowers102/">Flowers102</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../linnaeus5/">Linnaeus 5</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Linnaeus 5</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../introduction/quickstart/">Quick Start</a></li>
@@ -120,68 +122,24 @@
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">dSprites</span>
+<div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../">Datasets</a>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Linnaeus 5</span>
 </nav>
 <div id="content" role="main">
-<section id="dsprites">
-<h1>dSprites<a class="headerlink" href="#dsprites" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
+<section id="linnaeus-5">
+<h1>Linnaeus 5<a class="headerlink" href="#linnaeus-5" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
 <p style="display: flex; gap: 10px;">
-<img alt="Task: Disentangled Representation Learning" src="https://img.shields.io/badge/Task-Disentangled%20Representation-blue"/>
-<img alt="Latent Factors: 6" src="https://img.shields.io/badge/Factors-6-green"/>
-<img alt="Image Size: 64x64" src="https://img.shields.io/badge/Size-64x64-orange"/>
+<img alt="Task: Image Classification" src="https://img.shields.io/badge/Task-Image%20Classification-blue"/>
+<img alt="Classes: 5" src="https://img.shields.io/badge/Classes-5-green"/>
+<img alt="Image Size: 256x256" src="https://img.shields.io/badge/Size-256x256-orange"/>
 </p><section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#overview'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>The dSprites dataset is a synthetic benchmark designed for <strong>disentangled and unsupervised representation learning</strong>. It consists of procedurally generated <strong>binary black-and-white images</strong> of simple 2D shapes, rendered under controlled and fully known generative factors.</p>
-<p>The dataset contains <strong>all possible combinations</strong> of six latent factors of variation, with each combination appearing exactly once. This complete Cartesian product structure makes dSprites a standard benchmark for evaluating disentanglement, factor predictability, and interpretability of learned representations.</p>
+<p>The Linnaeus 5 dataset is a fine-grained image classification benchmark consisting of 8,000 RGB images across 5 classes: <em>berry</em>, <em>bird</em>, <em>dog</em>, <em>flower</em>, and <em>other</em>. Images are provided as 256×256 pixels. A unique feature of this dataset is the inclusion of a “negative” class (<em>other</em>) to test object recognition capabilities.</p>
 <ul class="simple">
-<li><p><strong>Total images</strong>: 737,280</p></li>
-<li><p><strong>Image resolution</strong>: 64×64 (binary)</p></li>
+<li><p><strong>Train</strong>: 6,000 images (1,200 per class)</p></li>
+<li><p><strong>Test</strong>: 2,000 images (400 per class)</p></li>
 </ul>
-</section>
-<section id="latent-factors-of-variation">
-<h2>Latent Factors of Variation<a class="headerlink" href="#latent-factors-of-variation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#latent-factors-of-variation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>The dataset is generated from six independent latent factors:</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 25.0%"/>
-<col style="width: 37.5%"/>
-<col style="width: 37.5%"/>
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Factor</p></th>
-<th class="head"><p>Discrete Values</p></th>
-<th class="head"><p>Continuous Values</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">color</span></code></p></td>
-<td><p>{0}</p></td>
-<td><p>1.0 (fixed, white)</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">shape</span></code></p></td>
-<td><p>{0, 1, 2}</p></td>
-<td><p>{1.0, 2.0, 3.0} (square, ellipse, heart)</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">scale</span></code></p></td>
-<td><p>{0, …, 5}</p></td>
-<td><p>Linearly spaced in [0.5, 1.0]</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">orientation</span></code></p></td>
-<td><p>{0, …, 39}</p></td>
-<td><p>Uniform in [0, 2π] radians</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">posX</span></code></p></td>
-<td><p>{0, …, 31}</p></td>
-<td><p>Normalized position in [0, 1]</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">posY</span></code></p></td>
-<td><p>{0, …, 31}</p></td>
-<td><p>Normalized position in [0, 1]</p></td>
-</tr>
-</tbody>
-</table>
-<p>Each image corresponds to a <strong>unique combination</strong> of these factors.</p>
-<a class="reference internal image-reference" href="../../_images/dsprites_teaser.gif"><img alt="../../_images/dsprites_teaser.gif" class="align-center" src="../../_images/dsprites_teaser.gif" style="width: 90%;">
+<a class="reference internal image-reference" href="../../_images/linnaeus5_teaser.png"><img alt="../../_images/linnaeus5_teaser.png" class="align-center" src="../../_images/linnaeus5_teaser.png" style="width: 90%;">
 </img></a>
 </section>
 <section id="data-structure">
@@ -189,9 +147,9 @@
 <p>When accessing an example using <code class="docutils literal notranslate"><span class="pre">ds[i]</span></code>, you will receive a dictionary with the following keys:</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 25.0%"/>
 <col style="width: 20.0%"/>
-<col style="width: 55.0%"/>
+<col style="width: 20.0%"/>
+<col style="width: 60.0%"/>
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Key</p></th>
@@ -202,23 +160,11 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">PIL.Image.Image</span></code></p></td>
-<td><p>64×64 binary image</p></td>
+<td><p>256×256 RGB color image</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">List[int]</span></code></p></td>
-<td><p>Discrete latent indices: <code class="docutils literal notranslate"><span class="pre">[color,</span> <span class="pre">shape,</span> <span class="pre">scale,</span> <span class="pre">orientation,</span> <span class="pre">posX,</span> <span class="pre">posY]</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">label_values</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">List[float]</span></code></p></td>
-<td><p>Continuous latent values corresponding to <code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">color</span></code> … <code class="docutils literal notranslate"><span class="pre">posY</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
-<td><p>Individual discrete latent factors</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">colorValue</span></code> … <code class="docutils literal notranslate"><span class="pre">posYValue</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
-<td><p>Individual continuous latent values</p></td>
+<td><p>int</p></td>
+<td><p>Class label (0-4)</p></td>
 </tr>
 </tbody>
 </table>
@@ -226,62 +172,39 @@
 <section id="usage-example">
 <h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage-example'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <p><strong>Basic Usage</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.dsprites</span><span class="w"> </span><span class="kn">import</span> <span class="n">DSprites</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.linnaeus5</span><span class="w"> </span><span class="kn">import</span> <span class="n">Linnaeus5</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="c1"># First run will download + prepare cache, then return the split as a HF Dataset</span>
-</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">DSprites</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
-</span><span id="line-5">
-</span><span id="line-6"><span class="c1"># If you omit the split (split=None), you get a DatasetDict with all available splits</span>
-</span><span id="line-7"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">DSprites</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</span><span id="line-8">
-</span><span id="line-9"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-10"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-</span><span id="line-11">
-</span><span id="line-12"><span class="n">image</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span>
-</span><span id="line-13"><span class="n">factors</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span>
-</span><span id="line-14"><span class="n">factor_values</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"label_values"</span><span class="p">]</span>
-</span><span id="line-15">
-</span><span id="line-16"><span class="c1"># Optional: make it PyTorch-friendly</span>
-</span><span id="line-17"><span class="n">ds_torch</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span><span id="line-4"><span class="n">ds_train</span> <span class="o">=</span> <span class="n">Linnaeus5</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
+</span><span id="line-5"><span class="n">ds_test</span> <span class="o">=</span> <span class="n">Linnaeus5</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="c1"># If you omit the split (split=None), you get a DatasetDict with all available splits</span>
+</span><span id="line-8"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">Linnaeus5</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds_train</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-11"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label"}</span>
+</span><span id="line-12"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Label: </span><span class="si">{</span><span class="n">sample</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="c1"># e.g., 0 (Berry)</span>
+</span><span id="line-13">
+</span><span id="line-14"><span class="c1"># Optional: make it PyTorch-friendly</span>
+</span><span id="line-15"><span class="n">ds_train_torch</span> <span class="o">=</span> <span class="n">ds_train</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span><span id="line-16"><span class="n">ds_test_torch</span> <span class="o">=</span> <span class="n">ds_test</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
-</section>
-<section id="why-no-train-test-split">
-<h2>Why No Train/Test Split?<a class="headerlink" href="#why-no-train-test-split" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#why-no-train-test-split'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>The dSprites dataset does not define an official train/test split.
-It is intended for <strong>representation learning research</strong>, where models are trained to capture underlying factors of variation rather than to generalize across semantic classes.</p>
-<p>Because the dataset is a complete Cartesian product of all factor combinations, common evaluation protocols rely on:</p>
-<ul class="simple">
-<li><p>Factor-wise generalization</p></li>
-<li><p>Metric-based disentanglement scores</p></li>
-<li><p>Controlled interventions on latent variables</p></li>
-</ul>
-</section>
-<section id="related-datasets">
-<h2>Related Datasets<a class="headerlink" href="#related-datasets" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#related-datasets'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<ul class="simple">
-<li><p><strong>dSprites-Color</strong>: Colored variant of dSprites</p></li>
-<li><p><strong>dSprites-Noisy</strong>: Noisy background variant</p></li>
-<li><p><strong>dSprites-Scream</strong>: Backgrounds replaced with natural images</p></li>
-</ul>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#references'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <ul class="simple">
-<li><p>Dataset repository: <a class="reference external" href="https://github.com/google-deepmind/dsprites-dataset" rel="nofollow noopener">https://github.com/google-deepmind/dsprites-dataset<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
-<li><p>License: zlib/libpng License</p></li>
-<li><p>Paper: Higgins et al., <em>β-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework</em>, ICLR 2017</p></li>
+<li><p>Official website: <a class="reference external" href="http://chaladze.com/l5/" rel="nofollow noopener">http://chaladze.com/l5/<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
 </ul>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">higgins2017beta</span><span class="p">,</span>
-</span><span id="line-2"><span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{beta-vae: Learning basic visual concepts with a constrained variational framework}</span><span class="p">,</span>
-</span><span id="line-3"><span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Higgins, Irina and Matthey, Loic and Pal, Arka and Burgess, Christopher and</span>
-</span><span id="line-4"><span class="s">          Glorot, Xavier and Botvinick, Matthew and Mohamed, Shakir and Lerchner, Alexander}</span><span class="p">,</span>
-</span><span id="line-5"><span class="w">  </span><span class="na">booktitle</span><span class="p">=</span><span class="s">{International Conference on Learning Representations}</span><span class="p">,</span>
-</span><span id="line-6"><span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2017}</span>
-</span><span id="line-7"><span class="p">}</span>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@article</span><span class="p">{</span><span class="nl">chaladze2017linnaeus</span><span class="p">,</span>
+</span><span id="line-2"><span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{Linnaeus 5 dataset for machine learning}</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Chaladze, G and Kalatozishvili, L}</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">  </span><span class="na">journal</span><span class="p">=</span><span class="s">{chaladze.com}</span><span class="p">,</span>
+</span><span id="line-5"><span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2017}</span>
+</span><span id="line-6"><span class="p">}</span>
 </span></code></pre></div>
 </div>
 </section>
@@ -290,11 +213,8 @@ It is intended for <strong>representation learning research</strong>, where mode
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
 <li><a :data-current="activeSection === '#overview'" class="reference internal" href="#overview">Overview</a></li>
-<li><a :data-current="activeSection === '#latent-factors-of-variation'" class="reference internal" href="#latent-factors-of-variation">Latent Factors of Variation</a></li>
 <li><a :data-current="activeSection === '#data-structure'" class="reference internal" href="#data-structure">Data Structure</a></li>
 <li><a :data-current="activeSection === '#usage-example'" class="reference internal" href="#usage-example">Usage Example</a></li>
-<li><a :data-current="activeSection === '#why-no-train-test-split'" class="reference internal" href="#why-no-train-test-split">Why No Train/Test Split?</a></li>
-<li><a :data-current="activeSection === '#related-datasets'" class="reference internal" href="#related-datasets">Related Datasets</a></li>
 <li><a :data-current="activeSection === '#references'" class="reference internal" href="#references">References</a></li>
 <li><a :data-current="activeSection === '#citation'" class="reference internal" href="#citation">Citation</a></li>
 </ul>
