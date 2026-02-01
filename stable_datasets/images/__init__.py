@@ -17,6 +17,7 @@ from .e_mnist import EMNIST
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
 from .k_mnist import KMNIST
+from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
 from .stl10 import STL10
@@ -32,7 +33,6 @@ from .svhn import SVHN
 # from .food101 import Food101
 # from .hasy_v2 import HASYv2
 # from .imagenette import Imagenette
-# from .linnaeus5 import Linnaeus5
 # from .mnist import MNIST
 # from .places365_small import Places365Small
 # from .rock_paper_scissor import RockPaperScissor
@@ -61,4 +61,5 @@ __all__ = [
     "NotMNIST",
     "STL10",
     "SVHN",
+    "Linnaeus5",
 ]
