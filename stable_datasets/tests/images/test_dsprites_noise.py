@@ -49,7 +49,7 @@ def test_dsprites_noise_dataset():
     # Test 4: Validate label type and range
     label = sample["label"]
     label_values = sample["label_values"]
-    assert isinstance(label, list), f"Label should be int, got {type(list)}."
+    assert isinstance(label, list), f"Label should be list, got {type(label)}."
     assert isinstance(label_values, list), f"Label values should be list, got {type(label_values)}."
     assert len(label) == 6, f"Label should have 6 elements, got {len(label)}."
     assert len(label_values) == 6, f"Label values should have 6 elements, got {len(label_values)}."
