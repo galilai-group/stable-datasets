@@ -116,21 +116,36 @@ def _adjust_mae_params_for_low_resolution(
     )
 
 
+def _mae_patchify(images, patch_size):
+    """Convert images to patches in MAE format [N, T, P*C]."""
+    N, C, H, W = images.shape
+    p = patch_size
+    h, w = H // p, W // p
+    # [N, C, H, W] -> [N, C, h, p, w, p] -> [N, h, w, p, p, C] -> [N, T, P*C]
+    x = images.reshape(N, C, h, p, w, p)
+    x = x.permute(0, 2, 4, 3, 5, 1)  # [N, h, w, p, p, C]
+    x = x.reshape(N, h * w, p * p * C)
+    return x
+
+
 def _mae_forward(self, batch, stage):
     """MAE forward function for training and inference."""
-    from stable_pretraining.utils import patchify
-
     images = batch["image"]
     encoder_out = self.backbone(images)
 
+    # Extract CLS token embedding for downstream tasks
     out = {"embedding": encoder_out.encoded[:, 0]}
 
     if "label" in batch:
         out["label"] = batch["label"]
 
     if self.training:
-        pred = self.decoder(encoder_out.encoded, encoder_out.mask)
-        target = patchify(images, patch_size=(self.patch_size, self.patch_size))
+        # Strip prefix tokens (CLS, etc.) - decoder expects only visible patch tokens
+        num_prefix = getattr(self.backbone, "num_prefix_tokens", 1)
+        visible_patches = encoder_out.encoded[:, num_prefix:]
+        
+        pred = self.decoder(visible_patches, encoder_out.mask)
+        target = _mae_patchify(images, self.patch_size)
         loss = spt.losses.mae(target, pred, encoder_out.mask)
 
         out["loss"] = loss
@@ -172,23 +187,27 @@ def create_mae_module(
     """
     h, w = config.image_size
 
-    patch_size, embed_dim, depth, decoder_embed_dim, decoder_depth = _adjust_mae_params_for_low_resolution(
+    patch_size, _, depth, decoder_embed_dim, decoder_depth = _adjust_mae_params_for_low_resolution(
         config, patch_size, embed_dim, depth, decoder_embed_dim, decoder_depth
     )
 
     grid_size = (h // patch_size, w // patch_size)
     num_patches = grid_size[0] * grid_size[1]
-    output_dim = patch_size * patch_size * config.channels
+    # Always 3 channels because transforms.RGB() converts all images to RGB
+    output_dim = patch_size * patch_size * 3
 
-    masking = spt.data.transforms.PatchMasking(patch_size=patch_size, drop_ratio=mask_ratio)
+    masking = spt.backbone.PatchMasking(mask_ratio=mask_ratio)
     vit_model = create_vit_base(patch_size=patch_size, img_size=(h, w), pretrained=False)
     encoder = spt.backbone.MaskedEncoder(
         model_or_model_name=vit_model,
         masking=masking,
     )
 
+    # Get actual embed_dim from the encoder (may differ from requested due to model config)
+    encoder_embed_dim = getattr(encoder, "embed_dim", embed_dim)
+
     decoder = spt.backbone.MAEDecoder(
-        embed_dim=embed_dim,
+        embed_dim=encoder_embed_dim,
         decoder_embed_dim=decoder_embed_dim,
         output_dim=output_dim,
         num_patches=num_patches,
@@ -211,7 +230,7 @@ def create_mae_module(
             },
             "scheduler": {
                 "type": "LinearWarmupCosineAnnealing",
-                "warmup_epochs": 40,
+                # peak_step as fraction of total_steps (default 0.01 = 1% warmup)
             },
             "interval": "epoch",
         },
@@ -307,9 +326,12 @@ def create_experiment(
     callbacks = create_evaluation_callbacks(module, config, embed_dim)
     callbacks.append(LearningRateMonitor(logging_interval="step"))
 
+    # Disable validation if no validation dataloader exists
+    has_val = data_module.val is not None
     trainer = pl.Trainer(
         max_epochs=max_epochs,
         num_sanity_val_steps=0,
+        limit_val_batches=1.0 if has_val else 0,
         callbacks=callbacks,
         precision=precision,
         enable_checkpointing=False,
