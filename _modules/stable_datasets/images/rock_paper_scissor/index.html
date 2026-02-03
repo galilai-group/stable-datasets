@@ -133,6 +133,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/stl10/">STL-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/flowers102/">Flowers102</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 </ul>
 </li>
@@ -182,60 +184,70 @@
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.rock_paper_scissor</h1><div class="highlight"><pre>
 <span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-5">
-</span><span id="line-6">
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
+</span><span id="line-9">
+</span><span id="line-10">
 <div class="viewcode-block" id="RockPaperScissor">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor">[docs]</a>
-</span><span id="line-7"><span class="k">class</span><span class="w"> </span><span class="nc">RockPaperScissor</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-8"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Rock Paper Scissors dataset.&quot;&quot;&quot;</span>
-</span><span id="line-9">
-</span><span id="line-10">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-11">
-</span><span id="line-12">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-13">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-14">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Rock Paper Scissors contains images from various hands, from different races, ages, and &quot;</span>
-</span><span id="line-15">            <span class="s2">&quot;genders, posed into Rock / Paper or Scissors and labeled as such.&quot;</span><span class="p">,</span>
-</span><span id="line-16">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-17">                <span class="p">{</span>
-</span><span id="line-18">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-19">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;rock&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="s2">&quot;scissors&quot;</span><span class="p">]),</span>
-</span><span id="line-20">                <span class="p">}</span>
-</span><span id="line-21">            <span class="p">),</span>
-</span><span id="line-22">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-23">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://laurencemoroney.com/datasets.html&quot;</span><span class="p">,</span>
-</span><span id="line-24">            <span class="n">license</span><span class="o">=</span><span class="s2">&quot;CC By 2.0&quot;</span><span class="p">,</span>
-</span><span id="line-25">        <span class="p">)</span>
-</span><span id="line-26">
-</span><span id="line-27">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-28">        <span class="n">urls</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-29">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.googleapis.com/download.tensorflow.org/data/rps.zip&quot;</span><span class="p">,</span>
-</span><span id="line-30">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.googleapis.com/download.tensorflow.org/data/rps-test-set.zip&quot;</span><span class="p">,</span>
-</span><span id="line-31">        <span class="p">}</span>
-</span><span id="line-32">        <span class="n">extracted_paths</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download_and_extract</span><span class="p">(</span><span class="n">urls</span><span class="p">)</span>
-</span><span id="line-33">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-34">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-35">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-36">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_dir&quot;</span><span class="p">:</span> <span class="n">extracted_paths</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]},</span>
-</span><span id="line-37">            <span class="p">),</span>
-</span><span id="line-38">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-39">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-40">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_dir&quot;</span><span class="p">:</span> <span class="n">extracted_paths</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]},</span>
-</span><span id="line-41">            <span class="p">),</span>
-</span><span id="line-42">        <span class="p">]</span>
-</span><span id="line-43">
-</span><span id="line-44">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">):</span>
-</span><span id="line-45">        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
-</span><span id="line-46">            <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
-</span><span id="line-47">                <span class="k">if</span> <span class="n">file_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.png&quot;</span><span class="p">):</span>
-</span><span id="line-48">                    <span class="n">label</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>  <span class="c1"># Folder name as label</span>
-</span><span id="line-49">                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
-</span><span id="line-50">                    <span class="c1"># Open image and ensure it is RGB</span>
-</span><span id="line-51">                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">img_file</span><span class="p">:</span>
-</span><span id="line-52">                        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">img_file</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
-</span><span id="line-53">                        <span class="k">yield</span> <span class="n">file_path</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span></div>
+</span><span id="line-11"><span class="k">class</span><span class="w"> </span><span class="nc">RockPaperScissor</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-12"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Rock Paper Scissors dataset.&quot;&quot;&quot;</span>
+</span><span id="line-13">
+</span><span id="line-14">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-15">
+</span><span id="line-16">    <span class="c1"># Single source-of-truth for dataset provenance + download locations.</span>
+</span><span id="line-17">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-18">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://laurencemoroney.com/datasets.html&quot;</span><span class="p">,</span>
+</span><span id="line-19">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-20">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.googleapis.com/download.tensorflow.org/data/rps.zip&quot;</span><span class="p">,</span>
+</span><span id="line-21">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.googleapis.com/download.tensorflow.org/data/rps-test-set.zip&quot;</span><span class="p">,</span>
+</span><span id="line-22">        <span class="p">},</span>
+</span><span id="line-23">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@misc{laurence2019rock,</span>
+</span><span id="line-24"><span class="s2">                         title={Rock Paper Scissors Dataset},</span>
+</span><span id="line-25"><span class="s2">                         author={Laurence Moroney},</span>
+</span><span id="line-26"><span class="s2">                         year=</span><span class="si">{2019}</span><span class="s2">,</span>
+</span><span id="line-27"><span class="s2">                         url={https://laurencemoroney.com/datasets.html}}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-28">        <span class="s2">&quot;license&quot;</span><span class="p">:</span> <span class="s2">&quot;CC By 2.0&quot;</span><span class="p">,</span>
+</span><span id="line-29">    <span class="p">}</span>
+</span><span id="line-30">
+</span><span id="line-31">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-32">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-33">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;Rock Paper Scissors contains images from various hands, from different races, ages, and</span>
+</span><span id="line-34"><span class="s2">                           genders, posed into Rock / Paper or Scissors and labeled as such.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-35">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-36">                <span class="p">{</span>
+</span><span id="line-37">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-38">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;rock&quot;</span><span class="p">,</span> <span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="s2">&quot;scissors&quot;</span><span class="p">]),</span>
+</span><span id="line-39">                <span class="p">}</span>
+</span><span id="line-40">            <span class="p">),</span>
+</span><span id="line-41">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-42">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-43">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-44">        <span class="p">)</span>
+</span><span id="line-45">
+</span><span id="line-46">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-47"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the extracted zip archive.&quot;&quot;&quot;</span>
+</span><span id="line-48">        <span class="c1"># Extract the zip file to a directory</span>
+</span><span id="line-49">        <span class="n">extract_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;rock_paper_scissor_</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="line-50">        <span class="k">if</span> <span class="ow">not</span> <span class="n">extract_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span><span id="line-51">            <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">zip_file</span><span class="p">:</span>
+</span><span id="line-52">                <span class="n">zip_file</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">extract_dir</span><span class="p">)</span>
+</span><span id="line-53">
+</span><span id="line-54">        <span class="c1"># Walk through the extracted directory</span>
+</span><span id="line-55">        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">extract_dir</span><span class="p">):</span>
+</span><span id="line-56">            <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+</span><span id="line-57">                <span class="k">if</span> <span class="n">file_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.png&quot;</span><span class="p">):</span>
+</span><span id="line-58">                    <span class="n">label</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>  <span class="c1"># Folder name as label</span>
+</span><span id="line-59">                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+</span><span id="line-60">                    <span class="c1"># Open image and ensure it is RGB</span>
+</span><span id="line-61">                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">img_file</span><span class="p">:</span>
+</span><span id="line-62">                        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">img_file</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+</span><span id="line-63">                        <span class="k">yield</span> <span class="n">file_path</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span></div>
 
 </span></code></pre></div>
     </div></div>

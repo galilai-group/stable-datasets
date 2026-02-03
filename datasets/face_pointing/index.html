@@ -21,9 +21,9 @@
 <meta content="#ffffff" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="#030711" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>The Street View House Numbers Dataset (SVHN) | stable-datasets</title>
-<meta content="The Street View House Numbers Dataset (SVHN) | stable-datasets" property="og:title"/>
-<meta content="The Street View House Numbers Dataset (SVHN) | stable-datasets" name="twitter:title"/>
+<title>Face Pointing | stable-datasets</title>
+<meta content="Face Pointing | stable-datasets" property="og:title"/>
+<meta content="Face Pointing | stable-datasets" name="twitter:title"/>
 <link href="../../_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="../../_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
 <link href="../../_static/theme.css?v=73505e79" rel="stylesheet" type="text/css"/>
@@ -35,6 +35,8 @@
 <link href="../../_static/awesome-sphinx-design.css?v=c54898a4" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
+<link href="../rock_paper_scissor/" rel="next" title="Rock Paper Scissor"/>
+<link href="../flowers102/" rel="prev" title="Flowers102"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" @scroll.window="showScrollTop = pageYOffset &gt; 100" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -81,8 +83,8 @@
 <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0">
 <div class="overflow-y-auto h-full w-full relative pr-6"><nav class="table w-full min-w-full my-6 lg:my-8">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../">Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<ul class="current">
+<li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../">Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="../arabic_characters/">Arabic Characters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../arabic_digits/">Arabic Digits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar10/">CIFAR-10</a></li>
@@ -97,7 +99,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../stl10/">STL-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flowers102/">Flowers102</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../face_pointing/">Face Pointing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../rock_paper_scissor/">Rock Paper Scissor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../linnaeus5/">Linnaeus 5</a></li>
 </ul>
@@ -124,24 +126,26 @@
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">The Street View House Numbers Dataset (SVHN)</span>
+<div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../">Datasets</a>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Face Pointing</span>
 </nav>
 <div id="content" role="main">
-<section id="the-street-view-house-numbers-dataset-svhn">
-<h1>The Street View House Numbers Dataset (SVHN)<a class="headerlink" href="#the-street-view-house-numbers-dataset-svhn" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
+<section id="face-pointing">
+<h1>Face Pointing<a class="headerlink" href="#face-pointing" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
 <p style="display: flex; gap: 10px;">
-<img alt="Task: Image Classification" src="https://img.shields.io/badge/Task-Image%20Classification-blue"/>
-<img alt="Classes: 10" src="https://img.shields.io/badge/Classes-10-green"/>
-<img alt="Image Size: 32x32" src="https://img.shields.io/badge/Size-32x32-orange"/>
+<img alt="Task: Head Pose Estimation" src="https://img.shields.io/badge/Task-Head%20Pose%20Estimation-blue"/>
+<img alt="Persons: 15" src="https://img.shields.io/badge/Persons-15-green"/>
+<img alt="Format: JPEG" src="https://img.shields.io/badge/Format-JPEG-orange"/>
 </p><section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#overview'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>SVHN is a real-world image dataset for developing machine learning and object recognition algorithms with minimal requirement on data preprocessing and formatting. It can be seen as similar in flavor to MNIST (e.g., the images are of small cropped digits), but incorporates an order of magnitude more labeled data (over 600,000 digit images) and comes from a significantly harder, unsolved, real world problem (recognizing digits and numbers in natural scene images). SVHN is obtained from house numbers in Google Street View images.</p>
+<p>The Head Pose Database consists of 15 sets of images, with each set containing 2 series of 93 images of the same person at different head poses. The database is used for head pose estimation and face orientation detection research.</p>
 <ul class="simple">
-<li><p><strong>Train</strong>: 73,257 images</p></li>
-<li><p><strong>Test</strong>: 26,032 images</p></li>
-<li><p><strong>Extra</strong>: 531,131 images (additionalally less difficult samples, using as extra training data)</p></li>
+<li><p><strong>Total Images</strong>: 2,790 images across 15 persons</p></li>
+<li><p><strong>Format</strong>: JPEG images</p></li>
+<li><p><strong>Size</strong>: Approximately 30 MB</p></li>
+<li><p><strong>Annotations</strong>: Each image filename encodes person ID, tilt angle, and pan angle</p></li>
 </ul>
-<a class="reference internal image-reference" href="../../_images/svhn_teaser.png"><img alt="../../_images/svhn_teaser.png" class="align-center" src="../../_images/svhn_teaser.png" style="width: 90%;">
+<a class="reference internal image-reference" href="../../_images/face_pointing_teaser.png"><img alt="../../_images/face_pointing_teaser.png" class="align-center" src="../../_images/face_pointing_teaser.png" style="width: 90%;">
 </img></a>
 </section>
 <section id="data-structure">
@@ -162,11 +166,15 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">PIL.Image.Image</span></code></p></td>
-<td><p>32×32×3 RGB image</p></td>
+<td><p>RGB image of person’s head at specific pose</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">person_id</span></code></p></td>
 <td><p>int</p></td>
-<td><p>Class label (0-9)</p></td>
+<td><p>Person identifier (1-15)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">angles</span></code></p></td>
+<td><p>List[int]</p></td>
+<td><p>[tilt_angle, pan_angle] representing head orientation</p></td>
 </tr>
 </tbody>
 </table>
@@ -174,42 +182,107 @@
 <section id="usage-example">
 <h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage-example'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <p><strong>Basic Usage</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.svhn</span><span class="w"> </span><span class="kn">import</span> <span class="n">SVHN</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.face_pointing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FacePointing</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="c1"># First run will download + prepare cache, then return the split as a HF Dataset</span>
-</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">SVHN</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
+</span><span id="line-3"><span class="c1"># Load the training split</span>
+</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">FacePointing</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
 </span><span id="line-5">
-</span><span id="line-6"><span class="c1"># If you omit the split (split=None), you get a DatasetDict with all available splits</span>
-</span><span id="line-7"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">SVHN</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</span><span id="line-8">
-</span><span id="line-9"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-10"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label"}</span>
+</span><span id="line-6"><span class="c1"># Access a single sample</span>
+</span><span id="line-7"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-8"><span class="n">image</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span>  <span class="c1"># PIL Image</span>
+</span><span id="line-9"><span class="n">person_id</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"person_id"</span><span class="p">]</span>  <span class="c1"># 1-15</span>
+</span><span id="line-10"><span class="n">angles</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"angles"</span><span class="p">]</span>  <span class="c1"># [tilt, pan]</span>
 </span><span id="line-11">
-</span><span id="line-12"><span class="c1"># Optional: make it PyTorch-friendly</span>
-</span><span id="line-13"><span class="n">ds_torch</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span><span id="line-12"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Dataset size: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-13"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Person </span><span class="si">{</span><span class="n">person_id</span><span class="si">}</span><span class="s2">, Angles: </span><span class="si">{</span><span class="n">angles</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p><strong>With PyTorch</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.face_pointing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FacePointing</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="c1"># Load dataset and format for PyTorch</span>
+</span><span id="line-6"><span class="n">ds</span> <span class="o">=</span> <span class="n">FacePointing</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="c1"># Create a DataLoader</span>
+</span><span id="line-9"><span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-10">
+</span><span id="line-11"><span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+</span><span id="line-12">    <span class="n">images</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span>
+</span><span id="line-13">    <span class="n">person_ids</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">"person_id"</span><span class="p">]</span>
+</span><span id="line-14">    <span class="n">angles</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="s2">"angles"</span><span class="p">]</span>
+</span><span id="line-15">    <span class="c1"># Your training loop here</span>
+</span><span id="line-16">    <span class="k">break</span>
+</span></code></pre></div>
+</div>
+<p><strong>Analyzing Head Poses</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.face_pointing</span><span class="w"> </span><span class="kn">import</span> <span class="n">FacePointing</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">FacePointing</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="c1"># Collect angle statistics</span>
+</span><span id="line-7"><span class="n">tilt_angles</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-8"><span class="n">pan_angles</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+</span><span id="line-11">    <span class="n">tilt</span><span class="p">,</span> <span class="n">pan</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"angles"</span><span class="p">]</span>
+</span><span id="line-12">    <span class="n">tilt_angles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tilt</span><span class="p">)</span>
+</span><span id="line-13">    <span class="n">pan_angles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pan</span><span class="p">)</span>
+</span><span id="line-14">
+</span><span id="line-15"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Tilt range: [</span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">tilt_angles</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">tilt_angles</span><span class="p">)</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
+</span><span id="line-16"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Pan range: [</span><span class="si">{</span><span class="nb">min</span><span class="p">(</span><span class="n">pan_angles</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">pan_angles</span><span class="p">)</span><span class="si">}</span><span class="s2">]"</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
 </section>
-<section id="references">
-<h2>References<a class="headerlink" href="#references" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#references'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
+<section id="dataset-details">
+<h2>Dataset Details<a class="headerlink" href="#dataset-details" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#dataset-details'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <ul class="simple">
-<li><p>Official website: <a class="reference external" href="http://ufldl.stanford.edu/housenumbers/" rel="nofollow noopener">http://ufldl.stanford.edu/housenumbers/<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
-<li><p>License: MIT License</p></li>
+<li><p><strong>Source</strong>: Head Pose Image Database</p></li>
+<li><p><strong>Homepage</strong>: <a class="reference external" href="http://crowley-coutaz.fr/HeadPoseDataSet/" rel="nofollow noopener">http://crowley-coutaz.fr/HeadPoseDataSet/<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
+<li><p><strong>Image Format</strong>: JPEG, RGB color</p></li>
+<li><p><strong>Total Images</strong>: 2,790 images</p></li>
+<li><p><strong>Persons</strong>: 15 different individuals</p></li>
+<li><p><strong>Series per Person</strong>: 2 series of 93 images each</p></li>
+<li><p><strong>Organization</strong>: Files organized in directories by person</p></li>
+<li><p><strong>Special</strong>: Includes a “Front” directory with 30 frontal images (pan and tilt angles equal to 0)</p></li>
+</ul>
+</section>
+<section id="angle-information">
+<h2>Angle Information<a class="headerlink" href="#angle-information" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#angle-information'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
+<p>Each image filename encodes the head pose angles:</p>
+<ul class="simple">
+<li><p><strong>Tilt angle</strong>: Vertical head rotation (up/down)</p></li>
+<li><p><strong>Pan angle</strong>: Horizontal head rotation (left/right)</p></li>
+</ul>
+<p>Angles are encoded in the filename with the pattern: <code class="docutils literal notranslate"><span class="pre">personXXYYY[+-]ZZ[+-]WW.jpg</span></code> where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">XX</span></code>: Person ID (01-15)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">YYY</span></code>: Image number within series</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[+-]ZZ</span></code>: Tilt angle in degrees</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[+-]WW</span></code>: Pan angle in degrees</p></li>
 </ul>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">netzer2011reading</span><span class="p">,</span>
-</span><span id="line-2"><span class="na">title</span><span class="p">=</span><span class="s">{Reading digits in natural images with unsupervised feature learning}</span><span class="p">,</span>
-</span><span id="line-3"><span class="na">author</span><span class="p">=</span><span class="s">{Netzer, Yuval and Wang, Tao and Coates, Adam and Bissacco, Alessandro and Wu, Baolin and Ng, Andrew Y and others}</span><span class="p">,</span>
-</span><span id="line-4"><span class="na">booktitle</span><span class="p">=</span><span class="s">{NIPS workshop on deep learning and unsupervised feature learning}</span><span class="p">,</span>
-</span><span id="line-5"><span class="na">volume</span><span class="p">=</span><span class="s">{2011}</span><span class="p">,</span>
-</span><span id="line-6"><span class="na">number</span><span class="p">=</span><span class="s">{2}</span><span class="p">,</span>
-</span><span id="line-7"><span class="na">pages</span><span class="p">=</span><span class="s">{4}</span><span class="p">,</span>
-</span><span id="line-8"><span class="na">year</span><span class="p">=</span><span class="s">{2011}</span><span class="p">,</span>
-</span><span id="line-9"><span class="na">organization</span><span class="p">=</span><span class="s">{Granada}</span>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">gourier2004estimating</span><span class="p">,</span>
+</span><span id="line-2"><span class="w">    </span><span class="na">title</span><span class="p">=</span><span class="s">{Estimating face orientation from robust detection of salient facial features}</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">    </span><span class="na">author</span><span class="p">=</span><span class="s">{Gourier, Nicolas and Hall, Daniela and Crowley, James L}</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">    </span><span class="na">booktitle</span><span class="p">=</span><span class="s">{ICPR International Workshop on Visual Observation of Deictic Gestures}</span><span class="p">,</span>
+</span><span id="line-5"><span class="w">    </span><span class="na">year</span><span class="p">=</span><span class="s">{2004}</span><span class="p">,</span>
+</span><span id="line-6"><span class="w">    </span><span class="na">organization</span><span class="p">=</span><span class="s">{Citeseer}</span>
+</span><span id="line-7"><span class="p">}</span>
 </span></code></pre></div>
 </div>
+</section>
+<section id="related-datasets">
+<h2>Related Datasets<a class="headerlink" href="#related-datasets" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#related-datasets'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
+<ul class="simple">
+<li><p>Head pose estimation datasets</p></li>
+<li><p>Face orientation datasets</p></li>
+<li><p>Facial landmark detection datasets</p></li>
+</ul>
 </section>
 </section>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
@@ -218,8 +291,10 @@
 <li><a :data-current="activeSection === '#overview'" class="reference internal" href="#overview">Overview</a></li>
 <li><a :data-current="activeSection === '#data-structure'" class="reference internal" href="#data-structure">Data Structure</a></li>
 <li><a :data-current="activeSection === '#usage-example'" class="reference internal" href="#usage-example">Usage Example</a></li>
-<li><a :data-current="activeSection === '#references'" class="reference internal" href="#references">References</a></li>
+<li><a :data-current="activeSection === '#dataset-details'" class="reference internal" href="#dataset-details">Dataset Details</a></li>
+<li><a :data-current="activeSection === '#angle-information'" class="reference internal" href="#angle-information">Angle Information</a></li>
 <li><a :data-current="activeSection === '#citation'" class="reference internal" href="#citation">Citation</a></li>
+<li><a :data-current="activeSection === '#related-datasets'" class="reference internal" href="#related-datasets">Related Datasets</a></li>
 </ul>
 </div>
 </aside>

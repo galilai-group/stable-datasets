@@ -23,9 +23,9 @@
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#030711" />
   
-  <title>stable_datasets.images.beans | stable-datasets</title>
-  <meta property="og:title" content="stable_datasets.images.beans | stable-datasets" />
-  <meta name="twitter:title" content="stable_datasets.images.beans | stable-datasets" />
+  <title>stable_datasets.images.face_pointing | stable-datasets</title>
+  <meta property="og:title" content="stable_datasets.images.face_pointing | stable-datasets" />
+  <meta name="twitter:title" content="stable_datasets.images.face_pointing | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=73505e79" />
@@ -178,77 +178,82 @@
        href="../../../">Module code</a>
     
 <div class="mr-1">/</div><span aria-current="page"
-        class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">stable_datasets.images.beans</span>
+        class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">stable_datasets.images.face_pointing</span>
 </nav>
 
     <div id="content" role="main">
-      <h1>Source code for stable_datasets.images.beans</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-5">
-</span><span id="line-6">
-<div class="viewcode-block" id="Beans">
-<a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.beans.Beans">[docs]</a>
-</span><span id="line-7"><span class="k">class</span><span class="w"> </span><span class="nc">Beans</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-8"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bean disease dataset for classification of three classes: Angular Leaf Spot, Bean Rust, and Healthy leaves.&quot;&quot;&quot;</span>
+      <h1>Source code for stable_datasets.images.face_pointing</h1><div class="highlight"><pre>
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
 </span><span id="line-9">
-</span><span id="line-10">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-11">
-</span><span id="line-12">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-13">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-14">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The IBeans dataset contains leaf images representing three classes:</span>
-</span><span id="line-15"><span class="s2">                1) Healthy leaves, 2) Angular Leaf Spot, and 3) Bean Rust. Images are collected in Uganda for disease</span>
-</span><span id="line-16"><span class="s2">                classification in the field.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-17">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-18">                <span class="p">{</span>
-</span><span id="line-19">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-20">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;healthy&quot;</span><span class="p">,</span> <span class="s2">&quot;angular_leaf_spot&quot;</span><span class="p">,</span> <span class="s2">&quot;bean_rust&quot;</span><span class="p">]),</span>
-</span><span id="line-21">                <span class="p">}</span>
-</span><span id="line-22">            <span class="p">),</span>
-</span><span id="line-23">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-24">            <span class="n">license</span><span class="o">=</span><span class="s2">&quot;MIT License&quot;</span><span class="p">,</span>
-</span><span id="line-25">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@misc{makerere2020beans,</span>
-</span><span id="line-26"><span class="s2">                         author = &quot;{Makerere AI Lab}&quot;,</span>
-</span><span id="line-27"><span class="s2">                         title = &quot;{Bean Disease Dataset}&quot;,</span>
-</span><span id="line-28"><span class="s2">                         year = &quot;2020&quot;,</span>
-</span><span id="line-29"><span class="s2">                         month = &quot;January&quot;,</span>
-</span><span id="line-30"><span class="s2">                         url = &quot;https://github.com/AI-Lab-Makerere/ibean/&quot;}&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-31">        <span class="p">)</span>
-</span><span id="line-32">
-</span><span id="line-33">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-34">        <span class="n">urls</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-35">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.googleapis.com/ibeans/train.zip&quot;</span><span class="p">,</span>
-</span><span id="line-36">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.googleapis.com/ibeans/test.zip&quot;</span><span class="p">,</span>
-</span><span id="line-37">            <span class="s2">&quot;validation&quot;</span><span class="p">:</span> <span class="s2">&quot;https://storage.googleapis.com/ibeans/validation.zip&quot;</span><span class="p">,</span>
-</span><span id="line-38">        <span class="p">}</span>
-</span><span id="line-39">        <span class="n">downloaded_files</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">urls</span><span class="p">)</span>
-</span><span id="line-40">
-</span><span id="line-41">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-42">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-43">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-44">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;zip_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">]},</span>
-</span><span id="line-45">            <span class="p">),</span>
-</span><span id="line-46">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-47">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-48">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;zip_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]},</span>
-</span><span id="line-49">            <span class="p">),</span>
-</span><span id="line-50">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-51">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
-</span><span id="line-52">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;zip_path&quot;</span><span class="p">:</span> <span class="n">downloaded_files</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">]},</span>
-</span><span id="line-53">            <span class="p">),</span>
-</span><span id="line-54">        <span class="p">]</span>
-</span><span id="line-55">
-</span><span id="line-56">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">zip_path</span><span class="p">):</span>
-</span><span id="line-57">        <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">zip_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
-</span><span id="line-58">            <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">archive</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
-</span><span id="line-59">                <span class="k">if</span> <span class="n">file_name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jpg&quot;</span><span class="p">):</span>
-</span><span id="line-60">                    <span class="k">with</span> <span class="n">archive</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-</span><span id="line-61">                        <span class="n">image_data</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-</span><span id="line-62">                        <span class="n">label_name</span> <span class="o">=</span> <span class="n">file_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
-</span><span id="line-63">                        <span class="n">label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">str2int</span><span class="p">(</span><span class="n">label_name</span><span class="p">)</span>
-</span><span id="line-64">                        <span class="k">yield</span> <span class="n">file_name</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image_data</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span></div>
+</span><span id="line-10">
+<div class="viewcode-block" id="FacePointing">
+<a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.face_pointing.FacePointing">[docs]</a>
+</span><span id="line-11"><span class="k">class</span><span class="w"> </span><span class="nc">FacePointing</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-12"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Head angle classification dataset.&quot;&quot;&quot;</span>
+</span><span id="line-13">
+</span><span id="line-14">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-15">
+</span><span id="line-16">    <span class="c1"># Single source-of-truth for dataset provenance + download locations.</span>
+</span><span id="line-17">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-18">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;http://crowley-coutaz.fr/HeadPoseDataSet/&quot;</span><span class="p">,</span>
+</span><span id="line-19">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;http://crowley-coutaz.fr/HeadPoseDataSet/HeadPoseImageDatabase.tar.gz&quot;</span><span class="p">},</span>
+</span><span id="line-20">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@inproceedings{gourier2004estimating,</span>
+</span><span id="line-21"><span class="s2">                         title={Estimating face orientation from robust detection of salient facial features},</span>
+</span><span id="line-22"><span class="s2">                         author={Gourier, Nicolas and Hall, Daniela and Crowley, James L},</span>
+</span><span id="line-23"><span class="s2">                         booktitle={ICPR International Workshop on Visual Observation of Deictic Gestures},</span>
+</span><span id="line-24"><span class="s2">                         year=</span><span class="si">{2004}</span><span class="s2">,</span>
+</span><span id="line-25"><span class="s2">                         organization=</span><span class="si">{Citeseer}</span><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-26">    <span class="p">}</span>
+</span><span id="line-27">
+</span><span id="line-28">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-29">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-30">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The head pose database consists of 15 sets of images. Each set contains 2 series of 93 images</span>
+</span><span id="line-31"><span class="s2">                           of the same person at different poses. The database has a total size of approximately 30 MB.</span>
+</span><span id="line-32"><span class="s2">                           Files are organized in directories, with each directory containing images from one person (2 series).</span>
+</span><span id="line-33"><span class="s2">                           All images are in JPEG format. A Front directory contains 30 frontal images (pan and tilt angles equal to 0).&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-34">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-35">                <span class="p">{</span>
+</span><span id="line-36">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-37">                    <span class="s2">&quot;person_id&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
+</span><span id="line-38">                    <span class="s2">&quot;angles&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Sequence</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)),</span>
+</span><span id="line-39">                <span class="p">}</span>
+</span><span id="line-40">            <span class="p">),</span>
+</span><span id="line-41">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;angles&quot;</span><span class="p">),</span>
+</span><span id="line-42">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-43">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-44">        <span class="p">)</span>
+</span><span id="line-45">
+</span><span id="line-46">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-47"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the tar.gz archive.</span>
+</span><span id="line-48">
+</span><span id="line-49"><span class="sd">        Each archive contains images with filenames encoding person_id and angles.</span>
+</span><span id="line-50"><span class="sd">        Pattern: personXXYYY[+-]ZZ[+-]WW.jpg where XX=person_id, YYY=image_number, ZZ=tilt, WW=pan</span>
+</span><span id="line-51"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="line-52">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+</span><span id="line-53">            <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">tar</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
+</span><span id="line-54">                <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">isfile</span><span class="p">()</span> <span class="ow">and</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jpg&quot;</span><span class="p">):</span>
+</span><span id="line-55">                    <span class="c1"># Match pattern: person(\d{2})\d+([+-]\d+)([+-]\d+)</span>
+</span><span id="line-56">                    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;person(\d</span><span class="si">{2}</span><span class="s2">)\d+([+-]\d+)([+-]\d+)&quot;</span><span class="p">,</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</span><span id="line-57">                    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+</span><span id="line-58">                        <span class="n">person_id</span><span class="p">,</span> <span class="n">tilt_angle</span><span class="p">,</span> <span class="n">pan_angle</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">())</span>
+</span><span id="line-59">                        <span class="n">file</span> <span class="o">=</span> <span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+</span><span id="line-60">                        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+</span><span id="line-61">
+</span><span id="line-62">                        <span class="k">yield</span> <span class="p">(</span>
+</span><span id="line-63">                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">person_id</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">tilt_angle</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">pan_angle</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+</span><span id="line-64">                            <span class="p">{</span>
+</span><span id="line-65">                                <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
+</span><span id="line-66">                                <span class="s2">&quot;person_id&quot;</span><span class="p">:</span> <span class="n">person_id</span><span class="p">,</span>
+</span><span id="line-67">                                <span class="s2">&quot;angles&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">tilt_angle</span><span class="p">,</span> <span class="n">pan_angle</span><span class="p">],</span>
+</span><span id="line-68">                            <span class="p">},</span>
+</span><span id="line-69">                        <span class="p">)</span></div>
 
 </span></code></pre></div>
     </div></div>
