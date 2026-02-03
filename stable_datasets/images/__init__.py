@@ -1,47 +1,44 @@
 #!/usr/bin/env python
 
 from .arabic_characters import ArabicCharacters
+from .arabic_digits import ArabicDigits
+from .cars3d import CARS3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
-
-# from .arabic_digits import ArabicDigits
-# from .awa2 import AWA2
-# from .beans import Beans
-# from .celeb_a import CelebA
-# from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
 from .cifar100 import CIFAR100
-
-# from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .clevrer import CLEVRER
-
-# from .country211 import Country211
-# from .cub200 import CUB200
 from .dsprites import DSprites
 from .dsprites_color import DSpritesColor
 from .dsprites_noise import DSpritesNoise
 from .dsprites_scream import DSpritesScream
 from .dtd import DTD
 from .e_mnist import EMNIST
+from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
 from .hasy_v2 import HASYv2
+from .food101 import Food101
 from .k_mnist import KMNIST
+from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
+from .not_mnist import NotMNIST
 
-# from .dtd import DTD
-# from .fashion_mnist import FashionMNIST
+# from .awa2 import AWA2
+# from .beans import Beans
+# from .celeb_a import CelebA
+# from .country211 import Country211
+# from .cub200 import CUB200
 # from .fgvc_aircraft import FGVCAircraft
 # from .food101 import Food101
 # from .imagenette import Imagenette
-# from .linnaeus5 import Linnaeus5
 # from .mnist import MNIST
-from .not_mnist import NotMNIST
-
 # from .places365_small import Places365Small
-# from .rock_paper_scissor import RockPaperScissor
-# from .stl10 import STL10
+from .rock_paper_scissor import RockPaperScissor
+from .shapes3d import Shapes3D
+from .small_norb import SmallNORB
+from .stl10 import STL10
 from .svhn import SVHN
 
 
@@ -50,25 +47,34 @@ from .svhn import SVHN
 
 __all__ = [
     "ArabicCharacters",
+    "ArabicDigits",
     "Cars196",
+    "CARS3D",
     "CIFAR10",
-    "CIFAR100",
     "CIFAR10C",
+    "CIFAR100",
     "CIFAR100C",
     "CLEVRER",
-    "DTD",
     "DSprites",
     "DSpritesColor",
     "DSpritesNoise",
     "DSpritesScream",
+    "FacePointing",
+    "DTD",
+    "EMNIST",
     "FashionMNIST",
+    "Flowers102",
     "KMNIST",
     "MedMNIST",
-    "EMNIST",
-    "Cars196",
-    "DTD",
     "NotMNIST",
     "Flowers102",
+    "RockPaperScissor",
+    "Food101",
+    "SVHN",
+    "Shapes3D",
+    "SmallNORB",
+    "STL10",
     "SVHN",
     "HASYv2",
+    "Linnaeus5",
 ]
