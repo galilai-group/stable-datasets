@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from .arabic_characters import ArabicCharacters
-from .cars3d import CARS3D
 from .arabic_digits import ArabicDigits
+from .cars3d import CARS3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
@@ -22,9 +22,6 @@ from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
-from .stl10 import STL10
-from .svhn import SVHN
-
 
 # from .awa2 import AWA2
 # from .beans import Beans
@@ -40,6 +37,7 @@ from .svhn import SVHN
 # from .rock_paper_scissor import RockPaperScissor
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
+from .stl10 import STL10
 from .svhn import SVHN
 
 
