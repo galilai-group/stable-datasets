@@ -26,6 +26,16 @@ class HASYv2(BaseDatasetBuilder):
     """
 
     VERSION = datasets.Version("1.0.0")
+    BUILDER_CONFIGS = [
+        datasets.BuilderConfig(
+            name=f"fold-{i}",
+            version=datasets.Version("1.0.0"),
+            description=f"HASYv2 dataset using fold {i} as the test set.",
+        )
+        for i in range(1, 11)
+    ]
+
+    DEFAULT_CONFIG_NAME = "fold-1"
 
     SOURCE = {
         "homepage": "https://github.com/MartinThoma/HASY",
@@ -39,7 +49,7 @@ class HASYv2(BaseDatasetBuilder):
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="HASYv2 dataset with 369 classes of handwritten symbols.",
+            description=f"HASYv2 dataset (Config: {self.config.name})",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
@@ -76,7 +86,8 @@ class HASYv2(BaseDatasetBuilder):
         ]
 
     def _generate_examples(self, archive_path, split_name):
-        csv_internal_path = f"classification-task/fold-1/{split_name}.csv"
+        fold_name = self.config.name
+        csv_internal_path = f"classification-task/{fold_name}/{split_name}.csv"
 
         image_label_map = {}
 
@@ -96,6 +107,9 @@ class HASYv2(BaseDatasetBuilder):
                     symbol_id = str(row["symbol_id"])
                     image_label_map[filename] = symbol_id
 
+            if not image_label_map:
+                return
+
             for member in tar.getmembers():
                 if not member.isfile():
                     continue
@@ -107,7 +121,6 @@ class HASYv2(BaseDatasetBuilder):
                     if f:
                         image_bytes = f.read()
                         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-
                         label = image_label_map[member_filename]
 
                         yield (

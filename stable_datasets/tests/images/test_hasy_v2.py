@@ -55,12 +55,23 @@ def test_hasy_v2_default_config():
 
 def test_hasy_v2_fold_switching():
     """
-    Ensures that the user can load a different fold (e.g., fold-5).
+    Ensures that the user can load a different fold (e.g., fold-5)
+    and that it contains different data than fold-1.
     """
+    ds_fold1 = HASYv2(config_name="fold-1", split="test")
+
     ds_fold5 = HASYv2(config_name="fold-5", split="test")
 
-    assert ds_fold5.info.config_name == "fold-5", f"Expected config to be 'fold-5', got '{ds_fold5.info.config_name}'"
+    assert ds_fold5.info.config_name == "fold-5"
+    assert len(ds_fold5) > 10000
 
-    assert len(ds_fold5) > 10000, "Fold 5 test set seems suspiciously small."
+    sample1 = ds_fold1[0]
+    sample5 = ds_fold5[0]
+
+    if len(ds_fold1) == len(ds_fold5):
+        assert (
+            sample1["label"] != sample5["label"]
+            or np.array(sample1["image"]).tobytes() != np.array(sample5["image"]).tobytes()
+        ), "Fold 1 and Fold 5 appear to be identical! Config switching might be broken."
 
     print("HASYv2 fold switching test passed!")
