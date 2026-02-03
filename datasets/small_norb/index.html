@@ -21,9 +21,9 @@
 <meta content="#ffffff" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="#030711" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Describable Textures Dataset (DTD) | stable-datasets</title>
-<meta content="Describable Textures Dataset (DTD) | stable-datasets" property="og:title"/>
-<meta content="Describable Textures Dataset (DTD) | stable-datasets" name="twitter:title"/>
+<title>SmallNORB | stable-datasets</title>
+<meta content="SmallNORB | stable-datasets" property="og:title"/>
+<meta content="SmallNORB | stable-datasets" name="twitter:title"/>
 <link href="../../_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="../../_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
 <link href="../../_static/theme.css?v=73505e79" rel="stylesheet" type="text/css"/>
@@ -35,8 +35,6 @@
 <link href="../../_static/awesome-sphinx-design.css?v=c54898a4" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
-<link href="../fashion_mnist/" rel="next" title="Fashion-MNIST"/>
-<link href="../cars196/" rel="prev" title="CARS-196"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" @scroll.window="showScrollTop = pageYOffset &gt; 100" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -83,8 +81,8 @@
 <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0">
 <div class="overflow-y-auto h-full w-full relative pr-6"><nav class="table w-full min-w-full my-6 lg:my-8">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../">Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
+<ul>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../">Datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="../arabic_characters/">Arabic Characters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../arabic_digits/">Arabic Digits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar10/">CIFAR-10</a></li>
@@ -92,7 +90,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../cifar10_c/">CIFAR-10-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cars196/">CARS-196</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../dtd/">Describable Textures Dataset (DTD)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../medmnist/">MedMNIST</a></li>
@@ -124,25 +122,66 @@
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
-<div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../">Datasets</a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Describable Textures Dataset (DTD)</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">SmallNORB</span>
 </nav>
 <div id="content" role="main">
-<section id="describable-textures-dataset-dtd">
-<h1>Describable Textures Dataset (DTD)<a class="headerlink" href="#describable-textures-dataset-dtd" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
+<section id="smallnorb">
+<h1>SmallNORB<a class="headerlink" href="#smallnorb" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
 <p style="display: flex; gap: 10px;">
-<img alt="Task: Image Classification" src="https://img.shields.io/badge/Task-Image%20Classification-blue"/>
-<img alt="Classes: 47" src="https://img.shields.io/badge/Classes-47-green"/>
-<img alt="Image Size: HxWx3" src="https://img.shields.io/badge/Size-HxWx3-orange"/>
+<img alt="Task: Disentangled Representation Learning" src="https://img.shields.io/badge/Task-Disentangled%20Representation-blue"/>
+<img alt="Latent Factors: 5" src="https://img.shields.io/badge/Factors-5-green"/>
+<img alt="Image Size: 96x96" src="https://img.shields.io/badge/Size-96x96-orange"/>
 </p><section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#overview'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>Describable Textures Dataset (DTD) is a texture database, consisting of 5640 images, organized according to a list of 47 terms (categories) inspired from human perception. There are 120 images for each category. Image sizes range between 300x300 and 640x640, and the images contain at least 90% of the surface representing the category attribute. The images were collected from Google and Flickr by entering our proposed attributes and related terms as search queries. The images were annotated using Amazon Mechanical Turk in several iterations. For each image we provide key attribute (main category) and a list of joint attributes.</p>
+<p>The <strong>SmallNORB dataset</strong> is a real-world benchmark designed for <strong>disentangled and unsupervised representation learning</strong> on <strong>3D objects</strong> under controlled but realistic variations. It was introduced by <strong>LeCun et al. (2004)</strong> to study <strong>object recognition invariant to pose and lighting</strong>.</p>
+<p>Each example consists of a <strong>stereo image pair</strong>, capturing the same object from two horizontally displaced cameras.</p>
 <ul class="simple">
-<li><p><strong>Train</strong>: 1880 images</p></li>
-<li><p><strong>Validation</strong>: 1880 images</p></li>
-<li><p><strong>Test</strong>: 1880 images</p></li>
+<li><p><strong>Total images (train)</strong>: 24,300 stereo pairs</p></li>
+<li><p><strong>Total images (test)</strong>: 24,300 stereo pairs</p></li>
+<li><p><strong>Image resolution</strong>: 96×96 (grayscale)</p></li>
 </ul>
-<a class="reference internal image-reference" href="../../_images/dtd_teaser.png"><img alt="../../_images/dtd_teaser.png" class="align-center" src="../../_images/dtd_teaser.png" style="width: 90%;">
+</section>
+<section id="latent-factors-of-variation">
+<h2>Latent Factors of Variation<a class="headerlink" href="#latent-factors-of-variation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#latent-factors-of-variation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
+<p>Each stereo pair is annotated with five discrete factors of variation:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%"/>
+<col style="width: 40.0%"/>
+<col style="width: 40.0%"/>
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Factor</p></th>
+<th class="head"><p>Discrete Values</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">category</span></code></p></td>
+<td><p>{0, …, 4}</p></td>
+<td><p>Object category (airplane, car, truck, human, animal)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">instance</span></code></p></td>
+<td><p>{0, …, 9}</p></td>
+<td><p>Specific object instance within a category</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">elevation</span></code></p></td>
+<td><p>{0, …, 8}</p></td>
+<td><p>Camera elevation angle</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">azimuth</span></code></p></td>
+<td><p>{0, …, 17}</p></td>
+<td><p>Camera azimuth angle (originally 0, 2, …, 34)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lighting</span></code></p></td>
+<td><p>{0, …, 5}</p></td>
+<td><p>Lighting condition index</p></td>
+</tr>
+</tbody>
+</table>
+<p>Each sample corresponds to a <strong>single observed configuration</strong> of these factors.
+The dataset <strong>does not enumerate all possible combinations</strong>, reflecting the constraints of real-world data collection.</p>
+<a class="reference internal image-reference" href="../../_images/small_norb_teaser.gif"><img alt="../../_images/small_norb_teaser.gif" class="align-center" src="../../_images/small_norb_teaser.gif" style="width: 90%;">
 </img></a>
 </section>
 <section id="data-structure">
@@ -150,9 +189,9 @@
 <p>When accessing an example using <code class="docutils literal notranslate"><span class="pre">ds[i]</span></code>, you will receive a dictionary with the following keys:</p>
 <table class="docutils align-default">
 <colgroup>
+<col style="width: 25.0%"/>
 <col style="width: 20.0%"/>
-<col style="width: 20.0%"/>
-<col style="width: 60.0%"/>
+<col style="width: 55.0%"/>
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Key</p></th>
@@ -161,13 +200,37 @@
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">left_image</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">PIL.Image.Image</span></code></p></td>
-<td><p>H×W×3 RGB image</p></td>
+<td><p>Left view grayscale image (96×96)</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
-<td><p>int</p></td>
-<td><p>Class label (0-46)</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">right_image</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">PIL.Image.Image</span></code></p></td>
+<td><p>Right view grayscale image (96×96)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">List[int]</span></code></p></td>
+<td><p>Discrete latent indices: <code class="docutils literal notranslate"><span class="pre">[category,</span> <span class="pre">instance,</span> <span class="pre">elevation,</span> <span class="pre">azimuth,</span> <span class="pre">lighting]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">category</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p>Object category index</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">instance</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p>Object instance index</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">elevation</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p>Elevation index</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">azimuth</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p>Azimuth index</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lighting</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p>Lighting condition index</p></td>
 </tr>
 </tbody>
 </table>
@@ -175,36 +238,48 @@
 <section id="usage-example">
 <h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage-example'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <p><strong>Basic Usage</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.dtd</span><span class="w"> </span><span class="kn">import</span> <span class="n">DTD</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.smallnorb</span><span class="w"> </span><span class="kn">import</span> <span class="n">SmallNORB</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="c1"># First run will download + prepare cache, then return the split as a HF Dataset</span>
-</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">DTD</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
-</span><span id="line-5">
-</span><span id="line-6"><span class="c1"># If you omit the split (split=None), you get a DatasetDict with all available splits</span>
-</span><span id="line-7"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">DTD</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</span><span id="line-8">
-</span><span id="line-9"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-10"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label"}</span>
-</span><span id="line-11">
-</span><span id="line-12"><span class="c1"># Optional: make it PyTorch-friendly</span>
-</span><span id="line-13"><span class="n">ds_torch</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span><span id="line-3"><span class="c1"># Load training split</span>
+</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">SmallNORB</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
+</span><span id="line-5"><span class="n">ds_test</span> <span class="o">=</span> <span class="n">SmallNORB</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="c1"># Load both splits</span>
+</span><span id="line-8"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">SmallNORB</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-11"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</span><span id="line-12">
+</span><span id="line-13"><span class="n">left_image</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"left_image"</span><span class="p">]</span>
+</span><span id="line-14"><span class="n">right_image</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"right_image"</span><span class="p">]</span>
+</span><span id="line-15"><span class="n">label</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span>
+</span><span id="line-16">
+</span><span id="line-17"><span class="n">category</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">elevation</span><span class="p">,</span> <span class="n">azimuth</span><span class="p">,</span> <span class="n">lighting</span> <span class="o">=</span> <span class="n">label</span>
+</span><span id="line-18">
+</span><span id="line-19"><span class="c1"># Optional: make it PyTorch-friendly</span>
+</span><span id="line-20"><span class="n">ds_torch</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#references'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <ul class="simple">
-<li><p>Official website: <a class="reference external" href="https://www.robots.ox.ac.uk/~vgg/data/dtd/" rel="nofollow noopener">https://www.robots.ox.ac.uk/~vgg/data/dtd/<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
-<li><p>License: MIT License</p></li>
+<li><p>Dataset homepage: <a class="reference external" href="https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/" rel="nofollow noopener">https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
+<li><p>License: Public domain (research use)</p></li>
+<li><p>Paper: LeCun et al., <em>Learning Methods for Generic Object Recognition with Invariance to Pose and Lighting</em>, CVPR 2004</p></li>
 </ul>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@InProceedings</span><span class="p">{</span><span class="nl">cimpoi14describing</span><span class="p">,</span>
-</span><span id="line-2"><span class="w">    </span><span class="na">Author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{M. Cimpoi and S. Maji and I. Kokkinos and S. Mohamed and and A. Vedaldi}</span><span class="p">,</span>
-</span><span id="line-3"><span class="w">    </span><span class="na">Title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{Describing Textures in the Wild}</span><span class="p">,</span>
-</span><span id="line-4"><span class="w">    </span><span class="na">Booktitle</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Proceedings of the {IEEE} Conf. on Computer Vision and Pattern Recognition ({CVPR})}</span><span class="p">,</span>
-</span><span id="line-5"><span class="w">    </span><span class="na">Year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2014}</span><span class="p">}</span>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">lecun2004learning</span><span class="p">,</span>
+</span><span id="line-2"><span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{Learning methods for generic object recognition with invariance to pose and lighting}</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{LeCun, Yann and Huang, Fu Jie and Bottou, Leon}</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">  </span><span class="na">booktitle</span><span class="p">=</span><span class="s">{Proceedings of the 2004 IEEE Computer Society Conference on Computer Vision and Pattern Recognition}</span><span class="p">,</span>
+</span><span id="line-5"><span class="w">  </span><span class="na">volume</span><span class="p">=</span><span class="s">{2}</span><span class="p">,</span>
+</span><span id="line-6"><span class="w">  </span><span class="na">pages</span><span class="p">=</span><span class="s">{II--104}</span><span class="p">,</span>
+</span><span id="line-7"><span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2004}</span><span class="p">,</span>
+</span><span id="line-8"><span class="w">  </span><span class="na">organization</span><span class="p">=</span><span class="s">{IEEE}</span>
+</span><span id="line-9"><span class="p">}</span>
 </span></code></pre></div>
 </div>
 </section>
@@ -213,6 +288,7 @@
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
 <li><a :data-current="activeSection === '#overview'" class="reference internal" href="#overview">Overview</a></li>
+<li><a :data-current="activeSection === '#latent-factors-of-variation'" class="reference internal" href="#latent-factors-of-variation">Latent Factors of Variation</a></li>
 <li><a :data-current="activeSection === '#data-structure'" class="reference internal" href="#data-structure">Data Structure</a></li>
 <li><a :data-current="activeSection === '#usage-example'" class="reference internal" href="#usage-example">Usage Example</a></li>
 <li><a :data-current="activeSection === '#references'" class="reference internal" href="#references">References</a></li>
