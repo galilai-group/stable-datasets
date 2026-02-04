@@ -9,6 +9,8 @@ from .cifar10_c import CIFAR10C
 from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .clevrer import CLEVRER
+from .country211 import Country211
+from .cub200 import CUB200
 from .dsprites import DSprites
 from .dsprites_color import DSpritesColor
 from .dsprites_noise import DSpritesNoise
@@ -66,11 +68,14 @@ __all__ = [
     "Flowers102",
     "KMNIST",
     "MedMNIST",
+    "EMNIST",
     "NotMNIST",
     "Flowers102",
     "RockPaperScissor",
     "Food101",
     "SVHN",
+    "CUB200",
+    "Country211",
     "Shapes3D",
     "SmallNORB",
     "STL10",
