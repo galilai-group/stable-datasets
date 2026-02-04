@@ -133,6 +133,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/stl10/">STL-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/flowers102/">Flowers102</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cub200/">CUB-200</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/country211/">Country-211</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
@@ -184,294 +186,292 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.cub200</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-6">
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-7">
+</span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
+</span><span id="line-9">
+</span><span id="line-10">
 <div class="viewcode-block" id="CUB200">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.cub200.CUB200">[docs]</a>
-</span><span id="line-8"><span class="k">class</span><span class="w"> </span><span class="nc">CUB200</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-9"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Caltech-UCSD Birds-200-2011 (CUB-200-2011) Dataset&quot;&quot;&quot;</span>
-</span><span id="line-10">
-</span><span id="line-11">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-12">
-</span><span id="line-13">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-14">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-15">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The Caltech-UCSD Birds-200-2011 dataset consists of 11,788 images of 200 bird species.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-16">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-17">                <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">())}</span>
-</span><span id="line-18">            <span class="p">),</span>
-</span><span id="line-19">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-20">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://www.vision.caltech.edu/datasets/cub_200_2011/&quot;</span><span class="p">,</span>
-</span><span id="line-21">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@techreport{WahCUB_200_2011,</span>
-</span><span id="line-22"><span class="s2">                         Title = {The Caltech-UCSD Birds-200-2011 Dataset},</span>
-</span><span id="line-23"><span class="s2">                         Author = {Wah, C. and Branson, S. and Welinder, P. and Perona, P. and Belongie, S.},</span>
-</span><span id="line-24"><span class="s2">                         Year = </span><span class="si">{2011}</span><span class="s2">,</span>
-</span><span id="line-25"><span class="s2">                         Institution = {California Institute of Technology},</span>
-</span><span id="line-26"><span class="s2">                         Number = {CNS-TR-2011-001}}&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-27">        <span class="p">)</span>
-</span><span id="line-28">
-</span><span id="line-29">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-30">        <span class="c1"># Download and extract in a single step</span>
-</span><span id="line-31">        <span class="n">extracted_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download_and_extract</span><span class="p">(</span>
-</span><span id="line-32">            <span class="s2">&quot;https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1&quot;</span>
-</span><span id="line-33">        <span class="p">)</span>
-</span><span id="line-34">        <span class="n">data_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">extracted_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;CUB_200_2011&quot;</span>
-</span><span id="line-35">
-</span><span id="line-36">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-37">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-38">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-39">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_dir&quot;</span><span class="p">:</span> <span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">},</span>
-</span><span id="line-40">            <span class="p">),</span>
-</span><span id="line-41">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-42">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
-</span><span id="line-43">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_dir&quot;</span><span class="p">:</span> <span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">},</span>
-</span><span id="line-44">            <span class="p">),</span>
-</span><span id="line-45">        <span class="p">]</span>
-</span><span id="line-46">
-</span><span id="line-47">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
-</span><span id="line-48"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the extracted directory.&quot;&quot;&quot;</span>
-</span><span id="line-49">        <span class="c1"># Paths to metadata files in the extracted directory</span>
-</span><span id="line-50">        <span class="n">image_labels_path</span> <span class="o">=</span> <span class="n">data_dir</span> <span class="o">/</span> <span class="s2">&quot;image_class_labels.txt&quot;</span>
-</span><span id="line-51">        <span class="n">image_paths_path</span> <span class="o">=</span> <span class="n">data_dir</span> <span class="o">/</span> <span class="s2">&quot;images.txt&quot;</span>
-</span><span id="line-52">        <span class="n">train_test_split_path</span> <span class="o">=</span> <span class="n">data_dir</span> <span class="o">/</span> <span class="s2">&quot;train_test_split.txt&quot;</span>
-</span><span id="line-53">
-</span><span id="line-54">        <span class="c1"># Load metadata</span>
-</span><span id="line-55">        <span class="n">images_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">image_paths_path</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;file_path&quot;</span><span class="p">])</span>
-</span><span id="line-56">        <span class="n">labels_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">image_labels_path</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">])</span>
-</span><span id="line-57">        <span class="n">split_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">train_test_split_path</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;is_training&quot;</span><span class="p">])</span>
-</span><span id="line-58">
-</span><span id="line-59">        <span class="c1"># Merge metadata into a single DataFrame</span>
-</span><span id="line-60">        <span class="n">data_df</span> <span class="o">=</span> <span class="n">images_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">labels_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">split_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">)</span>
-</span><span id="line-61">        <span class="n">data_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>  <span class="c1"># Zero-index the labels</span>
-</span><span id="line-62">
-</span><span id="line-63">        <span class="c1"># Filter by the specified split</span>
-</span><span id="line-64">        <span class="n">is_training_split</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span> <span class="k">else</span> <span class="mi">0</span>
-</span><span id="line-65">        <span class="n">split_data</span> <span class="o">=</span> <span class="n">data_df</span><span class="p">[</span><span class="n">data_df</span><span class="p">[</span><span class="s2">&quot;is_training&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">is_training_split</span><span class="p">]</span>
-</span><span id="line-66">
-</span><span id="line-67">        <span class="c1"># Generate examples</span>
-</span><span id="line-68">        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">split_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-</span><span id="line-69">            <span class="n">image_path</span> <span class="o">=</span> <span class="n">data_dir</span> <span class="o">/</span> <span class="s2">&quot;images&quot;</span> <span class="o">/</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;file_path&quot;</span><span class="p">]</span>
-</span><span id="line-70">            <span class="n">label</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
-</span><span id="line-71">
-</span><span id="line-72">            <span class="c1"># Load the image</span>
-</span><span id="line-73">            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">img_file</span><span class="p">:</span>
-</span><span id="line-74">                <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">img_file</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
-</span><span id="line-75">                <span class="k">yield</span> <span class="p">(</span>
-</span><span id="line-76">                    <span class="n">row</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">],</span>
-</span><span id="line-77">                    <span class="p">{</span>
-</span><span id="line-78">                        <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
-</span><span id="line-79">                        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
-</span><span id="line-80">                    <span class="p">},</span>
-</span><span id="line-81">                <span class="p">)</span>
-</span><span id="line-82">
-</span><span id="line-83">    <span class="nd">@staticmethod</span>
-</span><span id="line-84">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
-</span><span id="line-85">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-86">            <span class="s2">&quot;Black_footed_Albatross&quot;</span><span class="p">,</span>
-</span><span id="line-87">            <span class="s2">&quot;Laysan_Albatross&quot;</span><span class="p">,</span>
-</span><span id="line-88">            <span class="s2">&quot;Sooty_Albatross&quot;</span><span class="p">,</span>
-</span><span id="line-89">            <span class="s2">&quot;Groove_billed_Ani&quot;</span><span class="p">,</span>
-</span><span id="line-90">            <span class="s2">&quot;Crested_Auklet&quot;</span><span class="p">,</span>
-</span><span id="line-91">            <span class="s2">&quot;Least_Auklet&quot;</span><span class="p">,</span>
-</span><span id="line-92">            <span class="s2">&quot;Parakeet_Auklet&quot;</span><span class="p">,</span>
-</span><span id="line-93">            <span class="s2">&quot;Rhinoceros_Auklet&quot;</span><span class="p">,</span>
-</span><span id="line-94">            <span class="s2">&quot;Brewer_Blackbird&quot;</span><span class="p">,</span>
-</span><span id="line-95">            <span class="s2">&quot;Red_winged_Blackbird&quot;</span><span class="p">,</span>
-</span><span id="line-96">            <span class="s2">&quot;Rusty_Blackbird&quot;</span><span class="p">,</span>
-</span><span id="line-97">            <span class="s2">&quot;Yellow_headed_Blackbird&quot;</span><span class="p">,</span>
-</span><span id="line-98">            <span class="s2">&quot;Bobolink&quot;</span><span class="p">,</span>
-</span><span id="line-99">            <span class="s2">&quot;Indigo_Bunting&quot;</span><span class="p">,</span>
-</span><span id="line-100">            <span class="s2">&quot;Lazuli_Bunting&quot;</span><span class="p">,</span>
-</span><span id="line-101">            <span class="s2">&quot;Painted_Bunting&quot;</span><span class="p">,</span>
-</span><span id="line-102">            <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
-</span><span id="line-103">            <span class="s2">&quot;Spotted_Catbird&quot;</span><span class="p">,</span>
-</span><span id="line-104">            <span class="s2">&quot;Gray_Catbird&quot;</span><span class="p">,</span>
-</span><span id="line-105">            <span class="s2">&quot;Yellow_breasted_Chat&quot;</span><span class="p">,</span>
-</span><span id="line-106">            <span class="s2">&quot;Eastern_Towhee&quot;</span><span class="p">,</span>
-</span><span id="line-107">            <span class="s2">&quot;Chuck_will_Widow&quot;</span><span class="p">,</span>
-</span><span id="line-108">            <span class="s2">&quot;Brandt_Cormorant&quot;</span><span class="p">,</span>
-</span><span id="line-109">            <span class="s2">&quot;Red_faced_Cormorant&quot;</span><span class="p">,</span>
-</span><span id="line-110">            <span class="s2">&quot;Pelagic_Cormorant&quot;</span><span class="p">,</span>
-</span><span id="line-111">            <span class="s2">&quot;Bronzed_Cowbird&quot;</span><span class="p">,</span>
-</span><span id="line-112">            <span class="s2">&quot;Shiny_Cowbird&quot;</span><span class="p">,</span>
-</span><span id="line-113">            <span class="s2">&quot;Brown_Creeper&quot;</span><span class="p">,</span>
-</span><span id="line-114">            <span class="s2">&quot;American_Crow&quot;</span><span class="p">,</span>
-</span><span id="line-115">            <span class="s2">&quot;Fish_Crow&quot;</span><span class="p">,</span>
-</span><span id="line-116">            <span class="s2">&quot;Black_billed_Cuckoo&quot;</span><span class="p">,</span>
-</span><span id="line-117">            <span class="s2">&quot;Mangrove_Cuckoo&quot;</span><span class="p">,</span>
-</span><span id="line-118">            <span class="s2">&quot;Yellow_billed_Cuckoo&quot;</span><span class="p">,</span>
-</span><span id="line-119">            <span class="s2">&quot;Gray_crowned_Rosy_Finch&quot;</span><span class="p">,</span>
-</span><span id="line-120">            <span class="s2">&quot;Purple_Finch&quot;</span><span class="p">,</span>
-</span><span id="line-121">            <span class="s2">&quot;Northern_Flicker&quot;</span><span class="p">,</span>
-</span><span id="line-122">            <span class="s2">&quot;Acadian_Flycatcher&quot;</span><span class="p">,</span>
-</span><span id="line-123">            <span class="s2">&quot;Great_Crested_Flycatcher&quot;</span><span class="p">,</span>
-</span><span id="line-124">            <span class="s2">&quot;Least_Flycatcher&quot;</span><span class="p">,</span>
-</span><span id="line-125">            <span class="s2">&quot;Olive_sided_Flycatcher&quot;</span><span class="p">,</span>
-</span><span id="line-126">            <span class="s2">&quot;Scissor_tailed_Flycatcher&quot;</span><span class="p">,</span>
-</span><span id="line-127">            <span class="s2">&quot;Vermilion_Flycatcher&quot;</span><span class="p">,</span>
-</span><span id="line-128">            <span class="s2">&quot;Yellow_bellied_Flycatcher&quot;</span><span class="p">,</span>
-</span><span id="line-129">            <span class="s2">&quot;Frigatebird&quot;</span><span class="p">,</span>
-</span><span id="line-130">            <span class="s2">&quot;Northern_Fulmar&quot;</span><span class="p">,</span>
-</span><span id="line-131">            <span class="s2">&quot;Gadwall&quot;</span><span class="p">,</span>
-</span><span id="line-132">            <span class="s2">&quot;American_Goldfinch&quot;</span><span class="p">,</span>
-</span><span id="line-133">            <span class="s2">&quot;European_Goldfinch&quot;</span><span class="p">,</span>
-</span><span id="line-134">            <span class="s2">&quot;Boat_tailed_Grackle&quot;</span><span class="p">,</span>
-</span><span id="line-135">            <span class="s2">&quot;Eared_Grebe&quot;</span><span class="p">,</span>
-</span><span id="line-136">            <span class="s2">&quot;Horned_Grebe&quot;</span><span class="p">,</span>
-</span><span id="line-137">            <span class="s2">&quot;Pied_billed_Grebe&quot;</span><span class="p">,</span>
-</span><span id="line-138">            <span class="s2">&quot;Western_Grebe&quot;</span><span class="p">,</span>
-</span><span id="line-139">            <span class="s2">&quot;Blue_Grosbeak&quot;</span><span class="p">,</span>
-</span><span id="line-140">            <span class="s2">&quot;Evening_Grosbeak&quot;</span><span class="p">,</span>
-</span><span id="line-141">            <span class="s2">&quot;Pine_Grosbeak&quot;</span><span class="p">,</span>
-</span><span id="line-142">            <span class="s2">&quot;Rose_breasted_Grosbeak&quot;</span><span class="p">,</span>
-</span><span id="line-143">            <span class="s2">&quot;Pigeon_Guillemot&quot;</span><span class="p">,</span>
-</span><span id="line-144">            <span class="s2">&quot;California_Gull&quot;</span><span class="p">,</span>
-</span><span id="line-145">            <span class="s2">&quot;Glaucous_winged_Gull&quot;</span><span class="p">,</span>
-</span><span id="line-146">            <span class="s2">&quot;Heermann_Gull&quot;</span><span class="p">,</span>
-</span><span id="line-147">            <span class="s2">&quot;Herring_Gull&quot;</span><span class="p">,</span>
-</span><span id="line-148">            <span class="s2">&quot;Ivory_Gull&quot;</span><span class="p">,</span>
-</span><span id="line-149">            <span class="s2">&quot;Ring_billed_Gull&quot;</span><span class="p">,</span>
-</span><span id="line-150">            <span class="s2">&quot;Slaty_backed_Gull&quot;</span><span class="p">,</span>
-</span><span id="line-151">            <span class="s2">&quot;Western_Gull&quot;</span><span class="p">,</span>
-</span><span id="line-152">            <span class="s2">&quot;Anna_Hummingbird&quot;</span><span class="p">,</span>
-</span><span id="line-153">            <span class="s2">&quot;Ruby_throated_Hummingbird&quot;</span><span class="p">,</span>
-</span><span id="line-154">            <span class="s2">&quot;Rufous_Hummingbird&quot;</span><span class="p">,</span>
-</span><span id="line-155">            <span class="s2">&quot;Green_Violetear&quot;</span><span class="p">,</span>
-</span><span id="line-156">            <span class="s2">&quot;Long_tailed_Jaeger&quot;</span><span class="p">,</span>
-</span><span id="line-157">            <span class="s2">&quot;Pomarine_Jaeger&quot;</span><span class="p">,</span>
-</span><span id="line-158">            <span class="s2">&quot;Blue_Jay&quot;</span><span class="p">,</span>
-</span><span id="line-159">            <span class="s2">&quot;Florida_Jay&quot;</span><span class="p">,</span>
-</span><span id="line-160">            <span class="s2">&quot;Green_Jay&quot;</span><span class="p">,</span>
-</span><span id="line-161">            <span class="s2">&quot;Dark_eyed_Junco&quot;</span><span class="p">,</span>
-</span><span id="line-162">            <span class="s2">&quot;Tropical_Kingbird&quot;</span><span class="p">,</span>
-</span><span id="line-163">            <span class="s2">&quot;Gray_Kingbird&quot;</span><span class="p">,</span>
-</span><span id="line-164">            <span class="s2">&quot;Belted_Kingfisher&quot;</span><span class="p">,</span>
-</span><span id="line-165">            <span class="s2">&quot;Green_Kingfisher&quot;</span><span class="p">,</span>
-</span><span id="line-166">            <span class="s2">&quot;Pied_Kingfisher&quot;</span><span class="p">,</span>
-</span><span id="line-167">            <span class="s2">&quot;Ringed_Kingfisher&quot;</span><span class="p">,</span>
-</span><span id="line-168">            <span class="s2">&quot;White_breasted_Kingfisher&quot;</span><span class="p">,</span>
-</span><span id="line-169">            <span class="s2">&quot;Red_legged_Kittiwake&quot;</span><span class="p">,</span>
-</span><span id="line-170">            <span class="s2">&quot;Horned_Lark&quot;</span><span class="p">,</span>
-</span><span id="line-171">            <span class="s2">&quot;Pacific_Loon&quot;</span><span class="p">,</span>
-</span><span id="line-172">            <span class="s2">&quot;Mallard&quot;</span><span class="p">,</span>
-</span><span id="line-173">            <span class="s2">&quot;Western_Meadowlark&quot;</span><span class="p">,</span>
-</span><span id="line-174">            <span class="s2">&quot;Hooded_Merganser&quot;</span><span class="p">,</span>
-</span><span id="line-175">            <span class="s2">&quot;Red_breasted_Merganser&quot;</span><span class="p">,</span>
-</span><span id="line-176">            <span class="s2">&quot;Mockingbird&quot;</span><span class="p">,</span>
-</span><span id="line-177">            <span class="s2">&quot;Nighthawk&quot;</span><span class="p">,</span>
-</span><span id="line-178">            <span class="s2">&quot;Clark_Nutcracker&quot;</span><span class="p">,</span>
-</span><span id="line-179">            <span class="s2">&quot;White_breasted_Nuthatch&quot;</span><span class="p">,</span>
-</span><span id="line-180">            <span class="s2">&quot;Baltimore_Oriole&quot;</span><span class="p">,</span>
-</span><span id="line-181">            <span class="s2">&quot;Hooded_Oriole&quot;</span><span class="p">,</span>
-</span><span id="line-182">            <span class="s2">&quot;Orchard_Oriole&quot;</span><span class="p">,</span>
-</span><span id="line-183">            <span class="s2">&quot;Scott_Oriole&quot;</span><span class="p">,</span>
-</span><span id="line-184">            <span class="s2">&quot;Ovenbird&quot;</span><span class="p">,</span>
-</span><span id="line-185">            <span class="s2">&quot;Brown_Pelican&quot;</span><span class="p">,</span>
-</span><span id="line-186">            <span class="s2">&quot;White_Pelican&quot;</span><span class="p">,</span>
-</span><span id="line-187">            <span class="s2">&quot;Western_Wood_Pewee&quot;</span><span class="p">,</span>
-</span><span id="line-188">            <span class="s2">&quot;Sayornis&quot;</span><span class="p">,</span>
-</span><span id="line-189">            <span class="s2">&quot;American_Pipit&quot;</span><span class="p">,</span>
-</span><span id="line-190">            <span class="s2">&quot;Whip_poor_Will&quot;</span><span class="p">,</span>
-</span><span id="line-191">            <span class="s2">&quot;Horned_Puffin&quot;</span><span class="p">,</span>
-</span><span id="line-192">            <span class="s2">&quot;Common_Raven&quot;</span><span class="p">,</span>
-</span><span id="line-193">            <span class="s2">&quot;White_necked_Raven&quot;</span><span class="p">,</span>
-</span><span id="line-194">            <span class="s2">&quot;American_Redstart&quot;</span><span class="p">,</span>
-</span><span id="line-195">            <span class="s2">&quot;Geococcyx&quot;</span><span class="p">,</span>
-</span><span id="line-196">            <span class="s2">&quot;Loggerhead_Shrike&quot;</span><span class="p">,</span>
-</span><span id="line-197">            <span class="s2">&quot;Great_Grey_Shrike&quot;</span><span class="p">,</span>
-</span><span id="line-198">            <span class="s2">&quot;Baird_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-199">            <span class="s2">&quot;Black_throated_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-200">            <span class="s2">&quot;Brewer_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-201">            <span class="s2">&quot;Chipping_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-202">            <span class="s2">&quot;Clay_colored_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-203">            <span class="s2">&quot;House_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-204">            <span class="s2">&quot;Field_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-205">            <span class="s2">&quot;Fox_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-206">            <span class="s2">&quot;Grasshopper_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-207">            <span class="s2">&quot;Harris_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-208">            <span class="s2">&quot;Henslow_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-209">            <span class="s2">&quot;Le_Conte_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-210">            <span class="s2">&quot;Lincoln_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-211">            <span class="s2">&quot;Nelson_Sharp_tailed_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-212">            <span class="s2">&quot;Savannah_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-213">            <span class="s2">&quot;Seaside_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-214">            <span class="s2">&quot;Song_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-215">            <span class="s2">&quot;Tree_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-216">            <span class="s2">&quot;Vesper_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-217">            <span class="s2">&quot;White_crowned_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-218">            <span class="s2">&quot;White_throated_Sparrow&quot;</span><span class="p">,</span>
-</span><span id="line-219">            <span class="s2">&quot;Cape_Glossy_Starling&quot;</span><span class="p">,</span>
-</span><span id="line-220">            <span class="s2">&quot;Bank_Swallow&quot;</span><span class="p">,</span>
-</span><span id="line-221">            <span class="s2">&quot;Barn_Swallow&quot;</span><span class="p">,</span>
-</span><span id="line-222">            <span class="s2">&quot;Cliff_Swallow&quot;</span><span class="p">,</span>
-</span><span id="line-223">            <span class="s2">&quot;Tree_Swallow&quot;</span><span class="p">,</span>
-</span><span id="line-224">            <span class="s2">&quot;Scarlet_Tanager&quot;</span><span class="p">,</span>
-</span><span id="line-225">            <span class="s2">&quot;Summer_Tanager&quot;</span><span class="p">,</span>
-</span><span id="line-226">            <span class="s2">&quot;Arctic_Tern&quot;</span><span class="p">,</span>
-</span><span id="line-227">            <span class="s2">&quot;Black_Tern&quot;</span><span class="p">,</span>
-</span><span id="line-228">            <span class="s2">&quot;Caspian_Tern&quot;</span><span class="p">,</span>
-</span><span id="line-229">            <span class="s2">&quot;Common_Tern&quot;</span><span class="p">,</span>
-</span><span id="line-230">            <span class="s2">&quot;Elegant_Tern&quot;</span><span class="p">,</span>
-</span><span id="line-231">            <span class="s2">&quot;Forster_Tern&quot;</span><span class="p">,</span>
-</span><span id="line-232">            <span class="s2">&quot;Least_Tern&quot;</span><span class="p">,</span>
-</span><span id="line-233">            <span class="s2">&quot;Green_tailed_Towhee&quot;</span><span class="p">,</span>
-</span><span id="line-234">            <span class="s2">&quot;Brown_Thrasher&quot;</span><span class="p">,</span>
-</span><span id="line-235">            <span class="s2">&quot;Sage_Thrasher&quot;</span><span class="p">,</span>
-</span><span id="line-236">            <span class="s2">&quot;Black_capped_Vireo&quot;</span><span class="p">,</span>
-</span><span id="line-237">            <span class="s2">&quot;Blue_headed_Vireo&quot;</span><span class="p">,</span>
-</span><span id="line-238">            <span class="s2">&quot;Philadelphia_Vireo&quot;</span><span class="p">,</span>
-</span><span id="line-239">            <span class="s2">&quot;Red_eyed_Vireo&quot;</span><span class="p">,</span>
-</span><span id="line-240">            <span class="s2">&quot;Warbling_Vireo&quot;</span><span class="p">,</span>
-</span><span id="line-241">            <span class="s2">&quot;White_eyed_Vireo&quot;</span><span class="p">,</span>
-</span><span id="line-242">            <span class="s2">&quot;Yellow_throated_Vireo&quot;</span><span class="p">,</span>
-</span><span id="line-243">            <span class="s2">&quot;Bay_breasted_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-244">            <span class="s2">&quot;Black_and_white_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-245">            <span class="s2">&quot;Black_throated_Blue_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-246">            <span class="s2">&quot;Blue_winged_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-247">            <span class="s2">&quot;Canada_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-248">            <span class="s2">&quot;Cape_May_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-249">            <span class="s2">&quot;Cerulean_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-250">            <span class="s2">&quot;Chestnut_sided_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-251">            <span class="s2">&quot;Golden_winged_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-252">            <span class="s2">&quot;Hooded_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-253">            <span class="s2">&quot;Kentucky_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-254">            <span class="s2">&quot;Magnolia_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-255">            <span class="s2">&quot;Mourning_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-256">            <span class="s2">&quot;Myrtle_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-257">            <span class="s2">&quot;Nashville_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-258">            <span class="s2">&quot;Orange_crowned_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-259">            <span class="s2">&quot;Palm_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-260">            <span class="s2">&quot;Pine_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-261">            <span class="s2">&quot;Prairie_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-262">            <span class="s2">&quot;Prothonotary_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-263">            <span class="s2">&quot;Swainson_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-264">            <span class="s2">&quot;Tennessee_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-265">            <span class="s2">&quot;Wilson_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-266">            <span class="s2">&quot;Worm_eating_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-267">            <span class="s2">&quot;Yellow_Warbler&quot;</span><span class="p">,</span>
-</span><span id="line-268">            <span class="s2">&quot;Northern_Waterthrush&quot;</span><span class="p">,</span>
-</span><span id="line-269">            <span class="s2">&quot;Louisiana_Waterthrush&quot;</span><span class="p">,</span>
-</span><span id="line-270">            <span class="s2">&quot;Bohemian_Waxwing&quot;</span><span class="p">,</span>
-</span><span id="line-271">            <span class="s2">&quot;Cedar_Waxwing&quot;</span><span class="p">,</span>
-</span><span id="line-272">            <span class="s2">&quot;American_Three_toed_Woodpecker&quot;</span><span class="p">,</span>
-</span><span id="line-273">            <span class="s2">&quot;Pileated_Woodpecker&quot;</span><span class="p">,</span>
-</span><span id="line-274">            <span class="s2">&quot;Red_bellied_Woodpecker&quot;</span><span class="p">,</span>
-</span><span id="line-275">            <span class="s2">&quot;Red_cockaded_Woodpecker&quot;</span><span class="p">,</span>
-</span><span id="line-276">            <span class="s2">&quot;Red_headed_Woodpecker&quot;</span><span class="p">,</span>
-</span><span id="line-277">            <span class="s2">&quot;Downy_Woodpecker&quot;</span><span class="p">,</span>
-</span><span id="line-278">            <span class="s2">&quot;Bewick_Wren&quot;</span><span class="p">,</span>
-</span><span id="line-279">            <span class="s2">&quot;Cactus_Wren&quot;</span><span class="p">,</span>
-</span><span id="line-280">            <span class="s2">&quot;Carolina_Wren&quot;</span><span class="p">,</span>
-</span><span id="line-281">            <span class="s2">&quot;House_Wren&quot;</span><span class="p">,</span>
-</span><span id="line-282">            <span class="s2">&quot;Marsh_Wren&quot;</span><span class="p">,</span>
-</span><span id="line-283">            <span class="s2">&quot;Rock_Wren&quot;</span><span class="p">,</span>
-</span><span id="line-284">            <span class="s2">&quot;Winter_Wren&quot;</span><span class="p">,</span>
-</span><span id="line-285">            <span class="s2">&quot;Common_Yellowthroat&quot;</span><span class="p">,</span>
-</span><span id="line-286">        <span class="p">]</span></div>
+</span><span id="line-11"><span class="k">class</span><span class="w"> </span><span class="nc">CUB200</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-12"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Caltech-UCSD Birds-200-2011 (CUB-200-2011) Dataset&quot;&quot;&quot;</span>
+</span><span id="line-13">
+</span><span id="line-14">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-15">
+</span><span id="line-16">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-17">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://www.vision.caltech.edu/datasets/cub_200_2011/&quot;</span><span class="p">,</span>
+</span><span id="line-18">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-19">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1&quot;</span><span class="p">,</span>
+</span><span id="line-20">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1&quot;</span><span class="p">,</span>
+</span><span id="line-21">        <span class="p">},</span>
+</span><span id="line-22">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@techreport{WahCUB_200_2011,</span>
+</span><span id="line-23"><span class="s2">                        Title = {The Caltech-UCSD Birds-200-2011 Dataset},</span>
+</span><span id="line-24"><span class="s2">                        Author = {Wah, C. and Branson, S. and Welinder, P. and Perona, P. and Belongie, S.},</span>
+</span><span id="line-25"><span class="s2">                        Year = </span><span class="si">{2011}</span><span class="s2">,</span>
+</span><span id="line-26"><span class="s2">                        Institution = {California Institute of Technology},</span>
+</span><span id="line-27"><span class="s2">                        Number = {CNS-TR-2011-001}}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-28">    <span class="p">}</span>
+</span><span id="line-29">
+</span><span id="line-30">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-31">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-32">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The Caltech-UCSD Birds-200-2011 dataset consists of 11,788 images of 200 bird species.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-33">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-34">                <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">())}</span>
+</span><span id="line-35">            <span class="p">),</span>
+</span><span id="line-36">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-37">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-38">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-39">        <span class="p">)</span>
+</span><span id="line-40">
+</span><span id="line-41">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-42"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the extracted directory.&quot;&quot;&quot;</span>
+</span><span id="line-43">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
+</span><span id="line-44">            <span class="c1"># Read metadata files from inside the archive</span>
+</span><span id="line-45">            <span class="k">with</span> <span class="n">archive</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="s2">&quot;CUB_200_2011/image_class_labels.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-46">                <span class="n">labels_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()),</span> <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">])</span>
+</span><span id="line-47">
+</span><span id="line-48">            <span class="k">with</span> <span class="n">archive</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="s2">&quot;CUB_200_2011/images.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-49">                <span class="n">images_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()),</span> <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;file_path&quot;</span><span class="p">])</span>
+</span><span id="line-50">
+</span><span id="line-51">            <span class="k">with</span> <span class="n">archive</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="s2">&quot;CUB_200_2011/train_test_split.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-52">                <span class="n">split_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+</span><span id="line-53">                    <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()),</span> <span class="n">sep</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="s2">&quot;is_training&quot;</span><span class="p">]</span>
+</span><span id="line-54">                <span class="p">)</span>
+</span><span id="line-55">
+</span><span id="line-56">            <span class="c1"># Merge metadata into a single DataFrame</span>
+</span><span id="line-57">            <span class="n">data_df</span> <span class="o">=</span> <span class="n">images_df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">labels_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">split_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;image_id&quot;</span><span class="p">)</span>
+</span><span id="line-58">            <span class="n">data_df</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>  <span class="c1"># Zero-index the labels</span>
+</span><span id="line-59">
+</span><span id="line-60">            <span class="c1"># Filter by the specified split</span>
+</span><span id="line-61">            <span class="n">is_training_split</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span> <span class="k">else</span> <span class="mi">0</span>
+</span><span id="line-62">            <span class="n">split_data</span> <span class="o">=</span> <span class="n">data_df</span><span class="p">[</span><span class="n">data_df</span><span class="p">[</span><span class="s2">&quot;is_training&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">is_training_split</span><span class="p">]</span>
+</span><span id="line-63">
+</span><span id="line-64">            <span class="c1"># Generate examples</span>
+</span><span id="line-65">            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">split_data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+</span><span id="line-66">                <span class="n">image_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;CUB_200_2011/images/</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;file_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="line-67">                <span class="n">label</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+</span><span id="line-68">
+</span><span id="line-69">                <span class="c1"># Read the image from the tar archive</span>
+</span><span id="line-70">                <span class="k">with</span> <span class="n">archive</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">img_file</span><span class="p">:</span>
+</span><span id="line-71">                    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">img_file</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+</span><span id="line-72">
+</span><span id="line-73">                    <span class="k">yield</span> <span class="p">(</span>
+</span><span id="line-74">                        <span class="n">row</span><span class="p">[</span><span class="s2">&quot;image_id&quot;</span><span class="p">],</span>
+</span><span id="line-75">                        <span class="p">{</span>
+</span><span id="line-76">                            <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span>
+</span><span id="line-77">                            <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">,</span>
+</span><span id="line-78">                        <span class="p">},</span>
+</span><span id="line-79">                    <span class="p">)</span>
+</span><span id="line-80">
+</span><span id="line-81">    <span class="nd">@staticmethod</span>
+</span><span id="line-82">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
+</span><span id="line-83">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-84">            <span class="s2">&quot;Black_footed_Albatross&quot;</span><span class="p">,</span>
+</span><span id="line-85">            <span class="s2">&quot;Laysan_Albatross&quot;</span><span class="p">,</span>
+</span><span id="line-86">            <span class="s2">&quot;Sooty_Albatross&quot;</span><span class="p">,</span>
+</span><span id="line-87">            <span class="s2">&quot;Groove_billed_Ani&quot;</span><span class="p">,</span>
+</span><span id="line-88">            <span class="s2">&quot;Crested_Auklet&quot;</span><span class="p">,</span>
+</span><span id="line-89">            <span class="s2">&quot;Least_Auklet&quot;</span><span class="p">,</span>
+</span><span id="line-90">            <span class="s2">&quot;Parakeet_Auklet&quot;</span><span class="p">,</span>
+</span><span id="line-91">            <span class="s2">&quot;Rhinoceros_Auklet&quot;</span><span class="p">,</span>
+</span><span id="line-92">            <span class="s2">&quot;Brewer_Blackbird&quot;</span><span class="p">,</span>
+</span><span id="line-93">            <span class="s2">&quot;Red_winged_Blackbird&quot;</span><span class="p">,</span>
+</span><span id="line-94">            <span class="s2">&quot;Rusty_Blackbird&quot;</span><span class="p">,</span>
+</span><span id="line-95">            <span class="s2">&quot;Yellow_headed_Blackbird&quot;</span><span class="p">,</span>
+</span><span id="line-96">            <span class="s2">&quot;Bobolink&quot;</span><span class="p">,</span>
+</span><span id="line-97">            <span class="s2">&quot;Indigo_Bunting&quot;</span><span class="p">,</span>
+</span><span id="line-98">            <span class="s2">&quot;Lazuli_Bunting&quot;</span><span class="p">,</span>
+</span><span id="line-99">            <span class="s2">&quot;Painted_Bunting&quot;</span><span class="p">,</span>
+</span><span id="line-100">            <span class="s2">&quot;Cardinal&quot;</span><span class="p">,</span>
+</span><span id="line-101">            <span class="s2">&quot;Spotted_Catbird&quot;</span><span class="p">,</span>
+</span><span id="line-102">            <span class="s2">&quot;Gray_Catbird&quot;</span><span class="p">,</span>
+</span><span id="line-103">            <span class="s2">&quot;Yellow_breasted_Chat&quot;</span><span class="p">,</span>
+</span><span id="line-104">            <span class="s2">&quot;Eastern_Towhee&quot;</span><span class="p">,</span>
+</span><span id="line-105">            <span class="s2">&quot;Chuck_will_Widow&quot;</span><span class="p">,</span>
+</span><span id="line-106">            <span class="s2">&quot;Brandt_Cormorant&quot;</span><span class="p">,</span>
+</span><span id="line-107">            <span class="s2">&quot;Red_faced_Cormorant&quot;</span><span class="p">,</span>
+</span><span id="line-108">            <span class="s2">&quot;Pelagic_Cormorant&quot;</span><span class="p">,</span>
+</span><span id="line-109">            <span class="s2">&quot;Bronzed_Cowbird&quot;</span><span class="p">,</span>
+</span><span id="line-110">            <span class="s2">&quot;Shiny_Cowbird&quot;</span><span class="p">,</span>
+</span><span id="line-111">            <span class="s2">&quot;Brown_Creeper&quot;</span><span class="p">,</span>
+</span><span id="line-112">            <span class="s2">&quot;American_Crow&quot;</span><span class="p">,</span>
+</span><span id="line-113">            <span class="s2">&quot;Fish_Crow&quot;</span><span class="p">,</span>
+</span><span id="line-114">            <span class="s2">&quot;Black_billed_Cuckoo&quot;</span><span class="p">,</span>
+</span><span id="line-115">            <span class="s2">&quot;Mangrove_Cuckoo&quot;</span><span class="p">,</span>
+</span><span id="line-116">            <span class="s2">&quot;Yellow_billed_Cuckoo&quot;</span><span class="p">,</span>
+</span><span id="line-117">            <span class="s2">&quot;Gray_crowned_Rosy_Finch&quot;</span><span class="p">,</span>
+</span><span id="line-118">            <span class="s2">&quot;Purple_Finch&quot;</span><span class="p">,</span>
+</span><span id="line-119">            <span class="s2">&quot;Northern_Flicker&quot;</span><span class="p">,</span>
+</span><span id="line-120">            <span class="s2">&quot;Acadian_Flycatcher&quot;</span><span class="p">,</span>
+</span><span id="line-121">            <span class="s2">&quot;Great_Crested_Flycatcher&quot;</span><span class="p">,</span>
+</span><span id="line-122">            <span class="s2">&quot;Least_Flycatcher&quot;</span><span class="p">,</span>
+</span><span id="line-123">            <span class="s2">&quot;Olive_sided_Flycatcher&quot;</span><span class="p">,</span>
+</span><span id="line-124">            <span class="s2">&quot;Scissor_tailed_Flycatcher&quot;</span><span class="p">,</span>
+</span><span id="line-125">            <span class="s2">&quot;Vermilion_Flycatcher&quot;</span><span class="p">,</span>
+</span><span id="line-126">            <span class="s2">&quot;Yellow_bellied_Flycatcher&quot;</span><span class="p">,</span>
+</span><span id="line-127">            <span class="s2">&quot;Frigatebird&quot;</span><span class="p">,</span>
+</span><span id="line-128">            <span class="s2">&quot;Northern_Fulmar&quot;</span><span class="p">,</span>
+</span><span id="line-129">            <span class="s2">&quot;Gadwall&quot;</span><span class="p">,</span>
+</span><span id="line-130">            <span class="s2">&quot;American_Goldfinch&quot;</span><span class="p">,</span>
+</span><span id="line-131">            <span class="s2">&quot;European_Goldfinch&quot;</span><span class="p">,</span>
+</span><span id="line-132">            <span class="s2">&quot;Boat_tailed_Grackle&quot;</span><span class="p">,</span>
+</span><span id="line-133">            <span class="s2">&quot;Eared_Grebe&quot;</span><span class="p">,</span>
+</span><span id="line-134">            <span class="s2">&quot;Horned_Grebe&quot;</span><span class="p">,</span>
+</span><span id="line-135">            <span class="s2">&quot;Pied_billed_Grebe&quot;</span><span class="p">,</span>
+</span><span id="line-136">            <span class="s2">&quot;Western_Grebe&quot;</span><span class="p">,</span>
+</span><span id="line-137">            <span class="s2">&quot;Blue_Grosbeak&quot;</span><span class="p">,</span>
+</span><span id="line-138">            <span class="s2">&quot;Evening_Grosbeak&quot;</span><span class="p">,</span>
+</span><span id="line-139">            <span class="s2">&quot;Pine_Grosbeak&quot;</span><span class="p">,</span>
+</span><span id="line-140">            <span class="s2">&quot;Rose_breasted_Grosbeak&quot;</span><span class="p">,</span>
+</span><span id="line-141">            <span class="s2">&quot;Pigeon_Guillemot&quot;</span><span class="p">,</span>
+</span><span id="line-142">            <span class="s2">&quot;California_Gull&quot;</span><span class="p">,</span>
+</span><span id="line-143">            <span class="s2">&quot;Glaucous_winged_Gull&quot;</span><span class="p">,</span>
+</span><span id="line-144">            <span class="s2">&quot;Heermann_Gull&quot;</span><span class="p">,</span>
+</span><span id="line-145">            <span class="s2">&quot;Herring_Gull&quot;</span><span class="p">,</span>
+</span><span id="line-146">            <span class="s2">&quot;Ivory_Gull&quot;</span><span class="p">,</span>
+</span><span id="line-147">            <span class="s2">&quot;Ring_billed_Gull&quot;</span><span class="p">,</span>
+</span><span id="line-148">            <span class="s2">&quot;Slaty_backed_Gull&quot;</span><span class="p">,</span>
+</span><span id="line-149">            <span class="s2">&quot;Western_Gull&quot;</span><span class="p">,</span>
+</span><span id="line-150">            <span class="s2">&quot;Anna_Hummingbird&quot;</span><span class="p">,</span>
+</span><span id="line-151">            <span class="s2">&quot;Ruby_throated_Hummingbird&quot;</span><span class="p">,</span>
+</span><span id="line-152">            <span class="s2">&quot;Rufous_Hummingbird&quot;</span><span class="p">,</span>
+</span><span id="line-153">            <span class="s2">&quot;Green_Violetear&quot;</span><span class="p">,</span>
+</span><span id="line-154">            <span class="s2">&quot;Long_tailed_Jaeger&quot;</span><span class="p">,</span>
+</span><span id="line-155">            <span class="s2">&quot;Pomarine_Jaeger&quot;</span><span class="p">,</span>
+</span><span id="line-156">            <span class="s2">&quot;Blue_Jay&quot;</span><span class="p">,</span>
+</span><span id="line-157">            <span class="s2">&quot;Florida_Jay&quot;</span><span class="p">,</span>
+</span><span id="line-158">            <span class="s2">&quot;Green_Jay&quot;</span><span class="p">,</span>
+</span><span id="line-159">            <span class="s2">&quot;Dark_eyed_Junco&quot;</span><span class="p">,</span>
+</span><span id="line-160">            <span class="s2">&quot;Tropical_Kingbird&quot;</span><span class="p">,</span>
+</span><span id="line-161">            <span class="s2">&quot;Gray_Kingbird&quot;</span><span class="p">,</span>
+</span><span id="line-162">            <span class="s2">&quot;Belted_Kingfisher&quot;</span><span class="p">,</span>
+</span><span id="line-163">            <span class="s2">&quot;Green_Kingfisher&quot;</span><span class="p">,</span>
+</span><span id="line-164">            <span class="s2">&quot;Pied_Kingfisher&quot;</span><span class="p">,</span>
+</span><span id="line-165">            <span class="s2">&quot;Ringed_Kingfisher&quot;</span><span class="p">,</span>
+</span><span id="line-166">            <span class="s2">&quot;White_breasted_Kingfisher&quot;</span><span class="p">,</span>
+</span><span id="line-167">            <span class="s2">&quot;Red_legged_Kittiwake&quot;</span><span class="p">,</span>
+</span><span id="line-168">            <span class="s2">&quot;Horned_Lark&quot;</span><span class="p">,</span>
+</span><span id="line-169">            <span class="s2">&quot;Pacific_Loon&quot;</span><span class="p">,</span>
+</span><span id="line-170">            <span class="s2">&quot;Mallard&quot;</span><span class="p">,</span>
+</span><span id="line-171">            <span class="s2">&quot;Western_Meadowlark&quot;</span><span class="p">,</span>
+</span><span id="line-172">            <span class="s2">&quot;Hooded_Merganser&quot;</span><span class="p">,</span>
+</span><span id="line-173">            <span class="s2">&quot;Red_breasted_Merganser&quot;</span><span class="p">,</span>
+</span><span id="line-174">            <span class="s2">&quot;Mockingbird&quot;</span><span class="p">,</span>
+</span><span id="line-175">            <span class="s2">&quot;Nighthawk&quot;</span><span class="p">,</span>
+</span><span id="line-176">            <span class="s2">&quot;Clark_Nutcracker&quot;</span><span class="p">,</span>
+</span><span id="line-177">            <span class="s2">&quot;White_breasted_Nuthatch&quot;</span><span class="p">,</span>
+</span><span id="line-178">            <span class="s2">&quot;Baltimore_Oriole&quot;</span><span class="p">,</span>
+</span><span id="line-179">            <span class="s2">&quot;Hooded_Oriole&quot;</span><span class="p">,</span>
+</span><span id="line-180">            <span class="s2">&quot;Orchard_Oriole&quot;</span><span class="p">,</span>
+</span><span id="line-181">            <span class="s2">&quot;Scott_Oriole&quot;</span><span class="p">,</span>
+</span><span id="line-182">            <span class="s2">&quot;Ovenbird&quot;</span><span class="p">,</span>
+</span><span id="line-183">            <span class="s2">&quot;Brown_Pelican&quot;</span><span class="p">,</span>
+</span><span id="line-184">            <span class="s2">&quot;White_Pelican&quot;</span><span class="p">,</span>
+</span><span id="line-185">            <span class="s2">&quot;Western_Wood_Pewee&quot;</span><span class="p">,</span>
+</span><span id="line-186">            <span class="s2">&quot;Sayornis&quot;</span><span class="p">,</span>
+</span><span id="line-187">            <span class="s2">&quot;American_Pipit&quot;</span><span class="p">,</span>
+</span><span id="line-188">            <span class="s2">&quot;Whip_poor_Will&quot;</span><span class="p">,</span>
+</span><span id="line-189">            <span class="s2">&quot;Horned_Puffin&quot;</span><span class="p">,</span>
+</span><span id="line-190">            <span class="s2">&quot;Common_Raven&quot;</span><span class="p">,</span>
+</span><span id="line-191">            <span class="s2">&quot;White_necked_Raven&quot;</span><span class="p">,</span>
+</span><span id="line-192">            <span class="s2">&quot;American_Redstart&quot;</span><span class="p">,</span>
+</span><span id="line-193">            <span class="s2">&quot;Geococcyx&quot;</span><span class="p">,</span>
+</span><span id="line-194">            <span class="s2">&quot;Loggerhead_Shrike&quot;</span><span class="p">,</span>
+</span><span id="line-195">            <span class="s2">&quot;Great_Grey_Shrike&quot;</span><span class="p">,</span>
+</span><span id="line-196">            <span class="s2">&quot;Baird_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-197">            <span class="s2">&quot;Black_throated_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-198">            <span class="s2">&quot;Brewer_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-199">            <span class="s2">&quot;Chipping_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-200">            <span class="s2">&quot;Clay_colored_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-201">            <span class="s2">&quot;House_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-202">            <span class="s2">&quot;Field_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-203">            <span class="s2">&quot;Fox_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-204">            <span class="s2">&quot;Grasshopper_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-205">            <span class="s2">&quot;Harris_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-206">            <span class="s2">&quot;Henslow_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-207">            <span class="s2">&quot;Le_Conte_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-208">            <span class="s2">&quot;Lincoln_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-209">            <span class="s2">&quot;Nelson_Sharp_tailed_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-210">            <span class="s2">&quot;Savannah_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-211">            <span class="s2">&quot;Seaside_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-212">            <span class="s2">&quot;Song_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-213">            <span class="s2">&quot;Tree_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-214">            <span class="s2">&quot;Vesper_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-215">            <span class="s2">&quot;White_crowned_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-216">            <span class="s2">&quot;White_throated_Sparrow&quot;</span><span class="p">,</span>
+</span><span id="line-217">            <span class="s2">&quot;Cape_Glossy_Starling&quot;</span><span class="p">,</span>
+</span><span id="line-218">            <span class="s2">&quot;Bank_Swallow&quot;</span><span class="p">,</span>
+</span><span id="line-219">            <span class="s2">&quot;Barn_Swallow&quot;</span><span class="p">,</span>
+</span><span id="line-220">            <span class="s2">&quot;Cliff_Swallow&quot;</span><span class="p">,</span>
+</span><span id="line-221">            <span class="s2">&quot;Tree_Swallow&quot;</span><span class="p">,</span>
+</span><span id="line-222">            <span class="s2">&quot;Scarlet_Tanager&quot;</span><span class="p">,</span>
+</span><span id="line-223">            <span class="s2">&quot;Summer_Tanager&quot;</span><span class="p">,</span>
+</span><span id="line-224">            <span class="s2">&quot;Arctic_Tern&quot;</span><span class="p">,</span>
+</span><span id="line-225">            <span class="s2">&quot;Black_Tern&quot;</span><span class="p">,</span>
+</span><span id="line-226">            <span class="s2">&quot;Caspian_Tern&quot;</span><span class="p">,</span>
+</span><span id="line-227">            <span class="s2">&quot;Common_Tern&quot;</span><span class="p">,</span>
+</span><span id="line-228">            <span class="s2">&quot;Elegant_Tern&quot;</span><span class="p">,</span>
+</span><span id="line-229">            <span class="s2">&quot;Forster_Tern&quot;</span><span class="p">,</span>
+</span><span id="line-230">            <span class="s2">&quot;Least_Tern&quot;</span><span class="p">,</span>
+</span><span id="line-231">            <span class="s2">&quot;Green_tailed_Towhee&quot;</span><span class="p">,</span>
+</span><span id="line-232">            <span class="s2">&quot;Brown_Thrasher&quot;</span><span class="p">,</span>
+</span><span id="line-233">            <span class="s2">&quot;Sage_Thrasher&quot;</span><span class="p">,</span>
+</span><span id="line-234">            <span class="s2">&quot;Black_capped_Vireo&quot;</span><span class="p">,</span>
+</span><span id="line-235">            <span class="s2">&quot;Blue_headed_Vireo&quot;</span><span class="p">,</span>
+</span><span id="line-236">            <span class="s2">&quot;Philadelphia_Vireo&quot;</span><span class="p">,</span>
+</span><span id="line-237">            <span class="s2">&quot;Red_eyed_Vireo&quot;</span><span class="p">,</span>
+</span><span id="line-238">            <span class="s2">&quot;Warbling_Vireo&quot;</span><span class="p">,</span>
+</span><span id="line-239">            <span class="s2">&quot;White_eyed_Vireo&quot;</span><span class="p">,</span>
+</span><span id="line-240">            <span class="s2">&quot;Yellow_throated_Vireo&quot;</span><span class="p">,</span>
+</span><span id="line-241">            <span class="s2">&quot;Bay_breasted_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-242">            <span class="s2">&quot;Black_and_white_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-243">            <span class="s2">&quot;Black_throated_Blue_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-244">            <span class="s2">&quot;Blue_winged_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-245">            <span class="s2">&quot;Canada_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-246">            <span class="s2">&quot;Cape_May_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-247">            <span class="s2">&quot;Cerulean_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-248">            <span class="s2">&quot;Chestnut_sided_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-249">            <span class="s2">&quot;Golden_winged_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-250">            <span class="s2">&quot;Hooded_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-251">            <span class="s2">&quot;Kentucky_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-252">            <span class="s2">&quot;Magnolia_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-253">            <span class="s2">&quot;Mourning_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-254">            <span class="s2">&quot;Myrtle_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-255">            <span class="s2">&quot;Nashville_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-256">            <span class="s2">&quot;Orange_crowned_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-257">            <span class="s2">&quot;Palm_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-258">            <span class="s2">&quot;Pine_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-259">            <span class="s2">&quot;Prairie_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-260">            <span class="s2">&quot;Prothonotary_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-261">            <span class="s2">&quot;Swainson_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-262">            <span class="s2">&quot;Tennessee_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-263">            <span class="s2">&quot;Wilson_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-264">            <span class="s2">&quot;Worm_eating_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-265">            <span class="s2">&quot;Yellow_Warbler&quot;</span><span class="p">,</span>
+</span><span id="line-266">            <span class="s2">&quot;Northern_Waterthrush&quot;</span><span class="p">,</span>
+</span><span id="line-267">            <span class="s2">&quot;Louisiana_Waterthrush&quot;</span><span class="p">,</span>
+</span><span id="line-268">            <span class="s2">&quot;Bohemian_Waxwing&quot;</span><span class="p">,</span>
+</span><span id="line-269">            <span class="s2">&quot;Cedar_Waxwing&quot;</span><span class="p">,</span>
+</span><span id="line-270">            <span class="s2">&quot;American_Three_toed_Woodpecker&quot;</span><span class="p">,</span>
+</span><span id="line-271">            <span class="s2">&quot;Pileated_Woodpecker&quot;</span><span class="p">,</span>
+</span><span id="line-272">            <span class="s2">&quot;Red_bellied_Woodpecker&quot;</span><span class="p">,</span>
+</span><span id="line-273">            <span class="s2">&quot;Red_cockaded_Woodpecker&quot;</span><span class="p">,</span>
+</span><span id="line-274">            <span class="s2">&quot;Red_headed_Woodpecker&quot;</span><span class="p">,</span>
+</span><span id="line-275">            <span class="s2">&quot;Downy_Woodpecker&quot;</span><span class="p">,</span>
+</span><span id="line-276">            <span class="s2">&quot;Bewick_Wren&quot;</span><span class="p">,</span>
+</span><span id="line-277">            <span class="s2">&quot;Cactus_Wren&quot;</span><span class="p">,</span>
+</span><span id="line-278">            <span class="s2">&quot;Carolina_Wren&quot;</span><span class="p">,</span>
+</span><span id="line-279">            <span class="s2">&quot;House_Wren&quot;</span><span class="p">,</span>
+</span><span id="line-280">            <span class="s2">&quot;Marsh_Wren&quot;</span><span class="p">,</span>
+</span><span id="line-281">            <span class="s2">&quot;Rock_Wren&quot;</span><span class="p">,</span>
+</span><span id="line-282">            <span class="s2">&quot;Winter_Wren&quot;</span><span class="p">,</span>
+</span><span id="line-283">            <span class="s2">&quot;Common_Yellowthroat&quot;</span><span class="p">,</span>
+</span><span id="line-284">        <span class="p">]</span></div>
 
 </span></code></pre></div>
     </div></div>
