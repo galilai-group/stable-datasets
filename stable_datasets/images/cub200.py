@@ -2,6 +2,9 @@ import datasets
 import pandas as pd
 from PIL import Image
 
+import tarfile
+import io
+
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -37,39 +40,41 @@ class CUB200(BaseDatasetBuilder):
 
     def _generate_examples(self, data_path, split):
         """Generate examples from the extracted directory."""
-        # Paths to metadata files in the extracted directory
-        image_labels_path = data_path / "image_class_labels.txt"
-        image_paths_path = data_path / "images.txt"
-        train_test_split_path = data_path / "train_test_split.txt"
+        with tarfile.open(data_path, "r:gz") as archive:
+            # Read metadata files from inside the archive
+            with archive.extractfile("CUB_200_2011/image_class_labels.txt") as f:
+                labels_df = pd.read_csv(io.BytesIO(f.read()), sep=r"\s+", header=None, names=["image_id", "label"])
 
-        # Load metadata
-        images_df = pd.read_csv(image_paths_path, sep=r"\s+", header=None, names=["image_id", "file_path"])
-        labels_df = pd.read_csv(image_labels_path, sep=r"\s+", header=None, names=["image_id", "label"])
-        split_df = pd.read_csv(train_test_split_path, sep=r"\s+", header=None, names=["image_id", "is_training"])
+            with archive.extractfile("CUB_200_2011/images.txt") as f:
+                images_df = pd.read_csv(io.BytesIO(f.read()), sep=r"\s+", header=None, names=["image_id", "file_path"])
 
-        # Merge metadata into a single DataFrame
-        data_df = images_df.merge(labels_df, on="image_id").merge(split_df, on="image_id")
-        data_df["label"] -= 1  # Zero-index the labels
+            with archive.extractfile("CUB_200_2011/train_test_split.txt") as f:
+                split_df = pd.read_csv(io.BytesIO(f.read()), sep=r"\s+", header=None, names=["image_id", "is_training"])
 
-        # Filter by the specified split
-        is_training_split = 1 if split == "train" else 0
-        split_data = data_df[data_df["is_training"] == is_training_split]
+            # Merge metadata into a single DataFrame
+            data_df = images_df.merge(labels_df, on="image_id").merge(split_df, on="image_id")
+            data_df["label"] -= 1  # Zero-index the labels
 
-        # Generate examples
-        for _, row in split_data.iterrows():
-            image_path = data_path / "images" / row["file_path"]
-            label = row["label"]
+            # Filter by the specified split
+            is_training_split = 1 if split == "train" else 0
+            split_data = data_df[data_df["is_training"] == is_training_split]
 
-            # Load the image
-            with open(image_path, "rb") as img_file:
-                image = Image.open(img_file).convert("RGB")
-                yield (
-                    row["image_id"],
-                    {
-                        "image": image,
-                        "label": label,
-                    },
-                )
+            # Generate examples
+            for _, row in split_data.iterrows():
+                image_path = f"CUB_200_2011/images/{row['file_path']}"
+                label = row["label"]
+
+                # Read the image from the tar archive
+                with archive.extractfile(image_path) as img_file:
+                    image = Image.open(io.BytesIO(img_file.read())).convert("RGB")
+
+                    yield (
+                        row["image_id"],
+                        {
+                            "image": image,
+                            "label": label,
+                        },
+                    )
 
     @staticmethod
     def _labels():
