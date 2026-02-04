@@ -18,8 +18,8 @@ from .e_mnist import EMNIST
 from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
-from .hasy_v2 import HASYv2
 from .food101 import Food101
+from .hasy_v2 import HASYv2
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
