@@ -58,6 +58,7 @@ Available Datasets
    stl10
    e_mnist
    flowers102
+   hasy_v2
    face_pointing
    rock_paper_scissor
    linnaeus5
