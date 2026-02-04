@@ -1,9 +1,9 @@
+import io
+import tarfile
+
 import datasets
 import pandas as pd
 from PIL import Image
-
-import tarfile
-import io
 
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -49,7 +49,9 @@ class CUB200(BaseDatasetBuilder):
                 images_df = pd.read_csv(io.BytesIO(f.read()), sep=r"\s+", header=None, names=["image_id", "file_path"])
 
             with archive.extractfile("CUB_200_2011/train_test_split.txt") as f:
-                split_df = pd.read_csv(io.BytesIO(f.read()), sep=r"\s+", header=None, names=["image_id", "is_training"])
+                split_df = pd.read_csv(
+                    io.BytesIO(f.read()), sep=r"\s+", header=None, names=["image_id", "is_training"]
+                )
 
             # Merge metadata into a single DataFrame
             data_df = images_df.merge(labels_df, on="image_id").merge(split_df, on="image_id")
