@@ -6,7 +6,7 @@ import tarfile
 import datasets
 from PIL import Image
 
-from stable_datasets.utils import BaseDatasetBuilder, bulk_download
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class HASYv2(BaseDatasetBuilder):
@@ -37,6 +37,7 @@ class HASYv2(BaseDatasetBuilder):
 
     DEFAULT_CONFIG_NAME = "fold-1"
 
+    _HASYV2_URL = "https://zenodo.org/record/259444/files/HASYv2.tar.bz2?download=1"
     SOURCE = {
         "homepage": "https://github.com/MartinThoma/HASY",
         "citation": """@article{thoma2017hasyv2,
@@ -44,7 +45,7 @@ class HASYv2(BaseDatasetBuilder):
                          author={Thoma, Martin},
                          journal={arXiv preprint arXiv:1701.08380},
                          year={2017}}""",
-        "assets": {"data": "https://zenodo.org/record/259444/files/HASYv2.tar.bz2?download=1"},
+        "assets": {"train": _HASYV2_URL, "test": _HASYV2_URL},
     }
 
     def _info(self):
@@ -61,37 +62,13 @@ class HASYv2(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        source = self._source()
-        url = source["assets"]["data"]
-
-        local_paths = bulk_download([url], dest_folder=self._raw_download_dir)
-        archive_path = local_paths[0]
-
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={
-                    "archive_path": archive_path,
-                    "split_name": "train",
-                },
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={
-                    "archive_path": archive_path,
-                    "split_name": "test",
-                },
-            ),
-        ]
-
-    def _generate_examples(self, archive_path, split_name):
+    def _generate_examples(self, data_path, split):
         fold_name = self.config.name
-        csv_internal_path = f"classification-task/{fold_name}/{split_name}.csv"
+        csv_internal_path = f"classification-task/{fold_name}/{split}.csv"
 
         image_label_map = {}
 
-        with tarfile.open(archive_path, "r:bz2") as tar:
+        with tarfile.open(data_path, "r:bz2") as tar:
             csv_member = None
             for member in tar.getmembers():
                 if member.name.endswith(csv_internal_path):
