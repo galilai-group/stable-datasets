@@ -331,7 +331,6 @@ def download(
     url: str,
     dest_folder: str | Path | None = None,
     progress_bar: bool = True,
-    disable_logging: bool = False,
     _progress_dict=None,
     _task_id=None,
 ) -> Path:
