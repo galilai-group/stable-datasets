@@ -25,6 +25,7 @@ dependencies = [
     "scikit-learn",
     "rarfile",
     "torch",
+    "torchcodec",
     "rich",
     "h5py",
     "requests_cache",
