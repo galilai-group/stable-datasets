@@ -11,19 +11,19 @@ Usage:
 import argparse
 import importlib
 
-from loguru import logger as logging
 import matplotlib.pyplot as plt
 import numpy as np
+from loguru import logger as logging
 
 
 def audiodecoder_to_rgb_spectrogram(
     decoder,
     *,
-    channel_mode = "mono",  # "mono" | "first" | "per_channel"
-    n_fft = 2205,
-    hop_length = 441,
-    cmap = "viridis",
-    eps = 1e-8,
+    channel_mode="mono",  # "mono" | "first" | "per_channel"
+    n_fft=2205,
+    hop_length=441,
+    cmap="viridis",
+    eps=1e-8,
 ):
     """
     Convert audio from a torchcodec AudioDecoder into an RGB mel spectrogram image.
@@ -52,10 +52,9 @@ def audiodecoder_to_rgb_spectrogram(
             list[np.ndarray], each of shape (H, W, 3)
     """
     # Imports that are only needed for audio teasers
-    from torchcodec.decoders import AudioDecoder
     import librosa
-    import numpy as np
     import matplotlib.pyplot as plt
+    import numpy as np
 
     # Decodes audio
     audio = decoder.get_all_samples()
@@ -74,10 +73,7 @@ def audiodecoder_to_rgb_spectrogram(
     elif channel_mode == "per_channel":
         signals = [waveform[c] for c in range(num_channels)]
     else:
-        raise ValueError(
-            f"Invalid channel_mode: {channel_mode}. "
-            "Choose from {'mono', 'first', 'per_channel'}."
-        )
+        raise ValueError(f"Invalid channel_mode: {channel_mode}. Choose from {{'mono', 'first', 'per_channel'}}.")
 
     # Computes spectrogram(s)
     images = []
@@ -235,7 +231,7 @@ def generate_teaser(
 
         # Handles both image and audio data
         if image_key == "audio":
-            logging.info(f"Making spectrogram from audio data")
+            logging.info("Making spectrogram from audio data")
             image = audiodecoder_to_rgb_spectrogram(sample[image_key])
         else:
             image = sample[image_key]

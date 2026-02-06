@@ -1,8 +1,8 @@
 import csv
-import datasets
-from pathlib import Path
 import os
+from pathlib import Path
 
+import datasets
 from loguru import logger as logging
 
 from stable_datasets.utils import BaseDatasetBuilder
@@ -42,7 +42,6 @@ class ESC50(BaseDatasetBuilder):
                     "fold": datasets.Value("int32"),
                     "category": datasets.ClassLabel(names=self._categories()),
                     "major_category": datasets.ClassLabel(names=self._major_categories()),
-
                     # Data source info
                     "esc10": datasets.Value("bool"),
                     "clip_id": datasets.Value("int32"),
@@ -75,12 +74,12 @@ class ESC50(BaseDatasetBuilder):
         # Finds paths
         download_root_dir = Path(data_path) / "ESC-50-master"
         csv_path = download_root_dir / "meta" / "esc50.csv"
-        audio_dir = download_root_dir / "audio"        
+        audio_dir = download_root_dir / "audio"
         logging.info(f"Reading CSV from {csv_path}")
         logging.info(f"Audio files in {audio_dir}")
-        
+
         # Reads and parses the CSV file
-        with open(csv_path, 'r', encoding='utf-8') as f:
+        with open(csv_path, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for idx, row in enumerate(reader):
                 # Finds audio path
@@ -99,16 +98,19 @@ class ESC50(BaseDatasetBuilder):
                 assert clip_id == int(row["src_file"])
                 assert take == row["take"]
                 assert target == int(row["target"])
-                
-                yield idx, {
-                    "audio": str(audio_path),
-                    "fold": fold,
-                    "category": target,
-                    "major_category": target // 10,
-                    "esc10": row["esc10"].lower() == "true",
-                    "clip_id": clip_id,
-                    "take": take,
-                }
+
+                yield (
+                    idx,
+                    {
+                        "audio": str(audio_path),
+                        "fold": fold,
+                        "category": target,
+                        "major_category": target // 10,
+                        "esc10": row["esc10"].lower() == "true",
+                        "clip_id": clip_id,
+                        "take": take,
+                    },
+                )
 
     @staticmethod
     def _categories():
