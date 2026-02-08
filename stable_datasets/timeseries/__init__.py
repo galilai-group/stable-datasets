@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+from .clotho import Clotho
+
+__all__ = [
+    "Clotho",
+]
+
 # from . import (
 #    VoiceGenderDetection,
 #    JapaneseVowels,
