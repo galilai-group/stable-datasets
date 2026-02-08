@@ -1,14 +1,10 @@
 import os
-import random
 
-import datasets
-import numpy as np
+import pytest
 import torch
 from loguru import logger as logging
-from tqdm import tqdm
-from torchcodec.decoders import VideoDecoder
 from torchcodec import Frame
-import pytest
+from torchcodec.decoders import VideoDecoder
 
 from stable_datasets.images.ucf101 import UCF101
 
@@ -44,9 +40,11 @@ def test_ucf101_action_recognition_01_dataset():
     assert 0 <= fine_label < 101, f"Fine label should be between 0 and 100, got {fine_label}"
     assert 0 <= coarse_label < 5, f"Coarse label should be between 0 and 4, got {coarse_label}"
     met = video.metadata
-    assert (met.width, met.height) == (320, 240), f"Video should have width 320 and height 240, got {met.width}x{met.height}"
+    assert (met.width, met.height) == (320, 240), (
+        f"Video should have width 320 and height 240, got {met.width}x{met.height}"
+    )
     assert met.average_fps == 25, f"Video should have 25 fps, got {met.fps}"
-    assert met.num_frames, f"Video should have more than 0 frames"
+    assert met.num_frames, "Video should have more than 0 frames"
 
     # Test 5: Checks the first frame of the video
     frame = video.get_frame_at(0)
@@ -87,8 +85,10 @@ def test_other_variants():
             )
 
             expected_num_examples = 13320 if task == "action_recognition" else 3207
-            assert len(train_dataset) + len(test_dataset) == expected_num_examples, f"Dataset {config_name} should have {expected_num_examples} total examples, got {len(train_dataset) + len(test_dataset)}"
-    
+            assert len(train_dataset) + len(test_dataset) == expected_num_examples, (
+                f"Dataset {config_name} should have {expected_num_examples} total examples, got {len(train_dataset) + len(test_dataset)}"
+            )
+
     logging.info("UCF-101 dataset tests for other variants passed successfully!")
 
 

@@ -1,19 +1,15 @@
-import io
-from pathlib import Path
 import os
-import zipfile
-import rarfile
-import subprocess
-from urllib.parse import urlparse
 import re
+import subprocess
+import zipfile
+from pathlib import Path
+from urllib.parse import urlparse
 
-import aiohttp
 import datasets
-import numpy as np
-import scipy.io as sio
+import rarfile
 from loguru import logger as logging
 
-from stable_datasets.utils import BaseDatasetBuilder
+from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder
 
 
 CURRENT_VERSION = datasets.Version("1.0.0")
@@ -76,7 +72,9 @@ class UCF101(BaseDatasetBuilder):
 
     def _info(self):
         # Checks variant
-        variant = self.config.variant  # The variant is already checked to be valid in DatasetBuilder._create_builder_config()
+        variant = (
+            self.config.variant
+        )  # The variant is already checked to be valid in DatasetBuilder._create_builder_config()
         if "action_recognition" in variant:
             action_classes = self._action_recognition_classes()
         elif "action_detection" in variant:
@@ -102,10 +100,14 @@ class UCF101(BaseDatasetBuilder):
         if download_dir is None:
             download_dir = _default_dest_folder()
         download_dir = Path(download_dir)
-        
+
         videos_path = _wget_download(self.SOURCE["assets"]["all_videos"], download_dir)
-        action_recognition_splits_path = _wget_download(self.SOURCE["assets"]["action_recognition_train_test_splits"], download_dir)
-        action_detection_splits_path = _wget_download(self.SOURCE["assets"]["action_detection_train_test_splits"], download_dir)
+        action_recognition_splits_path = _wget_download(
+            self.SOURCE["assets"]["action_recognition_train_test_splits"], download_dir
+        )
+        action_detection_splits_path = _wget_download(
+            self.SOURCE["assets"]["action_detection_train_test_splits"], download_dir
+        )
         logging.info(f"Archive path for videos: {videos_path}")
         logging.info(f"Archive path for action recognition train-test splits: {action_recognition_splits_path}")
         logging.info(f"Archive path for action detection train-test splits: {action_detection_splits_path}")
@@ -159,12 +161,16 @@ class UCF101(BaseDatasetBuilder):
 
     def _generate_examples(self, split, videos_dir, train_test_splits_dir):
         # Gets label indices
-        fine_label_names = self._action_recognition_classes() \
-            if "action_recognition" in self.config.variant \
+        fine_label_names = (
+            self._action_recognition_classes()
+            if "action_recognition" in self.config.variant
             else self._action_detection_classes()
+        )
         fine_label_name_to_idx = {name: idx for idx, name in enumerate(fine_label_names)}
 
-        fine_name_to_coarse_name = {fine: coarse for coarse in self._action_types() for fine in self._action_type_to_classes()[coarse]}
+        fine_name_to_coarse_name = {
+            fine: coarse for coarse in self._action_types() for fine in self._action_type_to_classes()[coarse]
+        }
         coarse_label_name_to_idx = {name: idx for idx, name in enumerate(self._action_types())}
 
         # Iterates over the split's item list
