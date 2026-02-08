@@ -29,17 +29,20 @@ def test_ucf101_action_recognition_01_dataset():
 
     # Test 2: Checks that the keys are correct
     sample = train_dataset[0]
-    expected_keys = {"video", "label"}
+    expected_keys = {"video", "fine_label", "coarse_label"}
     assert set(sample.keys()) == expected_keys, f"Expected keys {expected_keys}, got {set(sample.keys())}"
 
     # Test 3: Checks sample value types
     video = sample["video"]
     assert isinstance(video, VideoDecoder), f"Video should be a VideoDecoder, got {type(video)}"
-    label = sample["label"]
-    assert isinstance(label, int), f"Label should be an integer, got {type(label)}"
+    fine_label = sample["fine_label"]
+    assert isinstance(fine_label, int), f"Fine label should be an integer, got {type(fine_label)}"
+    coarse_label = sample["coarse_label"]
+    assert isinstance(coarse_label, int), f"Coarse label should be an integer, got {type(coarse_label)}"
 
     # Test 4: Checks sample value properties
-    assert 0 <= label < 101, f"Label should be between 0 and 100, got {label}"
+    assert 0 <= fine_label < 101, f"Fine label should be between 0 and 100, got {fine_label}"
+    assert 0 <= coarse_label < 5, f"Coarse label should be between 0 and 4, got {coarse_label}"
     met = video.metadata
     assert (met.width, met.height) == (320, 240), f"Video should have width 320 and height 240, got {met.width}x{met.height}"
     assert met.average_fps == 25, f"Video should have 25 fps, got {met.fps}"
@@ -100,3 +103,4 @@ if __name__ == "__main__":
     test_ucf101_action_recognition_01_dataset()
     test_other_variants()
     test_ucf101_config_enforcement()
+    logging.info("All UCF-101 dataset tests passed successfully!")

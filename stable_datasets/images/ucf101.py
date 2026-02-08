@@ -78,19 +78,20 @@ class UCF101(BaseDatasetBuilder):
         # Checks variant
         variant = self.config.variant  # The variant is already checked to be valid in DatasetBuilder._create_builder_config()
         if "action_recognition" in variant:
-            class_names = self._action_recognition_labels()
+            action_classes = self._action_recognition_classes()
         elif "action_detection" in variant:
-            class_names = self._action_detection_labels()
+            action_classes = self._action_detection_classes()
 
         return datasets.DatasetInfo(
             description="""The UCF-101 dataset is an action recognition dataset of videos recorded in the wild depicting 101 human action classes. The dataset contains 13,320 videos, with a minimum of 100 videos per class. See https://www.crcv.ucf.edu/data/UCF101.php for more information.""",
             features=datasets.Features(
                 {
                     "video": datasets.Video(),
-                    "label": datasets.ClassLabel(names=class_names),
+                    "fine_label": datasets.ClassLabel(names=action_classes),
+                    "coarse_label": datasets.ClassLabel(names=self._action_types()),
                 }
             ),
-            supervised_keys=("video", "label"),
+            supervised_keys=("video", "fine_label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],
         )
@@ -158,10 +159,13 @@ class UCF101(BaseDatasetBuilder):
 
     def _generate_examples(self, split, videos_dir, train_test_splits_dir):
         # Gets label indices
-        label_names = self._action_recognition_labels() \
+        fine_label_names = self._action_recognition_classes() \
             if "action_recognition" in self.config.variant \
-            else self._action_detection_labels()
-        label_name_to_idx = {name: idx for idx, name in enumerate(label_names)}
+            else self._action_detection_classes()
+        fine_label_name_to_idx = {name: idx for idx, name in enumerate(fine_label_names)}
+
+        fine_name_to_coarse_name = {fine: coarse for coarse in self._action_types() for fine in self._action_type_to_classes()[coarse]}
+        coarse_label_name_to_idx = {name: idx for idx, name in enumerate(self._action_types())}
 
         # Iterates over the split's item list
         list_num = re.search(r"(\d+)$", self.config.variant).group(1)
@@ -171,13 +175,17 @@ class UCF101(BaseDatasetBuilder):
                 stripped_line = line.strip()
                 video_rel_path = stripped_line.split(" ")[0]
                 video_path = os.path.abspath(os.path.join(videos_dir, video_rel_path))
-                label_name = video_rel_path.split("/")[0]
-                label_idx = label_name_to_idx[label_name]
 
-                yield idx, {"video": video_path, "label": label_idx}
+                fine_label_name = video_rel_path.split("/")[0]
+                fine_label_idx = fine_label_name_to_idx[fine_label_name]
+
+                coarse_label_name = fine_name_to_coarse_name[fine_label_name]
+                coarse_label_idx = coarse_label_name_to_idx[coarse_label_name]
+
+                yield idx, {"video": video_path, "fine_label": fine_label_idx, "coarse_label": coarse_label_idx}
 
     @staticmethod
-    def _action_recognition_labels():
+    def _action_recognition_classes():
         return [
             "ApplyEyeMakeup",
             "ApplyLipstick",
@@ -283,7 +291,7 @@ class UCF101(BaseDatasetBuilder):
         ]
 
     @staticmethod
-    def _action_detection_labels():
+    def _action_detection_classes():
         return [
             "Basketball",
             "BasketballDunk",
@@ -310,3 +318,129 @@ class UCF101(BaseDatasetBuilder):
             "VolleyballSpiking",
             "WalkingWithDog",
         ]
+
+    @staticmethod
+    def _action_types():
+        return [
+            "HumanObjectInteraction",
+            "BodyMotionOnly",
+            "HumanHumanInteraction",
+            "PlayingMusicalInstruments",
+            "Sports",
+        ]
+
+    @staticmethod
+    def _action_type_to_classes():
+        return {
+            "HumanObjectInteraction": {
+                "HulaHoop",
+                "JugglingBalls",
+                "JumpRope",
+                "Mixing",
+                "Nunchucks",
+                "PizzaTossing",
+                "SkateBoarding",
+                "SoccerJuggling",
+                "YoYo",
+                "ApplyEyeMakeup",
+                "ApplyLipstick",
+                "BlowDryHair",
+                "BrushingTeeth",
+                "CuttingInKitchen",
+                "Hammering",
+                "Knitting",
+                "MoppingFloor",
+                "ShavingBeard",
+                "Typing",
+                "WritingOnBoard",
+            },
+            "BodyMotionOnly": {
+                "JumpingJack",
+                "Lunges",
+                "PullUps",
+                "PushUps",
+                "RockClimbingIndoor",
+                "RopeClimbing",
+                "Swing",
+                "TaiChi",
+                "TrampolineJumping",
+                "WalkingWithDog",
+                "BabyCrawling",
+                "BlowingCandles",
+                "BodyWeightSquats",
+                "HandstandPushups",
+                "HandstandWalking",
+                "WallPushups",
+            },
+            "HumanHumanInteraction": {
+                "MilitaryParade",
+                "SalsaSpin",
+                "BandMarching",
+                "Haircut",
+                "HeadMassage",
+            },
+            "PlayingMusicalInstruments": {
+                "Drumming",
+                "PlayingGuitar",
+                "PlayingPiano",
+                "PlayingTabla",
+                "PlayingViolin",
+                "PlayingCello",
+                "PlayingDaf",
+                "PlayingDhol",
+                "PlayingFlute",
+                "PlayingSitar",
+            },
+            "Sports": {
+                "BaseballPitch",
+                "Basketball",
+                "BenchPress",
+                "Biking",
+                "Billiards",
+                "BreastStroke",
+                "CleanAndJerk",
+                "Diving",
+                "Fencing",
+                "GolfSwing",
+                "HighJump",
+                "HorseRace",
+                "HorseRiding",
+                "JavelinThrow",
+                "Kayaking",
+                "PoleVault",
+                "PommelHorse",
+                "Punch",
+                "Rowing",
+                "Skiing",
+                "Skijet",
+                "TennisSwing",
+                "ThrowDiscus",
+                "VolleyballSpiking",
+                "Archery",
+                "BalanceBeam",
+                "BasketballDunk",
+                "Bowling",
+                "BoxingPunchingBag",
+                "BoxingSpeedBag",
+                "CliffDiving",
+                "CricketBowling",
+                "CricketShot",
+                "FieldHockeyPenalty",
+                "FloorGymnastics",
+                "FrisbeeCatch",
+                "FrontCrawl",
+                "HammerThrow",
+                "IceDancing",
+                "LongJump",
+                "ParallelBars",
+                "Rafting",
+                "Shotput",
+                "SkyDiving",
+                "SoccerPenalty",
+                "StillRings",
+                "SumoWrestling",
+                "Surfing",
+                "TableTennisShot",
+                "UnevenBars",
+            },
+        }
