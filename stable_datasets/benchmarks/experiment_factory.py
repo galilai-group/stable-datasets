@@ -16,6 +16,7 @@ from torch import nn
 
 from .dataset_factory import DatasetConfig
 from .models import create_vit_base
+from .lejepa_losses import EppsPulley, SlicingUnivariateTest
 
 
 DEFAULT_EMBED_DIM = 512
@@ -143,13 +144,63 @@ def _mae_forward(self, batch, stage):
         # Strip prefix tokens (CLS, etc.) - decoder expects only visible patch tokens
         num_prefix = getattr(self.backbone, "num_prefix_tokens", 1)
         visible_patches = encoder_out.encoded[:, num_prefix:]
-        
+
         pred = self.decoder(visible_patches, encoder_out.mask)
         target = _mae_patchify(images, self.patch_size)
         loss = spt.losses.mae(target, pred, encoder_out.mask)
 
         out["loss"] = loss
         self.log(f"{stage}/loss", loss, on_step=True, on_epoch=True, sync_dist=True)
+
+    return out
+
+
+def _lejepa_forward(self, batch, stage):
+    """LeJEPA forward pass with multi-view invariance and SIGReg losses."""
+    out = {}
+    views = batch.get("views")
+
+    if views is not None:
+        # Multi-view training
+        V = len(views)
+        N = views[0]["image"].size(0)
+
+        # Single forward pass for all views
+        all_images = torch.cat([view["image"] for view in views], dim=0)
+        all_emb = self.backbone(all_images)
+        out["embedding"] = all_emb
+
+        if "label" in views[0]:
+            out["label"] = torch.cat([view["label"] for view in views], dim=0)
+
+        if self.training:
+            all_proj = self.projector(all_emb)
+            proj_stacked = all_proj.reshape(V, N, -1)  # (V, N, proj_dim)
+
+            # Invariance loss: compare each view to mean
+            view_mean = proj_stacked.mean(0)
+            inv_loss = (view_mean - proj_stacked).square().mean()
+
+            # SIGReg loss: check if loss supports 3D input (V, N, D)
+            if isinstance(self.sigreg_loss, SlicingUnivariateTest) and isinstance(
+                self.sigreg_loss.univariate_test, EppsPulley
+            ):
+                sigreg_loss = self.sigreg_loss(proj_stacked)
+            else:
+                sigreg_loss = self.sigreg_loss(proj_stacked.reshape(-1, proj_stacked.size(-1)))
+
+            lamb = getattr(self, "lamb", 0.02)
+            lejepa_loss = sigreg_loss * lamb + inv_loss * (1 - lamb)
+            out["loss"] = lejepa_loss
+
+            self.log(f"{stage}/sigreg", sigreg_loss, on_step=True, on_epoch=True, sync_dist=True)
+            self.log(f"{stage}/inv", inv_loss, on_step=True, on_epoch=True, sync_dist=True)
+            self.log(f"{stage}/lejepa", lejepa_loss, on_step=True, on_epoch=True, sync_dist=True)
+    else:
+        # Single-view (validation)
+        out["embedding"] = self.backbone(batch["image"])
+        if "label" in batch:
+            out["label"] = batch["label"]
 
     return out
 
@@ -237,6 +288,162 @@ def create_mae_module(
     )
 
 
+def create_lejepa_module(
+    config: DatasetConfig,
+    backbone_name: str = "resnet18",
+    projection_dim: int = 128,
+    hidden_dim: int = 2048,
+    lamb: float = 0.02,
+    t_max: float = 3.0,
+    n_points: int = 17,
+    num_slices: int = 256,
+    learning_rate: float = 5.0,
+    weight_decay: float = 1e-6,
+) -> spt.Module:
+    """Create a LeJEPA module.
+
+    Args:
+        config: Dataset configuration
+        backbone_name: Name of the backbone (e.g., "resnet18", "resnet50")
+        projection_dim: Output dimension of the projection head
+        hidden_dim: Hidden dimension of the projection head
+        lamb: Regularization weight (SIGReg vs invariance loss)
+        t_max: Maximum integration point for EppsPulley test
+        n_points: Number of integration points for EppsPulley test
+        num_slices: Number of random slices for SlicingUnivariateTest
+        learning_rate: Learning rate (LARS optimizer)
+        weight_decay: Weight decay
+
+    Returns:
+        spt.Module configured for LeJEPA training
+    """
+    backbone = spt.backbone.from_torchvision(backbone_name, low_resolution=config.low_resolution)
+    backbone.fc = nn.Identity()
+    embed_dim = get_embedding_dim(backbone)
+
+    projector = _create_projection_head(embed_dim, hidden_dim, projection_dim)
+
+    # Create SIGReg loss: SlicingUnivariateTest with EppsPulley
+    univariate_test = EppsPulley(t_max=t_max, n_points=n_points)
+    sigreg_loss = SlicingUnivariateTest(
+        univariate_test=univariate_test,
+        num_slices=num_slices,
+        reduction="mean",
+    )
+
+    return spt.Module(
+        backbone=backbone,
+        projector=projector,
+        sigreg_loss=sigreg_loss,
+        lamb=lamb,
+        forward=_lejepa_forward,
+        optim={
+            "optimizer": {
+                "type": "LARS",
+                "lr": learning_rate,
+                "weight_decay": weight_decay,
+            },
+            "scheduler": {
+                "type": "LinearWarmupCosineAnnealing",
+            },
+            "interval": "epoch",
+        },
+    )
+
+
+def create_dino_module(
+    config: DatasetConfig,
+    backbone_name: str = "vit_tiny_patch16_224",
+    projection_dim: int = 65536,
+    hidden_dim: int = 2048,
+    bottleneck_dim: int = 256,
+    temperature_student: float = 0.1,
+    temperature_teacher: float = 0.04,
+    warmup_temperature_teacher: float = 0.04,
+    warmup_epochs_temperature_teacher: int = 30,
+    momentum_teacher: float = 0.996,
+    learning_rate: float = 5e-4,
+    weight_decay: float = 0.04,
+) -> spt.Module:
+    """Create a DINO module.
+
+    Args:
+        config: Dataset configuration
+        backbone_name: Name of the backbone (ViT model)
+        projection_dim: Output dimension of the projection head (prototypes)
+        hidden_dim: Hidden dimension of the projection head
+        bottleneck_dim: Bottleneck dimension before final layer
+        temperature_student: Temperature for student softmax
+        temperature_teacher: Final temperature for teacher softmax
+        warmup_temperature_teacher: Starting temperature for teacher
+        warmup_epochs_temperature_teacher: Epochs to warm up teacher temperature
+        momentum_teacher: EMA momentum for teacher network
+        learning_rate: Learning rate
+        weight_decay: Weight decay
+
+    Returns:
+        spt.Module configured for DINO training
+    """
+    # Use ViT backbone (DINO works best with ViTs)
+    h, w = config.image_size
+    backbone = spt.backbone.vit_timm(backbone_name, img_size=(h, w))
+    embed_dim = get_embedding_dim(backbone)
+
+    # Wrap backbone in TeacherStudentWrapper
+    backbone_wrapper = spt.backbone.TeacherStudentWrapper(
+        student=backbone, momentum=momentum_teacher
+    )
+
+    # Create DINO projection head (3-layer MLP + normalization + prototypes)
+    projector_head = nn.Sequential(
+        nn.Linear(embed_dim, hidden_dim),
+        nn.GELU(),
+        nn.Linear(hidden_dim, hidden_dim),
+        nn.GELU(),
+        nn.Linear(hidden_dim, bottleneck_dim),
+    )
+
+    # Wrap projector with normalization and prototypes
+    projector = spt.backbone.DINOProjector(
+        projector=projector_head,
+        input_dim=bottleneck_dim,
+        output_dim=projection_dim,
+        norm_last_layer=True,
+    )
+
+    # Wrap in TeacherStudentWrapper
+    projector_wrapper = spt.backbone.TeacherStudentWrapper(
+        student=projector, momentum=momentum_teacher
+    )
+
+    # Create DINO loss
+    dino_loss = spt.losses.DINOv1Loss(
+        temperature_student=temperature_student,
+        center_momentum=0.9,
+    )
+
+    return spt.Module(
+        backbone=backbone_wrapper,
+        projector=projector_wrapper,
+        dino_loss=dino_loss,
+        temperature_teacher=temperature_teacher,
+        warmup_temperature_teacher=warmup_temperature_teacher,
+        warmup_epochs_temperature_teacher=warmup_epochs_temperature_teacher,
+        forward=forward.dino_forward,
+        optim={
+            "optimizer": {
+                "type": "AdamW",
+                "lr": learning_rate,
+                "weight_decay": weight_decay,
+            },
+            "scheduler": {
+                "type": "LinearWarmupCosineAnnealing",
+            },
+            "interval": "epoch",
+        },
+    )
+
+
 def create_evaluation_callbacks(
     module: spt.Module,
     config: DatasetConfig,
@@ -279,7 +486,7 @@ def create_evaluation_callbacks(
     return evals
 
 
-AVAILABLE_MODELS = ("simclr", "mae")
+AVAILABLE_MODELS = ("simclr", "mae", "lejepa", "dino")
 DEFAULT_MAE_EMBED_DIM = 768
 
 
@@ -293,6 +500,18 @@ def _create_module_and_get_embed_dim(model_name: str, config: DatasetConfig, **m
     if model_name == "mae":
         module = create_mae_module(config, **model_kwargs)
         embed_dim = getattr(module.backbone, "embed_dim", DEFAULT_MAE_EMBED_DIM)
+        return module, embed_dim
+
+    if model_name == "lejepa":
+        module = create_lejepa_module(config, **model_kwargs)
+        embed_dim = get_embedding_dim(module.backbone)
+        return module, embed_dim
+
+    if model_name == "dino":
+        module = create_dino_module(config, **model_kwargs)
+        # DINO uses TeacherStudentWrapper, get embed_dim from teacher
+        backbone = getattr(module.backbone, "teacher", module.backbone)
+        embed_dim = get_embedding_dim(backbone)
         return module, embed_dim
 
     available = ", ".join(AVAILABLE_MODELS)
@@ -310,7 +529,7 @@ def create_experiment(
     """Create a complete experiment (module + trainer + callbacks).
 
     Args:
-        model_name: Name of the SSL method ("simclr" or "mae")
+        model_name: Name of the SSL method ("simclr", "mae", "lejepa", or "dino")
         data_module: Data module with train/val dataloaders
         config: Dataset configuration
         max_epochs: Maximum training epochs
