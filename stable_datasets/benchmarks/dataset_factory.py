@@ -282,6 +282,79 @@ def create_mae_transforms(config: DatasetConfig):
     return train_transform, val_transform
 
 
+def create_lejepa_transforms(config: DatasetConfig, num_views: int = 4):
+    """Create LeJEPA transforms (multi-view with strong augmentations).
+
+    Uses same augmentations as SimCLR but defaults to 4 views.
+    """
+    view_transform = _build_view_transform(config)
+    train_transform = transforms.MultiViewTransform([view_transform] * num_views)
+    val_transform = _build_val_transform(config)
+    return train_transform, val_transform
+
+
+def create_dino_transforms(
+    config: DatasetConfig, num_global_views: int = 2, num_local_views: int = 6
+):
+    """Create DINO transforms (multi-crop with global and local views).
+
+    For low-resolution images (<= 64px), local crops are disabled by default
+    since multi-scale learning doesn't make sense at that resolution.
+
+    Args:
+        config: Dataset configuration
+        num_global_views: Number of global crops (default 2)
+        num_local_views: Number of local crops (default 6, set to 0 for low-res)
+
+    Returns:
+        Tuple of (train_transform, val_transform)
+    """
+    h, w = config.image_size
+    stats = {"mean": config.mean, "std": config.std}
+    source = target = config.data_key
+
+    # Disable local crops for low-resolution images (multi-scale doesn't help)
+    if config.low_resolution:
+        num_local_views = 0
+
+    # Global crops: full-size images with wider scale range
+    global_crop_scale = (0.4, 1.0) if not config.low_resolution else (0.5, 1.0)
+    global_transform = transforms.Compose(
+        transforms.RGB(source=source, target=target),
+        transforms.RandomResizedCrop((h, w), scale=global_crop_scale, source=source, target=target),
+        transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
+        transforms.ColorJitter(
+            brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8, source=source, target=target
+        ),
+        transforms.RandomGrayscale(p=0.2, source=source, target=target),
+        transforms.GaussianBlur(kernel_size=23, sigma=(0.1, 2.0), p=1.0, source=source, target=target),
+        transforms.ToImage(**stats, source=source, target=target),
+    )
+
+    transform_list = [global_transform] * num_global_views
+
+    # Add local crops only for normal-resolution images
+    if num_local_views > 0:
+        local_size = (max(h // 2, 32), max(w // 2, 32))
+        local_crop_scale = (0.05, 0.4)
+        local_transform = transforms.Compose(
+            transforms.RGB(source=source, target=target),
+            transforms.RandomResizedCrop(local_size, scale=local_crop_scale, source=source, target=target),
+            transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
+            transforms.ColorJitter(
+                brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8, source=source, target=target
+            ),
+            transforms.RandomGrayscale(p=0.2, source=source, target=target),
+            transforms.GaussianBlur(kernel_size=23, sigma=(0.1, 2.0), p=0.5, source=source, target=target),
+            transforms.ToImage(**stats, source=source, target=target),
+        )
+        transform_list.extend([local_transform] * num_local_views)
+
+    train_transform = transforms.MultiViewTransform(transform_list)
+    val_transform = _build_val_transform(config)
+    return train_transform, val_transform
+
+
 # =============================================================================
 # Model-to-Transform Mapping
 # =============================================================================
@@ -289,6 +362,8 @@ def create_mae_transforms(config: DatasetConfig):
 MODEL_TRANSFORMS = {
     "simclr": create_simclr_transforms,  # Multi-view contrastive transforms
     "mae": create_mae_transforms,         # Single-view reconstruction transforms
+    "lejepa": create_lejepa_transforms,   # Multi-view with statistical regularity
+    "dino": create_dino_transforms,       # Multi-crop (global + local views)
 }
 
 
@@ -339,10 +414,16 @@ def create_dataset(
         model_name: SSL model name - determines transform type ("simclr", "mae", etc.)
         batch_size: Batch size for training
         num_workers: Number of data loading workers
-        **dataset_kwargs: Additional kwargs passed to the dataset class
+        **dataset_kwargs: Additional kwargs passed to the dataset class AND transforms
 
     Returns:
         Tuple of (DataModule, DatasetConfig)
+
+    Examples:
+        # Override transform parameters per model:
+        create_dataset("cifar10", "simclr", num_views=4)  # 4 views instead of 2
+        create_dataset("imagenet", "dino", num_global_views=2, num_local_views=8)
+        create_dataset("cifar10", "lejepa", num_views=6)
     """
     name_lower = name.lower()
     dataset_classes = get_dataset_classes()
@@ -388,6 +469,3 @@ def create_dataset(
 
     data_module = spt.data.DataModule(train=train_dataloader, val=val_dataloader)
     return data_module, config
-
-
-# TODO: SimCLR (Anurag, )
