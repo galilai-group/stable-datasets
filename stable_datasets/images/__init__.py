@@ -21,6 +21,7 @@ from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
 from .flowers102 import Flowers102
 from .food101 import Food101
+from .galaxy10 import Galaxy10Decal
 from .hasy_v2 import HASYv2
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
@@ -66,6 +67,7 @@ __all__ = [
     "EMNIST",
     "FashionMNIST",
     "Flowers102",
+    "Galaxy10Decal",
     "KMNIST",
     "MedMNIST",
     "EMNIST",
