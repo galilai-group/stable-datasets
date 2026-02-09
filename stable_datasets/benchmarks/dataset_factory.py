@@ -1,8 +1,8 @@
 """Dataset factory for SSL baselines.
 
 This module provides utilities to create datasets from stable-datasets
-for SSL training. stable-datasets returns HuggingFace datasets directly,
-so we use HuggingFace's native transform functionality.
+for SSL training. Uses a PyTorch Dataset wrapper to avoid HuggingFace's
+set_transform quirks with nested list structures.
 """
 
 from __future__ import annotations
@@ -11,8 +11,12 @@ from dataclasses import dataclass
 
 import numpy as np
 import stable_datasets as sds
+import sys
+sys.path.append("/root/stable-datasets/stable-pretraining")
+
 import stable_pretraining as spt
 import torch
+import torchcodec
 from stable_pretraining.data import transforms
 
 
@@ -27,6 +31,8 @@ class DatasetConfig:
     mean: list[float]
     std: list[float]
     low_resolution: bool
+    num_frames: int
+    data_key: str = "image"  # "image" or "video"
 
 
 NORMALIZATION_STATS: dict[str, dict] = {
@@ -43,13 +49,97 @@ NORMALIZATION_STATS: dict[str, dict] = {
 DEFAULT_STATS = {"mean": [0.485, 0.456, 0.406], "std": [0.229, 0.224, 0.225]}
 
 
+# =============================================================================
+# PyTorch Dataset Wrapper (bypasses HuggingFace set_transform quirks)
+# =============================================================================
+
+class TransformDataset(torch.utils.data.Dataset):
+    """Simple PyTorch Dataset wrapper that applies transforms per-sample.
+    
+    This bypasses HuggingFace's set_transform which mangles nested list structures.
+    Normalizes output to always use "image" key for compatibility with forward functions.
+    """
+    
+    def __init__(self, hf_dataset, transform, data_key: str = "image"):
+        self.dataset = hf_dataset
+        self.transform = transform
+        self.data_key = data_key
+    
+    def __len__(self):
+        return len(self.dataset)
+    
+    def __getitem__(self, idx):
+        sample = self.dataset[idx]
+        # Build sample dict with data_key and label
+        transform_input = {self.data_key: sample[self.data_key]}
+        if "label" in sample:
+            transform_input["label"] = sample["label"]
+        # Apply transform (may be MultiViewTransform or single-view)
+        output = self.transform(transform_input)
+        # Normalize key to "image" for compatibility with forward functions
+        return self._normalize_keys(output)
+    
+    def _normalize_keys(self, output):
+        """Normalize data_key to 'image' for forward function compatibility."""
+        if self.data_key == "image":
+            return output
+        
+        if "views" in output:
+            # Multi-view: normalize each view
+            for view in output["views"]:
+                if self.data_key in view:
+                    view["image"] = view.pop(self.data_key)
+        elif self.data_key in output:
+            # Single-view: rename key
+            output["image"] = output.pop(self.data_key)
+        
+        return output
+
+
+def _collate_views(batch):
+    """Collate function for multi-view and single-view batches.
+    
+    Handles:
+    - MultiViewTransform output: {"views": [view0_dict, view1_dict]}
+    - Single-view output: {"image": tensor, "label": int}
+    """
+    first = batch[0]
+    
+    if "views" in first:
+        # Multi-view: each sample has {"views": [{"image": tensor, "label": int}, ...]}
+        num_views = len(first["views"])
+        views_list = []
+        for v in range(num_views):
+            # Stack images from view v across all samples
+            view_images = torch.stack([sample["views"][v]["image"] for sample in batch])
+            view_dict = {"image": view_images}
+            # Stack labels if present
+            if "label" in first["views"][v]:
+                view_labels = torch.tensor([sample["views"][v]["label"] for sample in batch])
+                view_dict["label"] = view_labels
+            views_list.append(view_dict)
+        return {"views": views_list}
+    
+    else:
+        # Single-view: each sample has {"image": tensor, "label": int}
+        result = {"image": torch.stack([sample["image"] for sample in batch])}
+        if "label" in first:
+            result["label"] = torch.tensor([sample["label"] for sample in batch])
+        return result
+
+
+# =============================================================================
+# Dataset Config Extraction
+# =============================================================================
+
 def get_dataset_classes() -> dict[str, type]:
     """Return all available dataset classes from stable_datasets.images."""
-    return {
+    classes = {
         name.lower(): cls
         for name, cls in vars(sds.images).items()
         if isinstance(cls, type) and issubclass(cls, sds.BaseDatasetBuilder)
     }
+    return classes
 
 
 def _extract_image_dimensions(image) -> tuple[int, int, int]:
@@ -91,7 +181,25 @@ def extract_config_from_dataset(name: str, dataset) -> DatasetConfig:
         num_classes = label_feature.num_classes
 
     sample = dataset[0]
-    h, w, channels = _extract_image_dimensions(sample["image"])
+    data_key = "image"
+    num_frames = 1
+    
+    if 'image' in sample:
+        image = sample['image']
+        h, w, channels = _extract_image_dimensions(image)
+        data_key = "image"
+
+    if 'video' in sample:
+        data_key = "video"
+        video = sample['video']
+        if isinstance(video, torchcodec.decoders.VideoDecoder):
+            num_frames = video._num_frames
+            frame = video.get_frame_at(0)
+            shape = frame.data.shape
+            channels, h, w = shape
+        else: 
+            num_frames, h, w, channels = video.data.shape
+
     mean, std = _get_normalization_stats(name_lower, channels)
 
     return DatasetConfig(
@@ -102,32 +210,39 @@ def extract_config_from_dataset(name: str, dataset) -> DatasetConfig:
         mean=mean,
         std=std,
         low_resolution=max(h, w) <= 64,
+        num_frames=num_frames,
+        data_key=data_key,
     )
 
+
+# =============================================================================
+# Transform Builders
+# =============================================================================
 
 def _build_view_transform(config: DatasetConfig):
     """Build view transform for SSL with resolution-appropriate augmentations."""
     h, w = config.image_size
     stats = {"mean": config.mean, "std": config.std}
+    source = target = config.data_key
 
     if config.low_resolution:
         return transforms.Compose(
-            transforms.RGB(),
-            transforms.RandomResizedCrop((h, w), scale=(0.2, 1.0)),
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8),
-            transforms.RandomGrayscale(p=0.2),
-            transforms.ToImage(**stats),
+            transforms.RGB(source=source, target=target),
+            transforms.RandomResizedCrop((h, w), scale=(0.2, 1.0), source=source, target=target),
+            transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
+            transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8, source=source, target=target),
+            transforms.RandomGrayscale(p=0.2, source=source, target=target),
+            transforms.ToImage(**stats, source=source, target=target),
         )
 
     return transforms.Compose(
-        transforms.RGB(),
-        transforms.RandomResizedCrop((h, w), scale=(0.08, 1.0)),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8),
-        transforms.RandomGrayscale(p=0.2),
-        transforms.GaussianBlur(kernel_size=23, sigma=(0.1, 2.0), p=0.5),
-        transforms.ToImage(**stats),
+        transforms.RGB(source=source, target=target),
+        transforms.RandomResizedCrop((h, w), scale=(0.08, 1.0), source=source, target=target),
+        transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
+        transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8, source=source, target=target),
+        transforms.RandomGrayscale(p=0.2, source=source, target=target),
+        transforms.GaussianBlur(kernel_size=23, sigma=(0.1, 2.0), p=0.5, source=source, target=target),
+        transforms.ToImage(**stats, source=source, target=target),
     )
 
 
@@ -135,15 +250,16 @@ def _build_val_transform(config: DatasetConfig):
     """Build validation transform (simple resize and normalize)."""
     h, w = config.image_size
     stats = {"mean": config.mean, "std": config.std}
+    source = target = config.data_key
     return transforms.Compose(
-        transforms.RGB(),
-        transforms.Resize((h, w)),
-        transforms.ToImage(**stats),
+        transforms.RGB(source=source, target=target),
+        transforms.Resize((h, w), source=source, target=target),
+        transforms.ToImage(**stats, source=source, target=target),
     )
 
 
-def create_ssl_transforms(config: DatasetConfig, num_views: int = 2):
-    """Create SSL training and validation transforms."""
+def create_simclr_transforms(config: DatasetConfig, num_views: int = 2):
+    """Create SimCLR transforms (multi-view contrastive learning)."""
     view_transform = _build_view_transform(config)
     train_transform = transforms.MultiViewTransform([view_transform] * num_views)
     val_transform = _build_val_transform(config)
@@ -151,19 +267,53 @@ def create_ssl_transforms(config: DatasetConfig, num_views: int = 2):
 
 
 def create_mae_transforms(config: DatasetConfig):
-    """Create MAE-specific transforms (single view with minimal augmentation)."""
+    """Create MAE transforms (single view with minimal augmentation for reconstruction)."""
     h, w = config.image_size
     stats = {"mean": config.mean, "std": config.std}
+    source = target = config.data_key
 
     train_transform = transforms.Compose(
-        transforms.RGB(),
-        transforms.RandomResizedCrop((h, w), scale=(0.2, 1.0)),
-        transforms.RandomHorizontalFlip(p=0.5),
-        transforms.ToImage(**stats),
+        transforms.RGB(source=source, target=target),
+        transforms.RandomResizedCrop((h, w), scale=(0.2, 1.0), source=source, target=target),
+        transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
+        transforms.ToImage(**stats, source=source, target=target),
     )
     val_transform = _build_val_transform(config)
     return train_transform, val_transform
 
+
+# =============================================================================
+# Model-to-Transform Mapping
+# =============================================================================
+
+MODEL_TRANSFORMS = {
+    "simclr": create_simclr_transforms,  # Multi-view contrastive transforms
+    "mae": create_mae_transforms,         # Single-view reconstruction transforms
+}
+
+
+def get_transforms_for_model(model_name: str, config: DatasetConfig, **kwargs):
+    """Get transforms appropriate for a given model.
+    
+    Args:
+        model_name: Name of the model ("simclr", "mae", etc.)
+        config: Dataset configuration
+        **kwargs: Additional kwargs passed to the transform factory
+        
+    Returns:
+        Tuple of (train_transform, val_transform)
+    """
+    model_name_lower = model_name.lower()
+    if model_name_lower not in MODEL_TRANSFORMS:
+        available = ", ".join(MODEL_TRANSFORMS.keys())
+        raise ValueError(f"Unknown model for transforms: {model_name}. Available: {available}")
+    
+    return MODEL_TRANSFORMS[model_name_lower](config, **kwargs)
+
+
+# =============================================================================
+# Dataset Creation
+# =============================================================================
 
 def _load_validation_split(dataset_cls, **kwargs):
     """Load validation split, trying 'test' first, then 'validation'."""
@@ -175,38 +325,20 @@ def _load_validation_split(dataset_cls, **kwargs):
     return None
 
 
-def _make_transform_fn(transform):
-    """Create a transform function for HuggingFace set_transform."""
-    def apply_transform(batch):
-        return transform({"image": batch["image"], "label": batch["label"]})
-    return apply_transform
-
-
-def _create_dataloader(dataset, batch_size: int, num_workers: int, shuffle: bool = False, drop_last: bool = False):
-    """Create a DataLoader with standard settings."""
-    return torch.utils.data.DataLoader(
-        dataset=dataset,
-        batch_size=batch_size,
-        num_workers=num_workers,
-        shuffle=shuffle,
-        drop_last=drop_last,
-    )
-
-
 def create_dataset(
     name: str,
+    model_name: str = "simclr",
     batch_size: int = 256,
-    num_workers: int = 8,
-    transform_type: str = "ssl",
+    num_workers: int = 4,
     **dataset_kwargs,
 ) -> tuple[spt.data.DataModule, DatasetConfig]:
     """Create a dataset and data module for SSL training.
 
     Args:
         name: Dataset name (case-insensitive)
+        model_name: SSL model name - determines transform type ("simclr", "mae", etc.)
         batch_size: Batch size for training
         num_workers: Number of data loading workers
-        transform_type: Type of transforms ("ssl" for SimCLR-style, "mae" for MAE-style)
         **dataset_kwargs: Additional kwargs passed to the dataset class
 
     Returns:
@@ -221,23 +353,41 @@ def create_dataset(
 
     dataset_cls = dataset_classes[name_lower]
 
+    # Load raw HuggingFace datasets
     train_hf = dataset_cls(split="train", **dataset_kwargs)
     val_hf = _load_validation_split(dataset_cls, **dataset_kwargs)
 
+    # Extract config from dataset
     config = extract_config_from_dataset(name_lower, train_hf)
 
-    if transform_type == "mae":
-        train_transform, val_transform = create_mae_transforms(config)
-    else:
-        train_transform, val_transform = create_ssl_transforms(config)
+    # Create model-specific transforms
+    train_transform, val_transform = get_transforms_for_model(model_name, config)
 
-    train_hf.set_transform(_make_transform_fn(train_transform))
-    train_dataloader = _create_dataloader(train_hf, batch_size, num_workers, shuffle=True, drop_last=True)
+    # Wrap in PyTorch Dataset (bypasses HuggingFace set_transform quirks)
+    train_dataset = TransformDataset(train_hf, train_transform, data_key=config.data_key)
+    train_dataloader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        shuffle=True,
+        drop_last=True,
+        collate_fn=_collate_views,
+    )
 
     val_dataloader = None
     if val_hf is not None:
-        val_hf.set_transform(_make_transform_fn(val_transform))
-        val_dataloader = _create_dataloader(val_hf, batch_size, num_workers)
+        val_dataset = TransformDataset(val_hf, val_transform, data_key=config.data_key)
+        val_dataloader = torch.utils.data.DataLoader(
+            val_dataset,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            shuffle=False,
+            drop_last=False,
+            collate_fn=_collate_views,
+        )
 
     data_module = spt.data.DataModule(train=train_dataloader, val=val_dataloader)
     return data_module, config
+
+
+# TODO: SimCLR (Anurag, )

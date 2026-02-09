@@ -50,9 +50,20 @@ from stable_datasets.benchmarks.experiment_factory    import AVAILABLE_MODELS, c
 
 def _get_all_dataset_classes() -> list[type]:
     """Return all dataset builder classes from stable_datasets.images."""
+    # Datasets to skip
+    SKIP_DATASETS = {
+        'cars196',      # Takes too long to download
+        'cifar10c',     # Takes too long
+        'cifar100c',    # Takes too long
+        'clevrer',      # Video dataset - not yet supported
+    }
     return [
         cls for cls in vars(sds.images).values()
-        if isinstance(cls, type) and issubclass(cls, sds.BaseDatasetBuilder)
+        if (
+            isinstance(cls, type) 
+            and issubclass(cls, sds.BaseDatasetBuilder) 
+            and cls.__name__.lower() not in SKIP_DATASETS
+        )
     ]
 
 
@@ -100,20 +111,43 @@ def main() -> None:
     if 'all' in model_names:
         model_names = MODELS
 
-    datasets_loaded = [create_dataset(name) for name in dataset_names]
-    
-    experiments = [
-        (
-            create_experiment(model_name=model_name, data_module=data, config=config),
-            model_name, data
-        )
-        for model_name   in model_names
-        for data, config in datasets_loaded
-    ]
+    # Print experiment summary
+    total_experiments = len(dataset_names) * len(model_names)
+    logging.info(f"\n{'='*60}")
+    logging.info(f"SSL Baseline Experiments")
+    logging.info(f"{'='*60}")
+    logging.info(f"Models ({len(model_names)}): {', '.join(model_names)}")
+    logging.info(f"Datasets ({len(dataset_names)}): {', '.join(dataset_names)}")
+    logging.info(f"Total experiments: {total_experiments}")
+    logging.info(f"{'='*60}\n")
 
-    for experiment, model_name, data_cfg in experiments:
-        logging.info(f'Running {experiment} with {model_name=} and dataset "{data_cfg.name}"')
-        experiment()
+    # Run experiments one at a time to avoid callback queue reuse issues
+    for dataset_name in dataset_names:
+        for model_name in model_names:
+            # Clear OnlineQueue class-level caches to prevent dimension mismatches
+            # between experiments with different embedding dimensions
+            from stable_pretraining.callbacks.queue import OnlineQueue
+            OnlineQueue._shared_queues.clear()
+            OnlineQueue._queue_info.clear()
+            
+            # Load dataset with model-specific transforms
+            if dataset_name == 'emnist':
+                data, config = create_dataset(dataset_name, model_name=model_name, config_name="balanced")
+            elif dataset_name == 'medmnist':
+                data, config = create_dataset(dataset_name, model_name=model_name, config_name="pneumoniamnist")
+            else:
+                data, config = create_dataset(dataset_name, model_name=model_name)
+            
+            # Create experiment fresh (new callbacks with empty queues)
+            experiment, experiment_info = create_experiment(
+                model_name=model_name, 
+                data_module=data, 
+                config=config, 
+                max_epochs=2
+            )
+            
+            logging.info(f'Running {model_name} on "{config.name}" {experiment_info}')
+            experiment()
 
 
 if __name__ == "__main__":
