@@ -98,16 +98,26 @@ class TransformDataset(torch.utils.data.Dataset):
 
 def _collate_views(batch):
     """Collate function for multi-view and single-view batches.
-    
+
     Handles:
-    - MultiViewTransform output: {"views": [view0_dict, view1_dict]}
+    - MultiViewTransform with dict: {"global_1": {...}, "global_2": {...}, "local_1": {...}}
+    - MultiViewTransform with list: {"views": [view0_dict, view1_dict]}
     - Single-view output: {"image": tensor, "label": int}
     """
     first = batch[0]
-    
-    if "views" in first:
-        # Multi-view: each sample has {"views": [{"image": tensor, "label": int}, ...]}
-        num_views = len(first["views"])
+
+    # Check for single-view case first
+    if "image" in first:
+        # Single-view: each sample has {"image": tensor, "label": int}
+        result = {"image": torch.stack([sample["image"] for sample in batch])}
+        if "label" in first:
+            result["label"] = torch.tensor([sample["label"] for sample in batch])
+        return result
+
+    # Check for list-based multi-view (legacy format)
+    elif "views" in first:
+        views = first["views"]
+        num_views = len(views)
         views_list = []
         for v in range(num_views):
             # Stack images from view v across all samples
@@ -119,13 +129,22 @@ def _collate_views(batch):
                 view_dict["label"] = view_labels
             views_list.append(view_dict)
         return {"views": views_list}
-    
+
+    # Dict-based multi-view (DINO format with named views like "global_1", "local_1")
     else:
-        # Single-view: each sample has {"image": tensor, "label": int}
-        result = {"image": torch.stack([sample["image"] for sample in batch])}
-        if "label" in first:
-            result["label"] = torch.tensor([sample["label"] for sample in batch])
-        return result
+        # Sample is a dict where each key is a view name and each value is a view dict
+        collated_views = {}
+        for view_name in first.keys():
+            if isinstance(first[view_name], dict) and "image" in first[view_name]:
+                # Stack images from this named view across all samples
+                view_images = torch.stack([sample[view_name]["image"] for sample in batch])
+                view_dict = {"image": view_images}
+                # Stack labels if present
+                if "label" in first[view_name]:
+                    view_labels = torch.tensor([sample[view_name]["label"] for sample in batch])
+                    view_dict["label"] = view_labels
+                collated_views[view_name] = view_dict
+        return collated_views
 
 
 # =============================================================================
@@ -331,7 +350,10 @@ def create_dino_transforms(
         transforms.ToImage(**stats, source=source, target=target),
     )
 
-    transform_list = [global_transform] * num_global_views
+    # Create dict of named transforms for DINO (required by dino_forward)
+    transform_dict = {}
+    for i in range(num_global_views):
+        transform_dict[f"global_{i+1}"] = global_transform
 
     # Add local crops only for normal-resolution images
     if num_local_views > 0:
@@ -348,9 +370,10 @@ def create_dino_transforms(
             transforms.GaussianBlur(kernel_size=23, sigma=(0.1, 2.0), p=0.5, source=source, target=target),
             transforms.ToImage(**stats, source=source, target=target),
         )
-        transform_list.extend([local_transform] * num_local_views)
+        for i in range(num_local_views):
+            transform_dict[f"local_{i+1}"] = local_transform
 
-    train_transform = transforms.MultiViewTransform(transform_list)
+    train_transform = transforms.MultiViewTransform(transform_dict)
     val_transform = _build_val_transform(config)
     return train_transform, val_transform
 
@@ -404,7 +427,7 @@ def create_dataset(
     name: str,
     model_name: str = "simclr",
     batch_size: int = 256,
-    num_workers: int = 4,
+    num_workers: int = 16,
     **dataset_kwargs,
 ) -> tuple[spt.data.DataModule, DatasetConfig]:
     """Create a dataset and data module for SSL training.
