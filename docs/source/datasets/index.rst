@@ -65,5 +65,11 @@ Available Datasets
    rock_paper_scissor
    linnaeus5
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Video Classification Datasets
+
+   ucf101
+
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.

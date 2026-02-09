@@ -1,0 +1,90 @@
+UCF-101
+==========
+
+.. raw:: html
+
+   <p style="display: flex; gap: 10px;">
+   <img src="https://img.shields.io/badge/Task-Video%20Classification%20%2F%20Action%20Recognition-blue" alt="Task: Video Classification / Action Recognition">
+   <img src="https://img.shields.io/badge/Classes-101-green" alt="Classes: 101">
+   <img src="https://img.shields.io/badge/Video%20Resolution-240x320-orange" alt="Video Resolution: 240x320">
+   <img src="https://img.shields.io/badge/Video%20Frame%20Rate-25%20frames%20per%20second-orange" alt="Video Frame Rate: 25 frames per second">
+   <img src="https://img.shields.io/badge/Video%20Length-Variable-orange" alt="Video Length: Variable">
+   </p>
+
+Overview
+--------
+
+The UCF-101 dataset is a video classification dataset consisting of human activities being recorded in their natural environment (i.e., not in a controlled environment). In total, it has 13,320 videos, and there are 101 action classes, such as dunking a basketball or playing the guitar. These action classes are further categorized into 5 coarser groups ("action types") which are: human-object interaction, body motion only, human-human interaction, playing musical instruments, and sports.
+
+There are multiple splits offered, which are presented as different variations of the ``UCF101Config`` in the code. Three of these are for the action recognition task and use all 13,320 videos, while three are for the task of temporal action detection and only use 3,207 of the videos. For the latter three, only 24 total action classes are used, and so we follow the re-mapping of indices to action class names that is used in the downloadable split lists from the official site (as seen in ``UCF101._action_detection_classes()`` in the code). More information about the dataset sizes are below:
+
+- **Action recognition splits**:
+    - *Split 01*: 9,537 images for training, 3,783 images for testing
+    - *Split 02*: 9,586 images for training, 3,734 images for testing
+    - *Split 03*: 9,624 images for training, 3,696 images for testing
+- **Action detection splits**:
+    - *Split 01*: 2,293 images for training, 914 images for testing
+    - *Split 02*: 2,306 images for training, 901 images for testing
+    - *Split 03*: 2,306 images for training, 901 images for testing
+
+A teaser video can be viewed at ``teasers/ucf101_teaser.avi``. Note, however, that it is in .avi format as the dataset originally provides all videos in that format, and to view it in a modern video renderer you may need to convert it to a .mp4 file.
+
+Data Structure
+--------------
+
+When accessing an example using ``ds[i]``, you will receive a dictionary with the following keys:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 20 60
+
+   * - Key
+     - Type
+     - Description
+   * - ``video``
+     - ``torchcodec.decoders.VideoDecoder``
+     - The video object holding all the frame data
+   * - ``fine_label``
+     - int
+     - The index for the action class in the interval [0, 100] (or [0, 23] if you are using one of the action detection splits)
+   * - ``coarse_label``
+     - int
+     - The index for the action type in the interval [0, 4]
+
+Usage Example
+-------------
+
+**Basic Usage**
+
+.. code-block:: python
+
+    from stable_datasets.images.ucf101 import UCF101
+
+    # First run will download + prepare cache, then return the split as a HF Dataset
+    ds = UCF101(config_name="action_recognition_01", split="train")
+
+    # Can access attributes of each sample through standard Python dict indexing
+    sample = ds[0]
+    print(sample.keys())  # {"video", "fine_label", "coarse_label"}
+    print(f"Action class: {sample['fine_label']}")
+    print(f"Action type: {sample['coarse_label']}")
+
+    # Optional: Make it PyTorch-friendly
+    ds_torch = ds.with_format("torch")
+
+References
+----------
+
+- Official website: https://www.crcv.ucf.edu/data/UCF101.php
+
+Citation
+--------
+
+.. code-block:: bibtex
+
+    @inproceedings{UCF101,
+        author = {Soomro, K. and Roshan Zamir, A. and Shah, M.},
+        booktitle = {CRCV-TR-12-01},
+        title = {{UCF101}: A Dataset of 101 Human Actions Classes From Videos in The Wild},
+        year = {2012}
+    }

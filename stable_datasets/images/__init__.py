@@ -43,9 +43,10 @@ from .small_norb import SmallNORB
 from .stl10 import STL10
 from .svhn import SVHN
 
-
 # from .tiny_imagenet import TinyImagenet
 # from .tiny_imagenet_c import TinyImagenetC
+from .ucf101 import UCF101
+
 
 __all__ = [
     "ArabicCharacters",
@@ -82,4 +83,5 @@ __all__ = [
     "SVHN",
     "HASYv2",
     "Linnaeus5",
+    "UCF101",
 ]

@@ -29,6 +29,7 @@ dependencies = [
     "h5py",
     "requests_cache",
     "pre-commit>=4.5.0",
+    "torchcodec",
 ]
 
 dynamic = ["version"]
