@@ -6,6 +6,7 @@ using stable-pretraining's Module and Manager.
 
 from __future__ import annotations
 
+import re
 import lightning as pl
 import stable_pretraining as spt
 import torch
@@ -24,6 +25,11 @@ DEFAULT_EMBED_DIM = 512
 
 def get_embedding_dim(backbone: nn.Module) -> int:
     """Get the embedding dimension from a backbone."""
+    # Check for HuggingFace models (ViT, etc.)
+    if hasattr(backbone, "config") and hasattr(backbone.config, "hidden_size"):
+        return backbone.config.hidden_size
+
+    # Check for timm models and other backbones
     for attr in ("num_features", "embed_dim"):
         if hasattr(backbone, attr):
             return getattr(backbone, attr)
@@ -385,35 +391,48 @@ def create_dino_module(
         spt.Module configured for DINO training
     """
     # Use ViT backbone (DINO works best with ViTs)
-    h, w = config.image_size
-    backbone = spt.backbone.vit_timm(backbone_name, img_size=(h, w))
+    h = config.image_size[0]  # Assuming square images
+
+    # Parse ViT size and patch_size from backbone_name
+    # Expected format: "vit_tiny_patch16_224" or similar
+    size_match = re.search(r'vit[_-]?(tiny|small|base|large|huge)', backbone_name.lower())
+    patch_match = re.search(r'patch[_-]?(\d+)', backbone_name.lower())
+
+    if not size_match:
+        raise ValueError(f"Could not parse ViT size from backbone_name: {backbone_name}")
+
+    size = size_match.group(1)
+    patch_size = int(patch_match.group(1)) if patch_match else 16  # Default to 16
+
+    # Use vit_hf which returns HuggingFace-style outputs with .last_hidden_state
+    # (required by dino_forward)
+    backbone = spt.backbone.vit_hf(
+        size=size,
+        patch_size=patch_size,
+        image_size=h,  # Assuming square images
+        pretrained=False,
+    )
     embed_dim = get_embedding_dim(backbone)
 
     # Wrap backbone in TeacherStudentWrapper
     backbone_wrapper = spt.backbone.TeacherStudentWrapper(
-        student=backbone, momentum=momentum_teacher
+        student=backbone, base_ema_coefficient=momentum_teacher
     )
 
     # Create DINO projection head (3-layer MLP + normalization + prototypes)
-    projector_head = nn.Sequential(
+    projector = nn.Sequential(
         nn.Linear(embed_dim, hidden_dim),
         nn.GELU(),
         nn.Linear(hidden_dim, hidden_dim),
         nn.GELU(),
         nn.Linear(hidden_dim, bottleneck_dim),
-    )
-
-    # Wrap projector with normalization and prototypes
-    projector = spt.backbone.DINOProjector(
-        projector=projector_head,
-        input_dim=bottleneck_dim,
-        output_dim=projection_dim,
-        norm_last_layer=True,
+        spt.utils.nn_modules.L2Norm(),
+        nn.Linear(bottleneck_dim, projection_dim, bias=False),  # Prototypes layer
     )
 
     # Wrap in TeacherStudentWrapper
     projector_wrapper = spt.backbone.TeacherStudentWrapper(
-        student=projector, momentum=momentum_teacher
+        student=projector, base_ema_coefficient=momentum_teacher
     )
 
     # Create DINO loss
@@ -467,7 +486,7 @@ def create_evaluation_callbacks(
             input="embedding",
             target="label",
             probe=nn.Linear(embed_dim, num_classes),
-            loss_fn=nn.CrossEntropyLoss(),
+            loss=nn.CrossEntropyLoss(),
             metrics=metrics,
         )
         evals.append(linear_probe)
@@ -486,7 +505,7 @@ def create_evaluation_callbacks(
     return evals
 
 
-AVAILABLE_MODELS = ("simclr", "mae", "lejepa", "dino")
+AVAILABLE_MODELS = ("dino", "lejepa", "simclr", "mae")
 DEFAULT_MAE_EMBED_DIM = 768
 
 
@@ -554,6 +573,7 @@ def create_experiment(
         callbacks=callbacks,
         precision=precision,
         enable_checkpointing=False,
+        accelerator="auto",  # Automatically detect GPU/CPU
     )
 
     manager = spt.Manager(trainer=trainer, module=module, data=data_module)
