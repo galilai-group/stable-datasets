@@ -57,6 +57,7 @@ Available Datasets
    medmnist
    stl10
    e_mnist
+   fgvc_aircraft
    flowers102
    cub200
    country211
