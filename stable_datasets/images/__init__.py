@@ -42,10 +42,9 @@ from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
 from .stl10 import STL10
 from .svhn import SVHN
-
-
 from .tiny_imagenet import TinyImagenet
 from .tiny_imagenet_c import TinyImagenetC
+
 
 __all__ = [
     "ArabicCharacters",
