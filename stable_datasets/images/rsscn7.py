@@ -25,9 +25,7 @@ class RSSCN7(BaseDatasetBuilder):
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
         "homepage": "https://github.com/palewithout/RSSCN7",
-        "assets": {
-            "train": "https://github.com/palewithout/RSSCN7/archive/refs/heads/master.zip"
-        },
+        "assets": {"train": "https://github.com/palewithout/RSSCN7/archive/refs/heads/master.zip"},
         "citation": """@article{zou2015deep,
                          title={Deep Learning Based Feature Selection for Remote Sensing Scene Classification},
                          author={Zou, Qin and Ni, Lihao and Zhang, Tong and Wang, Qian},

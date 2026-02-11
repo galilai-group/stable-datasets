@@ -26,6 +26,7 @@ from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
+from .resisc45 import RESISC45
 
 # from .awa2 import AWA2
 # from .beans import Beans
@@ -38,18 +39,15 @@ from .not_mnist import NotMNIST
 # from .mnist import MNIST
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
+
+# from .tiny_imagenet import TinyImagenet
+# from .tiny_imagenet_c import TinyImagenetC
+from .rsscn7 import RSSCN7
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
 from .stl10 import STL10
 from .svhn import SVHN
 
-
-# from .tiny_imagenet import TinyImagenet
-# from .tiny_imagenet_c import TinyImagenetC
-
-
-from .rsscn7 import RSSCN7
-from .resisc45 import RESISC45
 
 __all__ = [
     "ArabicCharacters",
@@ -80,6 +78,8 @@ __all__ = [
     "SVHN",
     "CUB200",
     "Country211",
+    "RESISC45",
+    "RSSCN7",
     "Shapes3D",
     "SmallNORB",
     "STL10",
