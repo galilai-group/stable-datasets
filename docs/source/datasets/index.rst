@@ -56,6 +56,8 @@ Available Datasets
    k_mnist
    medmnist
    stl10
+   tiny_imagenet
+   tiny_imagenet_c
    e_mnist
    flowers102
    cub200

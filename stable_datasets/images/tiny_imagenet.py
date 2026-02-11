@@ -1,9 +1,13 @@
 import os
+import subprocess
+from pathlib import Path
 
 import datasets
 
+from stable_datasets.utils import BaseDatasetBuilder
 
-class TinyImagenet(datasets.GeneratorBasedBuilder):
+
+class TinyImagenet(BaseDatasetBuilder):
     """
     Tiny ImageNet dataset for image classification tasks.
     It contains 200 classes with 500 training images, 50 validation images, and 50 test images per class.
@@ -11,7 +15,24 @@ class TinyImagenet(datasets.GeneratorBasedBuilder):
 
     VERSION = datasets.Version("1.0.0")
 
+    # Single source-of-truth for dataset provenance + download locations.
+    SOURCE = {
+        "homepage": "https://www.kaggle.com/c/tiny-imagenet",
+        "assets": {
+            "train": "http://cs231n.stanford.edu/tiny-imagenet-200.zip",
+            "validation": "http://cs231n.stanford.edu/tiny-imagenet-200.zip",
+            "test": "http://cs231n.stanford.edu/tiny-imagenet-200.zip",
+        },
+        "citation": """@inproceedings{Le2015TinyIV,
+                          title={Tiny ImageNet Visual Recognition Challenge},
+                          author={Ya Le and Xuan S. Yang},
+                          year={2015}
+                        }""",
+        "license": "MIT License",
+    }
+
     def _info(self):
+        source = self._source()
         return datasets.DatasetInfo(
             description="""In Tiny ImageNet, there are 100,000 images divided up into 200 classes. Every image in the
             dataset is downsized to a 64×64 colored image. For every class, there are 500 training images, 50 validating
@@ -20,47 +41,67 @@ class TinyImagenet(datasets.GeneratorBasedBuilder):
                 {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}
             ),
             supervised_keys=("image", "label"),
-            homepage="https://www.kaggle.com/c/tiny-imagenet",
-            citation="""@inproceedings{Le2015TinyIV,
-                          title={Tiny ImageNet Visual Recognition Challenge},
-                          author={Ya Le and Xuan S. Yang},
-                          year={2015}
-                        }""",
-            license="MIT License",
+            homepage=source["homepage"],
+            citation=source["citation"],
+            license=source.get("license", None),
         )
 
-    def _split_generators(self, dl_manager):
-        url = "http://cs231n.stanford.edu/tiny-imagenet-200.zip"
-        archive_path = dl_manager.download_and_extract(url)
+    def _generate_examples(self, data_path, split):
+        if os.path.isfile(data_path) and data_path._str.lower().endswith(".zip"):
+            extract_dir = Path(
+                os.path.join(os.path.dirname(data_path), os.path.splitext(os.path.basename(data_path))[0])
+            )
+            extract_dir.mkdir(parents=True, exist_ok=True)
+            print("[tiny_imagenet] Extracting dataset... (this may take a while)")
+            subprocess.run(["unzip", "-nq", data_path, "-d", str(extract_dir)], check=True)
+            base_path = (
+                os.path.join(extract_dir, "tiny-imagenet-200")
+                if os.path.isdir(os.path.join(extract_dir, "tiny-imagenet-200"))
+                else extract_dir
+            )
+        else:
+            base_path = (
+                os.path.join(data_path, "tiny-imagenet-200")
+                if os.path.isdir(os.path.join(data_path, "tiny-imagenet-200"))
+                else data_path
+            )
 
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"archive_path": archive_path, "split": "train"},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION,
-                gen_kwargs={"archive_path": archive_path, "split": "val"},
-            ),
-        ]
-
-    def _generate_examples(self, archive_path, split):
-        base_path = os.path.join(archive_path, "tiny-imagenet-200")
+        print(f"[tiny_imagenet] generating examples for split={split} from {base_path}")
 
         if split == "train":
-            for label_dir in os.listdir(os.path.join(base_path, "train")):
+            label_dirs = sorted(os.listdir(os.path.join(base_path, "train")))
+            total_labels = len(label_dirs)
+            processed = 0
+            for label_dir in label_dirs:
                 class_path = os.path.join(base_path, "train", label_dir, "images")
-                for image_file in os.listdir(class_path):
+                files = os.listdir(class_path)
+                for image_file in files:
                     image_path = os.path.join(class_path, image_file)
                     yield image_file, {"image": image_path, "label": label_dir}
+                processed += 1
+                if processed % 50 == 0 or processed == total_labels:
+                    print(f"[tiny_imagenet] processed {processed}/{total_labels} classes")
 
-        elif split == "val":
+        elif split == "validation":
             annotations = os.path.join(base_path, "val", "val_annotations.txt")
+            print(f"[tiny_imagenet] reading validation annotations: {annotations}")
             with open(annotations) as f:
-                for line in f:
+                for i, line in enumerate(f):
                     image_file, label, *_ = line.strip().split("\t")
                     image_path = os.path.join(base_path, "val", "images", image_file)
+                    if i and i % 1000 == 0:
+                        print(f"[tiny_imagenet] yielded {i} validation examples")
                     yield image_file, {"image": image_path, "label": label}
+        elif split == "test":
+            test_dir = os.path.join(base_path, "test", "images")
+            files = os.listdir(test_dir)
+            for i, image_file in enumerate(files):
+                image_path = os.path.join(test_dir, image_file)
+                if i and i % 1000 == 0:
+                    print(f"[tiny_imagenet] yielded {i} test examples")
+                yield image_file, {"image": image_path, "label": -1}  # No labels for test set
+        else:
+            raise ValueError(f"Unknown split: {split} | expected one of 'train', 'validation', 'test'")
 
     @staticmethod
     def _labels():
