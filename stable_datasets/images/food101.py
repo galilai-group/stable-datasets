@@ -1,61 +1,62 @@
-import os
+import io
+from zipfile import ZipFile
 
 import datasets
+from PIL import Image
+from tqdm import tqdm
+
+from stable_datasets.utils import BaseDatasetBuilder
 
 
-class Food101(datasets.GeneratorBasedBuilder):
-    """A challenging data set of 101 food categories, with 101,000 images.
-    For each class, 250 manually reviewed test images are provided as well as 750 training images. On purpose, the
-    training images were not cleaned, and thus still contain some amount of noise. This comes mostly in the form of
-    intense colors and sometimes wrong labels. All images were rescaled to have a maximum side length of 512 pixels.
-    """
-
+class Food101(BaseDatasetBuilder):
     VERSION = datasets.Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
+        "assets": {
+            "train": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_train.zip",
+            "test": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_test.zip",
+        },
+        "citation": """@inproceedings{bossard14,
+            title = {Food-101 -- Mining Discriminative Components with Random Forests},
+            author = {Bossard, Lukas and Guillaumin, Matthieu and Van Gool, Luc},
+            booktitle = {European Conference on Computer Vision},
+            year = {2014}}""",
+    }
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""This is the Food 101 dataset, also available from https://www.vision.ee.ethz.ch/datasets_extra/food-101/
-            It contains images of food, organized by type of food. It was used in the Paper "Food-101 – Mining
-            Discriminative Components with Random Forests" by Lukas Bossard, Matthieu Guillaumin and Luc Van Gool. It's
-            a good (large dataset) for testing computer vision techniques.""",
+            description="Food-101 image classification dataset. It has 101 food categories, with 101'000 images. For each class, 250 manually reviewed test images are provided as well as 750 training images. On purpose, the training images were not cleaned, and thus still contain some amount of noise. This comes mostly in the form of intense colors and sometimes wrong labels. All images were rescaled to have a maximum side length of 512 pixels",
             features=datasets.Features(
-                {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}
+                {
+                    "image": datasets.Image(),
+                    "label": datasets.ClassLabel(names=self._labels()),
+                }
             ),
             supervised_keys=("image", "label"),
-            homepage="https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
-            citation="""@inproceedings{bossard14,
-                         title = {Food-101 -- Mining Discriminative Components with Random Forests},
-                         author = {Bossard, Lukas and Guillaumin, Matthieu and Van Gool, Luc},
-                         booktitle = {European Conference on Computer Vision},
-                         year = {2014}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        archive = dl_manager.download_and_extract("http://data.vision.ee.ethz.ch/cvl/food-101.tar.gz")
-        archive = str(archive)
-        train = open(os.path.join(archive, "food-101", "meta", "train.txt")).read().splitlines()
-        test = open(os.path.join(archive, "food-101", "meta", "test.txt")).read().splitlines()
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"root": archive, "archives": train},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"root": archive, "archives": test},
-            ),
-        ]
+    def _generate_examples(self, data_path, split):
+        """Generate examples from the ZIP archives of images and labels."""
+        labels = self._labels()
+        label_to_idx = {name: idx for idx, name in enumerate(labels)}
+        with ZipFile(data_path, "r") as archive:
+            for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
+                if entry.filename.endswith(".jpg"):
+                    content = archive.read(entry)
+                    image = Image.open(io.BytesIO(content)).convert("RGB")
 
-    def _generate_examples(self, root, archives):
-        for key, name in enumerate(archives):
-            image_path = os.path.join(root, "food-101", "images", f"{name}.jpg")
-            yield (
-                key,
-                {
-                    "image": image_path,
-                    "label": name.split("/")[0],
-                },
-            )
+                    filename = entry.filename.split("/")[-1]
+                    class_part = filename.split("_", 1)[1].rsplit(".", 1)[0]
+                    label_name = class_part.lower().replace("-", "_").replace(".", "")
+                    if label_name not in label_to_idx:
+                        raise ValueError(f"Unknown label: {label_name}")
+
+                    label = label_to_idx[label_name]
+
+                    yield entry.filename, {"image": image, "label": label}
 
     @staticmethod
     def _labels():
