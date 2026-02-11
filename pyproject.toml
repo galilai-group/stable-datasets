@@ -41,6 +41,15 @@ version = {attr = "stable_datasets.__version__"}
 
 [project.optional-dependencies]
 
+# Benchmark dependencies (SSL evaluation suite)
+benchmarks = [
+    "stable-pretraining",
+    "hydra-core>=1.3",
+    "hydra-submitit-launcher>=1.2",
+    "omegaconf>=2.3",
+    "tabulate",
+]
+
 # Development tools
 dev = [
     "pytest",
@@ -50,7 +59,9 @@ dev = [
     "codecov",
     "pre-commit",
     "ruff",
-    "stable-pretraining"
+    "stable-pretraining",
+    "hydra-core>=1.3",
+    "omegaconf>=2.3",
 ]
 
 # Documentation tools

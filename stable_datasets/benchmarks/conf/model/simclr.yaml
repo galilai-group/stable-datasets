@@ -1,0 +1,22 @@
+name: simclr
+forward: simclr_forward
+requires_vit: false
+
+transforms:
+  type: multiview
+  num_views: 2
+
+projector:
+  hidden_dim: 2048
+  output_dim: 256
+
+loss:
+  temperature: 0.5
+
+optimizer:
+  type: LARS
+  lr: 5.0
+  weight_decay: 1e-6
+
+scheduler:
+  type: LinearWarmupCosineAnnealing

@@ -1,5 +1,5 @@
-from . import dataset_factory
-from . import experiment_factory
+from . import dataset
+from . import modules
 from . import main
 
-__all__ = ["dataset_factory", "experiment_factory", "main"]
+__all__ = ["dataset", "modules", "main"]

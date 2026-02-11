@@ -1,0 +1,21 @@
+name: mae
+requires_vit: true
+
+transforms:
+  type: single
+
+mask_ratio: 0.75
+
+decoder:
+  embed_dim: 512
+  depth: 8
+  num_heads: 16
+
+optimizer:
+  type: AdamW
+  lr: 1.5e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.95]
+
+scheduler:
+  type: LinearWarmupCosineAnnealing
