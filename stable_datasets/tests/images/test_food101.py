@@ -1,7 +1,11 @@
 import numpy as np
+import pytest
 from PIL import Image
 
 from stable_datasets.images.food101 import Food101
+
+
+pytestmark = pytest.mark.large
 
 
 def test_food101_dataset():
