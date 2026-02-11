@@ -35,7 +35,6 @@ from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
 
-# from .food101 import Food101
 # from .imagenette import Imagenette
 # from .mnist import MNIST
 # from .places365_small import Places365Small

@@ -59,6 +59,7 @@ Available Datasets
    e_mnist
    fgvc_aircraft
    flowers102
+   food101
    cub200
    country211
    galaxy10
