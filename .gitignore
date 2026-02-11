@@ -1,3 +1,6 @@
+# OS generated files
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 core.*
 *.pdf
@@ -208,3 +211,4 @@ logs/
 .vscode/
 *.sh
 *.lock
+.DS_Store
