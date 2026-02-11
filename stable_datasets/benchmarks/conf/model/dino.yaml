@@ -1,0 +1,28 @@
+name: dino
+requires_vit: true
+
+transforms:
+  type: multicrop
+  num_global: 2
+  num_local: 6
+
+projector:
+  hidden_dim: 2048
+  bottleneck_dim: 256
+  output_dim: 65536
+
+loss:
+  temperature_student: 0.1
+  temperature_teacher: 0.04
+  warmup_temperature_teacher: 0.04
+  warmup_epochs_temperature_teacher: 30
+
+momentum_teacher: 0.996
+
+optimizer:
+  type: AdamW
+  lr: 5e-4
+  weight_decay: 0.04
+
+scheduler:
+  type: LinearWarmupCosineAnnealing

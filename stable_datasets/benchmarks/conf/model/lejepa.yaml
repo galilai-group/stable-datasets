@@ -1,0 +1,25 @@
+name: lejepa
+forward: lejepa_forward
+requires_vit: false
+
+transforms:
+  type: multiview
+  num_views: 4
+
+projector:
+  hidden_dim: 2048
+  output_dim: 128
+
+loss:
+  lamb: 0.02
+  t_max: 3.0
+  n_points: 17
+  num_slices: 256
+
+optimizer:
+  type: LARS
+  lr: 5.0
+  weight_decay: 1e-6
+
+scheduler:
+  type: LinearWarmupCosineAnnealing

@@ -1,156 +1,107 @@
-"""SSL Baselines for stable-datasets.
+"""SSL Benchmarks for stable-datasets.
+
+Hydra-driven entry point that runs any combination of
+{model, backbone, dataset} for self-supervised learning evaluation.
+
+Incompatible combos (e.g. MAE + ResNet) are skipped with a warning.
 
 Usage:
-    python -m stable_datasets.benchmarks.main --datasets cifar10 --models simclr
-    python -m stable_datasets.benchmarks.main --datasets all --models all
+    # Single run
+    python -m stable_datasets.benchmarks.main dataset=cifar10 model=simclr backbone=resnet18
+
+    # Sweep all models x backbones on one dataset (local)
+    python -m stable_datasets.benchmarks.main --multirun \\
+        dataset=cifar10 model=simclr,dino,mae,lejepa backbone=resnet18,vit_tiny
+
+    # Sweep across multiple datasets
+    python -m stable_datasets.benchmarks.main --multirun \\
+        dataset=cifar10,stl10,flowers102 model=simclr,dino backbone=resnet18,vit_tiny
+
+    # Sweep (SLURM) — each combo becomes a separate job
+    python -m stable_datasets.benchmarks.main --multirun --config-name slurm \\
+        dataset=cifar10,stl10 model=simclr,dino,mae,lejepa backbone=resnet18,vit_tiny
+
+    # Override hyperparameters for a specific run
+    python -m stable_datasets.benchmarks.main dataset=cifar10 model=simclr backbone=resnet50 \\
+        model.optimizer.lr=0.3 training.max_epochs=200
+
+    # LR sweep (useful for tuning)
+    python -m stable_datasets.benchmarks.main --multirun \\
+        dataset=cifar10 model=simclr backbone=resnet18 \\
+        model.optimizer.lr=0.1,1.0,5.0,10.0
 """
 
 from __future__ import annotations
 
-import logging, argparse, sys
-from pathlib import Path
-from unittest.mock import patch
+import logging
 
-import stable_datasets as sds
+import hydra
+import lightning as pl
+import stable_pretraining as spt
+from lightning.pytorch.loggers import WandbLogger
+from omegaconf import DictConfig
 
+from stable_datasets.benchmarks.dataset import create_dataset
+from stable_datasets.benchmarks.modules import build_module, create_eval_callbacks
 
-def _mock_downloads_on_macos():
-    """Mock download functions on MacOS to skip actual downloads."""
-    if sys.platform != "darwin":
-        return None
-
-    logging.info("MacOS detected: mocking download functions")
-
-    def mock_download(url, dest_folder=None, **kwargs) -> Path:
-        """Mock download that returns a fake path."""
-        from urllib.parse import urlparse
-        import os
-        filename = os.path.basename(urlparse(url).path)
-        if dest_folder is None:
-            dest_folder = Path.home() / ".stable_datasets" / "downloads"
-        return Path(dest_folder) / filename
-
-    def mock_bulk_download(urls, dest_folder, **kwargs) -> list[Path]:
-        """Mock bulk download that returns fake paths."""
-        return [mock_download(url, dest_folder) for url in urls]
-
-    # Patch the download functions in stable_datasets.utils
-    patches = [
-        patch("stable_datasets.utils.download", mock_download),
-        patch("stable_datasets.utils.bulk_download", mock_bulk_download),
-    ]
-    for p in patches:
-        p.start()
-
-    return patches
-
-from stable_datasets.benchmarks.dataset_factory       import create_dataset
-from stable_datasets.benchmarks.experiment_factory    import AVAILABLE_MODELS, create_experiment
+log = logging.getLogger(__name__)
 
 
-def _get_all_dataset_classes() -> list[type]:
-    """Return all dataset builder classes from stable_datasets.images."""
-    # Datasets to skip
-    SKIP_DATASETS = {
-        'cars196',      # Takes too long to download
-        'cifar10c',     # Takes too long
-        'cifar100c',    # Takes too long
-        'clevrer',      # Video dataset - not yet supported
-    }
-    return [
-        cls for cls in vars(sds.images).values()
-        if (
-            isinstance(cls, type) 
-            and issubclass(cls, sds.BaseDatasetBuilder) 
-            and cls.__name__.lower() not in SKIP_DATASETS
+@hydra.main(version_base=None, config_path="conf", config_name="config")
+def main(cfg: DictConfig) -> None:
+    # Validate backbone x model compatibility
+    if cfg.model.requires_vit and cfg.backbone.type != "vit":
+        log.warning(
+            f"Skipping {cfg.model.name} + {cfg.backbone.name}: "
+            f"{cfg.model.name} requires a ViT backbone."
         )
-    ]
+        return
 
-
-DATASET_CLASSES = _get_all_dataset_classes()
-MODELS = list(AVAILABLE_MODELS)
-
-
-def parse_args() -> argparse.Namespace:
-    """Parse command line arguments."""
-    all_dataset_names = [cls.__name__.lower() for cls in DATASET_CLASSES]
-    dataset_choices = all_dataset_names + ["all"]
-    model_choices = MODELS + ["all"]
-
-    parser = argparse.ArgumentParser(description="Run SSL baselines on stable-datasets")
-    parser.add_argument(
-        "--datasets",
-        nargs="+",
-        default=["all"],
-        choices=dataset_choices,
-        help="Datasets to run experiments on",
+    log.info(
+        f"Running {cfg.model.name} | backbone={cfg.backbone.name} | dataset={cfg.dataset}"
     )
-    parser.add_argument(
-        "--models",
-        nargs="+",
-        default=["all"],
-        choices=model_choices,
-        help="SSL models to train",
+
+    # Load dataset with config-driven transforms
+    data, ds_config = create_dataset(cfg.dataset, cfg.model.transforms, cfg.training)
+
+    # Build module from registry
+    module, embed_dim = build_module(cfg, ds_config)
+
+    # Evaluation callbacks
+    callbacks = create_eval_callbacks(module, ds_config, embed_dim)
+
+    # Logger
+    logger = None
+    if cfg.wandb.enabled:
+        logger = WandbLogger(
+            entity=cfg.wandb.entity,
+            project=cfg.wandb.project,
+            name=f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}",
+            log_model=False,
+            config={
+                "model": cfg.model.name,
+                "backbone": cfg.backbone.name,
+                "dataset": cfg.dataset,
+            },
+        )
+
+    # Trainer
+    has_val = data.val is not None
+    trainer = pl.Trainer(
+        max_epochs=cfg.training.max_epochs,
+        precision=cfg.training.precision,
+        callbacks=callbacks,
+        logger=logger,
+        num_sanity_val_steps=0,
+        limit_val_batches=1.0 if has_val else 0,
+        enable_checkpointing=False,
+        accelerator="auto",
     )
-    return parser.parse_args()
 
-
-def main() -> None:
-    """Run SSL baseline experiments."""
-    logging.basicConfig(level=logging.INFO)
-    _mock_downloads_on_macos()
-    args = parse_args()
-
-    all_dataset_names = [cls.__name__.lower() for cls in DATASET_CLASSES]
-
-    dataset_names = args.datasets
-    if 'all' in dataset_names:
-        dataset_names = all_dataset_names
-
-    model_names = args.models
-    if 'all' in model_names:
-        model_names = MODELS
-
-    # Print experiment summary
-    total_experiments = len(dataset_names) * len(model_names)
-    logging.info(f"\n{'='*60}")
-    logging.info(f"SSL Baseline Experiments")
-    logging.info(f"{'='*60}")
-    logging.info(f"Models ({len(model_names)}): {', '.join(model_names)}")
-    logging.info(f"Datasets ({len(dataset_names)}): {', '.join(dataset_names)}")
-    logging.info(f"Total experiments: {total_experiments}")
-    logging.info(f"{'='*60}\n")
-
-    # Run experiments one at a time to avoid callback queue reuse issues
-    for dataset_name in dataset_names:
-        for model_name in model_names:
-            # Clear OnlineQueue class-level caches to prevent dimension mismatches
-            # between experiments with different embedding dimensions
-            from stable_pretraining.callbacks.queue import OnlineQueue
-            OnlineQueue._shared_queues.clear()
-            OnlineQueue._queue_info.clear()
-            
-            # Load dataset with model-specific transforms
-            if dataset_name == 'emnist':
-                data, config = create_dataset(dataset_name, model_name=model_name, config_name="balanced")
-            elif dataset_name == 'medmnist':
-                data, config = create_dataset(dataset_name, model_name=model_name, config_name="pneumoniamnist")
-            else:
-                data, config = create_dataset(dataset_name, model_name=model_name)
-            
-            # Create experiment fresh (new callbacks with empty queues)
-            experiment, experiment_info = create_experiment(
-                model_name=model_name, 
-                data_module=data, 
-                config=config, 
-                max_epochs=2
-            )
-            
-            logging.info(f'Running {model_name} on "{config.name}" {experiment_info}')
-            experiment()
+    # Run
+    manager = spt.Manager(trainer=trainer, module=module, data=data)
+    manager()
 
 
 if __name__ == "__main__":
-    import sys
-    sys.argv[1:] = ["--datasets", "all", "--models", "all"]
     main()

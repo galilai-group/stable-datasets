@@ -1,0 +1,22 @@
+name: barlow_twins
+forward: barlow_twins_forward
+requires_vit: false
+
+transforms:
+  type: multiview
+  num_views: 2
+
+projector:
+  hidden_dim: 8192
+  output_dim: 8192
+
+loss:
+  lambda_coeff: 0.0051
+
+optimizer:
+  type: LARS
+  lr: 5.0
+  weight_decay: 1e-6
+
+scheduler:
+  type: LinearWarmupCosineAnnealing
