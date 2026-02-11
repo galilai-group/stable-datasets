@@ -1,23 +1,56 @@
+import csv
+import io
 import os
-import tempfile
+import tarfile
 
 import datasets
-import pandas as pd
 from PIL import Image
 
+from stable_datasets.utils import BaseDatasetBuilder
 
-class HASYv2(datasets.GeneratorBasedBuilder):
-    """
-    The HASYv2 dataset contains handwritten symbol images of 369 classes.
-    Each image is 32x32 pixels in size.
+
+class HASYv2(BaseDatasetBuilder):
+    """HASYv2 Dataset
+
+    Abstract
+    The HASYv2 dataset contains handwritten symbol images of 369 classes. It includes over 168,000 samples categorized into various classes like Latin characters, numerals, and symbols. Each image is 32x32 pixels in size. The dataset was created to benchmark the classification of mathematical symbols and handwritten characters.
+
+    Context
+    Recognizing handwritten mathematical symbols is a challenging task due to the similarity between classes (e.g., '1', 'l', '|') and the large number of unique symbols used in scientific notation. HASYv2 serves as a standard benchmark for testing classifiers on a large number of classes (369) with low resolution (32x32).
+
+    Content
+    The dataset consists of:
+    - **Images:** 168,236 black-and-white images (32x32 pixels).
+    - **Labels:** 369 distinct classes.
+    - **Splits:** The dataset includes 10 pre-defined folds. This implementation uses 'Fold 1' as the standard train/test split.
     """
 
     VERSION = datasets.Version("1.0.0")
+    BUILDER_CONFIGS = [
+        datasets.BuilderConfig(
+            name=f"fold-{i}",
+            version=datasets.Version("1.0.0"),
+            description=f"HASYv2 dataset using fold {i} as the test set.",
+        )
+        for i in range(1, 11)
+    ]
+
+    DEFAULT_CONFIG_NAME = "fold-1"
+
+    _HASYV2_URL = "https://zenodo.org/record/259444/files/HASYv2.tar.bz2?download=1"
+    SOURCE = {
+        "homepage": "https://github.com/MartinThoma/HASY",
+        "citation": """@article{thoma2017hasyv2,
+                         title={The hasyv2 dataset},
+                         author={Thoma, Martin},
+                         journal={arXiv preprint arXiv:1701.08380},
+                         year={2017}}""",
+        "assets": {"train": _HASYV2_URL, "test": _HASYV2_URL},
+    }
 
     def _info(self):
         return datasets.DatasetInfo(
-            description="""The HASYv2 dataset contains 32x32 black-and-white images of 369 handwritten symbol classes.
-                           It includes over 168,236 samples categorized into various classes like Latin characters, numerals, and symbols.""",
+            description=f"HASYv2 dataset (Config: {self.config.name})",
             features=datasets.Features(
                 {
                     "image": datasets.Image(),
@@ -25,55 +58,59 @@ class HASYv2(datasets.GeneratorBasedBuilder):
                 }
             ),
             supervised_keys=("image", "label"),
-            homepage="https://github.com/MartinThoma/HASY",
-            citation="""@article{thoma2017hasyv2,
-                         title={The hasyv2 dataset},
-                         author={Thoma, Martin},
-                         journal={arXiv preprint arXiv:1701.08380},
-                         year={2017}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        url = "https://zenodo.org/record/259444/files/HASYv2.tar.bz2?download=1"
-        archive_path = dl_manager.download_and_extract(url)
+    def _generate_examples(self, data_path, split):
+        fold_name = self.config.name
+        csv_internal_path = f"classification-task/{fold_name}/{split}.csv"
 
-        fold_1_dir = os.path.join(archive_path, "classification-task/fold-1")
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"csv_path": os.path.join(fold_1_dir, "train.csv"), "base_dir": archive_path},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"csv_path": os.path.join(fold_1_dir, "test.csv"), "base_dir": archive_path},
-            ),
-        ]
+        image_label_map = {}
 
-    def _generate_examples(self, csv_path, base_dir):
-        # Read the CSV file
-        df = pd.read_csv(csv_path)
+        with tarfile.open(data_path, "r:bz2") as tar:
+            csv_member = None
+            for member in tar.getmembers():
+                if member.name.endswith(csv_internal_path):
+                    csv_member = member
+                    break
 
-        for idx, row in df.iterrows():
-            # Resolve the full path to the image
-            image_path = os.path.join(base_dir, row["path"].lstrip("../../"))
+            if csv_member:
+                f = tar.extractfile(csv_member)
+                content = f.read().decode("utf-8").splitlines()
+                reader = csv.DictReader(content)
+                for row in reader:
+                    filename = os.path.basename(row["path"])
+                    symbol_id = str(row["symbol_id"])
+                    image_label_map[filename] = symbol_id
 
-            # Open the image and convert to grayscale
-            with Image.open(image_path).convert("L") as image:
-                # Save the processed image to a temporary file
-                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as temp_file:
-                    image.save(temp_file.name, format="PNG")
-                    temp_image_path = temp_file.name
+            if not image_label_map:
+                return
 
-            yield (
-                idx,
-                {
-                    "image": temp_image_path,  # Provide the path to the temporary file
-                    "label": str(row["symbol_id"]),  # Pass the label as a string
-                },
-            )
+            for member in tar.getmembers():
+                if not member.isfile():
+                    continue
+
+                member_filename = os.path.basename(member.name)
+
+                if member_filename in image_label_map:
+                    f = tar.extractfile(member)
+                    if f:
+                        image_bytes = f.read()
+                        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+                        label = image_label_map[member_filename]
+
+                        yield (
+                            member.name,
+                            {
+                                "image": image,
+                                "label": label,
+                            },
+                        )
 
     @staticmethod
     def _labels():
+        """Returns the list of 369 symbol IDs as strings."""
         return [
             "31",
             "32",

@@ -1,0 +1,42 @@
+All Tiny ImageNet dataset tests passed successfully!
+--2025-12-28 22:57:13--  https://zenodo.org/records/2536630/files/Tiny-ImageNet-C.tar?download=1
+Resolving zenodo.org (zenodo.org)... 188.185.43.153, 137.138.52.235, 188.185.48.75, ...
+Connecting to zenodo.org (zenodo.org)|188.185.43.153|:443... connected.
+HTTP request sent, awaiting response... 416 REQUESTED_RANGE_NOT_SATISFIABLE
+
+    The file is already fully retrieved; nothing to do.
+
+Generating test split: 0 examples [00:00, ? examples/s]tar: This does not look like a tar archive
+tar: Skipping to next header
+tar: Exiting with failure status due to previous errors
+Generating test split: 0 examples [3:40:38, ? examples/s]Generating test split: 0 examples [3:40:38, ? examples/s]
+[tiny_imagenet_c] Extracting dataset... (this may take a while)
+Traceback (most recent call last):
+  File "/cs/home/hnam16/codes/stable-datasets/.venv/lib/python3.10/site-packages/datasets/builder.py", line 1556, in _prepare_split_single
+    for key, record in generator:
+  File "/cs/home/hnam16/codes/stable-datasets/stable_datasets/images/tiny_imagenet_c.py", line 88, in _generate_examples
+    subprocess.run(cmd,shell=True,check=True)
+  File "/home/hnam16/miniconda3/envs/stable-dataset/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'pv /cs/data/people/hnam16/stable_datasets/downloads/Tiny-ImageNet-C.tar | tar -x -C /cs/data/people/hnam16/stable_datasets/downloads/Tiny-ImageNet-C --skip-old-files' returned non-zero exit status 2.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/cs/home/hnam16/codes/stable-datasets/stable_datasets/tests/images/test_tiny_imagenet_c.py", line 59, in <module>
+    test_tiny_imagenet_c_dataset()
+  File "/cs/home/hnam16/codes/stable-datasets/stable_datasets/tests/images/test_tiny_imagenet_c.py", line 10, in test_tiny_imagenet_c_dataset
+    tiny_c_test = TinyImagenetC(split="test")
+  File "/cs/home/hnam16/codes/stable-datasets/stable_datasets/utils.py", line 229, in __new__
+    instance.download_and_prepare(
+  File "/cs/home/hnam16/codes/stable-datasets/.venv/lib/python3.10/site-packages/datasets/builder.py", line 884, in download_and_prepare
+    self._download_and_prepare(
+  File "/cs/home/hnam16/codes/stable-datasets/.venv/lib/python3.10/site-packages/datasets/builder.py", line 1614, in _download_and_prepare
+    super()._download_and_prepare(
+  File "/cs/home/hnam16/codes/stable-datasets/.venv/lib/python3.10/site-packages/datasets/builder.py", line 947, in _download_and_prepare
+    self._prepare_split(split_generator, **prepare_split_kwargs)
+  File "/cs/home/hnam16/codes/stable-datasets/.venv/lib/python3.10/site-packages/datasets/builder.py", line 1418, in _prepare_split
+    for job_id, done, content in self._prepare_split_single(
+  File "/cs/home/hnam16/codes/stable-datasets/.venv/lib/python3.10/site-packages/datasets/builder.py", line 1597, in _prepare_split_single
+    raise DatasetGenerationError("An error occurred while generating the dataset") from e
+datasets.exceptions.DatasetGenerationError: An error occurred while generating the dataset
