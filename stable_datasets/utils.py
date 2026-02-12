@@ -28,15 +28,22 @@ from tqdm import tqdm
 
 DEFAULT_CACHE_DIR = "~/.stable_datasets/"
 
+CACHE_DIR_ENV_VAR = "STABLE_DATASETS_CACHE_DIR"
+
+
+def _get_cache_dir() -> str:
+    """Return the base cache directory, respecting the environment variable."""
+    return os.environ.get(CACHE_DIR_ENV_VAR, DEFAULT_CACHE_DIR)
+
 
 def _default_dest_folder() -> Path:
     """Default folder where files are saved."""
-    return Path(os.path.expanduser(DEFAULT_CACHE_DIR)) / "downloads"
+    return Path(os.path.expanduser(_get_cache_dir())) / "downloads"
 
 
 def _default_processed_cache_dir() -> Path:
     """Default folder where processed datasets (Arrow files) are cached."""
-    return Path(os.path.expanduser(DEFAULT_CACHE_DIR)) / "processed"
+    return Path(os.path.expanduser(_get_cache_dir())) / "processed"
 
 
 class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
