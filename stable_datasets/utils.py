@@ -27,15 +27,22 @@ from tqdm import tqdm
 
 DEFAULT_CACHE_DIR = "~/.stable_datasets/"
 
+CACHE_DIR_ENV_VAR = "STABLE_DATASETS_CACHE_DIR"
+
+
+def _get_cache_dir() -> str:
+    """Return the base cache directory, respecting the environment variable."""
+    return os.environ.get(CACHE_DIR_ENV_VAR, DEFAULT_CACHE_DIR)
+
 
 def _default_dest_folder() -> Path:
     """Default folder where files are saved."""
-    return Path(os.path.expanduser(DEFAULT_CACHE_DIR)) / "downloads"
+    return Path(os.path.expanduser(_get_cache_dir())) / "downloads"
 
 
 def _default_processed_cache_dir() -> Path:
     """Default folder where processed datasets (Arrow files) are cached."""
-    return Path(os.path.expanduser(DEFAULT_CACHE_DIR)) / "processed"
+    return Path(os.path.expanduser(_get_cache_dir())) / "processed"
 
 
 class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
@@ -373,12 +380,16 @@ def download(
         # prevent concurrent downloads of the same file
         with FileLock(lock_filename):
             session = CachedSession(cache_dir, backend=backend)
-            session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"})
+            session.headers.update(
+                {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+                }
+            )
             logging.info(f"Downloading: {url}")
 
             response = session.get(url, stream=True, allow_redirects=True)
             response.raise_for_status()
-            
+
             total_size = int(response.headers.get("content-length", 0) or 0)
             logging.info(f"Total size: {total_size} bytes")
 
