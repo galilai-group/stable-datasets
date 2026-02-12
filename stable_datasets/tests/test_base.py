@@ -323,9 +323,7 @@ def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
     assert seen["urls"] == ["https://example.com/file.bin"]
 
 
-# ---------------------------------------------------------------------------
 # STABLE_DATASETS_CACHE_DIR env variable tests
-# ---------------------------------------------------------------------------
 
 
 def test_get_cache_dir_returns_default_when_env_unset(monkeypatch):
