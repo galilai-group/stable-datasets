@@ -210,7 +210,7 @@ def _lejepa_forward(self, batch, stage):
 
             self.log(f"{stage}/sigreg", sigreg_loss, on_step=True, on_epoch=True, sync_dist=True)
             self.log(f"{stage}/inv", inv_loss, on_step=True, on_epoch=True, sync_dist=True)
-            self.log(f"{stage}/lejepa", lejepa_loss, on_step=True, on_epoch=True, sync_dist=True)
+            self.log(f"{stage}/loss", lejepa_loss, on_step=True, on_epoch=True, sync_dist=True)
     else:
         out["embedding"] = self.backbone(batch["image"])
         if "label" in batch:
