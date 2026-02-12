@@ -165,10 +165,10 @@ def main():
     parser = argparse.ArgumentParser(
         description="Collect benchmark results from W&B"
     )
-    parser.add_argument("--entity", required=True, help="W&B entity")
-    parser.add_argument("--project", required=True, help="W&B project")
-    parser.add_argument("--output", default=None, help="Output CSV path")
-    parser.add_argument("--latex", default=None, help="Output LaTeX table path (.tex)")
+    parser.add_argument("--entity", default="stable-ssl", help="W&B entity")
+    parser.add_argument("--project", default="stable-datasets-benchmarks", help="W&B project")
+    parser.add_argument("--output", default='ssl_baselines_results.csv', help="Output CSV path")
+    parser.add_argument("--latex", default='ssl_baselines_results_table.tex', help="Output LaTeX table path (.tex)")
     parser.add_argument(
         "--metric",
         default=None,

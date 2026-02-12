@@ -17,17 +17,17 @@ loss:
   num_slices: 256
 
 batch_sizes:
-  default: 128
-  cifar10: 256
-  cifar100: 256
-  svhn: 256
-  stl10: 128
-  flowers102: 128
-  food101: 128
-  dtd: 128
-  cub200: 128
-  tinyimagenet: 128
-  imagenet: 128
+  default: 1024
+  cifar10: 2048
+  cifar100: 2048
+  svhn: 2048
+  stl10: 1024
+  flowers102: 1024
+  food101: 1024
+  dtd: 1024
+  cub200: 512
+  tinyimagenet: 1024
+  imagenet: 1024
 
 optimizer:
   type: LARS

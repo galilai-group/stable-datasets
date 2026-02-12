@@ -12,17 +12,17 @@ decoder:
   num_heads: 16
 
 batch_sizes:
-  default: 256
-  cifar10: 512
-  cifar100: 512
-  svhn: 512
-  stl10: 256
-  flowers102: 256
-  food101: 256
-  dtd: 256
-  cub200: 256
-  tinyimagenet: 256
-  imagenet: 256
+  default: 1024
+  cifar10: 2048
+  cifar100: 2048
+  svhn: 2048
+  stl10: 1024
+  flowers102: 1024
+  food101: 1024
+  dtd: 1024
+  cub200: 512
+  tinyimagenet: 1024
+  imagenet: 1024
 
 optimizer:
   type: AdamW
