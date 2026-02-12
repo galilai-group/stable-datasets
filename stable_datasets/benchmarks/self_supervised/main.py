@@ -141,7 +141,9 @@ def main(cfg: DictConfig) -> None:
     )
 
     # Load dataset with config-driven transforms
-    data, ds_config = create_dataset(cfg.dataset, cfg.model.transforms, cfg.training)
+    data, ds_config = create_dataset(
+        cfg.dataset, cfg.model.transforms, cfg.training, data_dir=cfg.get("data_dir"),
+    )
 
     # Build module from registry
     module, embed_dim = build_module(cfg, ds_config)
