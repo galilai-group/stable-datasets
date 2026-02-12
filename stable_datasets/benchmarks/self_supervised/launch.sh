@@ -25,7 +25,7 @@ echo "Models:    $MODELS"
 echo "Backbones: $BACKBONES"
 echo "=========================="
 
-python -m stable_datasets.benchmarks.main \
+python -m stable_datasets.benchmarks.self_supervised.main \
     --multirun \
     --config-name slurm \
     "dataset=$DATASETS" \

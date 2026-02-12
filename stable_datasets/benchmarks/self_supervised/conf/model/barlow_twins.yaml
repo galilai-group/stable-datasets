@@ -13,6 +13,19 @@ projector:
 loss:
   lambda_coeff: 0.0051
 
+batch_sizes:
+  default: 256
+  cifar10: 512
+  cifar100: 512
+  svhn: 512
+  stl10: 256
+  flowers102: 256
+  food101: 128
+  dtd: 256
+  cub200: 128
+  tinyimagenet: 128
+  imagenet: 128
+
 optimizer:
   type: LARS
   lr: 5.0

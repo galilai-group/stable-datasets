@@ -19,6 +19,19 @@ loss:
 
 momentum_teacher: 0.996
 
+batch_sizes:
+  default: 64
+  cifar10: 128
+  cifar100: 128
+  svhn: 128
+  stl10: 64
+  flowers102: 64
+  food101: 64
+  dtd: 64
+  cub200: 64
+  tinyimagenet: 64
+  imagenet: 64
+
 optimizer:
   type: AdamW
   lr: 5e-4

@@ -1,5 +1,3 @@
-from . import dataset
-from . import modules
-from . import main
+from . import self_supervised
 
-__all__ = ["dataset", "modules", "main"]
+__all__ = ["self_supervised"]
