@@ -49,6 +49,7 @@ benchmarks = [
     "hydra-joblib-launcher>=1.2",
     "omegaconf>=2.3",
     "tabulate",
+    "torchcodec"
 ]
 
 # Development tools
