@@ -62,21 +62,47 @@ from stable_datasets.benchmarks.self_supervised.modules import build_module, cre
 
 log = logging.getLogger(__name__)
 
-SKIP_DATASETS = {"cars196", "cifar10c", "cifar100c", "clevrer"}
+# Datasets to always skip:
+#   - cars196: download issues
+#   - cifar10c/cifar100c: corruption benchmarks, not standard SSL datasets
+#   - clevrer: video dataset, no label field
+#   - dsprites*: multi-factor labels (Sequence), no ClassLabel/num_classes
+#   - cars3d, shapes3d, smallnorb: same multi-factor label issue
+#   - facepointing, celeba: no label field
+SKIP_DATASETS = {
+    "cars196", "cifar10c", "cifar100c", "clevrer",
+    "dsprites", "dspritescolor", "dspritesnoise", "dspritesscream",
+    "cars3d", "shapes3d", "smallnorb",
+    "facepointing", "celeba",
+}
 
 
-def _get_all_dataset_names() -> list[str]:
+def _parse_skip_datasets_from_argv() -> set[str]:
+    """Extract skip_datasets from sys.argv before Hydra parses it."""
+    import sys
+
+    for arg in sys.argv:
+        if arg.startswith("skip_datasets="):
+            val = arg.split("=", 1)[1]
+            # Handle both skip_datasets=[a,b] and skip_datasets=a,b
+            val = val.strip("[]")
+            if val:
+                return {s.strip().lower() for s in val.split(",")}
+    return set()
+
+
+def _get_all_dataset_names(extra_skip: set[str] = None) -> list[str]:
     """Discover all available dataset names from stable_datasets.images."""
+    skip = SKIP_DATASETS | (extra_skip or set())
     return sorted(
         name.lower()
         for name, cls in vars(sds.images).items()
         if (
             isinstance(cls, type)
             and issubclass(cls, sds.BaseDatasetBuilder)
-            and name.lower() not in SKIP_DATASETS
+            and name.lower() not in skip
         )
     )
-
 
 
 def _expand_dataset_all_in_argv():
@@ -85,7 +111,8 @@ def _expand_dataset_all_in_argv():
 
     for i, arg in enumerate(sys.argv):
         if arg.startswith("dataset=") and arg.split("=", 1)[1].lower() == "all":
-            all_names = ",".join(_get_all_dataset_names())
+            extra_skip = _parse_skip_datasets_from_argv()
+            all_names = ",".join(_get_all_dataset_names(extra_skip))
             sys.argv[i] = f"dataset={all_names}"
             if "--multirun" not in sys.argv and "-m" not in sys.argv:
                 sys.argv.append("--multirun")
@@ -115,6 +142,12 @@ def main(cfg: DictConfig) -> None:
     # Pin each multirun job to a different GPU
     if cfg.get("distribute_gpus", False):
         _assign_gpu()
+
+    # Skip datasets in the skip list
+    skip_list = {s.lower() for s in cfg.get("skip_datasets", [])}
+    if cfg.dataset.lower() in skip_list:
+        log.warning(f"Skipping dataset '{cfg.dataset}' (in skip_datasets list)")
+        return
 
     # Validate backbone x model compatibility
     if cfg.model.requires_vit and cfg.backbone.type != "vit":
