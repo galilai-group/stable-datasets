@@ -1,8 +1,17 @@
-import urllib.request
 import zipfile
 from pathlib import Path
 
 import datasets
+
+
+try:
+    import gdown
+except ImportError:
+    import subprocess
+
+    subprocess.check_call(["pip", "install", "gdown"])
+    import gdown
+
 
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder
 
@@ -26,7 +35,7 @@ class RESISC45(BaseDatasetBuilder):
     SOURCE = {
         "homepage": "http://www.escience.cn/people/JunweiHan/NWPU-RESISC45.html",
         "assets": {
-            "train": "https://figshare.com/ndownloader/files/34054286",
+            "train": "https://drive.google.com/uc?export=download&id=1eOMQ7zF19KRvjxZqVESMYzAd9X6gZfar",
         },
         "citation": """@article{cheng2017remote,
                          title={Remote sensing image scene classification: Benchmark and state of the art},
@@ -111,15 +120,19 @@ class RESISC45(BaseDatasetBuilder):
         download_dir.mkdir(parents=True, exist_ok=True)
 
         # Download the dataset ZIP file from Figshare
-        zip_url = "https://figshare.com/ndownloader/files/34054286"
         zip_path = download_dir / "NWPU-RESISC45.zip"
+        zip_path_str = str(zip_path)
 
         if not zip_path.exists():
             print("Downloading RESISC45 dataset from Figshare...")
-            urllib.request.urlretrieve(zip_url, zip_path)
+            gdown.download(
+                "https://drive.google.com/uc?export=download&id=1eOMQ7zF19KRvjxZqVESMYzAd9X6gZfar",
+                zip_path_str,
+                quiet=False,
+            )
 
         # Extract ZIP file if not already extracted
-        extracted_path = download_dir / "NWPU"
+        extracted_path = download_dir / "NWPU-RESISC45" / "NWPU-RESISC45"
         if not extracted_path.exists():
             print("Extracting ZIP archive...")
             with zipfile.ZipFile(zip_path, "r") as zip_ref:
@@ -128,13 +141,11 @@ class RESISC45(BaseDatasetBuilder):
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
-                gen_kwargs={
-                    "data_path": str(extracted_path),
-                },
+                gen_kwargs={"data_path": str(extracted_path), "split": "train"},
             ),
         ]
 
-    def _generate_examples(self, data_path):
+    def _generate_examples(self, data_path, split):
         """Generate examples from all images in the dataset."""
         data_path = Path(data_path)
 
