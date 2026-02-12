@@ -433,6 +433,15 @@ def create_dataset(
     log.info(f"Loading validation split for '{name_lower}'...")
     val_hf = _load_validation_split(dataset_cls, **extra_kwargs)
 
+    if val_hf is None:
+        log.warning(
+            f"No test/validation split for '{name_lower}'; "
+            f"holding out 10%% of train as validation."
+        )
+        splits = train_hf.train_test_split(test_size=0.1, seed=42)
+        train_hf = splits["train"]
+        val_hf = splits["test"]
+
     ds_config = extract_config(name_lower, train_hf)
     train_transform, val_transform = create_transforms(ds_config, transform_cfg)
 
