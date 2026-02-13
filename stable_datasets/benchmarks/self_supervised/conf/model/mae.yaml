@@ -11,20 +11,42 @@ decoder:
   depth: 8
   num_heads: 16
 
-batch_sizes:
-  default: 1024
-  cifar10: 2048
-  cifar100: 2048
-  svhn: 2048
-  stl10: 1024
-  flowers102: 1024
-  food101: 1024
-  dtd: 1024
-  cub200: 512
-  tinyimagenet: 1024
-  imagenet: 1024
+params:
+  default:
+    batch_size: 1024
+    max_epochs: 800
+  cifar10:
+    batch_size: 2048
+    max_epochs: 800
+  cifar100:
+    batch_size: 2048
+    max_epochs: 800
+  svhn:
+    batch_size: 2048
+    max_epochs: 400
+  stl10:
+    batch_size: 1024
+    max_epochs: 800
+  flowers102:
+    batch_size: 1024
+    max_epochs: 400
+  food101:
+    batch_size: 1024
+    max_epochs: 400
+  dtd:
+    batch_size: 1024
+    max_epochs: 400
+  cub200:
+    batch_size: 512
+    max_epochs: 400
+  tinyimagenet:
+    batch_size: 1024
+    max_epochs: 400
+  imagenet:
+    batch_size: 1024
+    max_epochs: 400
 
-optimizer:
+vit_optimizer:
   type: AdamW
   lr: 1.5e-4
   weight_decay: 0.05
