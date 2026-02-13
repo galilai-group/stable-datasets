@@ -51,6 +51,7 @@ import hydra
 import lightning as pl
 import stable_pretraining as spt
 import torch
+import wandb
 from hydra.core.hydra_config import HydraConfig
 from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig, open_dict
@@ -157,20 +158,31 @@ def main(cfg: DictConfig) -> None:
         )
         return
 
-    # Resolve per-model, per-dataset batch size
-    batch_sizes = cfg.model.get("batch_sizes", {})
-    if cfg.dataset in batch_sizes:
-        resolved_bs = batch_sizes[cfg.dataset]
-    elif "default" in batch_sizes:
-        resolved_bs = batch_sizes["default"]
-    else:
-        resolved_bs = cfg.training.batch_size
+    # Resolve per-model, per-dataset params (batch_size, max_epochs, lr)
+    params = cfg.model.get("params", {})
+    ds_params = params.get(cfg.dataset, {})
+    default_params = params.get("default", {})
+
+    def _resolve(key, fallback):
+        """Check dataset-specific params, then default params, then global fallback."""
+        if key in ds_params:
+            return ds_params[key]
+        if key in default_params:
+            return default_params[key]
+        return fallback
+
     with open_dict(cfg):
-        cfg.training.batch_size = resolved_bs
+        cfg.training.batch_size = _resolve("batch_size", cfg.training.batch_size)
+        cfg.training.max_epochs = _resolve("max_epochs", cfg.training.max_epochs)
+        # LR override stored for optim builder
+        lr_override = ds_params.get("lr", default_params.get("lr", None))
+        if lr_override is not None:
+            cfg.model._lr_override = float(lr_override)
 
     log.info(
         f"Running {cfg.model.name} | backbone={cfg.backbone.name} "
-        f"| dataset={cfg.dataset} | batch_size={resolved_bs}"
+        f"| dataset={cfg.dataset} | batch_size={cfg.training.batch_size} "
+        f"| max_epochs={cfg.training.max_epochs}"
     )
 
     # Load dataset with config-driven transforms
@@ -184,13 +196,15 @@ def main(cfg: DictConfig) -> None:
     # Evaluation callbacks
     callbacks = create_eval_callbacks(module, ds_config, embed_dim)
 
-    # Logger
+    # Logger — each multirun job gets its own wandb run
     logger = None
     if cfg.wandb.enabled:
+        run_name = f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}"
         logger = WandbLogger(
             entity=cfg.wandb.entity,
             project=cfg.wandb.project,
-            name=f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}",
+            name=run_name,
+            id=wandb.util.generate_id(),
             log_model=False,
             config={
                 "model": cfg.model.name,
@@ -215,6 +229,10 @@ def main(cfg: DictConfig) -> None:
     # Run
     manager = spt.Manager(trainer=trainer, module=module, data=data)
     manager()
+
+    # Close wandb run so the next multirun job gets a fresh run
+    if cfg.wandb.enabled:
+        wandb.finish()
 
 
 if __name__ == "__main__":

@@ -78,19 +78,35 @@ def create_projector(embed_dim: int, hidden_dim: int, output_dim: int) -> nn.Mod
     )
 
 
-def build_optim_config(model_cfg) -> dict:
-    """Build optimizer config dict from model config."""
+def build_optim_config(model_cfg, backbone_cfg) -> dict:
+    """Build optimizer config dict from model config.
+
+    Selects vit_optimizer when the backbone is a ViT, otherwise uses
+    resnet_optimizer. Falls back to the legacy ``optimizer`` key if the
+    per-backbone keys are not present.
+    """
+    is_vit = getattr(backbone_cfg, "type", "resnet") == "vit"
+    if is_vit and hasattr(model_cfg, "vit_optimizer"):
+        opt_cfg = model_cfg.vit_optimizer
+    elif not is_vit and hasattr(model_cfg, "resnet_optimizer"):
+        opt_cfg = model_cfg.resnet_optimizer
+    else:
+        opt_cfg = model_cfg.optimizer
+
     optim = {
         "optimizer": {
-            "type": model_cfg.optimizer.type,
-            "lr": model_cfg.optimizer.lr,
-            "weight_decay": model_cfg.optimizer.weight_decay,
+            "type": opt_cfg.type,
+            "lr": opt_cfg.lr,
+            "weight_decay": opt_cfg.weight_decay,
         },
         "scheduler": {"type": model_cfg.scheduler.type},
         "interval": "epoch",
     }
-    if hasattr(model_cfg.optimizer, "betas"):
-        optim["optimizer"]["betas"] = tuple(model_cfg.optimizer.betas)
+    if hasattr(opt_cfg, "betas"):
+        optim["optimizer"]["betas"] = tuple(opt_cfg.betas)
+    # Apply per-dataset LR override if present
+    if hasattr(model_cfg, "_lr_override"):
+        optim["optimizer"]["lr"] = model_cfg._lr_override
     return optim
 
 
@@ -235,7 +251,7 @@ def build_simclr(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
         projector=projector,
         forward=forward.simclr_forward,
         simclr_loss=spt.losses.NTXEntLoss(temperature=cfg.model.loss.temperature),
-        optim=build_optim_config(cfg.model),
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim
 
@@ -246,12 +262,16 @@ def build_barlow_twins(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
     projector = create_projector(
         embed_dim, cfg.model.projector.hidden_dim, cfg.model.projector.output_dim
     )
+    barlow_loss = spt.losses.BarlowTwinsLoss(lambd=cfg.model.loss.lambda_coeff)
+    # Replace LazyBatchNorm1d with concrete BatchNorm1d to avoid
+    # UninitializedParameter errors (e.g. numel() calls before first forward)
+    barlow_loss.bn = nn.BatchNorm1d(cfg.model.projector.output_dim)
     module = spt.Module(
         backbone=backbone,
         projector=projector,
         forward=forward.barlow_twins_forward,
-        barlow_loss=spt.losses.BarlowTwinsLoss(lambd=cfg.model.loss.lambda_coeff),
-        optim=build_optim_config(cfg.model),
+        barlow_loss=barlow_loss,
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim
 
@@ -279,7 +299,7 @@ def build_nnclr(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
             "support_set_size": cfg.model.queue_size,
             "projection_dim": proj_out,
         },
-        optim=build_optim_config(cfg.model),
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim
 
@@ -304,7 +324,7 @@ def build_lejepa(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
         sigreg_loss=sigreg_loss,
         lamb=cfg.model.loss.lamb,
         forward=_lejepa_forward,
-        optim=build_optim_config(cfg.model),
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim
 
@@ -348,7 +368,7 @@ def build_dino(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
         warmup_temperature_teacher=cfg.model.loss.warmup_temperature_teacher,
         warmup_epochs_temperature_teacher=cfg.model.loss.warmup_epochs_temperature_teacher,
         forward=forward.dino_forward,
-        optim=build_optim_config(cfg.model),
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim
 
@@ -403,7 +423,7 @@ def build_mae(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
         decoder=decoder,
         forward=_mae_forward,
         patch_size=patch_size,
-        optim=build_optim_config(cfg.model),
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, encoder_embed_dim
 
