@@ -1,0 +1,63 @@
+name: dino
+requires_vit: true
+
+transforms:
+  type: multicrop
+  num_global: 2
+  num_local: 6
+
+projector:
+  hidden_dim: 2048
+  bottleneck_dim: 256
+  output_dim: 65536
+
+loss:
+  temperature_student: 0.1
+  temperature_teacher: 0.04
+  warmup_temperature_teacher: 0.04
+  warmup_epochs_temperature_teacher: 30
+
+momentum_teacher: 0.996
+
+params:
+  default:
+    batch_size: 1024
+    max_epochs: 300
+  cifar10:
+    batch_size: 768
+    max_epochs: 300
+  cifar100:
+    batch_size: 768
+    max_epochs: 300
+  svhn:
+    batch_size: 2048
+    max_epochs: 200
+  stl10:
+    batch_size: 1024
+    max_epochs: 300
+  flowers102:
+    batch_size: 1024
+    max_epochs: 300
+  food101:
+    batch_size: 1024
+    max_epochs: 300
+  dtd:
+    batch_size: 1024
+    max_epochs: 300
+  cub200:
+    batch_size: 512
+    max_epochs: 300
+  tinyimagenet:
+    batch_size: 1024
+    max_epochs: 300
+  imagenet:
+    batch_size: 1024
+    max_epochs: 100
+
+vit_optimizer:
+  type: AdamW
+  lr: 2e-3
+  weight_decay: 0.05
+
+scheduler:
+  type: LinearWarmupCosineAnnealing

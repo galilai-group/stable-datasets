@@ -1,0 +1,56 @@
+name: mae
+requires_vit: true
+
+transforms:
+  type: single
+
+mask_ratio: 0.75
+
+decoder:
+  embed_dim: 512
+  depth: 8
+  num_heads: 16
+
+params:
+  default:
+    batch_size: 1024
+    max_epochs: 800
+  cifar10:
+    batch_size: 2048
+    max_epochs: 800
+  cifar100:
+    batch_size: 2048
+    max_epochs: 800
+  svhn:
+    batch_size: 2048
+    max_epochs: 400
+  stl10:
+    batch_size: 1024
+    max_epochs: 800
+  flowers102:
+    batch_size: 1024
+    max_epochs: 400
+  food101:
+    batch_size: 1024
+    max_epochs: 400
+  dtd:
+    batch_size: 1024
+    max_epochs: 400
+  cub200:
+    batch_size: 512
+    max_epochs: 400
+  tinyimagenet:
+    batch_size: 1024
+    max_epochs: 400
+  imagenet:
+    batch_size: 1024
+    max_epochs: 400
+
+vit_optimizer:
+  type: AdamW
+  lr: 1.5e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.95]
+
+scheduler:
+  type: LinearWarmupCosineAnnealing
