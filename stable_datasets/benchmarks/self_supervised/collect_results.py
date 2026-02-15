@@ -86,7 +86,11 @@ def collect(entity: str, project: str) -> pd.DataFrame:
             row[metric] = valid.loc[best_idx]
             # Get epoch number from the history row where peak occurred
             if "epoch" in history_df.columns:
-                row[f"{metric}_best_epoch"] = int(history_df.loc[best_idx, "epoch"])
+                epoch_value = history_df.loc[best_idx, "epoch"]
+                # Handle case where duplicate indices return a Series
+                if isinstance(epoch_value, pd.Series):
+                    epoch_value = epoch_value.iloc[0]
+                row[f"{metric}_best_epoch"] = int(epoch_value)
             else:
                 row[f"{metric}_best_epoch"] = int(best_idx)
 
