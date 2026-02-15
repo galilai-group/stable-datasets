@@ -4,6 +4,8 @@ defaults:
   - _self_
 
 dataset: cifar10
+skip_datasets: []  # extra datasets to skip at runtime (e.g. [shapes3d, food101])
+data_dir: /mnt/data/sami/.stable-datasets  # override to set download/cache root (e.g. /mnt/data/sami/.stable-datasets)
 
 training:
   max_epochs: 100

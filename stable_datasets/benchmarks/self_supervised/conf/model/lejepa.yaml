@@ -16,23 +16,51 @@ loss:
   n_points: 17
   num_slices: 256
 
-batch_sizes:
-  default: 128
-  cifar10: 256
-  cifar100: 256
-  svhn: 256
-  stl10: 128
-  flowers102: 128
-  food101: 128
-  dtd: 128
-  cub200: 128
-  tinyimagenet: 128
-  imagenet: 128
+params:
+  default:
+    batch_size: 1024
+    max_epochs: 300
+  cifar10:
+    batch_size: 2048
+    max_epochs: 300
+  cifar100:
+    batch_size: 2048
+    max_epochs: 300
+  svhn:
+    batch_size: 2048
+    max_epochs: 300
+  stl10:
+    batch_size: 1024
+    max_epochs: 300
+  flowers102:
+    batch_size: 1024
+    max_epochs: 300
+  food101:
+    batch_size: 1024
+    max_epochs: 300
+  dtd:
+    batch_size: 1024
+    max_epochs: 300
+  cub200:
+    batch_size: 512
+    max_epochs: 300
+  tinyimagenet:
+    batch_size: 1024
+    max_epochs: 300
+  imagenet:
+    batch_size: 1024
+    max_epochs: 100
 
-optimizer:
+resnet_optimizer:
   type: LARS
   lr: 5.0
   weight_decay: 1e-6
+
+vit_optimizer:
+  type: AdamW
+  lr: 3e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
 
 scheduler:
   type: LinearWarmupCosineAnnealing

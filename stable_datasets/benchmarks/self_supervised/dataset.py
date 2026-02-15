@@ -7,9 +7,12 @@ normalization stats), and creates transforms driven by the model's transform con
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 import numpy as np
+
+log = logging.getLogger(__name__)
 import stable_datasets as sds
 import stable_pretraining as spt
 import torch
@@ -403,6 +406,7 @@ def create_dataset(
     name: str,
     transform_cfg,
     training_cfg,
+    data_dir: str | None = None,
 ) -> tuple[spt.data.DataModule, DatasetConfig]:
     """Create a dataset with config-driven transforms.
 
@@ -410,6 +414,8 @@ def create_dataset(
         name: Dataset name (case-insensitive).
         transform_cfg: Model's transform config (type + params).
         training_cfg: Training config with batch_size and num_workers.
+        data_dir: Root directory for downloads and cache. If None, uses the
+            stable_datasets default (~/.stable_datasets/).
 
     Returns:
         Tuple of (DataModule, DatasetConfig).
@@ -423,9 +429,25 @@ def create_dataset(
 
     dataset_cls = dataset_classes[name_lower]
     extra_kwargs = DATASET_KWARGS.get(name_lower, {})
+    if data_dir is not None:
+        from pathlib import Path
+        root = Path(data_dir)
+        extra_kwargs["download_dir"] = str(root / "downloads")
+        extra_kwargs["processed_cache_dir"] = str(root / "processed")
 
+    log.info(f"Loading train split for '{name_lower}'...")
     train_hf = dataset_cls(split="train", **extra_kwargs)
+    log.info(f"Loading validation split for '{name_lower}'...")
     val_hf = _load_validation_split(dataset_cls, **extra_kwargs)
+
+    if val_hf is None:
+        log.warning(
+            f"No test/validation split for '{name_lower}'; "
+            f"holding out 10%% of train as validation."
+        )
+        splits = train_hf.train_test_split(test_size=0.1, seed=42)
+        train_hf = splits["train"]
+        val_hf = splits["test"]
 
     ds_config = extract_config(name_lower, train_hf)
     train_transform, val_transform = create_transforms(ds_config, transform_cfg)
@@ -441,6 +463,7 @@ def create_dataset(
         shuffle=True,
         drop_last=True,
         collate_fn=_collate_views,
+        multiprocessing_context="fork" if num_workers > 0 else None,
     )
 
     val_loader = None
@@ -453,6 +476,7 @@ def create_dataset(
             shuffle=False,
             drop_last=False,
             collate_fn=_collate_views,
+            multiprocessing_context="fork" if num_workers > 0 else None,
         )
 
     data_module = spt.data.DataModule(train=train_loader, val=val_loader)

@@ -85,12 +85,19 @@ def collect(entity: str, project: str) -> pd.DataFrame:
             best_idx = valid.idxmax()
             row[metric] = valid.loc[best_idx]
             # Get epoch number from the history row where peak occurred
+            # .loc can return a Series if the index has duplicates, so
+            # extract a scalar with .iloc[0] when that happens.
             if "epoch" in history_df.columns:
+<<<<<<< HEAD
                 epoch_value = history_df.loc[best_idx, "epoch"]
                 # Handle case where duplicate indices return a Series
                 if isinstance(epoch_value, pd.Series):
                     epoch_value = epoch_value.iloc[0]
                 row[f"{metric}_best_epoch"] = int(epoch_value)
+=======
+                epoch_val = history_df.loc[best_idx, "epoch"]
+                row[f"{metric}_best_epoch"] = int(epoch_val.iloc[0] if hasattr(epoch_val, "iloc") else epoch_val)
+>>>>>>> 8063b4eff39e45b44466337759bcf586d27641f8
             else:
                 row[f"{metric}_best_epoch"] = int(best_idx)
 
@@ -169,10 +176,10 @@ def main():
     parser = argparse.ArgumentParser(
         description="Collect benchmark results from W&B"
     )
-    parser.add_argument("--entity", required=True, help="W&B entity")
-    parser.add_argument("--project", required=True, help="W&B project")
-    parser.add_argument("--output", default=None, help="Output CSV path")
-    parser.add_argument("--latex", default=None, help="Output LaTeX table path (.tex)")
+    parser.add_argument("--entity", default="stable-ssl", help="W&B entity")
+    parser.add_argument("--project", default="stable-datasets-benchmarks", help="W&B project")
+    parser.add_argument("--output", default='ssl_baselines_results.csv', help="Output CSV path")
+    parser.add_argument("--latex", default='ssl_baselines_results_table.tex', help="Output LaTeX table path (.tex)")
     parser.add_argument(
         "--metric",
         default=None,

@@ -15,27 +15,55 @@ predictor:
   output_dim: 256
 
 loss:
-  temperature: 0.15
+  temperature: 0.1
 
 queue_size: 65536
 
-batch_sizes:
-  default: 256
-  cifar10: 512
-  cifar100: 512
-  svhn: 512
-  stl10: 256
-  flowers102: 256
-  food101: 256
-  dtd: 256
-  cub200: 128
-  tinyimagenet: 256
-  imagenet: 256
+params:
+  default:
+    batch_size: 1024
+    max_epochs: 200
+  cifar10:
+    batch_size: 2048
+    max_epochs: 200
+  cifar100:
+    batch_size: 2048
+    max_epochs: 200
+  svhn:
+    batch_size: 2048
+    max_epochs: 200
+  stl10:
+    batch_size: 1024
+    max_epochs: 200
+  flowers102:
+    batch_size: 1024
+    max_epochs: 200
+  food101:
+    batch_size: 1024
+    max_epochs: 200
+  dtd:
+    batch_size: 1024
+    max_epochs: 200
+  cub200:
+    batch_size: 512
+    max_epochs: 200
+  tinyimagenet:
+    batch_size: 1024
+    max_epochs: 200
+  imagenet:
+    batch_size: 1024
+    max_epochs: 100
 
-optimizer:
+resnet_optimizer:
   type: LARS
   lr: 5.0
   weight_decay: 1e-6
+
+vit_optimizer:
+  type: AdamW
+  lr: 3e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
 
 scheduler:
   type: LinearWarmupCosineAnnealing
