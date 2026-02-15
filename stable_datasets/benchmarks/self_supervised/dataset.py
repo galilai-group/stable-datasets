@@ -13,8 +13,15 @@ import numpy as np
 import stable_datasets as sds
 import stable_pretraining as spt
 import torch
-import torchcodec
 from stable_pretraining.data import transforms
+
+# Lazy import torchcodec only when needed for video datasets
+try:
+    import torchcodec
+    TORCHCODEC_AVAILABLE = True
+except (ImportError, RuntimeError):
+    TORCHCODEC_AVAILABLE = False
+    torchcodec = None
 
 
 # =============================================================================
@@ -188,7 +195,7 @@ def extract_config(name: str, dataset) -> DatasetConfig:
     if "video" in sample:
         data_key = "video"
         video = sample["video"]
-        if isinstance(video, torchcodec.decoders.VideoDecoder):
+        if TORCHCODEC_AVAILABLE and isinstance(video, torchcodec.decoders.VideoDecoder):
             num_frames = video._num_frames
             frame = video.get_frame_at(0)
             channels, h, w = frame.data.shape

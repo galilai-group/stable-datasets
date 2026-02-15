@@ -17,12 +17,18 @@
 
 set -euo pipefail
 
+# Detect project root (git repository root)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR" && git rev-parse --show-toplevel 2>/dev/null || echo "$SCRIPT_DIR/../../..")"
+export PROJECT_ROOT
+
 DATASETS=${1:?"Usage: launch.sh <dataset1,dataset2,...> [env: CONFIG=... MODELS=... BACKBONES=...]"}
 CONFIG=${CONFIG:-slurm}
 MODELS=${MODELS:-simclr,dino,mae,lejepa,nnclr,barlow_twins}
 BACKBONES=${BACKBONES:-resnet18,vit_tiny}
 
 echo "=== SSL Benchmark Sweep ==="
+echo "Project:   $PROJECT_ROOT"
 echo "Config:    $CONFIG"
 echo "Datasets:  $DATASETS"
 echo "Models:    $MODELS"

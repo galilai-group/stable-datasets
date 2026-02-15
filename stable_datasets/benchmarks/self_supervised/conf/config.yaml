@@ -18,7 +18,7 @@ wandb:
 
 hydra:
   run:
-    dir: outputs/${model.name}_${backbone.name}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${oc.env:PROJECT_ROOT,/mnt/data/sami/stable-datasets}/benchmark-runs/${model.name}_${backbone.name}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
   sweep:
-    dir: outputs/sweep/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${oc.env:PROJECT_ROOT,/mnt/data/sami/stable-datasets}/benchmark-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
     subdir: ${model.name}_${backbone.name}_${dataset}

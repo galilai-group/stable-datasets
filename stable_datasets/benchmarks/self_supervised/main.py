@@ -157,6 +157,7 @@ def main(cfg: DictConfig) -> None:
             project=cfg.wandb.project,
             name=f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}",
             log_model=False,
+            save_dir=os.getcwd(),
             config={
                 "model": cfg.model.name,
                 "backbone": cfg.backbone.name,
@@ -164,8 +165,11 @@ def main(cfg: DictConfig) -> None:
             },
         )
 
-    # Trainer
+    # Trainer - use Hydra's output directory (benchmark-runs/...)
     has_val = data.val is not None
+    hydra_cfg = HydraConfig.get()
+    output_dir = hydra_cfg.runtime.output_dir if hydra_cfg.runtime.output_dir else os.getcwd()
+
     trainer = pl.Trainer(
         max_epochs=cfg.training.max_epochs,
         precision=cfg.training.precision,
@@ -175,6 +179,7 @@ def main(cfg: DictConfig) -> None:
         limit_val_batches=1.0 if has_val else 0,
         enable_checkpointing=False,
         accelerator="auto",
+        default_root_dir=output_dir,
     )
 
     # Run
