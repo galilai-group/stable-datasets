@@ -51,6 +51,7 @@ import hydra
 import lightning as pl
 import stable_pretraining as spt
 import torch
+import wandb
 from hydra.core.hydra_config import HydraConfig
 from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig, open_dict
@@ -62,21 +63,47 @@ from stable_datasets.benchmarks.self_supervised.modules import build_module, cre
 
 log = logging.getLogger(__name__)
 
-SKIP_DATASETS = {"cars196", "cifar10c", "cifar100c", "clevrer"}
+# Datasets to always skip:
+#   - cars196: download issues
+#   - cifar10c/cifar100c: corruption benchmarks, not standard SSL datasets
+#   - clevrer: video dataset, no label field
+#   - dsprites*: multi-factor labels (Sequence), no ClassLabel/num_classes
+#   - cars3d, shapes3d, smallnorb: same multi-factor label issue
+#   - facepointing, celeba: no label field
+SKIP_DATASETS = {
+    "cars196", "cifar10c", "cifar100c", "clevrer",
+    "dsprites", "dspritescolor", "dspritesnoise", "dspritesscream",
+    "cars3d", "shapes3d", "smallnorb",
+    "facepointing", "celeba",
+}
 
 
-def _get_all_dataset_names() -> list[str]:
+def _parse_skip_datasets_from_argv() -> set[str]:
+    """Extract skip_datasets from sys.argv before Hydra parses it."""
+    import sys
+
+    for arg in sys.argv:
+        if arg.startswith("skip_datasets="):
+            val = arg.split("=", 1)[1]
+            # Handle both skip_datasets=[a,b] and skip_datasets=a,b
+            val = val.strip("[]")
+            if val:
+                return {s.strip().lower() for s in val.split(",")}
+    return set()
+
+
+def _get_all_dataset_names(extra_skip: set[str] = None) -> list[str]:
     """Discover all available dataset names from stable_datasets.images."""
+    skip = SKIP_DATASETS | (extra_skip or set())
     return sorted(
         name.lower()
         for name, cls in vars(sds.images).items()
         if (
             isinstance(cls, type)
             and issubclass(cls, sds.BaseDatasetBuilder)
-            and name.lower() not in SKIP_DATASETS
+            and name.lower() not in skip
         )
     )
-
 
 
 def _expand_dataset_all_in_argv():
@@ -85,7 +112,8 @@ def _expand_dataset_all_in_argv():
 
     for i, arg in enumerate(sys.argv):
         if arg.startswith("dataset=") and arg.split("=", 1)[1].lower() == "all":
-            all_names = ",".join(_get_all_dataset_names())
+            extra_skip = _parse_skip_datasets_from_argv()
+            all_names = ",".join(_get_all_dataset_names(extra_skip))
             sys.argv[i] = f"dataset={all_names}"
             if "--multirun" not in sys.argv and "-m" not in sys.argv:
                 sys.argv.append("--multirun")
@@ -116,6 +144,12 @@ def main(cfg: DictConfig) -> None:
     if cfg.get("distribute_gpus", False):
         _assign_gpu()
 
+    # Skip datasets in the skip list
+    skip_list = {s.lower() for s in cfg.get("skip_datasets", [])}
+    if cfg.dataset.lower() in skip_list:
+        log.warning(f"Skipping dataset '{cfg.dataset}' (in skip_datasets list)")
+        return
+
     # Validate backbone x model compatibility
     if cfg.model.requires_vit and cfg.backbone.type != "vit":
         log.warning(
@@ -124,24 +158,37 @@ def main(cfg: DictConfig) -> None:
         )
         return
 
-    # Resolve per-model, per-dataset batch size
-    batch_sizes = cfg.model.get("batch_sizes", {})
-    if cfg.dataset in batch_sizes:
-        resolved_bs = batch_sizes[cfg.dataset]
-    elif "default" in batch_sizes:
-        resolved_bs = batch_sizes["default"]
-    else:
-        resolved_bs = cfg.training.batch_size
+    # Resolve per-model, per-dataset params (batch_size, max_epochs, lr)
+    params = cfg.model.get("params", {})
+    ds_params = params.get(cfg.dataset, {})
+    default_params = params.get("default", {})
+
+    def _resolve(key, fallback):
+        """Check dataset-specific params, then default params, then global fallback."""
+        if key in ds_params:
+            return ds_params[key]
+        if key in default_params:
+            return default_params[key]
+        return fallback
+
     with open_dict(cfg):
-        cfg.training.batch_size = resolved_bs
+        cfg.training.batch_size = _resolve("batch_size", cfg.training.batch_size)
+        cfg.training.max_epochs = _resolve("max_epochs", cfg.training.max_epochs)
+        # LR override stored for optim builder
+        lr_override = ds_params.get("lr", default_params.get("lr", None))
+        if lr_override is not None:
+            cfg.model._lr_override = float(lr_override)
 
     log.info(
         f"Running {cfg.model.name} | backbone={cfg.backbone.name} "
-        f"| dataset={cfg.dataset} | batch_size={resolved_bs}"
+        f"| dataset={cfg.dataset} | batch_size={cfg.training.batch_size} "
+        f"| max_epochs={cfg.training.max_epochs}"
     )
 
     # Load dataset with config-driven transforms
-    data, ds_config = create_dataset(cfg.dataset, cfg.model.transforms, cfg.training)
+    data, ds_config = create_dataset(
+        cfg.dataset, cfg.model.transforms, cfg.training, data_dir=cfg.get("data_dir"),
+    )
 
     # Build module from registry
     module, embed_dim = build_module(cfg, ds_config)
@@ -149,13 +196,15 @@ def main(cfg: DictConfig) -> None:
     # Evaluation callbacks
     callbacks = create_eval_callbacks(module, ds_config, embed_dim)
 
-    # Logger
+    # Logger — each multirun job gets its own wandb run
     logger = None
     if cfg.wandb.enabled:
+        run_name = f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}"
         logger = WandbLogger(
             entity=cfg.wandb.entity,
             project=cfg.wandb.project,
-            name=f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}",
+            name=run_name,
+            id=wandb.util.generate_id(),
             log_model=False,
             save_dir=os.getcwd(),
             config={
@@ -185,6 +234,10 @@ def main(cfg: DictConfig) -> None:
     # Run
     manager = spt.Manager(trainer=trainer, module=module, data=data)
     manager()
+
+    # Close wandb run so the next multirun job gets a fresh run
+    if cfg.wandb.enabled:
+        wandb.finish()
 
 
 if __name__ == "__main__":
