@@ -46,9 +46,6 @@ jobs:
             pytest-split-${{ runner.os }}-py310-
 
       - name: Run tests (pytest-split shard) and write coverage data
-        env:
-          # Each shard writes separate coverage data for later merge
-          COVERAGE_FILE: .coverage.${{ matrix.shard }}
         run: |
           set -o pipefail
           pytest stable_datasets/ \
@@ -61,6 +58,19 @@ jobs:
             --cov=stable_datasets \
             --cov-report=term-missing:skip-covered \
             --cov-report=term | tee pytest-coverage.${{ matrix.shard }}.txt
+      
+          echo "=== coverage files in workspace ==="
+          ls -la
+          find . -maxdepth 2 -name ".coverage*" -print || true
+      
+          # pytest-cov usually writes ".coverage" in CWD; rename for sharding
+          if [ -f ".coverage" ]; then
+            mv .coverage .coverage.${{ matrix.shard }}
+          elif [ -f ".coverage.${{ matrix.shard }}" ]; then
+            echo "Already have .coverage.${{ matrix.shard }}"
+          else
+            echo "WARNING: no .coverage file produced!"
+          fi
 
       - name: Upload shard artifacts
         if: always()
@@ -122,7 +132,7 @@ jobs:
 
       # Save the merged durations for future runs (save-only)
       - name: Save merged pytest-split durations cache
-        if: success()
+        if: needs.Test.result == 'success'
         uses: actions/cache/save@v4
         with:
           path: .test_durations
