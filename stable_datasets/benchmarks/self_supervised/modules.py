@@ -107,6 +107,8 @@ def build_optim_config(model_cfg, backbone_cfg) -> dict:
     # Apply per-dataset LR override if present
     if hasattr(model_cfg, "_lr_override"):
         optim["optimizer"]["lr"] = model_cfg._lr_override
+    # Scheduler params are handled by stable_pretraining's SCHEDULER_FACTORY defaults
+    # which auto-computes total_steps, peak_step, etc. from trainer context
     return optim
 
 

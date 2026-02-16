@@ -4,11 +4,13 @@
 Usage:
     python download_datasets.py
     python download_datasets.py --datasets cifar10,stl10,svhn
+    python download_datasets.py --data-dir /mnt/data/sami/.stable-datasets
 """
 
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 import stable_datasets as sds
 
@@ -41,7 +43,7 @@ DATASET_KWARGS = {
 }
 
 
-def download_dataset(name: str) -> None:
+def download_dataset(name: str, data_dir: str | None = None) -> None:
     """Download a single dataset."""
     print(f"\n{'='*60}")
     print(f"Downloading: {name}")
@@ -59,6 +61,12 @@ def download_dataset(name: str) -> None:
 
     dataset_cls = dataset_classes[name]
     extra_kwargs = DATASET_KWARGS.get(name, {})
+
+    # Use custom data directory if provided
+    if data_dir is not None:
+        root = Path(data_dir)
+        extra_kwargs["download_dir"] = str(root / "downloads")
+        extra_kwargs["processed_cache_dir"] = str(root / "processed")
 
     try:
         # Download train split
@@ -90,6 +98,12 @@ def main():
         default=None,
         help="Comma-separated list of datasets to download (default: all classification datasets)",
     )
+    parser.add_argument(
+        "--data-dir",
+        type=str,
+        default="/mnt/data/sami/.stable-datasets",
+        help="Root directory for downloads and cache (default: /mnt/data/sami/.stable-datasets)",
+    )
     args = parser.parse_args()
 
     if args.datasets:
@@ -99,9 +113,10 @@ def main():
 
     print(f"Downloading {len(datasets)} datasets...")
     print(f"Datasets: {', '.join(datasets)}")
+    print(f"Data directory: {args.data_dir}")
 
     for dataset_name in datasets:
-        download_dataset(dataset_name)
+        download_dataset(dataset_name, data_dir=args.data_dir)
 
     print(f"\n{'='*60}")
     print(f"✓ Download complete! Downloaded {len(datasets)} datasets.")

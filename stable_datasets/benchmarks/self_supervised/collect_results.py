@@ -88,16 +88,11 @@ def collect(entity: str, project: str) -> pd.DataFrame:
             # .loc can return a Series if the index has duplicates, so
             # extract a scalar with .iloc[0] when that happens.
             if "epoch" in history_df.columns:
-<<<<<<< HEAD
                 epoch_value = history_df.loc[best_idx, "epoch"]
                 # Handle case where duplicate indices return a Series
                 if isinstance(epoch_value, pd.Series):
                     epoch_value = epoch_value.iloc[0]
                 row[f"{metric}_best_epoch"] = int(epoch_value)
-=======
-                epoch_val = history_df.loc[best_idx, "epoch"]
-                row[f"{metric}_best_epoch"] = int(epoch_val.iloc[0] if hasattr(epoch_val, "iloc") else epoch_val)
->>>>>>> 8063b4eff39e45b44466337759bcf586d27641f8
             else:
                 row[f"{metric}_best_epoch"] = int(best_idx)
 

@@ -17,46 +17,86 @@ predictor:
 loss:
   temperature: 0.1
 
-queue_size: 65536
+queue_size: 4096
+
 
 params:
   default:
-    batch_size: 1024
+    batch_size: 256
     max_epochs: 200
+  # CIFAR-scale (32x32)
   cifar10:
-    batch_size: 2048
+    batch_size: 256
     max_epochs: 200
   cifar100:
-    batch_size: 2048
+    batch_size: 256
     max_epochs: 200
   svhn:
-    batch_size: 2048
+    batch_size: 256
     max_epochs: 200
+  # Grayscale 28x28
+  fashionmnist:
+    batch_size: 256
+    max_epochs: 200
+  emnist:
+    batch_size: 256
+    max_epochs: 200
+  kmnist:
+    batch_size: 256
+    max_epochs: 200
+  notmnist:
+    batch_size: 256
+    max_epochs: 300
+  medmnist:
+    batch_size: 256
+    max_epochs: 200
+  # Other small datasets
+  hasyv2:
+    batch_size: 256
+    max_epochs: 200
+  arabiccharacters:
+    batch_size: 256
+    max_epochs: 400
+  arabicdigits:
+    batch_size: 256
+    max_epochs: 400
+  # Larger resolution
   stl10:
-    batch_size: 1024
+    batch_size: 256
     max_epochs: 200
+  # Small fine-grained
   flowers102:
-    batch_size: 1024
-    max_epochs: 200
-  food101:
-    batch_size: 1024
-    max_epochs: 200
-  dtd:
-    batch_size: 1024
-    max_epochs: 200
+    batch_size: 256
+    max_epochs: 400
   cub200:
-    batch_size: 512
+    batch_size: 256
+    max_epochs: 400
+  dtd:
+    batch_size: 256
+    max_epochs: 400
+  country211:
+    batch_size: 256
+    max_epochs: 200
+  rockpaperscissor:
+    batch_size: 256
+    max_epochs: 400
+  facepointing:
+    batch_size: 256
+    max_epochs: 300
+  # Large datasets
+  food101:
+    batch_size: 256
     max_epochs: 200
   tinyimagenet:
-    batch_size: 1024
+    batch_size: 256
     max_epochs: 200
   imagenet:
-    batch_size: 1024
+    batch_size: 256
     max_epochs: 100
 
 resnet_optimizer:
   type: LARS
-  lr: 5.0
+  lr: 0.3
   weight_decay: 1e-6
 
 vit_optimizer:
