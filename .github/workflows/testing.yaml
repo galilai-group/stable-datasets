@@ -58,11 +58,11 @@ jobs:
             --cov=stable_datasets \
             --cov-report=term-missing:skip-covered \
             --cov-report=term | tee pytest-coverage.${{ matrix.shard }}.txt
-      
+
           echo "=== coverage files in workspace ==="
           ls -la
           find . -maxdepth 2 -name ".coverage*" -print || true
-      
+
           # pytest-cov usually writes ".coverage" in CWD; rename for sharding
           if [ -f ".coverage" ]; then
             mv .coverage .coverage.${{ matrix.shard }}
