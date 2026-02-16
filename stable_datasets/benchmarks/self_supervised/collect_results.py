@@ -189,6 +189,13 @@ def main():
     if df.empty:
         return
 
+    # Filter out ResNet runs (only ViT backbones are used now)
+    if "backbone" in df.columns:
+        resnet_mask = df["backbone"].str.contains("resnet", case=False, na=False)
+        if resnet_mask.any():
+            log.info(f"Filtering out {resnet_mask.sum()} ResNet run(s).")
+            df = df[~resnet_mask].reset_index(drop=True)
+
     # Drop runs from datasets without num_classes (no eval metrics logged)
     metric_cols = [m for m in METRICS if m in df.columns]
     if metric_cols:

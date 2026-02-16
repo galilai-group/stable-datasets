@@ -1,6 +1,5 @@
 name: simclr
 forward: simclr_forward
-requires_vit: false
 
 transforms:
   type: multiview
@@ -87,11 +86,6 @@ params:
   imagenet:
     batch_size: 256
     max_epochs: 100
-
-resnet_optimizer:
-  type: LARS
-  lr: 0.3
-  weight_decay: 1e-6
 
 vit_optimizer:
   type: AdamW

@@ -8,7 +8,6 @@ for backbone creation, projectors, and evaluation callbacks.
 from __future__ import annotations
 
 import logging
-import re
 
 import stable_pretraining as spt
 import torch
@@ -44,17 +43,10 @@ def get_embedding_dim(backbone: nn.Module) -> int:
 
 
 def create_backbone(backbone_cfg, ds_config: DatasetConfig) -> nn.Module:
-    """Create a backbone that outputs flat embeddings (CLS token for ViT).
+    """Create a ViT backbone that outputs flat embeddings (CLS token).
 
     For DINO (HF ViT) and MAE (MaskedEncoder), see their model-specific builders.
     """
-    if backbone_cfg.type == "resnet":
-        backbone = spt.backbone.from_torchvision(
-            backbone_cfg.model_name, low_resolution=ds_config.low_resolution
-        )
-        backbone.fc = nn.Identity()
-        return backbone
-
     if backbone_cfg.type == "vit":
         return create_vit(
             size=backbone_cfg.size,
@@ -62,7 +54,7 @@ def create_backbone(backbone_cfg, ds_config: DatasetConfig) -> nn.Module:
             patch_size=backbone_cfg.patch_size,
         )
 
-    raise ValueError(f"Unknown backbone type: {backbone_cfg.type}")
+    raise ValueError(f"Unknown backbone type: {backbone_cfg.type}. Only 'vit' is supported.")
 
 
 def create_projector(embed_dim: int, hidden_dim: int, output_dim: int) -> nn.Module:
@@ -79,17 +71,9 @@ def create_projector(embed_dim: int, hidden_dim: int, output_dim: int) -> nn.Mod
 
 
 def build_optim_config(model_cfg, backbone_cfg) -> dict:
-    """Build optimizer config dict from model config.
-
-    Selects vit_optimizer when the backbone is a ViT, otherwise uses
-    resnet_optimizer. Falls back to the legacy ``optimizer`` key if the
-    per-backbone keys are not present.
-    """
-    is_vit = getattr(backbone_cfg, "type", "resnet") == "vit"
-    if is_vit and hasattr(model_cfg, "vit_optimizer"):
+    """Build optimizer config dict from model config."""
+    if hasattr(model_cfg, "vit_optimizer"):
         opt_cfg = model_cfg.vit_optimizer
-    elif not is_vit and hasattr(model_cfg, "resnet_optimizer"):
-        opt_cfg = model_cfg.resnet_optimizer
     else:
         opt_cfg = model_cfg.optimizer
 
@@ -376,40 +360,12 @@ def build_dino(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
     return module, embed_dim
 
 
-def _adjust_mae_params_for_low_resolution(
-    ds_config, patch_size, decoder_embed_dim, decoder_depth, mask_ratio
-):
-    """Scale down MAE params for small images."""
-    h, w = ds_config.image_size
-    if not ds_config.low_resolution:
-        return patch_size, decoder_embed_dim, decoder_depth, mask_ratio
-    patch_size = min(patch_size, min(h, w) // 4)
-    num_patches = (h // patch_size) * (w // patch_size)
-    # 75% masking is too aggressive for small grids (e.g. 4x4=16 patches →
-    # only 4 visible).  Cap so the encoder always sees at least 8 patches.
-    if num_patches <= 64:
-        max_ratio = max(1.0 - 8.0 / num_patches, 0.25)
-        mask_ratio = min(mask_ratio, max_ratio)
-    return (
-        patch_size,
-        min(decoder_embed_dim, 256),
-        min(decoder_depth, 4),
-        mask_ratio,
-    )
-
-
 def build_mae(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
     h, w = ds_config.image_size
     patch_size = cfg.backbone.patch_size
     decoder_embed_dim = cfg.model.decoder.embed_dim
     decoder_depth = cfg.model.decoder.depth
     mask_ratio = cfg.model.mask_ratio
-
-    patch_size, decoder_embed_dim, decoder_depth, mask_ratio = (
-        _adjust_mae_params_for_low_resolution(
-            ds_config, patch_size, decoder_embed_dim, decoder_depth, mask_ratio
-        )
-    )
 
     grid_size = (h // patch_size, w // patch_size)
     num_patches = grid_size[0] * grid_size[1]
