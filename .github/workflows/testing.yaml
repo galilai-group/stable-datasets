@@ -61,12 +61,12 @@ jobs:
 
             ls -la .test_durations .coverage* || true
             find . -maxdepth 2 -name ".coverage*" -print || true
-        
+
             echo "=== normalize coverage filename for sharding ==="
             if [ -f ".coverage" ]; then
               mv .coverage .coverage.${{ matrix.shard }}
             fi
-        
+
             echo "=== final files to upload ==="
             ls -la .coverage.${{ matrix.shard }} pytest-coverage.${{ matrix.shard }}.txt .test_durations || true
 
