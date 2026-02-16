@@ -21,12 +21,19 @@ from __future__ import annotations
 
 import argparse
 import logging
+from datetime import datetime, timezone
 
 import pandas as pd
 from stable_pretraining.utils.log_reader import WandbLogReader
 from tqdm import tqdm
 
 log = logging.getLogger(__name__)
+
+# Only collect runs created after the hparams-v2 change (ViT-Small, 224x224,
+# no ResNet).  This is the timestamp of the commit that introduced those
+# changes; using a timestamp instead of a commit hash so that future commits
+# don't invalidate the filter.
+HPARAMS_V2_CUTOFF = "2026-02-16T21:25:36+00:00"
 
 METRICS = [
     "eval/linear_probe_top1_epoch",
@@ -63,6 +70,8 @@ def collect(entity: str, project: str) -> pd.DataFrame:
     ):
         run_id = run_row["id"]
         row = {"id": run_id, "name": run_row.get("name", "")}
+        if "created_at" in run_row:
+            row["created_at"] = run_row["created_at"]
         for col in CONFIG_COLS:
             if col in run_row:
                 row[col] = run_row[col]
@@ -181,6 +190,12 @@ def main():
         choices=METRICS,
         help="Metric to pivot on for the summary table (default: first available)",
     )
+    parser.add_argument(
+        "--after",
+        default=HPARAMS_V2_CUTOFF,
+        help="Only include runs created after this ISO-8601 timestamp "
+             "(default: hparams-v2 cutoff %(default)s)",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
@@ -189,7 +204,18 @@ def main():
     if df.empty:
         return
 
-    # Filter out ResNet runs (only ViT backbones are used now)
+    # Filter runs by creation time (only keep runs after the hparams change)
+    if "created_at" in df.columns and args.after:
+        cutoff = datetime.fromisoformat(args.after)
+        created = pd.to_datetime(df["created_at"], utc=True)
+        before_mask = created < cutoff
+        if before_mask.any():
+            log.info(
+                f"Filtering out {before_mask.sum()} run(s) created before {args.after}."
+            )
+            df = df[~before_mask].reset_index(drop=True)
+
+    # Also filter out any ResNet runs as a safety net
     if "backbone" in df.columns:
         resnet_mask = df["backbone"].str.contains("resnet", case=False, na=False)
         if resnet_mask.any():
