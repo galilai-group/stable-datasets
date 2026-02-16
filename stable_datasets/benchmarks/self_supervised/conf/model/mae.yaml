@@ -8,43 +8,83 @@ mask_ratio: 0.75
 
 decoder:
   embed_dim: 512
-  depth: 8
+  depth: 4
   num_heads: 16
+
 
 params:
   default:
-    batch_size: 1024
-    max_epochs: 800
+    batch_size: 256
+    max_epochs: 400  # 200 * 2.0
+  # CIFAR-scale (32x32) - 2x multiplier
   cifar10:
-    batch_size: 2048
-    max_epochs: 800
+    batch_size: 256
+    max_epochs: 800  # 400 * 2.0
   cifar100:
-    batch_size: 2048
-    max_epochs: 800
+    batch_size: 256
+    max_epochs: 800  # 400 * 2.0
   svhn:
-    batch_size: 2048
-    max_epochs: 400
+    batch_size: 256
+    max_epochs: 600  # 300 * 2.0
+  # Grayscale 28x28 - 2x multiplier
+  fashionmnist:
+    batch_size: 256
+    max_epochs: 600  # 300 * 2.0
+  emnist:
+    batch_size: 256
+    max_epochs: 600  # 300 * 2.0
+  kmnist:
+    batch_size: 256
+    max_epochs: 600  # 300 * 2.0
+  notmnist:
+    batch_size: 256
+    max_epochs: 800  # 400 * 2.0
+  medmnist:
+    batch_size: 256
+    max_epochs: 800  # 400 * 2.0
+  # Other small datasets
+  hasyv2:
+    batch_size: 256
+    max_epochs: 600  # 300 * 2.0
+  arabiccharacters:
+    batch_size: 256
+    max_epochs: 1000  # 500 * 2.0
+  arabicdigits:
+    batch_size: 256
+    max_epochs: 1000  # 500 * 2.0
+  # Larger resolution
   stl10:
-    batch_size: 1024
-    max_epochs: 800
+    batch_size: 256
+    max_epochs: 600  # 300 * 2.0
+  # Small fine-grained
   flowers102:
-    batch_size: 1024
-    max_epochs: 400
-  food101:
-    batch_size: 1024
-    max_epochs: 400
-  dtd:
-    batch_size: 1024
-    max_epochs: 400
+    batch_size: 256
+    max_epochs: 1200  # 600 * 2.0
   cub200:
-    batch_size: 512
-    max_epochs: 400
+    batch_size: 256
+    max_epochs: 1200  # 600 * 2.0
+  dtd:
+    batch_size: 256
+    max_epochs: 1200  # 600 * 2.0
+  country211:
+    batch_size: 256
+    max_epochs: 800  # 400 * 2.0
+  rockpaperscissor:
+    batch_size: 256
+    max_epochs: 1200  # 600 * 2.0
+  facepointing:
+    batch_size: 256
+    max_epochs: 800  # 400 * 2.0
+  # Large datasets
+  food101:
+    batch_size: 256
+    max_epochs: 400  # 200 * 2.0
   tinyimagenet:
-    batch_size: 1024
-    max_epochs: 400
+    batch_size: 256
+    max_epochs: 400  # 200 * 2.0
   imagenet:
-    batch_size: 1024
-    max_epochs: 400
+    batch_size: 256
+    max_epochs: 200  # 100 * 2.0
 
 vit_optimizer:
   type: AdamW

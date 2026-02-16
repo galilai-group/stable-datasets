@@ -19,45 +19,86 @@ loss:
 
 momentum_teacher: 0.996
 
+
 params:
   default:
-    batch_size: 1024
-    max_epochs: 300
+    batch_size: 256
+    max_epochs: 250  # 200 * 1.25
+  # CIFAR-scale (32x32) - 1.25x multiplier
   cifar10:
-    batch_size: 768
-    max_epochs: 300
+    batch_size: 256
+    max_epochs: 500  # 400 * 1.25
   cifar100:
-    batch_size: 768
-    max_epochs: 300
+    batch_size: 256
+    max_epochs: 500  # 400 * 1.25
   svhn:
-    batch_size: 2048
-    max_epochs: 200
+    batch_size: 256
+    max_epochs: 375  # 300 * 1.25
+  # Grayscale 28x28 - 1.25x multiplier
+  fashionmnist:
+    batch_size: 256
+    max_epochs: 375  # 300 * 1.25
+  emnist:
+    batch_size: 256
+    max_epochs: 375  # 300 * 1.25
+  kmnist:
+    batch_size: 256
+    max_epochs: 375  # 300 * 1.25
+  notmnist:
+    batch_size: 256
+    max_epochs: 500  # 400 * 1.25
+  medmnist:
+    batch_size: 256
+    max_epochs: 500  # 400 * 1.25
+  # Other small datasets
+  hasyv2:
+    batch_size: 256
+    max_epochs: 375  # 300 * 1.25
+  arabiccharacters:
+    batch_size: 256
+    max_epochs: 625  # 500 * 1.25
+  arabicdigits:
+    batch_size: 256
+    max_epochs: 625  # 500 * 1.25
+  # Larger resolution
   stl10:
-    batch_size: 1024
-    max_epochs: 300
+    batch_size: 256
+    max_epochs: 375  # 300 * 1.25
+  # Small fine-grained
   flowers102:
-    batch_size: 1024
-    max_epochs: 300
-  food101:
-    batch_size: 1024
-    max_epochs: 300
-  dtd:
-    batch_size: 1024
-    max_epochs: 300
+    batch_size: 256
+    max_epochs: 750  # 600 * 1.25
   cub200:
-    batch_size: 512
-    max_epochs: 300
+    batch_size: 256
+    max_epochs: 750  # 600 * 1.25
+  dtd:
+    batch_size: 256
+    max_epochs: 750  # 600 * 1.25
+  country211:
+    batch_size: 256
+    max_epochs: 500  # 400 * 1.25
+  rockpaperscissor:
+    batch_size: 256
+    max_epochs: 750  # 600 * 1.25
+  facepointing:
+    batch_size: 256
+    max_epochs: 500  # 400 * 1.25
+  # Large datasets
+  food101:
+    batch_size: 256
+    max_epochs: 250  # 200 * 1.25
   tinyimagenet:
-    batch_size: 1024
-    max_epochs: 300
+    batch_size: 256
+    max_epochs: 250  # 200 * 1.25
   imagenet:
-    batch_size: 1024
-    max_epochs: 100
+    batch_size: 256
+    max_epochs: 125  # 100 * 1.25
 
 vit_optimizer:
   type: AdamW
-  lr: 2e-3
+  lr: 5e-4
   weight_decay: 0.05
+  betas: [0.9, 0.999]
 
 scheduler:
   type: LinearWarmupCosineAnnealing

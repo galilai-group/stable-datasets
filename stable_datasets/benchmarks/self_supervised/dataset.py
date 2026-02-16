@@ -230,38 +230,53 @@ def _build_view_transform(config: DatasetConfig):
     h, w = config.image_size
     stats = {"mean": config.mean, "std": config.std}
     source = target = config.data_key
+    is_grayscale = config.channels == 1
 
     if config.low_resolution:
-        return transforms.Compose(
+        # Low-resolution (≤64px): no gaussian blur, adjust color jitter
+        transform_list = [
             transforms.RGB(source=source, target=target),
             transforms.RandomResizedCrop(
                 (h, w), scale=(0.2, 1.0), source=source, target=target
             ),
             transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
-            transforms.ColorJitter(
-                brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8,
-                source=source, target=target,
-            ),
-            transforms.RandomGrayscale(p=0.2, source=source, target=target),
-            transforms.ToImage(**stats, source=source, target=target),
-        )
+        ]
+        # Skip color jitter for grayscale images
+        if not is_grayscale:
+            transform_list.extend([
+                transforms.ColorJitter(
+                    brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8,
+                    source=source, target=target,
+                ),
+                transforms.RandomGrayscale(p=0.2, source=source, target=target),
+            ])
+        transform_list.append(transforms.ToImage(**stats, source=source, target=target))
+        return transforms.Compose(*transform_list)
 
-    return transforms.Compose(
+    # High-resolution: full augmentation pipeline
+    transform_list = [
         transforms.RGB(source=source, target=target),
         transforms.RandomResizedCrop(
             (h, w), scale=(0.08, 1.0), source=source, target=target
         ),
         transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
-        transforms.ColorJitter(
-            brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8,
-            source=source, target=target,
-        ),
-        transforms.RandomGrayscale(p=0.2, source=source, target=target),
+    ]
+    # Skip color jitter for grayscale images
+    if not is_grayscale:
+        transform_list.extend([
+            transforms.ColorJitter(
+                brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8,
+                source=source, target=target,
+            ),
+            transforms.RandomGrayscale(p=0.2, source=source, target=target),
+        ])
+    transform_list.append(
         transforms.GaussianBlur(
             kernel_size=23, sigma=(0.1, 2.0), p=0.5, source=source, target=target
-        ),
-        transforms.ToImage(**stats, source=source, target=target),
+        )
     )
+    transform_list.append(transforms.ToImage(**stats, source=source, target=target))
+    return transforms.Compose(*transform_list)
 
 
 def _build_val_transform(config: DatasetConfig):
@@ -307,27 +322,39 @@ def _create_multicrop_transforms(
     h, w = config.image_size
     stats = {"mean": config.mean, "std": config.std}
     source = target = config.data_key
+    is_grayscale = config.channels == 1
 
     if config.low_resolution:
         num_local = 0
 
     global_crop_scale = (0.5, 1.0) if config.low_resolution else (0.4, 1.0)
-    global_transform = transforms.Compose(
+
+    # Build global transform
+    global_transform_list = [
         transforms.RGB(source=source, target=target),
         transforms.RandomResizedCrop(
             (h, w), scale=global_crop_scale, source=source, target=target
         ),
         transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
-        transforms.ColorJitter(
-            brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8,
-            source=source, target=target,
-        ),
-        transforms.RandomGrayscale(p=0.2, source=source, target=target),
-        transforms.GaussianBlur(
-            kernel_size=23, sigma=(0.1, 2.0), p=1.0, source=source, target=target
-        ),
-        transforms.ToImage(**stats, source=source, target=target),
-    )
+    ]
+    # Skip color jitter for grayscale images
+    if not is_grayscale:
+        global_transform_list.extend([
+            transforms.ColorJitter(
+                brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8,
+                source=source, target=target,
+            ),
+            transforms.RandomGrayscale(p=0.2, source=source, target=target),
+        ])
+    # Skip gaussian blur for low-resolution images
+    if not config.low_resolution:
+        global_transform_list.append(
+            transforms.GaussianBlur(
+                kernel_size=23, sigma=(0.1, 2.0), p=1.0, source=source, target=target
+            )
+        )
+    global_transform_list.append(transforms.ToImage(**stats, source=source, target=target))
+    global_transform = transforms.Compose(*global_transform_list)
 
     transform_dict = {}
     for i in range(num_global):
@@ -335,22 +362,30 @@ def _create_multicrop_transforms(
 
     if num_local > 0:
         local_size = (max(h // 2, 32), max(w // 2, 32))
-        local_transform = transforms.Compose(
+        local_transform_list = [
             transforms.RGB(source=source, target=target),
             transforms.RandomResizedCrop(
                 local_size, scale=(0.05, 0.4), source=source, target=target
             ),
             transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
-            transforms.ColorJitter(
-                brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8,
-                source=source, target=target,
-            ),
-            transforms.RandomGrayscale(p=0.2, source=source, target=target),
+        ]
+        # Skip color jitter for grayscale images
+        if not is_grayscale:
+            local_transform_list.extend([
+                transforms.ColorJitter(
+                    brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8,
+                    source=source, target=target,
+                ),
+                transforms.RandomGrayscale(p=0.2, source=source, target=target),
+            ])
+        local_transform_list.append(
             transforms.GaussianBlur(
                 kernel_size=23, sigma=(0.1, 2.0), p=0.5, source=source, target=target
-            ),
-            transforms.ToImage(**stats, source=source, target=target),
+            )
         )
+        local_transform_list.append(transforms.ToImage(**stats, source=source, target=target))
+        local_transform = transforms.Compose(*local_transform_list)
+
         for i in range(num_local):
             transform_dict[f"local_{i + 1}"] = local_transform
 
