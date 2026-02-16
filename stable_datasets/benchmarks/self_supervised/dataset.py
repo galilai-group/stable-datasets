@@ -206,6 +206,11 @@ def extract_config(name: str, dataset) -> DatasetConfig:
             num_frames, h, w, channels = video.data.shape
 
     mean, std = _get_normalization_stats(name_lower, channels)
+    low_resolution = max(h, w) <= 64
+
+    # Standard SSL resolution: 224x224 for high-res, native for low-res
+    if not low_resolution and data_key == "image":
+        h = w = 224
 
     return DatasetConfig(
         name=name_lower,
@@ -214,7 +219,7 @@ def extract_config(name: str, dataset) -> DatasetConfig:
         channels=channels,
         mean=mean,
         std=std,
-        low_resolution=max(h, w) <= 64,
+        low_resolution=low_resolution,
         num_frames=num_frames,
         data_key=data_key,
     )

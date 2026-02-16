@@ -5,6 +5,7 @@ transforms:
   type: single
 
 mask_ratio: 0.75
+norm_pix_loss: true
 
 decoder:
   embed_dim: 512

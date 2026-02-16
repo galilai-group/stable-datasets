@@ -189,6 +189,14 @@ def main():
     if df.empty:
         return
 
+    # Drop runs from datasets without num_classes (no eval metrics logged)
+    metric_cols = [m for m in METRICS if m in df.columns]
+    if metric_cols:
+        df = df.dropna(subset=metric_cols, how="all").reset_index(drop=True)
+    if df.empty:
+        log.warning("No runs with eval metrics found (datasets may lack num_classes).")
+        return
+
     print("\n=== All Results ===")
     print(df.to_string(index=False))
 
