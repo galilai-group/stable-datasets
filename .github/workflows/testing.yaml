@@ -59,24 +59,23 @@ jobs:
             --cov-report=term-missing:skip-covered \
             --cov-report=term | tee pytest-coverage.${{ matrix.shard }}.txt
 
-          echo "=== coverage files in workspace ==="
-          ls -la
-          find . -maxdepth 2 -name ".coverage*" -print || true
-
-          # pytest-cov usually writes ".coverage" in CWD; rename for sharding
-          if [ -f ".coverage" ]; then
-            mv .coverage .coverage.${{ matrix.shard }}
-          elif [ -f ".coverage.${{ matrix.shard }}" ]; then
-            echo "Already have .coverage.${{ matrix.shard }}"
-          else
-            echo "WARNING: no .coverage file produced!"
-          fi
+            ls -la .test_durations .coverage* || true
+            find . -maxdepth 2 -name ".coverage*" -print || true
+        
+            echo "=== normalize coverage filename for sharding ==="
+            if [ -f ".coverage" ]; then
+              mv .coverage .coverage.${{ matrix.shard }}
+            fi
+        
+            echo "=== final files to upload ==="
+            ls -la .coverage.${{ matrix.shard }} pytest-coverage.${{ matrix.shard }}.txt .test_durations || true
 
       - name: Upload shard artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: shard-${{ matrix.shard }}
+          include-hidden-files: true
           path: |
             .coverage.${{ matrix.shard }}
             pytest-coverage.${{ matrix.shard }}.txt
