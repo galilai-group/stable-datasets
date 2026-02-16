@@ -186,7 +186,8 @@ def _mae_forward(self, batch, stage):
         visible_patches = encoder_out.encoded[:, num_prefix:]
         pred = self.decoder(visible_patches, encoder_out.mask)
         target = _mae_patchify(images, self.patch_size)
-        loss = spt.losses.mae(target, pred, encoder_out.mask)
+        norm_pix = getattr(self, "norm_pix_loss", True)
+        loss = spt.losses.mae(target, pred, encoder_out.mask, norm_pix_loss=norm_pix)
         out["loss"] = loss
         self.log(f"{stage}/loss", loss, on_step=True, on_epoch=True, sync_dist=True)
 
@@ -375,15 +376,25 @@ def build_dino(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
     return module, embed_dim
 
 
-def _adjust_mae_params_for_low_resolution(ds_config, patch_size, decoder_embed_dim, decoder_depth):
+def _adjust_mae_params_for_low_resolution(
+    ds_config, patch_size, decoder_embed_dim, decoder_depth, mask_ratio
+):
     """Scale down MAE params for small images."""
     h, w = ds_config.image_size
     if not ds_config.low_resolution:
-        return patch_size, decoder_embed_dim, decoder_depth
+        return patch_size, decoder_embed_dim, decoder_depth, mask_ratio
+    patch_size = min(patch_size, min(h, w) // 4)
+    num_patches = (h // patch_size) * (w // patch_size)
+    # 75% masking is too aggressive for small grids (e.g. 4x4=16 patches →
+    # only 4 visible).  Cap so the encoder always sees at least 8 patches.
+    if num_patches <= 64:
+        max_ratio = max(1.0 - 8.0 / num_patches, 0.25)
+        mask_ratio = min(mask_ratio, max_ratio)
     return (
-        min(patch_size, min(h, w) // 4),
+        patch_size,
         min(decoder_embed_dim, 256),
         min(decoder_depth, 4),
+        mask_ratio,
     )
 
 
@@ -392,9 +403,12 @@ def build_mae(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
     patch_size = cfg.backbone.patch_size
     decoder_embed_dim = cfg.model.decoder.embed_dim
     decoder_depth = cfg.model.decoder.depth
+    mask_ratio = cfg.model.mask_ratio
 
-    patch_size, decoder_embed_dim, decoder_depth = _adjust_mae_params_for_low_resolution(
-        ds_config, patch_size, decoder_embed_dim, decoder_depth
+    patch_size, decoder_embed_dim, decoder_depth, mask_ratio = (
+        _adjust_mae_params_for_low_resolution(
+            ds_config, patch_size, decoder_embed_dim, decoder_depth, mask_ratio
+        )
     )
 
     grid_size = (h // patch_size, w // patch_size)
@@ -406,7 +420,13 @@ def build_mae(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
         img_size=(h, w),
         patch_size=patch_size,
     )
-    masking = spt.backbone.PatchMasking(mask_ratio=cfg.model.mask_ratio)
+    log.info(
+        f"MAE config: patch_size={patch_size}, grid={grid_size}, "
+        f"num_patches={num_patches}, mask_ratio={mask_ratio:.2f}, "
+        f"visible={int(num_patches * (1 - mask_ratio))}"
+    )
+
+    masking = spt.backbone.PatchMasking(mask_ratio=mask_ratio)
     encoder = spt.backbone.MaskedEncoder(model_or_model_name=vit_model, masking=masking)
     encoder_embed_dim = getattr(encoder, "embed_dim", 768)
 
@@ -420,11 +440,13 @@ def build_mae(cfg, ds_config: DatasetConfig) -> tuple[spt.Module, int]:
         num_heads=cfg.model.decoder.num_heads,
     )
 
+    norm_pix_loss = cfg.model.get("norm_pix_loss", True)
     module = spt.Module(
         backbone=encoder,
         decoder=decoder,
         forward=_mae_forward,
         patch_size=patch_size,
+        norm_pix_loss=norm_pix_loss,
         optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, encoder_embed_dim
