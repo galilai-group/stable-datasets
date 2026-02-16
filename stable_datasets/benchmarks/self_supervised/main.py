@@ -40,6 +40,10 @@ Usage:
     # Override GPU count for local parallel
     NUM_GPUS=4 python -m stable_datasets.benchmarks.self_supervised.main --multirun --config-name local_parallel \\
         dataset=all model=lejepa backbone=vit_small
+
+    # Smoke test — verify the pipeline (data, model, val/probes) works without a full run
+    python -m stable_datasets.benchmarks.self_supervised.main --multirun \\
+        dataset=cifar10 model=simclr,mae,dino,lejepa backbone=vit_small smoke_test=true
 """
 
 from __future__ import annotations
@@ -189,8 +193,8 @@ def main(cfg: DictConfig) -> None:
     callbacks = create_eval_callbacks(module, ds_config, embed_dim)
 
     # Logger — each multirun job gets its own wandb run
-    logger = None
-    if cfg.wandb.enabled:
+    logger = True  # default Lightning logger
+    if cfg.wandb.enabled and not cfg.get("smoke_test", False):
         run_name = f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}"
         logger = WandbLogger(
             entity=cfg.wandb.entity,
@@ -211,13 +215,18 @@ def main(cfg: DictConfig) -> None:
     hydra_cfg = HydraConfig.get()
     output_dir = hydra_cfg.runtime.output_dir if hydra_cfg.runtime.output_dir else os.getcwd()
 
+    smoke_test = cfg.get("smoke_test", False)
+    if smoke_test:
+        log.info("Smoke test mode: 1 epoch, 3 train batches, 3 val batches")
+
     trainer = pl.Trainer(
-        max_epochs=cfg.training.max_epochs,
+        max_epochs=1 if smoke_test else cfg.training.max_epochs,
         precision=cfg.training.precision,
         callbacks=callbacks,
         logger=logger,
         num_sanity_val_steps=0,
-        limit_val_batches=1.0 if has_val else 0,
+        limit_train_batches=3 if smoke_test else 1.0,
+        limit_val_batches=3 if smoke_test else (1.0 if has_val else 0),
         enable_checkpointing=False,
         accelerator="auto",
         default_root_dir=output_dir,
@@ -228,7 +237,7 @@ def main(cfg: DictConfig) -> None:
     manager()
 
     # Close wandb run so the next multirun job gets a fresh run
-    if cfg.wandb.enabled:
+    if cfg.wandb.enabled and not smoke_test:
         wandb.finish()
 
 
