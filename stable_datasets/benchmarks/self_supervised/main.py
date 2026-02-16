@@ -3,43 +3,43 @@
 Hydra-driven entry point that runs any combination of
 {model, backbone, dataset} for self-supervised learning evaluation.
 
-Incompatible combos (e.g. MAE + ResNet) are skipped with a warning.
+All datasets are resized to 224x224 with uniform augmentations and ViT backbones.
 
 Usage:
     # Single run
-    python -m stable_datasets.benchmarks.self_supervised.main dataset=cifar10 model=simclr backbone=resnet18
+    python -m stable_datasets.benchmarks.self_supervised.main dataset=cifar10 model=simclr backbone=vit_small
 
-    # Sweep all models x backbones on one dataset (local)
+    # Sweep all models on one dataset (local)
     python -m stable_datasets.benchmarks.self_supervised.main --multirun \\
-        dataset=cifar10 model=simclr,dino,mae,lejepa backbone=resnet18,vit_tiny
+        dataset=cifar10 model=simclr,dino,mae,lejepa backbone=vit_small
 
     # Sweep across multiple datasets
     python -m stable_datasets.benchmarks.self_supervised.main --multirun \\
-        dataset=cifar10,stl10,flowers102 model=simclr,dino backbone=resnet18,vit_tiny
+        dataset=cifar10,stl10,flowers102 model=simclr,dino backbone=vit_small
 
     # Sweep (SLURM) — each combo becomes a separate job
     python -m stable_datasets.benchmarks.self_supervised.main --multirun --config-name slurm \\
-        dataset=cifar10,stl10 model=simclr,dino,mae,lejepa backbone=resnet18,vit_tiny
+        dataset=cifar10,stl10 model=simclr,dino,mae,lejepa backbone=vit_small
 
     # Override hyperparameters for a specific run
-    python -m stable_datasets.benchmarks.self_supervised.main dataset=cifar10 model=simclr backbone=resnet50 \\
-        model.optimizer.lr=0.3 training.max_epochs=200
+    python -m stable_datasets.benchmarks.self_supervised.main dataset=cifar10 model=simclr backbone=vit_small \\
+        model.vit_optimizer.lr=3e-4 training.max_epochs=200
 
     # Run on ALL datasets
-    python -m stable_datasets.benchmarks.self_supervised.main dataset=all model=simclr backbone=resnet18
+    python -m stable_datasets.benchmarks.self_supervised.main dataset=all model=simclr backbone=vit_small
 
     # LR sweep (useful for tuning)
     python -m stable_datasets.benchmarks.self_supervised.main --multirun \\
-        dataset=cifar10 model=simclr backbone=resnet18 \\
-        model.optimizer.lr=0.1,1.0,5.0,10.0
+        dataset=cifar10 model=simclr backbone=vit_small \\
+        model.vit_optimizer.lr=1e-4,3e-4,1e-3
 
     # Parallel across local GPUs (round-robin assignment)
     python -m stable_datasets.benchmarks.self_supervised.main --multirun --config-name local_parallel \\
-        dataset=cifar10,stl10,svhn,cifar100 model=simclr backbone=resnet18
+        dataset=cifar10,stl10,svhn,cifar100 model=simclr backbone=vit_small
 
     # Override GPU count for local parallel
     NUM_GPUS=4 python -m stable_datasets.benchmarks.self_supervised.main --multirun --config-name local_parallel \\
-        dataset=all model=lejepa backbone=resnet18
+        dataset=all model=lejepa backbone=vit_small
 """
 
 from __future__ import annotations
@@ -148,14 +148,6 @@ def main(cfg: DictConfig) -> None:
     skip_list = {s.lower() for s in cfg.get("skip_datasets", [])}
     if cfg.dataset.lower() in skip_list:
         log.warning(f"Skipping dataset '{cfg.dataset}' (in skip_datasets list)")
-        return
-
-    # Validate backbone x model compatibility
-    if cfg.model.requires_vit and cfg.backbone.type != "vit":
-        log.warning(
-            f"Skipping {cfg.model.name} + {cfg.backbone.name}: "
-            f"{cfg.model.name} requires a ViT backbone."
-        )
         return
 
     # Resolve per-model, per-dataset params (batch_size, max_epochs, lr)

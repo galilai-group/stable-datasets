@@ -1,6 +1,5 @@
 name: lejepa
 forward: lejepa_forward
-requires_vit: false
 
 transforms:
   type: multiview
@@ -90,12 +89,6 @@ params:
   imagenet:
     batch_size: 256
     max_epochs: 125  # 100 * 1.25
-
-resnet_optimizer:
-  type: AdamW
-  lr: 1e-3
-  weight_decay: 0.05
-  betas: [0.9, 0.999]
 
 vit_optimizer:
   type: AdamW

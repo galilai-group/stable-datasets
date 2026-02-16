@@ -1,5 +1,4 @@
 name: dino
-requires_vit: true
 
 transforms:
   type: multicrop

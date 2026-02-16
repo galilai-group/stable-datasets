@@ -1,6 +1,6 @@
 defaults:
   - model: simclr
-  - backbone: resnet18
+  - backbone: vit_small
   - _self_
 
 dataset: cifar10

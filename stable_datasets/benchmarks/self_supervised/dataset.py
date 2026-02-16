@@ -42,7 +42,6 @@ class DatasetConfig:
     channels: int
     mean: list[float]
     std: list[float]
-    low_resolution: bool
     num_frames: int
     data_key: str = "image"
 
@@ -206,10 +205,9 @@ def extract_config(name: str, dataset) -> DatasetConfig:
             num_frames, h, w, channels = video.data.shape
 
     mean, std = _get_normalization_stats(name_lower, channels)
-    low_resolution = max(h, w) <= 64
 
-    # Standard SSL resolution: 224x224 for high-res, native for low-res
-    if not low_resolution and data_key == "image":
+    # Always resize to 224x224 for uniform augmentations and backbones
+    if data_key == "image":
         h = w = 224
 
     return DatasetConfig(
@@ -219,7 +217,6 @@ def extract_config(name: str, dataset) -> DatasetConfig:
         channels=channels,
         mean=mean,
         std=std,
-        low_resolution=low_resolution,
         num_frames=num_frames,
         data_key=data_key,
     )
@@ -237,28 +234,6 @@ def _build_view_transform(config: DatasetConfig):
     source = target = config.data_key
     is_grayscale = config.channels == 1
 
-    if config.low_resolution:
-        # Low-resolution (≤64px): no gaussian blur, adjust color jitter
-        transform_list = [
-            transforms.RGB(source=source, target=target),
-            transforms.RandomResizedCrop(
-                (h, w), scale=(0.2, 1.0), source=source, target=target
-            ),
-            transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
-        ]
-        # Skip color jitter for grayscale images
-        if not is_grayscale:
-            transform_list.extend([
-                transforms.ColorJitter(
-                    brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8,
-                    source=source, target=target,
-                ),
-                transforms.RandomGrayscale(p=0.2, source=source, target=target),
-            ])
-        transform_list.append(transforms.ToImage(**stats, source=source, target=target))
-        return transforms.Compose(*transform_list)
-
-    # High-resolution: full augmentation pipeline
     transform_list = [
         transforms.RGB(source=source, target=target),
         transforms.RandomResizedCrop(
@@ -329,16 +304,11 @@ def _create_multicrop_transforms(
     source = target = config.data_key
     is_grayscale = config.channels == 1
 
-    if config.low_resolution:
-        num_local = 0
-
-    global_crop_scale = (0.5, 1.0) if config.low_resolution else (0.4, 1.0)
-
     # Build global transform
     global_transform_list = [
         transforms.RGB(source=source, target=target),
         transforms.RandomResizedCrop(
-            (h, w), scale=global_crop_scale, source=source, target=target
+            (h, w), scale=(0.4, 1.0), source=source, target=target
         ),
         transforms.RandomHorizontalFlip(p=0.5, source=source, target=target),
     ]
@@ -351,13 +321,11 @@ def _create_multicrop_transforms(
             ),
             transforms.RandomGrayscale(p=0.2, source=source, target=target),
         ])
-    # Skip gaussian blur for low-resolution images
-    if not config.low_resolution:
-        global_transform_list.append(
-            transforms.GaussianBlur(
-                kernel_size=23, sigma=(0.1, 2.0), p=1.0, source=source, target=target
-            )
+    global_transform_list.append(
+        transforms.GaussianBlur(
+            kernel_size=23, sigma=(0.1, 2.0), p=1.0, source=source, target=target
         )
+    )
     global_transform_list.append(transforms.ToImage(**stats, source=source, target=target))
     global_transform = transforms.Compose(*global_transform_list)
 

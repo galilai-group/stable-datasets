@@ -1,5 +1,4 @@
 name: mae
-requires_vit: true
 
 transforms:
   type: single
