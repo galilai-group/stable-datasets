@@ -1,0 +1,140 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "SSL Offline Probe.",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "stable_datasets.benchmarks.self_supervised.offline_probe",
+            "args": [
+                "--checkpoint-dir", "/mnt/data/sami/stable-datasets/.pretrain_checkpoints",
+            ],
+        },
+        {
+            "name": "SSL Smoke Test: nnclr, vit_small, flowers102",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "stable_datasets.benchmarks.self_supervised.main",
+            "args": [
+                "--multirun",
+                "dataset=flowers102",
+                "model=nnclr",
+                "backbone=vit_small",
+                "smoke_test=true",
+                "training.num_workers=0"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PROJECT_ROOT": "${workspaceFolder}",
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "SSL Benchmark: Single (cifar10, simclr, vit_small)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "stable_datasets.benchmarks.self_supervised.main",
+            "args": [
+                "dataset=cifar10",
+                "model=simclr",
+                "backbone=vit_small",
+                "training.num_workers=0"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PROJECT_ROOT": "${workspaceFolder}",
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "SSL Benchmark: Local Parallel Sweep",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "stable_datasets.benchmarks.self_supervised.main",
+            "args": [
+                "--multirun",
+                "--config-name",
+                "local_parallel",
+                "dataset=cifar10,stl10,svhn,cifar100",
+                "model=simclr,dino",
+                "backbone=vit_small",
+                "training.num_workers=0"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PROJECT_ROOT": "${workspaceFolder}",
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "SSL Benchmark: Full Sweep (All Models x All Datasets)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "stable_datasets.benchmarks.self_supervised.main",
+            "args": [
+                "--multirun",
+                "--config-name",
+                "local_parallel",
+                "dataset=all",
+                "model=simclr,dino,mae,lejepa,nnclr,barlow_twins",
+                "backbone=vit_small",
+                "training.num_workers=0"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PROJECT_ROOT": "${workspaceFolder}",
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "SSL Benchmark: Custom",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "stable_datasets.benchmarks.self_supervised.main",
+            "args": [
+                "--multirun",
+                "--config-name",
+                "local_parallel",
+                "dataset=${input:dataset}",
+                "model=${input:model}",
+                "backbone=${input:backbone}",
+                "training.num_workers=0"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PROJECT_ROOT": "${workspaceFolder}",
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "dataset",
+            "type": "promptString",
+            "description": "Dataset(s) (comma-separated, or 'all')",
+            "default": "cifar10"
+        },
+        {
+            "id": "model",
+            "type": "promptString",
+            "description": "Model(s) (comma-separated)",
+            "default": "simclr"
+        },
+        {
+            "id": "backbone",
+            "type": "promptString",
+            "description": "Backbone(s) (comma-separated)",
+            "default": "vit_small"
+        }
+    ]
+}

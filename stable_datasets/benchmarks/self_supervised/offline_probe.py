@@ -61,6 +61,36 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 
 # ============================================================================
+# Backbone output normalisation
+# ============================================================================
+
+
+class FlatEmbeddingBackbone(nn.Module):
+    """Wraps any backbone to always return flat [B, D] CLS token embeddings.
+
+    Handles:
+      - HuggingFace ViT (BaseModelOutputWithPooling) → .last_hidden_state[:, 0]
+      - MaskedEncoder (has .encoded) → .encoded[:, 0]
+      - timm ViT [B, T, D] → [:, 0]
+      - Already flat [B, D] → passthrough
+    """
+
+    def __init__(self, backbone: nn.Module):
+        super().__init__()
+        self.backbone = backbone
+
+    def forward(self, images):
+        out = self.backbone(images)
+        if hasattr(out, "last_hidden_state"):  # HF ViT
+            return out.last_hidden_state[:, 0]
+        if hasattr(out, "encoded"):  # MaskedEncoder
+            return out.encoded[:, 0]
+        if out.ndim == 3:  # [B, T, D] → CLS token
+            return out[:, 0]
+        return out  # already [B, D]
+
+
+# ============================================================================
 # Backbone extraction
 # ============================================================================
 
@@ -140,8 +170,8 @@ def load_backbone_from_checkpoint(
     if msg.missing_keys:
         log.warning(f"Missing keys (first 5): {msg.missing_keys[:5]}")
 
-    # Freeze with EvalOnly — stays frozen even when trainer calls .train()
-    frozen = spt.backbone.EvalOnly(backbone)
+    # Normalise output to flat [B, D], then freeze with EvalOnly
+    frozen = spt.backbone.EvalOnly(FlatEmbeddingBackbone(backbone))
     return frozen, embed_dim
 
 
