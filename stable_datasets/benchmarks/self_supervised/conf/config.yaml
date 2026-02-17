@@ -6,6 +6,7 @@ defaults:
 dataset: cifar10
 skip_datasets: []  # extra datasets to skip at runtime (e.g. [shapes3d, food101])
 data_dir: /mnt/data/sami/.stable-datasets  # override to set download/cache root (e.g. /mnt/data/sami/.stable-datasets)
+cache_dir: /mnt/data/sami/stable-datasets/.cached_224  # pre-cached 224x224 numpy memmaps (null to disable)
 smoke_test: false  # run 3 train + 3 val batches for 1 epoch to verify the pipeline works
 
 training:

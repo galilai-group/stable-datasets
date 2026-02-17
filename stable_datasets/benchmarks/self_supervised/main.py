@@ -183,7 +183,9 @@ def main(cfg: DictConfig) -> None:
 
     # Load dataset with config-driven transforms
     data, ds_config = create_dataset(
-        cfg.dataset, cfg.model.transforms, cfg.training, data_dir=cfg.get("data_dir"),
+        cfg.dataset, cfg.model.transforms, cfg.training,
+        data_dir=cfg.get("data_dir"),
+        cache_dir=cfg.get("cache_dir", None),
     )
 
     # Build module from registry
