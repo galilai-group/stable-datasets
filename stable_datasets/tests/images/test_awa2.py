@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.awa2 import AWA2
+from stable_datasets.images import AWA2
 
 
 def test_awa2_dataset():

@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.beans import Beans
+from stable_datasets.images import Beans
 
 
 def test_beans_dataset():

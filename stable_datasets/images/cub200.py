@@ -1,14 +1,31 @@
-from pathlib import Path
+import io
+import tarfile
 
 import datasets
 import pandas as pd
 from PIL import Image
 
+from stable_datasets.utils import BaseDatasetBuilder
 
-class CUB200(datasets.GeneratorBasedBuilder):
+
+class CUB200(BaseDatasetBuilder):
     """Caltech-UCSD Birds-200-2011 (CUB-200-2011) Dataset"""
 
     VERSION = datasets.Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://www.vision.caltech.edu/datasets/cub_200_2011/",
+        "assets": {
+            "train": "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1",
+            "test": "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1",
+        },
+        "citation": """@techreport{WahCUB_200_2011,
+                        Title = {The Caltech-UCSD Birds-200-2011 Dataset},
+                        Author = {Wah, C. and Branson, S. and Welinder, P. and Perona, P. and Belongie, S.},
+                        Year = {2011},
+                        Institution = {California Institute of Technology},
+                        Number = {CNS-TR-2011-001}}""",
+    }
 
     def _info(self):
         return datasets.DatasetInfo(
@@ -17,68 +34,49 @@ class CUB200(datasets.GeneratorBasedBuilder):
                 {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}
             ),
             supervised_keys=("image", "label"),
-            homepage="https://www.vision.caltech.edu/datasets/cub_200_2011/",
-            citation="""@techreport{WahCUB_200_2011,
-                         Title = {The Caltech-UCSD Birds-200-2011 Dataset},
-                         Author = {Wah, C. and Branson, S. and Welinder, P. and Perona, P. and Belongie, S.},
-                         Year = {2011},
-                         Institution = {California Institute of Technology},
-                         Number = {CNS-TR-2011-001}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        # Download and extract in a single step
-        extracted_path = dl_manager.download_and_extract(
-            "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1"
-        )
-        data_dir = Path(extracted_path) / "CUB_200_2011"
-
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={"data_dir": data_dir, "split": "train"},
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"data_dir": data_dir, "split": "test"},
-            ),
-        ]
-
-    def _generate_examples(self, data_dir, split):
+    def _generate_examples(self, data_path, split):
         """Generate examples from the extracted directory."""
-        # Paths to metadata files in the extracted directory
-        image_labels_path = data_dir / "image_class_labels.txt"
-        image_paths_path = data_dir / "images.txt"
-        train_test_split_path = data_dir / "train_test_split.txt"
+        with tarfile.open(data_path, "r:gz") as archive:
+            # Read metadata files from inside the archive
+            with archive.extractfile("CUB_200_2011/image_class_labels.txt") as f:
+                labels_df = pd.read_csv(io.BytesIO(f.read()), sep=r"\s+", header=None, names=["image_id", "label"])
 
-        # Load metadata
-        images_df = pd.read_csv(image_paths_path, sep=r"\s+", header=None, names=["image_id", "file_path"])
-        labels_df = pd.read_csv(image_labels_path, sep=r"\s+", header=None, names=["image_id", "label"])
-        split_df = pd.read_csv(train_test_split_path, sep=r"\s+", header=None, names=["image_id", "is_training"])
+            with archive.extractfile("CUB_200_2011/images.txt") as f:
+                images_df = pd.read_csv(io.BytesIO(f.read()), sep=r"\s+", header=None, names=["image_id", "file_path"])
 
-        # Merge metadata into a single DataFrame
-        data_df = images_df.merge(labels_df, on="image_id").merge(split_df, on="image_id")
-        data_df["label"] -= 1  # Zero-index the labels
-
-        # Filter by the specified split
-        is_training_split = 1 if split == "train" else 0
-        split_data = data_df[data_df["is_training"] == is_training_split]
-
-        # Generate examples
-        for _, row in split_data.iterrows():
-            image_path = data_dir / "images" / row["file_path"]
-            label = row["label"]
-
-            # Load the image
-            with open(image_path, "rb") as img_file:
-                image = Image.open(img_file).convert("RGB")
-                yield (
-                    row["image_id"],
-                    {
-                        "image": image,
-                        "label": label,
-                    },
+            with archive.extractfile("CUB_200_2011/train_test_split.txt") as f:
+                split_df = pd.read_csv(
+                    io.BytesIO(f.read()), sep=r"\s+", header=None, names=["image_id", "is_training"]
                 )
+
+            # Merge metadata into a single DataFrame
+            data_df = images_df.merge(labels_df, on="image_id").merge(split_df, on="image_id")
+            data_df["label"] -= 1  # Zero-index the labels
+
+            # Filter by the specified split
+            is_training_split = 1 if split == "train" else 0
+            split_data = data_df[data_df["is_training"] == is_training_split]
+
+            # Generate examples
+            for _, row in split_data.iterrows():
+                image_path = f"CUB_200_2011/images/{row['file_path']}"
+                label = row["label"]
+
+                # Read the image from the tar archive
+                with archive.extractfile(image_path) as img_file:
+                    image = Image.open(io.BytesIO(img_file.read())).convert("RGB")
+
+                    yield (
+                        row["image_id"],
+                        {
+                            "image": image,
+                            "label": label,
+                        },
+                    )
 
     @staticmethod
     def _labels():

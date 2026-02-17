@@ -5,14 +5,33 @@ import datasets
 from PIL import Image
 from tqdm import tqdm
 
+from stable_datasets.utils import BaseDatasetBuilder
 
-class Country211(datasets.GeneratorBasedBuilder):
+
+class Country211(BaseDatasetBuilder):
     """Country211: Image Classification Dataset for Geolocation.
     This dataset uses a subset of the YFCC100M dataset, filtered by GPS coordinates to include images labeled
     with ISO-3166 country codes. Each country has a balanced sample of images for training, validation, and testing.
     """
 
     VERSION = datasets.Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://github.com/openai/CLIP/blob/main/data/country211.md",
+        "assets": {
+            "train": "https://openaipublic.azureedge.net/clip/data/country211.tgz",
+            "valid": "https://openaipublic.azureedge.net/clip/data/country211.tgz",
+            "test": "https://openaipublic.azureedge.net/clip/data/country211.tgz",
+        },
+        "citation": """@inproceedings{radford2021learning,
+                title     = {Learning transferable visual models from natural language supervision},
+                author    = {Radford, Alec and Kim, Jong Wook and Hallacy, Chris and Ramesh, Aditya and Goh, Gabriel and Agarwal, Sandhini and Sastry, Girish and Askell, Amanda and Mishkin, Pamela and Clark, Jack and others},
+                booktitle = {International conference on machine learning},
+                pages     = {8748--8763},
+                year      = {2021},
+                organization = {PmLR} }
+        """,
+    }
 
     def _info(self):
         return datasets.DatasetInfo(
@@ -21,36 +40,13 @@ class Country211(datasets.GeneratorBasedBuilder):
                 {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._class_names())}
             ),
             supervised_keys=("image", "label"),
-            homepage="https://github.com/openai/CLIP/blob/main/data/country211.md",
-            citation="""@inproceedings{radford2021learning,
-                         title={Learning transferable visual models from natural language supervision},
-                         author={Radford, Alec and Kim, Jong Wook and Hallacy, Chris and Ramesh, Aditya and Goh, Gabriel and Agarwal, Sandhini and Sastry, Girish and Askell, Amanda and Mishkin, Pamela and Clark, Jack and others},
-                         booktitle={International conference on machine learning},
-                         pages={8748--8763},
-                         year={2021},
-                         organization={PMLR}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        # Define download URL and local path
-        urls = "https://openaipublic.azureedge.net/clip/data/country211.tgz"
-        archive_path = dl_manager.download(urls)
-
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"archive_path": archive_path, "split": "train"}
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION, gen_kwargs={"archive_path": archive_path, "split": "valid"}
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"archive_path": archive_path, "split": "test"}
-            ),
-        ]
-
-    def _generate_examples(self, archive_path, split):
+    def _generate_examples(self, data_path, split):
         """Generate examples from the tar archive."""
-        with tarfile.open(archive_path, "r:gz") as archive:
+        with tarfile.open(data_path, "r:gz") as archive:
             # Navigate to the relevant split directory within the archive
             split_dir = f"country211/{split}"
 
