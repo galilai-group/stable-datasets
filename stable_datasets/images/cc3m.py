@@ -1,5 +1,4 @@
 # Python Standard Library imports
-# Third-party imports
 import asyncio
 import csv
 import hashlib
@@ -7,6 +6,7 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse
 
+# Third-party imports
 import aiohttp
 import datasets
 from loguru import logger as logging
