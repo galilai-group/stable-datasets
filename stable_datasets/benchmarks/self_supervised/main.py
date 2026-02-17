@@ -57,6 +57,7 @@ import stable_pretraining as spt
 import torch
 import wandb
 from hydra.core.hydra_config import HydraConfig
+from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig, open_dict
 
@@ -221,6 +222,23 @@ def main(cfg: DictConfig) -> None:
     if smoke_test:
         log.info("Smoke test mode: 1 epoch, 3 train batches, 3 val batches")
 
+    # Checkpoint callback for offline probing
+    ckpt_cfg = cfg.checkpoint
+    ckpt_dir = os.path.join(
+        ckpt_cfg.dir, f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}"
+    )
+    checkpoint_cb = ModelCheckpoint(
+        dirpath=ckpt_dir,
+        filename="{epoch}-{step}",
+        every_n_epochs=ckpt_cfg.every_n_epochs,
+        save_last=ckpt_cfg.save_last,
+        monitor=ckpt_cfg.monitor,
+        mode=ckpt_cfg.mode,
+        save_top_k=ckpt_cfg.save_top_k,
+        save_weights_only=True,
+    )
+    callbacks.append(checkpoint_cb)
+
     trainer = pl.Trainer(
         max_epochs=1 if smoke_test else cfg.training.max_epochs,
         precision=cfg.training.precision,
@@ -229,7 +247,6 @@ def main(cfg: DictConfig) -> None:
         num_sanity_val_steps=0,
         limit_train_batches=3 if smoke_test else 1.0,
         limit_val_batches=3 if smoke_test else (1.0 if has_val else 0),
-        enable_checkpointing=False,
         accelerator="auto",
         default_root_dir=output_dir,
     )

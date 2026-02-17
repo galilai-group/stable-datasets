@@ -24,8 +24,8 @@ export PROJECT_ROOT
 
 DATASETS=${1:?"Usage: launch.sh <dataset1,dataset2,...> [extra hydra overrides...] [env: CONFIG=... MODELS=... BACKBONES=...]"}
 shift
-CONFIG=${CONFIG:-slurm}
-MODELS=${MODELS:-simclr,dino,mae,lejepa,barlow_twins}
+CONFIG=${CONFIG:-local_parallel}
+MODELS=${MODELS:-simclr,dino,mae,lejepa,nnclr,barlow_twins}
 BACKBONES=${BACKBONES:-vit_small}
 
 echo "=== SSL Benchmark Sweep ==="

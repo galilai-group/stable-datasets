@@ -535,6 +535,7 @@ def create_dataset(
                 train_transform, val_transform = create_transforms(ds_config, transform_cfg)
                 batch_size = training_cfg.batch_size
                 num_workers = training_cfg.num_workers
+                prefetch_factor = getattr(training_cfg, "prefetch_factor", 2) if num_workers > 0 else None
 
                 train_dataset = CachedDataset(
                     train_images, train_labels, train_transform,
@@ -550,6 +551,7 @@ def create_dataset(
                     multiprocessing_context="fork" if num_workers > 0 else None,
                     persistent_workers=num_workers > 0,
                     pin_memory=True,
+                    prefetch_factor=prefetch_factor,
                 )
 
                 val_dataset = CachedDataset(
@@ -566,9 +568,11 @@ def create_dataset(
                     multiprocessing_context="fork" if num_workers > 0 else None,
                     persistent_workers=num_workers > 0,
                     pin_memory=True,
+                    prefetch_factor=prefetch_factor,
                 )
 
                 data_module = spt.data.DataModule(train=train_loader, val=val_loader)
+                log.info(f"Cached dataset loaded for '{name_lower}' from {cache_path}")
                 return data_module, ds_config
 
     # ------------------------------------------------------------------
@@ -606,6 +610,7 @@ def create_dataset(
 
     batch_size = training_cfg.batch_size
     num_workers = training_cfg.num_workers
+    prefetch_factor = getattr(training_cfg, "prefetch_factor", 2) if num_workers > 0 else None
 
     train_dataset = TransformDataset(train_hf, train_transform, data_key=ds_config.data_key)
     train_loader = torch.utils.data.DataLoader(
@@ -616,6 +621,7 @@ def create_dataset(
         drop_last=True,
         collate_fn=_collate_views,
         multiprocessing_context="fork" if num_workers > 0 else None,
+        prefetch_factor=prefetch_factor,
     )
 
     val_loader = None
@@ -629,6 +635,7 @@ def create_dataset(
             drop_last=False,
             collate_fn=_collate_views,
             multiprocessing_context="fork" if num_workers > 0 else None,
+            prefetch_factor=prefetch_factor,
         )
 
     data_module = spt.data.DataModule(train=train_loader, val=val_loader)
