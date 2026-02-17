@@ -1,7 +1,7 @@
-"""Collect benchmark results from W&B into summary tables.
+"""Collect offline probe results from W&B into summary tables.
 
-Pulls linear probe top-1/top-5 and KNN top-1/top-5 accuracy for all
-benchmark runs, then pivots into a {dataset x (model, backbone)} table.
+Pulls offline linear-probe top-1/top-5 accuracy for runs tagged
+``offline_probe``, then pivots into a {dataset x (model, backbone)} table.
 Shows the epoch at which peak performance was achieved.
 
 Usage:
@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-from datetime import datetime, timezone
 
 import pandas as pd
 from stable_pretraining.utils.log_reader import WandbLogReader
@@ -29,19 +28,15 @@ from tqdm import tqdm
 
 log = logging.getLogger(__name__)
 
-# Only collect runs created after the hparams-v2 change (ViT-Small, 224x224,
-# no ResNet).  This is the timestamp of the commit that introduced those
-# changes; using a timestamp instead of a commit hash so that future commits
-# don't invalidate the filter.
-HPARAMS_V2_CUTOFF = "2026-02-16T21:25:36+00:00"
+OFFLINE_PROBE_TAG = "offline_probe"
 
 METRICS = [
-    "eval/linear_probe_top1_epoch",
-    "eval/linear_probe_top5_epoch",
-    "eval/knn_probe_top1",
-    "eval/knn_probe_top5",
+    "eval/accuracy_top1_epoch",
+    "eval/accuracy_top5_epoch",
 ]
 
+# Offline probe runs store the SSL model name as "ssl_model" in the W&B config.
+# We remap it to "model" so the pivot tables stay consistent.
 CONFIG_COLS = ["model", "backbone", "dataset"]
 
 
