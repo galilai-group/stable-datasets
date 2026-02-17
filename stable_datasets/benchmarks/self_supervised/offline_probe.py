@@ -187,7 +187,7 @@ def load_eval_dataset(dataset_name: str, batch_size: int, num_workers: int = 8,
     with open(metadata_path) as f:
         metadata = json.load(f)
 
-    mean, std = _get_normalization_stats(dataset_name)
+    mean, std = _get_normalization_stats(dataset_name, metadata["original_channels"])
     train_tf, val_tf = create_eval_transforms(mean, std)
 
     class CachedEvalDataset(Dataset):
@@ -214,6 +214,7 @@ def load_eval_dataset(dataset_name: str, batch_size: int, num_workers: int = 8,
         image_size=(metadata["image_size"], metadata["image_size"]),
         mean=mean,
         std=std,
+        num_frames=1,
     )
 
     train_loader = DataLoader(
@@ -245,8 +246,14 @@ def evaluate_checkpoint(
     use_wandb: bool = True,
     wandb_entity: str | None = None,
     wandb_project: str = "stable-datasets-benchmarks",
+    gpu_id: int | None = None,
 ) -> dict:
     """Run offline linear probe on a single checkpoint."""
+
+    # Pin to a single GPU
+    if gpu_id is not None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+        log.info(f"Pinned to GPU {gpu_id}")
 
     log.info(f"Evaluating: {ckpt_path}")
     log.info(f"  model={model_name}, backbone=vit_{backbone_size}, dataset={dataset_name}")
@@ -294,23 +301,32 @@ def evaluate_checkpoint(
         },
     )
 
-    # 4. Callbacks — OnlineProbe for metric tracking on logits
-    metrics = {
-        "top1": torchmetrics.classification.MulticlassAccuracy(num_classes),
-        "top5": torchmetrics.classification.MulticlassAccuracy(
-            num_classes, top_k=min(5, num_classes)
-        ),
-    }
-    accuracy_probe = spt.callbacks.OnlineProbe(
-        module,
-        name="accuracy",
-        input="logits",
-        target="label",
-        probe=nn.Identity(),
-        loss=None,
-        metrics=metrics,
-    )
-    callbacks = [accuracy_probe, LearningRateMonitor(logging_interval="epoch")]
+    # 4. Callbacks — lightweight accuracy tracker (not OnlineProbe, which
+    #    requires a trainable probe and would fail with nn.Identity())
+    class AccuracyTracker(pl.Callback):
+        def __init__(self, n_classes):
+            super().__init__()
+            self.val_top1 = torchmetrics.classification.MulticlassAccuracy(n_classes)
+            self.val_top5 = torchmetrics.classification.MulticlassAccuracy(
+                n_classes, top_k=min(5, n_classes)
+            )
+
+        def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
+            if "logits" in outputs and "label" in batch:
+                logits = outputs["logits"].detach()
+                labels = batch["label"]
+                self.val_top1.to(logits.device).update(logits, labels)
+                self.val_top5.to(logits.device).update(logits, labels)
+
+        def on_validation_epoch_end(self, trainer, pl_module):
+            t1 = self.val_top1.compute()
+            t5 = self.val_top5.compute()
+            pl_module.log("eval/top1", t1, sync_dist=True)
+            pl_module.log("eval/top5", t5, sync_dist=True)
+            self.val_top1.reset()
+            self.val_top5.reset()
+
+    callbacks = [AccuracyTracker(num_classes), LearningRateMonitor(logging_interval="epoch")]
 
     # 5. Logger
     logger = False
@@ -337,7 +353,7 @@ def evaluate_checkpoint(
             },
         )
 
-    # 6. Train
+    # 6. Train (single GPU — round-robin assigned by caller)
     trainer = pl.Trainer(
         max_epochs=epochs,
         precision="16-mixed",
@@ -346,6 +362,7 @@ def evaluate_checkpoint(
         enable_checkpointing=False,
         num_sanity_val_steps=0,
         accelerator="auto",
+        devices=1,
     )
 
     manager = spt.Manager(trainer=trainer, module=module, data=data)
@@ -353,8 +370,8 @@ def evaluate_checkpoint(
 
     # 7. Collect results
     metric_dict = trainer.callback_metrics
-    top1 = metric_dict.get("eval/accuracy_top1", torch.tensor(0.0)).item()
-    top5 = metric_dict.get("eval/accuracy_top5", torch.tensor(0.0)).item()
+    top1 = metric_dict.get("eval/top1", torch.tensor(0.0)).item()
+    top5 = metric_dict.get("eval/top5", torch.tensor(0.0)).item()
 
     results = {
         "checkpoint": str(ckpt_path),
@@ -441,9 +458,16 @@ def main():
         log.error("No checkpoints found")
         sys.exit(1)
 
+    # Round-robin GPU assignment
+    num_gpus = torch.cuda.device_count()
+    if num_gpus > 0:
+        log.info(f"Found {num_gpus} GPU(s) — assigning probes round-robin")
+    else:
+        log.info("No GPUs found — running on CPU")
+
     all_results = []
 
-    for ckpt_path in ckpt_paths:
+    for job_idx, ckpt_path in enumerate(ckpt_paths):
         parsed = parse_checkpoint_info(ckpt_path)
 
         if parsed:
@@ -463,6 +487,8 @@ def main():
             )
             continue
 
+        gpu_id = job_idx % num_gpus if num_gpus > 0 else None
+
         results = evaluate_checkpoint(
             ckpt_path=ckpt_path,
             model_name=model,
@@ -475,6 +501,7 @@ def main():
             use_wandb=not args.no_wandb,
             wandb_entity=args.wandb_entity,
             wandb_project=args.wandb_project,
+            gpu_id=gpu_id,
         )
 
         all_results.append(results)
