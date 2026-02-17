@@ -57,7 +57,6 @@ jobs:
             --group ${{ matrix.shard }} \
             --splitting-algorithm least_duration \
             --store-durations \
-            --no-test-exit-code 0 \
             --cov=stable_datasets \
             --cov-report=term-missing:skip-covered \
             --cov-report=term
