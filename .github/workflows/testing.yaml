@@ -48,6 +48,7 @@ jobs:
       - name: Run tests (pytest-split shard) and write coverage data
         run: |
           set -o pipefail
+
           pytest stable_datasets/ \
             -m "not large" \
             --verbose \
@@ -57,7 +58,7 @@ jobs:
             --store-durations \
             --cov=stable_datasets \
             --cov-report=term-missing:skip-covered \
-            --cov-report=term | tee pytest-coverage.${{ matrix.shard }}.txt
+            --cov-report=term
 
             ls -la .test_durations .coverage* || true
             find . -maxdepth 2 -name ".coverage*" -print || true
@@ -68,7 +69,7 @@ jobs:
             fi
 
             echo "=== final files to upload ==="
-            ls -la .coverage.${{ matrix.shard }} pytest-coverage.${{ matrix.shard }}.txt .test_durations || true
+            ls -la .coverage.${{ matrix.shard }} .test_durations || true
 
       - name: Upload shard artifacts
         if: always()
@@ -78,7 +79,6 @@ jobs:
           include-hidden-files: true
           path: |
             .coverage.${{ matrix.shard }}
-            pytest-coverage.${{ matrix.shard }}.txt
             .test_durations
 
   MergeCoverage:
@@ -144,11 +144,19 @@ jobs:
           coverage html -d htmlcov
           coverage report --show-missing --skip-covered > pytest-coverage.txt
 
-      - name: Pytest coverage comment
+      - name: Post merged coverage to PR
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-        uses: MishaKav/pytest-coverage-comment@main
+        uses: actions/github-script@v7
         with:
-          pytest-coverage-path: ./pytest-coverage.txt
+          script: |
+            const fs = require('fs');
+            const body = "## Coverage (merged)\n\n```text\n" + fs.readFileSync('pytest-coverage.txt', 'utf8') + "\n```";
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
 
       - name: Upload coverage HTML report
         if: always()
