@@ -13,9 +13,13 @@ from dataclasses import dataclass
 import numpy as np
 
 log = logging.getLogger(__name__)
+import json
+from pathlib import Path
+
 import stable_datasets as sds
 import stable_pretraining as spt
 import torch
+from PIL import Image as PILImage
 from stable_pretraining.data import transforms
 
 # Lazy import torchcodec only when needed for video datasets
@@ -64,6 +68,8 @@ DATASET_KWARGS = {
     "emnist": {"config_name": "balanced"},
     "medmnist": {"config_name": "pneumoniamnist"},
 }
+
+CACHE_DIR_DEFAULT = "/mnt/data/sami/stable-datasets/.cached_224"
 
 
 # =============================================================================
@@ -147,6 +153,81 @@ def _collate_views(batch):
                 )
             collated[view_name] = view_dict
     return collated
+
+
+# =============================================================================
+# Cached Dataset (pre-cached 224x224 numpy memmaps)
+# =============================================================================
+
+
+class CachedDataset(torch.utils.data.Dataset):
+    """Dataset backed by pre-cached 224x224 uint8 numpy memmaps.
+
+    Eliminates HF Arrow deserialization, PIL decode, and resize overhead.
+    Returns samples as {"image": PIL.Image, "label": int} so existing
+    transform chains work without any modification.
+    """
+
+    def __init__(self, images_path: str, labels_path: str, transform, data_key: str = "image"):
+        # Memory-mapped read: no RAM cost, just pages in on access
+        self.images = np.load(images_path, mmap_mode="r")
+        self.labels = np.load(labels_path)
+        self.transform = transform
+        self.data_key = data_key
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx):
+        # .copy() is required: memmap returns a read-only view, and PIL/torch
+        # transforms may need to write. On a 224x224x3 array this is ~150KB,
+        # taking < 30 microseconds — negligible vs the old PIL decode path.
+        img = PILImage.fromarray(self.images[idx].copy())
+        label = int(self.labels[idx])
+
+        transform_input = {self.data_key: img}
+        transform_input["label"] = label
+        output = self.transform(transform_input)
+        return self._normalize_keys(output)
+
+    def _normalize_keys(self, output):
+        """Same normalization as TransformDataset."""
+        if self.data_key == "image":
+            return output
+        if "views" in output:
+            for view in output["views"]:
+                if self.data_key in view:
+                    view["image"] = view.pop(self.data_key)
+        elif self.data_key in output:
+            output["image"] = output.pop(self.data_key)
+        return output
+
+
+def _load_cached_config(name: str, cache_dir: str) -> DatasetConfig | None:
+    """Try to load DatasetConfig from cached metadata.json.
+
+    Returns None if cache doesn't exist for this dataset.
+    """
+    metadata_path = Path(cache_dir) / name / "metadata.json"
+    if not metadata_path.exists():
+        return None
+
+    with open(metadata_path) as f:
+        meta = json.load(f)
+
+    channels = meta["original_channels"]
+    mean, std = _get_normalization_stats(name, channels)
+
+    return DatasetConfig(
+        name=name,
+        num_classes=meta["num_classes"],
+        image_size=tuple(meta["image_size"]),
+        channels=channels,
+        mean=mean,
+        std=std,
+        num_frames=1,
+        data_key="image",
+    )
 
 
 # =============================================================================
@@ -415,20 +496,84 @@ def create_dataset(
     transform_cfg,
     training_cfg,
     data_dir: str | None = None,
+    cache_dir: str | None = CACHE_DIR_DEFAULT,
 ) -> tuple[spt.data.DataModule, DatasetConfig]:
     """Create a dataset with config-driven transforms.
+
+    If a pre-cached version exists at `cache_dir/{name}/`, uses fast numpy
+    memmap loading instead of HF Arrow deserialization. Falls back to the
+    original HF loading path if no cache is found.
 
     Args:
         name: Dataset name (case-insensitive).
         transform_cfg: Model's transform config (type + params).
         training_cfg: Training config with batch_size and num_workers.
-        data_dir: Root directory for downloads and cache. If None, uses the
-            stable_datasets default (~/.stable_datasets/).
+        data_dir: Root directory for HF downloads/cache.
+        cache_dir: Root directory for pre-cached 224x224 numpy files.
+            Set to None to disable caching and always use HF loading.
 
     Returns:
         Tuple of (DataModule, DatasetConfig).
     """
     name_lower = name.lower()
+
+    # ------------------------------------------------------------------
+    # Fast path: load from pre-cached numpy memmaps
+    # ------------------------------------------------------------------
+    if cache_dir is not None:
+        ds_config = _load_cached_config(name_lower, cache_dir)
+        if ds_config is not None:
+            cache_path = Path(cache_dir) / name_lower
+            train_images = str(cache_path / "train_images.npy")
+            train_labels = str(cache_path / "train_labels.npy")
+            val_images = str(cache_path / "val_images.npy")
+            val_labels = str(cache_path / "val_labels.npy")
+
+            if Path(train_images).exists() and Path(val_images).exists():
+                log.info(f"Using cached dataset for '{name_lower}' from {cache_path}")
+
+                train_transform, val_transform = create_transforms(ds_config, transform_cfg)
+                batch_size = training_cfg.batch_size
+                num_workers = training_cfg.num_workers
+
+                train_dataset = CachedDataset(
+                    train_images, train_labels, train_transform,
+                    data_key=ds_config.data_key,
+                )
+                train_loader = torch.utils.data.DataLoader(
+                    train_dataset,
+                    batch_size=batch_size,
+                    num_workers=num_workers,
+                    shuffle=True,
+                    drop_last=True,
+                    collate_fn=_collate_views,
+                    multiprocessing_context="fork" if num_workers > 0 else None,
+                    persistent_workers=num_workers > 0,
+                    pin_memory=True,
+                )
+
+                val_dataset = CachedDataset(
+                    val_images, val_labels, val_transform,
+                    data_key=ds_config.data_key,
+                )
+                val_loader = torch.utils.data.DataLoader(
+                    val_dataset,
+                    batch_size=batch_size,
+                    num_workers=num_workers,
+                    shuffle=False,
+                    drop_last=False,
+                    collate_fn=_collate_views,
+                    multiprocessing_context="fork" if num_workers > 0 else None,
+                    persistent_workers=num_workers > 0,
+                    pin_memory=True,
+                )
+
+                data_module = spt.data.DataModule(train=train_loader, val=val_loader)
+                return data_module, ds_config
+
+    # ------------------------------------------------------------------
+    # Slow path: original HF loading (unchanged)
+    # ------------------------------------------------------------------
     dataset_classes = _get_dataset_classes()
 
     if name_lower not in dataset_classes:
@@ -438,7 +583,6 @@ def create_dataset(
     dataset_cls = dataset_classes[name_lower]
     extra_kwargs = DATASET_KWARGS.get(name_lower, {})
     if data_dir is not None:
-        from pathlib import Path
         root = Path(data_dir)
         extra_kwargs["download_dir"] = str(root / "downloads")
         extra_kwargs["processed_cache_dir"] = str(root / "processed")
