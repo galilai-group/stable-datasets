@@ -21,9 +21,9 @@
 <meta content="#ffffff" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="#030711" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>STL-10 | stable-datasets</title>
-<meta content="STL-10 | stable-datasets" property="og:title"/>
-<meta content="STL-10 | stable-datasets" name="twitter:title"/>
+<title>AWA2 | stable-datasets</title>
+<meta content="AWA2 | stable-datasets" property="og:title"/>
+<meta content="AWA2 | stable-datasets" name="twitter:title"/>
 <link href="../../_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="../../_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
 <link href="../../_static/theme.css?v=73505e79" rel="stylesheet" type="text/css"/>
@@ -35,8 +35,8 @@
 <link href="../../_static/awesome-sphinx-design.css?v=c54898a4" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
-<link href="../e_mnist/" rel="next" title="EMNIST"/>
-<link href="../beans/" rel="prev" title="Beans"/>
+<link href="../beans/" rel="next" title="Beans"/>
+<link href="../medmnist/" rel="prev" title="MedMNIST"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" @scroll.window="showScrollTop = pageYOffset &gt; 100" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -96,9 +96,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../medmnist/">MedMNIST</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../awa2/">AWA2</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">AWA2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../beans/">Beans</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">STL-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../stl10/">STL-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flowers102/">Flowers102</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../cub200/">CUB-200</a></li>
@@ -132,29 +132,23 @@
 </svg>
 </a>
 <div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../">Datasets</a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">STL-10</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">AWA2</span>
 </nav>
 <div id="content" role="main">
-<section id="stl-10">
-<h1>STL-10<a class="headerlink" href="#stl-10" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
+<section id="awa2">
+<h1>AWA2<a class="headerlink" href="#awa2" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
 <p style="display: flex; gap: 10px;">
-<img alt="Task: Image Classification" src="https://img.shields.io/badge/Task-Image%20Classification-blue"/>
-<img alt="Classes: 10" src="https://img.shields.io/badge/Classes-10-green"/>
-<img alt="Image Size: 96x96" src="https://img.shields.io/badge/Size-96x96-orange"/>
+<img alt="Task: Zero-Shot Learning" src="https://img.shields.io/badge/Task-Zero--Shot%20Learning-blue"/>
+<img alt="Classes: 50" src="https://img.shields.io/badge/Classes-50-green"/>
+<img alt="Animals: 50 Species" src="https://img.shields.io/badge/Animals-50%20Species-purple"/>
 </p><section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#overview'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>The STL-10 dataset is an image recognition dataset for developing unsupervised feature learning, deep learning, and self-taught learning algorithms. It is inspired by the CIFAR-10 dataset but with some modifications. In particular, each class has fewer labeled training examples than in CIFAR-10, but a very large set of unlabeled examples is provided to learn image models prior to supervised training.</p>
-<p><strong>Labeled Splits:</strong></p>
+<p>Animals with Attributes 2 (AWA2) is an image classification dataset featuring 50 animal classes, primarily used for attribute-based image recognition and zero-shot learning research. The dataset provides a rich collection of animal images across diverse species.</p>
 <ul class="simple">
-<li><p><strong>Train</strong>: 5,000 images (500 per class)</p></li>
-<li><p><strong>Test</strong>: 8,000 images (800 per class)</p></li>
+<li><p><strong>Test</strong>: 37,322 images across 50 animal classes</p></li>
+<li><p><strong>Train</strong>: N/A (test-only dataset)</p></li>
 </ul>
-<p><strong>Unlabeled Split:</strong></p>
-<ul class="simple">
-<li><p><strong>Unlabeled</strong>: 100,000 images (label = -1)</p></li>
-</ul>
-<a class="reference internal image-reference" href="../../_images/stl10_teaser.png"><img alt="../../_images/stl10_teaser.png" class="align-center" src="../../_images/stl10_teaser.png" style="width: 90%;">
-</img></a>
+<p>The dataset is widely used for zero-shot learning tasks where models must recognize animal classes they haven’t been trained on, using semantic attributes as a bridge between seen and unseen classes.</p>
 </section>
 <section id="data-structure">
 <h2>Data Structure<a class="headerlink" href="#data-structure" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#data-structure'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
@@ -174,54 +168,92 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">PIL.Image.Image</span></code></p></td>
-<td><p>96×96 RGB image</p></td>
+<td><p>RGB image (variable dimensions)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
 <td><p>int</p></td>
-<td><p>Class label (0-9 for labeled splits, -1 for unlabeled)</p></td>
+<td><p>Class label (0-49)</p></td>
 </tr>
 </tbody>
 </table>
-<p><strong>Classes:</strong> airplane, bird, car, cat, deer, dog, horse, monkey, ship, truck</p>
+</section>
+<section id="animal-classes">
+<h2>Animal Classes<a class="headerlink" href="#animal-classes" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#animal-classes'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
+<p>The dataset includes 50 animal classes:</p>
+<p>antelope, grizzly+bear, killer+whale, beaver, dalmatian, persian+cat, horse, german+shepherd,
+blue+whale, siamese+cat, skunk, mole, tiger, hippopotamus, leopard, moose, spider+monkey,
+humpback+whale, elephant, gorilla, ox, fox, sheep, seal, chimpanzee, hamster, squirrel,
+rhinoceros, rabbit, bat, giraffe, wolf, chihuahua, rat, weasel, otter, buffalo, zebra,
+giant+panda, deer, bobcat, pig, lion, mouse, polar+bear, collie, walrus, raccoon, cow, dolphin</p>
 </section>
 <section id="usage-example">
 <h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage-example'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <p><strong>Basic Usage</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.stl10</span><span class="w"> </span><span class="kn">import</span> <span class="n">STL10</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.awa2</span><span class="w"> </span><span class="kn">import</span> <span class="n">AWA2</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="c1"># First run will download + prepare cache, then return the split as a HF Dataset</span>
-</span><span id="line-4"><span class="n">ds_train</span> <span class="o">=</span> <span class="n">STL10</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
-</span><span id="line-5"><span class="n">ds_test</span> <span class="o">=</span> <span class="n">STL10</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
-</span><span id="line-6"><span class="n">ds_unlabeled</span> <span class="o">=</span> <span class="n">STL10</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"unlabeled"</span><span class="p">)</span>
-</span><span id="line-7">
-</span><span id="line-8"><span class="c1"># If you omit the split (split=None), you get a DatasetDict with all available splits</span>
-</span><span id="line-9"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">STL10</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</span><span id="line-10">
-</span><span id="line-11"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds_train</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-12"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label"}</span>
+</span><span id="line-3"><span class="c1"># Load the test set (only split available)</span>
+</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">AWA2</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-7"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label"}</span>
+</span><span id="line-8"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Label: </span><span class="si">{</span><span class="n">sample</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>  <span class="c1"># Integer label (0-49)</span>
+</span><span id="line-9">
+</span><span id="line-10"><span class="c1"># Access the image</span>
+</span><span id="line-11"><span class="n">image</span> <span class="o">=</span> <span class="n">sample</span><span class="p">[</span><span class="s2">"image"</span><span class="p">]</span>
+</span><span id="line-12"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Image size: </span><span class="si">{</span><span class="n">image</span><span class="o">.</span><span class="n">size</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>  <span class="c1"># Variable dimensions</span>
 </span><span id="line-13">
 </span><span id="line-14"><span class="c1"># Optional: make it PyTorch-friendly</span>
-</span><span id="line-15"><span class="n">ds_train_torch</span> <span class="o">=</span> <span class="n">ds_train</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
-</span><span id="line-16"><span class="n">ds_test_torch</span> <span class="o">=</span> <span class="n">ds_test</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span><span id="line-15"><span class="n">ds_torch</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p><strong>Getting Class Names</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.awa2</span><span class="w"> </span><span class="kn">import</span> <span class="n">AWA2</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="n">ds</span> <span class="o">=</span> <span class="n">AWA2</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="c1"># Get class names</span>
+</span><span id="line-6"><span class="n">class_names</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="c1"># Map label to class name</span>
+</span><span id="line-9"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-10"><span class="n">class_name</span> <span class="o">=</span> <span class="n">class_names</span><span class="p">[</span><span class="n">sample</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]]</span>
+</span><span id="line-11"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Animal: </span><span class="si">{</span><span class="n">class_name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p><strong>Typical Use Case: Zero-Shot Learning</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.awa2</span><span class="w"> </span><span class="kn">import</span> <span class="n">AWA2</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="n">ds</span> <span class="o">=</span> <span class="n">AWA2</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="c1"># Define seen and unseen classes for zero-shot learning</span>
+</span><span id="line-6"><span class="n">seen_classes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>  <span class="c1"># Train on these</span>
+</span><span id="line-7"><span class="n">unseen_classes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>  <span class="c1"># Test on these</span>
+</span><span id="line-8">
+</span><span id="line-9"><span class="c1"># Filter dataset</span>
+</span><span id="line-10"><span class="n">seen_data</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">seen_classes</span><span class="p">)</span>
+</span><span id="line-11"><span class="n">unseen_data</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="ow">in</span> <span class="n">unseen_classes</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#references'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <ul class="simple">
-<li><p>Official website: <a class="reference external" href="https://cs.stanford.edu/~acoates/stl10/" rel="nofollow noopener">https://cs.stanford.edu/~acoates/stl10/<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
+<li><p>Homepage: <a class="reference external" href="https://cvml.ista.ac.at/AwA2/" rel="nofollow noopener">https://cvml.ista.ac.at/AwA2/<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
+<li><p>Paper: Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly (IEEE TPAMI 2019)</p></li>
 </ul>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">coates2011analysis</span><span class="p">,</span>
-</span><span id="line-2"><span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{An analysis of single-layer networks in unsupervised feature learning}</span><span class="p">,</span>
-</span><span id="line-3"><span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Coates, Adam and Ng, Andrew and Lee, Honglak}</span><span class="p">,</span>
-</span><span id="line-4"><span class="w">  </span><span class="na">booktitle</span><span class="p">=</span><span class="s">{Proceedings of the fourteenth international conference on artificial intelligence and statistics}</span><span class="p">,</span>
-</span><span id="line-5"><span class="w">  </span><span class="na">pages</span><span class="p">=</span><span class="s">{215--223}</span><span class="p">,</span>
-</span><span id="line-6"><span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2011}</span><span class="p">,</span>
-</span><span id="line-7"><span class="w">  </span><span class="na">organization</span><span class="p">=</span><span class="s">{JMLR Workshop and Conference Proceedings}</span>
-</span><span id="line-8"><span class="p">}</span>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@ARTICLE</span><span class="p">{</span><span class="nl">8413121</span><span class="p">,</span>
+</span><span id="line-2"><span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep}</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">  </span><span class="na">journal</span><span class="p">=</span><span class="s">{IEEE Transactions on Pattern Analysis and Machine Intelligence}</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly}</span><span class="p">,</span>
+</span><span id="line-5"><span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2019}</span><span class="p">,</span>
+</span><span id="line-6"><span class="w">  </span><span class="na">volume</span><span class="p">=</span><span class="s">{41}</span><span class="p">,</span>
+</span><span id="line-7"><span class="w">  </span><span class="na">number</span><span class="p">=</span><span class="s">{9}</span><span class="p">,</span>
+</span><span id="line-8"><span class="w">  </span><span class="na">pages</span><span class="p">=</span><span class="s">{2251-2265}</span><span class="p">,</span>
+</span><span id="line-9"><span class="w">  </span><span class="na">keywords</span><span class="p">=</span><span class="s">{Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning}</span><span class="p">,</span>
+</span><span id="line-10"><span class="w">  </span><span class="na">doi</span><span class="p">=</span><span class="s">{10.1109/TPAMI.2018.2857768}</span>
 </span></code></pre></div>
 </div>
 </section>
@@ -231,6 +263,7 @@
 <ul>
 <li><a :data-current="activeSection === '#overview'" class="reference internal" href="#overview">Overview</a></li>
 <li><a :data-current="activeSection === '#data-structure'" class="reference internal" href="#data-structure">Data Structure</a></li>
+<li><a :data-current="activeSection === '#animal-classes'" class="reference internal" href="#animal-classes">Animal Classes</a></li>
 <li><a :data-current="activeSection === '#usage-example'" class="reference internal" href="#usage-example">Usage Example</a></li>
 <li><a :data-current="activeSection === '#references'" class="reference internal" href="#references">References</a></li>
 <li><a :data-current="activeSection === '#citation'" class="reference internal" href="#citation">Citation</a></li>
