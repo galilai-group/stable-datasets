@@ -21,21 +21,22 @@ from .dtd import DTD
 from .e_mnist import EMNIST
 from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
-from .flowers102 import Flowers102
-from .food101 import Food101
-from .hasy_v2 import HASYv2
-from .k_mnist import KMNIST
-from .linnaeus5 import Linnaeus5
-from .med_mnist import MedMNIST
-from .not_mnist import NotMNIST
 
 # from .awa2 import AWA2
 # from .beans import Beans
 # from .celeb_a import CelebA
 # from .country211 import Country211
 # from .cub200 import CUB200
-# from .fgvc_aircraft import FGVCAircraft
-# from .food101 import Food101
+from .fgvc_aircraft import FGVCAircraft
+from .flowers102 import Flowers102
+from .food101 import Food101
+from .galaxy10 import Galaxy10Decal
+from .hasy_v2 import HASYv2
+from .k_mnist import KMNIST
+from .linnaeus5 import Linnaeus5
+from .med_mnist import MedMNIST
+from .not_mnist import NotMNIST
+
 # from .imagenette import Imagenette
 # from .mnist import MNIST
 # from .places365_small import Places365Small
@@ -70,7 +71,9 @@ __all__ = [
     "EMNIST",
     "FacePointing",
     "FashionMNIST",
+    "FGVCAircraft",
     "Flowers102",
+    "Galaxy10Decal",
     "Food101",
     "TinyImagenet",
     "TinyImagenetC",
