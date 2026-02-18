@@ -3,49 +3,72 @@
 Standard protocol: freeze backbone with spt.backbone.EvalOnly, train nn.Linear
 for 100 epochs with SGD + cosine annealing using spt.forward.supervised_forward.
 
+Uses Hydra for configuration (mirrors main.py). Parallel GPU execution via
+the joblib launcher with round-robin GPU assignment.
+
 Usage:
-    # Single checkpoint
+    # Single probe
     python -m stable_datasets.benchmarks.self_supervised.offline_probe \
-        --checkpoint checkpoints/simclr_vit_small_cifar10/last.ckpt
+        ssl_model=simclr dataset=cifar10
 
-    # Batch: all checkpoints under a directory
-    python -m stable_datasets.benchmarks.self_supervised.offline_probe \
-        --checkpoint-dir checkpoints/
+    # Sweep all models × datasets (sequential)
+    python -m stable_datasets.benchmarks.self_supervised.offline_probe --multirun \
+        ssl_model=simclr,dino,mae,lejepa dataset=cifar10,stl10,flowers102
 
-    # Custom settings
+    # Parallel across local GPUs (one probe per GPU, like local_parallel)
     python -m stable_datasets.benchmarks.self_supervised.offline_probe \
-        --checkpoint checkpoints/dino_vit_small_flowers102/last.ckpt \
-        --epochs 200 --lr 0.1 --batch-size 256
+        --multirun --config-name offline_probe_parallel \
+        ssl_model=simclr,dino,mae,lejepa dataset=cifar10,stl10,flowers102
+
+    # Override GPU count
+    NUM_GPUS=4 python -m stable_datasets.benchmarks.self_supervised.offline_probe \
+        --multirun --config-name offline_probe_parallel \
+        ssl_model=simclr,dino,mae,lejepa dataset=cifar10,stl10
+
+    # Override probe hyperparams
+    python -m stable_datasets.benchmarks.self_supervised.offline_probe \
+        ssl_model=dino dataset=flowers102 probe.epochs=200 probe.lr=0.05
+
+    # ALL checkpoints in the directory, parallel across GPUs
+    python -m stable_datasets.benchmarks.self_supervised.offline_probe \
+        --multirun --config-name offline_probe_parallel \
+        ssl_model=all dataset=all
+
+    # All models on specific datasets
+    python -m stable_datasets.benchmarks.self_supervised.offline_probe \
+        --multirun --config-name offline_probe_parallel \
+        ssl_model=all dataset=cifar10,stl10
 
     # Without wandb
     python -m stable_datasets.benchmarks.self_supervised.offline_probe \
-        --checkpoint-dir checkpoints/ --no-wandb
+        ssl_model=simclr dataset=cifar10 wandb.enabled=false
 
 Checkpoint directory convention (from main.py):
-    {checkpoint.dir}/{model}_{backbone}_{dataset}/last.ckpt
+    {checkpoint.dir}/{model}_{backbone}_{dataset}/{checkpoint.name}.ckpt
     e.g. checkpoints/simclr_vit_small_cifar10/last.ckpt
 
-The model, backbone, and dataset are parsed from the directory name.
-Results are saved as JSON and logged to wandb.
+Results are logged to wandb (tagged "offline_probe") and saved as JSON
+in Hydra's output directory.
 """
 
 from __future__ import annotations
 
-import argparse
-import glob
 import json
 import logging
 import os
 import sys
 from pathlib import Path
 
+import hydra
 import lightning as pl
 import stable_pretraining as spt
 import torch
 import torchmetrics
 import wandb
+from hydra.core.hydra_config import HydraConfig
 from lightning.pytorch.callbacks import LearningRateMonitor
 from lightning.pytorch.loggers import WandbLogger
+from omegaconf import DictConfig
 from torch import nn
 from torchvision.transforms import v2 as transforms
 
@@ -57,7 +80,73 @@ from stable_datasets.benchmarks.self_supervised.dataset import (
 from stable_datasets.benchmarks.self_supervised.models import create_vit, VIT_CONFIGS
 
 log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
+# Default checkpoint dir (must match offline_probe.yaml)
+_DEFAULT_CKPT_DIR = "/mnt/data/sami/stable-datasets/.pretrain_checkpoints"
+
+
+# ============================================================================
+# argv expansion: ssl_model=all / dataset=all  (mirrors main.py dataset=all)
+# ============================================================================
+
+
+def _get_argv_value(key: str, default: str) -> str:
+    """Extract key=value from sys.argv, or return default."""
+    prefix = f"{key}="
+    for arg in sys.argv:
+        if arg.startswith(prefix):
+            return arg.split("=", 1)[1]
+    return default
+
+
+def _scan_checkpoint_dir(ckpt_dir: str) -> tuple[list[str], list[str]]:
+    """Scan checkpoint directory for available (model, dataset) combos.
+
+    Expects subdirs named {model}_vit_{size}_{dataset}/ containing *.ckpt.
+    Returns (sorted_models, sorted_datasets).
+    """
+    models, datasets = set(), set()
+    if not os.path.isdir(ckpt_dir):
+        return [], []
+    for entry in os.listdir(ckpt_dir):
+        subdir = os.path.join(ckpt_dir, entry)
+        if not os.path.isdir(subdir):
+            continue
+        parts = entry.split("_")
+        # {model}_vit_{size}_{dataset...}
+        if len(parts) >= 4 and parts[1] == "vit":
+            models.add(parts[0])
+            datasets.add("_".join(parts[3:]))
+    return sorted(models), sorted(datasets)
+
+
+def _expand_all_in_argv():
+    """Rewrite sys.argv before Hydra sees it: ssl_model=all / dataset=all → discovered values."""
+    has_model_all = any(
+        arg.startswith("ssl_model=") and arg.split("=", 1)[1].lower() == "all"
+        for arg in sys.argv
+    )
+    has_dataset_all = any(
+        arg.startswith("dataset=") and arg.split("=", 1)[1].lower() == "all"
+        for arg in sys.argv
+    )
+    if not has_model_all and not has_dataset_all:
+        return
+
+    ckpt_dir = _get_argv_value("checkpoint.dir", _DEFAULT_CKPT_DIR)
+    models, datasets = _scan_checkpoint_dir(ckpt_dir)
+
+    for i, arg in enumerate(sys.argv):
+        if arg.startswith("ssl_model=") and arg.split("=", 1)[1].lower() == "all":
+            sys.argv[i] = f"ssl_model={','.join(models)}"
+        elif arg.startswith("dataset=") and arg.split("=", 1)[1].lower() == "all":
+            sys.argv[i] = f"dataset={','.join(datasets)}"
+
+    if "--multirun" not in sys.argv and "-m" not in sys.argv:
+        sys.argv.append("--multirun")
+
+
+_expand_all_in_argv()
 
 
 # ============================================================================
@@ -249,11 +338,15 @@ def load_eval_dataset(dataset_name: str, batch_size: int, num_workers: int = 8,
 
     train_loader = DataLoader(
         train_ds, batch_size=batch_size, shuffle=True,
-        num_workers=num_workers, pin_memory=True, persistent_workers=True, drop_last=True,
+        num_workers=num_workers, pin_memory=True,
+        persistent_workers=num_workers > 0, drop_last=True,
+        multiprocessing_context="fork" if num_workers > 0 else None,
     )
     val_loader = DataLoader(
         val_ds, batch_size=batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=True, persistent_workers=True,
+        num_workers=num_workers, pin_memory=True,
+        persistent_workers=num_workers > 0,
+        multiprocessing_context="fork" if num_workers > 0 else None,
     )
 
     return spt.data.DataModule(train=train_loader, val=val_loader), ds_config
@@ -276,14 +369,8 @@ def evaluate_checkpoint(
     use_wandb: bool = True,
     wandb_entity: str | None = None,
     wandb_project: str = "stable-datasets-benchmarks",
-    gpu_id: int | None = None,
 ) -> dict:
     """Run offline linear probe on a single checkpoint."""
-
-    # Pin to a single GPU
-    if gpu_id is not None:
-        os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
-        log.info(f"Pinned to GPU {gpu_id}")
 
     log.info(f"Evaluating: {ckpt_path}")
     log.info(f"  model={model_name}, backbone=vit_{backbone_size}, dataset={dataset_name}")
@@ -383,7 +470,7 @@ def evaluate_checkpoint(
             },
         )
 
-    # 6. Train (single GPU — round-robin assigned by caller)
+    # 6. Train (single GPU — assigned by _assign_gpu via Hydra job.num)
     trainer = pl.Trainer(
         max_epochs=epochs,
         precision="16-mixed",
@@ -395,8 +482,7 @@ def evaluate_checkpoint(
         devices=1,
     )
 
-    manager = spt.Manager(trainer=trainer, module=module, data=data)
-    manager()
+    trainer.fit(module, datamodule=data)
 
     # 7. Collect results
     metric_dict = trainer.callback_metrics
@@ -425,131 +511,66 @@ def evaluate_checkpoint(
 
 
 # ============================================================================
-# Checkpoint discovery
+# GPU assignment (mirrors main.py)
 # ============================================================================
 
 
-def parse_checkpoint_info(ckpt_path: str) -> tuple[str, str, str] | None:
-    """Parse model, backbone size, dataset from checkpoint directory name.
-
-    Expects: .../simclr_vit_small_cifar10/last.ckpt
-    Returns: ("simclr", "small", "cifar10") or None.
-    """
-    parent = Path(ckpt_path).parent.name
-    parts = parent.split("_")
-    if len(parts) >= 4 and parts[1] == "vit":
-        model = parts[0]
-        size = parts[2]
-        dataset = "_".join(parts[3:])
-        return model, size, dataset
-    return None
-
-
-# ============================================================================
-# CLI
-# ============================================================================
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Offline linear probe evaluation")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--checkpoint", type=str, help="Path to a single checkpoint")
-    group.add_argument("--checkpoint-dir", type=str, default="/mnt/data/sami/stable-datasets/.pretrain_checkpoints", help="Directory to glob for checkpoints")
-
-    parser.add_argument("--model", type=str, help="Model name (auto-detected from path if omitted)")
-    parser.add_argument("--backbone-size", type=str, default="small")
-    parser.add_argument("--dataset", type=str, help="Dataset name (auto-detected from path if omitted)")
-
-    parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--lr", type=float, default=0.1)
-    parser.add_argument("--batch-size", type=int, default=256)
-    parser.add_argument("--cache-dir", type=str, default=CACHE_DIR_DEFAULT)
-
-    parser.add_argument("--no-wandb", action="store_true", help="Disable wandb logging")
-    parser.add_argument("--wandb-entity", type=str, default="stable-ssl")
-    parser.add_argument("--wandb-project", type=str, default="stable-datasets-benchmarks")
-
-    parser.add_argument("--output", type=str, default="offline_probe_results.json",
-                        help="Output JSON for batch results")
-
-    args = parser.parse_args()
-
-    # Collect checkpoints
-    if args.checkpoint:
-        ckpt_paths = [args.checkpoint]
-    else:
-        ckpt_paths = sorted(
-            glob.glob(os.path.join(args.checkpoint_dir, "**/last.ckpt"), recursive=True)
-            + glob.glob(os.path.join(args.checkpoint_dir, "**/best*.ckpt"), recursive=True)
-        )
-        log.info(f"Found {len(ckpt_paths)} checkpoints under {args.checkpoint_dir}")
-
-    if not ckpt_paths:
-        log.error("No checkpoints found")
-        sys.exit(1)
-
-    # Round-robin GPU assignment
+def _assign_gpu():
+    """Pin this job to a single GPU via round-robin over available devices."""
     num_gpus = torch.cuda.device_count()
-    if num_gpus > 0:
-        log.info(f"Found {num_gpus} GPU(s) — assigning probes round-robin")
-    else:
-        log.info("No GPUs found — running on CPU")
+    if num_gpus == 0:
+        return
+    try:
+        job_num = HydraConfig.get().job.num
+    except ValueError:
+        return  # not a multirun
+    gpu_id = job_num % num_gpus
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+    log.info(f"Job #{job_num} pinned to GPU {gpu_id}/{num_gpus}")
 
-    all_results = []
 
-    for job_idx, ckpt_path in enumerate(ckpt_paths):
-        parsed = parse_checkpoint_info(ckpt_path)
+# ============================================================================
+# Hydra entry point
+# ============================================================================
 
-        if parsed:
-            model, size, dataset = parsed
-        else:
-            model, size, dataset = None, args.backbone_size, None
 
-        model = args.model or model
-        size = args.backbone_size or size
-        dataset = args.dataset or dataset
+@hydra.main(version_base=None, config_path="conf", config_name="offline_probe")
+def main(cfg: DictConfig) -> None:
+    # Pin each multirun job to a different GPU
+    if cfg.get("distribute_gpus", False):
+        _assign_gpu()
 
-        if not model or not dataset:
-            log.warning(
-                f"Skipping {ckpt_path}: could not determine model/dataset. "
-                f"Use --model and --dataset, or follow naming: "
-                f"{{model}}_vit_{{size}}_{{dataset}}/last.ckpt"
-            )
-            continue
+    # Construct checkpoint path from config
+    backbone_size = cfg.ssl_backbone.replace("vit_", "")
+    ckpt_dir = os.path.join(
+        cfg.checkpoint.dir, f"{cfg.ssl_model}_{cfg.ssl_backbone}_{cfg.dataset}"
+    )
+    ckpt_name = cfg.checkpoint.get("name", "last")
+    ckpt_path = os.path.join(ckpt_dir, f"{ckpt_name}.ckpt")
 
-        gpu_id = job_idx % num_gpus if num_gpus > 0 else None
+    if not os.path.exists(ckpt_path):
+        log.warning(f"Checkpoint not found: {ckpt_path}, skipping")
+        return
 
-        results = evaluate_checkpoint(
-            ckpt_path=ckpt_path,
-            model_name=model,
-            backbone_size=size,
-            dataset_name=dataset,
-            epochs=args.epochs,
-            lr=args.lr,
-            batch_size=args.batch_size,
-            cache_dir=args.cache_dir,
-            use_wandb=not args.no_wandb,
-            wandb_entity=args.wandb_entity,
-            wandb_project=args.wandb_project,
-            gpu_id=gpu_id,
-        )
+    result = evaluate_checkpoint(
+        ckpt_path=ckpt_path,
+        model_name=cfg.ssl_model,
+        backbone_size=backbone_size,
+        dataset_name=cfg.dataset,
+        epochs=cfg.probe.epochs,
+        lr=cfg.probe.lr,
+        batch_size=cfg.probe.batch_size,
+        cache_dir=cfg.get("cache_dir", CACHE_DIR_DEFAULT),
+        use_wandb=cfg.wandb.enabled,
+        wandb_entity=cfg.wandb.entity,
+        wandb_project=cfg.wandb.project,
+    )
 
-        all_results.append(results)
-
-        # Save incrementally
-        with open(args.output, "w") as f:
-            json.dump(all_results, f, indent=2)
-
-    # Summary
-    log.info("=" * 70)
-    log.info("RESULTS SUMMARY")
-    log.info("=" * 70)
-    for r in all_results:
-        log.info(
-            f"  {r['model']:>12s} | {r['dataset']:>20s} | "
-            f"{r['checkpoint_name']:>15s} | top1={r['top1']:.4f} | top5={r['top5']:.4f}"
-        )
-    log.info(f"\nResults saved to {args.output}")
+    # Save result JSON to Hydra's output directory
+    out_path = os.path.join(os.getcwd(), "probe_result.json")
+    with open(out_path, "w") as f:
+        json.dump(result, f, indent=2)
+    log.info(f"Saved to {out_path}")
 
 
 if __name__ == "__main__":
