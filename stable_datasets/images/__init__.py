@@ -2,6 +2,8 @@
 
 from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
+from .awa2 import AWA2
+from .beans import Beans
 from .cars3d import CARS3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
@@ -49,6 +51,8 @@ from .tiny_imagenet_c import TinyImagenetC
 __all__ = [
     "ArabicCharacters",
     "ArabicDigits",
+    "AWA2",
+    "Beans",
     "Cars196",
     "CARS3D",
     "CIFAR10",
@@ -56,31 +60,28 @@ __all__ = [
     "CIFAR100",
     "CIFAR100C",
     "CLEVRER",
+    "Country211",
+    "CUB200",
     "DSprites",
     "DSpritesColor",
     "DSpritesNoise",
     "DSpritesScream",
-    "FacePointing",
     "DTD",
     "EMNIST",
+    "FacePointing",
     "FashionMNIST",
     "Flowers102",
-    "KMNIST",
-    "MedMNIST",
-    "EMNIST",
-    "NotMNIST",
-    "Flowers102",
-    "RockPaperScissor",
     "Food101",
-    "SVHN",
     "TinyImagenet",
     "TinyImagenetC",
-    "CUB200",
-    "Country211",
+    "HASYv2",
+    "KMNIST",
+    "Linnaeus5",
+    "MedMNIST",
+    "NotMNIST",
+    "RockPaperScissor",
     "Shapes3D",
     "SmallNORB",
     "STL10",
     "SVHN",
-    "HASYv2",
-    "Linnaeus5",
 ]

@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.face_pointing import FacePointing
+from stable_datasets.images import FacePointing
 
 
 def test_face_pointing_dataset():

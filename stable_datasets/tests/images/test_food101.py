@@ -1,7 +1,7 @@
 # import numpy as np
 # from PIL import Image
 
-# from stable_datasets.images.food101 import Food101
+# from stable_datasets.images import Food101
 
 
 # def test_food101_dataset():

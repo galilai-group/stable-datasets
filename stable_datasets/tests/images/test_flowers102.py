@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.flowers102 import Flowers102
+from stable_datasets.images import Flowers102
 
 
 def test_flowers102_dataset():
