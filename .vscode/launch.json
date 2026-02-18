@@ -7,7 +7,11 @@
             "request": "launch",
             "module": "stable_datasets.benchmarks.self_supervised.offline_probe",
             "args": [
-                "--checkpoint-dir", "/mnt/data/sami/stable-datasets/.pretrain_checkpoints",
+                "--multirun",
+                "--config-name",
+                "offline_probe_parallel",
+                "ssl_model=all",
+                "dataset=all",
             ],
         },
         {
