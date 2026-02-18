@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.linnaeus5 import Linnaeus5
+from stable_datasets.images import Linnaeus5
 
 
 def test_linnaeus5_dataset():

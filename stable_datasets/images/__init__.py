@@ -2,6 +2,8 @@
 
 from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
+from .awa2 import AWA2
+from .beans import Beans
 from .cars3d import CARS3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
@@ -19,21 +21,22 @@ from .dtd import DTD
 from .e_mnist import EMNIST
 from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
-from .flowers102 import Flowers102
-from .food101 import Food101
-from .hasy_v2 import HASYv2
-from .k_mnist import KMNIST
-from .linnaeus5 import Linnaeus5
-from .med_mnist import MedMNIST
-from .not_mnist import NotMNIST
 
 # from .awa2 import AWA2
 # from .beans import Beans
 # from .celeb_a import CelebA
 # from .country211 import Country211
 # from .cub200 import CUB200
-# from .fgvc_aircraft import FGVCAircraft
-# from .food101 import Food101
+from .fgvc_aircraft import FGVCAircraft
+from .flowers102 import Flowers102
+from .food101 import Food101
+from .galaxy10 import Galaxy10Decal
+from .hasy_v2 import HASYv2
+from .k_mnist import KMNIST
+from .linnaeus5 import Linnaeus5
+from .med_mnist import MedMNIST
+from .not_mnist import NotMNIST
+
 # from .imagenette import Imagenette
 # from .mnist import MNIST
 # from .places365_small import Places365Small
@@ -42,14 +45,15 @@ from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
 from .stl10 import STL10
 from .svhn import SVHN
+from .tiny_imagenet import TinyImagenet
+from .tiny_imagenet_c import TinyImagenetC
 
-
-# from .tiny_imagenet import TinyImagenet
-# from .tiny_imagenet_c import TinyImagenetC
 
 __all__ = [
     "ArabicCharacters",
     "ArabicDigits",
+    "AWA2",
+    "Beans",
     "Cars196",
     "CARS3D",
     "CIFAR10",
@@ -57,29 +61,30 @@ __all__ = [
     "CIFAR100",
     "CIFAR100C",
     "CLEVRER",
+    "Country211",
+    "CUB200",
     "DSprites",
     "DSpritesColor",
     "DSpritesNoise",
     "DSpritesScream",
-    "FacePointing",
     "DTD",
     "EMNIST",
+    "FacePointing",
     "FashionMNIST",
+    "FGVCAircraft",
     "Flowers102",
-    "KMNIST",
-    "MedMNIST",
-    "EMNIST",
-    "NotMNIST",
-    "Flowers102",
-    "RockPaperScissor",
+    "Galaxy10Decal",
     "Food101",
-    "SVHN",
-    "CUB200",
-    "Country211",
+    "TinyImagenet",
+    "TinyImagenetC",
+    "HASYv2",
+    "KMNIST",
+    "Linnaeus5",
+    "MedMNIST",
+    "NotMNIST",
+    "RockPaperScissor",
     "Shapes3D",
     "SmallNORB",
     "STL10",
     "SVHN",
-    "HASYv2",
-    "Linnaeus5",
 ]

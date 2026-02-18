@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.not_mnist import NotMNIST
+from stable_datasets.images import NotMNIST
 
 
 def test_not_mnist_dataset():
