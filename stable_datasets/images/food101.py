@@ -1,33 +1,21 @@
-import tarfile
+import io
+from zipfile import ZipFile
 
 import datasets
 from PIL import Image
+from tqdm import tqdm
 
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class Food101(BaseDatasetBuilder):
-    """
-    Food-101 Dataset.
-
-    The Food-101 dataset consists of 101 food categories with 101,000 images.
-    For each class, 250 manually reviewed test images are provided as well as
-    750 training images.
-
-    Split sizes:
-    - train: 75,750 images (750 images × 101 classes)
-    - test: 25,250 images (250 images × 101 classes)
-
-    All images are automatically rescaled to have a maximum side length of 512 pixels.
-    """
-
     VERSION = datasets.Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
         "assets": {
-            "train": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_train.tar",
-            "test": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_test.tar",
+            "train": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_train.zip",
+            "test": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_test.zip",
         },
         "citation": """@inproceedings{bossard14,
             title = {Food-101 -- Mining Discriminative Components with Random Forests},
@@ -51,59 +39,24 @@ class Food101(BaseDatasetBuilder):
         )
 
     def _generate_examples(self, data_path, split):
-        """Generate examples from uncompressed TAR archives.
+        """Generate examples from the ZIP archives of images and labels."""
+        labels = self._labels()
+        label_to_idx = {name: idx for idx, name in enumerate(labels)}
+        with ZipFile(data_path, "r") as archive:
+            for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
+                if entry.filename.endswith(".jpg"):
+                    content = archive.read(entry)
+                    image = Image.open(io.BytesIO(content)).convert("RGB")
 
-        Expects TAR structure: class_name/image_id.jpg
+                    filename = entry.filename.split("/")[-1]
+                    class_part = filename.split("_", 1)[1].rsplit(".", 1)[0]
+                    label_name = class_part.lower().replace("-", "_").replace(".", "")
+                    if label_name not in label_to_idx:
+                        raise ValueError(f"Unknown label: {label_name}")
 
-        Using uncompressed TAR provides 5-10x speed improvement over gzip:
-        - No decompression overhead (direct disk I/O)
-        - Sequential reading is cache-friendly
-        - Processes 75k images in 1-2 hours vs 10-12 hours with gzip
+                    label = label_to_idx[label_name]
 
-        File size increase is minimal (~80 MB, 2%) since JPEG is already compressed.
-        """
-        # Pre-build label lookup dictionary
-        label_to_idx = {name: idx for idx, name in enumerate(self._labels())}
-
-        # Open TAR in auto-detect mode (handles both compressed and uncompressed)
-        with tarfile.open(data_path, "r:*") as tar:
-            for member in tar.getmembers():
-                # Quick filter: only process files (skip directories)
-                if not member.isfile():
-                    continue
-
-                filename = member.name
-
-                # Fast filter: skip non-jpg files
-                if not filename.endswith(".jpg"):
-                    continue
-
-                # Extract class name from path: class_name/image_id.jpg
-                # Split path into parts
-                path_parts = filename.split("/")
-
-                # Expected format: class_name/image_id.jpg
-                # Find the class_name (second-to-last part)
-                if len(path_parts) < 2:
-                    continue
-
-                class_name = path_parts[-2]  # Directory name = class name
-
-                # Lookup label (skip if not found)
-                label = label_to_idx.get(class_name)
-                if label is None:
-                    continue
-
-                # Read and process image
-                try:
-                    file_obj = tar.extractfile(member)
-                    image = Image.open(file_obj).convert("RGB")
-
-                    # Use full path as key for uniqueness
-                    yield filename, {"image": image, "label": label}
-                except Exception:
-                    # Skip corrupted images silently
-                    continue
+                    yield entry.filename, {"image": image, "label": label}
 
     @staticmethod
     def _labels():
