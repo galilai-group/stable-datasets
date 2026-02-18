@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.dsprites_scream import DSpritesScream
+from stable_datasets.images import DSpritesScream
 
 
 def test_dsprites_scream_dataset():

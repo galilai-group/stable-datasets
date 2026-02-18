@@ -4,14 +4,34 @@ import zipfile
 import datasets
 from PIL import Image
 
+from stable_datasets.utils import BaseDatasetBuilder
 
-class AWA2(datasets.GeneratorBasedBuilder):
+
+class AWA2(BaseDatasetBuilder):
     """
     The Animals with Attributes 2 (AwA2) dataset provides images across 50 animal classes, useful for attribute-based classification
     and zero-shot learning research. See https://cvml.ista.ac.at/AwA2/ for more information.
     """
 
     VERSION = datasets.Version("1.0.0")
+
+    # Single source-of-truth for dataset provenance + download locations.
+    SOURCE = {
+        "homepage": "https://cvml.ista.ac.at/AwA2/",
+        "assets": {
+            "test": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip",
+        },
+        "citation": """@ARTICLE{8413121,
+                         author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},
+                         journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+                         title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly},
+                         year={2019},
+                         volume={41},
+                         number={9},
+                         pages={2251-2265},
+                         keywords={Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning},
+                         doi={10.1109/TPAMI.2018.2857768}}""",
+    }
 
     def _info(self):
         return datasets.DatasetInfo(
@@ -76,29 +96,16 @@ class AWA2(datasets.GeneratorBasedBuilder):
                 }
             ),
             supervised_keys=("image", "label"),
-            homepage="https://cvml.ista.ac.at/AwA2/",
-            citation="""@ARTICLE{8413121,
-                         author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},
-                         journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-                         title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly},
-                         year={2019},
-                         volume={41},
-                         number={9},
-                         pages={2251-2265},
-                         keywords={Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning},
-                         doi={10.1109/TPAMI.2018.2857768}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        # Download the dataset
-        archive_path = dl_manager.download({"data": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip"})
-        return [datasets.SplitGenerator(name=datasets.Split.TEST, gen_kwargs={"archive_paths": archive_path})]
-
-    def _generate_examples(self, archive_path):
+    def _generate_examples(self, data_path, split):
+        # Note: split parameter is unused as AWA2 only contains a test split.
         # Open the zip file
-        with zipfile.ZipFile(archive_path, "r") as z:
+        with zipfile.ZipFile(data_path, "r") as z:
             # Use the class names from DatasetInfo for consistent label order
-            class_names = self._info().features["label"].names
+            class_names = self.info.features["label"].names
 
             # Create a mapping from class name to label index based on DatasetInfo order
             label_mapping = {name: idx for idx, name in enumerate(class_names)}

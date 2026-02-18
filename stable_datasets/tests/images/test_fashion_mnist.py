@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.fashion_mnist import FashionMNIST
+from stable_datasets.images import FashionMNIST
 
 
 def test_fashion_mnist_dataset():
