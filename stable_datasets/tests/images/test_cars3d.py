@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.cars3d import CARS3D
+from stable_datasets.images import CARS3D
 
 
 def test_cars3d_dataset():

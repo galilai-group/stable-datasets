@@ -24,7 +24,7 @@ repos:
 
   # Ruff - Fast Python linter (replaces flake8, isort, etc.)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.8
+    rev: v0.15.0
     hooks:
       - id: ruff
         types_or: [python, pyi]
@@ -41,7 +41,7 @@ repos:
 
   # Check for common Python anti-patterns
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
+    rev: v3.21.2
     hooks:
       - id: pyupgrade
         args: [--py310-plus]
