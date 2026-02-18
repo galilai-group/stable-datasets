@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from stable_datasets.images.galaxy10 import Galaxy10Decal
+from stable_datasets.images import Galaxy10Decal
 
 
 pytestmark = pytest.mark.large

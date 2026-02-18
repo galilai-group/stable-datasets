@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from stable_datasets.images.fgvc_aircraft import FGVCAircraft
+from stable_datasets.images import FGVCAircraft
 
 
 pytestmark = pytest.mark.large

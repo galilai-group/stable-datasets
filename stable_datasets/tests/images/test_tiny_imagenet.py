@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.tiny_imagenet import TinyImagenet
+from stable_datasets.images import TinyImagenet
 
 
 def test_tiny_imagenet_dataset():
