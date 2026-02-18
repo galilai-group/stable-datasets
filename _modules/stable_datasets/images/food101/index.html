@@ -136,9 +136,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/tiny_imagenet/">Tiny ImageNet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/tiny_imagenet_c/">Tiny ImageNet-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/e_mnist/">EMNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fgvc_aircraft/">FGVC Aircraft</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/flowers102/">Flowers102</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/food101/">Food-101</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cub200/">CUB-200</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/country211/">Country-211</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/galaxy10/">Galaxy10 DECaLS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
@@ -190,173 +193,220 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.food101</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
-</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">zipfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZipFile</span>
-</span><span id="line-3">
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
 </span><span id="line-7">
-</span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
-</span><span id="line-9">
-</span><span id="line-10">
+</span><span id="line-8">
 <div class="viewcode-block" id="Food101">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.food101.Food101">[docs]</a>
-</span><span id="line-11"><span class="k">class</span><span class="w"> </span><span class="nc">Food101</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
-</span><span id="line-12">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-13">
-</span><span id="line-14">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-15">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/&quot;</span><span class="p">,</span>
-</span><span id="line-16">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="line-17">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_train.zip&quot;</span><span class="p">,</span>
-</span><span id="line-18">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_test.zip&quot;</span><span class="p">,</span>
-</span><span id="line-19">        <span class="p">},</span>
-</span><span id="line-20">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@inproceedings{bossard14,</span>
-</span><span id="line-21"><span class="s2">            title = {Food-101 -- Mining Discriminative Components with Random Forests},</span>
-</span><span id="line-22"><span class="s2">            author = {Bossard, Lukas and Guillaumin, Matthieu and Van Gool, Luc},</span>
-</span><span id="line-23"><span class="s2">            booktitle = {European Conference on Computer Vision},</span>
-</span><span id="line-24"><span class="s2">            year = </span><span class="si">{2014}</span><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-25">    <span class="p">}</span>
-</span><span id="line-26">
-</span><span id="line-27">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-28">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-29">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Food-101 image classification dataset. It has 101 food categories, with 101&#39;000 images. For each class, 250 manually reviewed test images are provided as well as 750 training images. On purpose, the training images were not cleaned, and thus still contain some amount of noise. This comes mostly in the form of intense colors and sometimes wrong labels. All images were rescaled to have a maximum side length of 512 pixels&quot;</span><span class="p">,</span>
-</span><span id="line-30">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-31">                <span class="p">{</span>
-</span><span id="line-32">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-33">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()),</span>
-</span><span id="line-34">                <span class="p">}</span>
-</span><span id="line-35">            <span class="p">),</span>
-</span><span id="line-36">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-37">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
-</span><span id="line-38">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
-</span><span id="line-39">        <span class="p">)</span>
-</span><span id="line-40">
-</span><span id="line-41">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
-</span><span id="line-42"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the ZIP archives of images and labels.&quot;&quot;&quot;</span>
-</span><span id="line-43">        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()</span>
-</span><span id="line-44">        <span class="n">label_to_idx</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">)}</span>
-</span><span id="line-45">        <span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
-</span><span id="line-46">            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">infolist</span><span class="p">(),</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Processing </span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2"> set&quot;</span><span class="p">):</span>
-</span><span id="line-47">                <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jpg&quot;</span><span class="p">):</span>
-</span><span id="line-48">                    <span class="n">content</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
-</span><span id="line-49">                    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">content</span><span class="p">))</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
-</span><span id="line-50">
-</span><span id="line-51">                    <span class="n">filename</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span><span id="line-52">                    <span class="n">class_part</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-53">                    <span class="n">label_name</span> <span class="o">=</span> <span class="n">class_part</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-</span><span id="line-54">                    <span class="k">if</span> <span class="n">label_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">label_to_idx</span><span class="p">:</span>
-</span><span id="line-55">                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown label: </span><span class="si">{</span><span class="n">label_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="line-56">
-</span><span id="line-57">                    <span class="n">label</span> <span class="o">=</span> <span class="n">label_to_idx</span><span class="p">[</span><span class="n">label_name</span><span class="p">]</span>
-</span><span id="line-58">
-</span><span id="line-59">                    <span class="k">yield</span> <span class="n">entry</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
-</span><span id="line-60">
-</span><span id="line-61">    <span class="nd">@staticmethod</span>
-</span><span id="line-62">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
-</span><span id="line-63">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-64">            <span class="s2">&quot;apple_pie&quot;</span><span class="p">,</span>
-</span><span id="line-65">            <span class="s2">&quot;baby_back_ribs&quot;</span><span class="p">,</span>
-</span><span id="line-66">            <span class="s2">&quot;baklava&quot;</span><span class="p">,</span>
-</span><span id="line-67">            <span class="s2">&quot;beef_carpaccio&quot;</span><span class="p">,</span>
-</span><span id="line-68">            <span class="s2">&quot;beef_tartare&quot;</span><span class="p">,</span>
-</span><span id="line-69">            <span class="s2">&quot;beet_salad&quot;</span><span class="p">,</span>
-</span><span id="line-70">            <span class="s2">&quot;beignets&quot;</span><span class="p">,</span>
-</span><span id="line-71">            <span class="s2">&quot;bibimbap&quot;</span><span class="p">,</span>
-</span><span id="line-72">            <span class="s2">&quot;bread_pudding&quot;</span><span class="p">,</span>
-</span><span id="line-73">            <span class="s2">&quot;breakfast_burrito&quot;</span><span class="p">,</span>
-</span><span id="line-74">            <span class="s2">&quot;bruschetta&quot;</span><span class="p">,</span>
-</span><span id="line-75">            <span class="s2">&quot;caesar_salad&quot;</span><span class="p">,</span>
-</span><span id="line-76">            <span class="s2">&quot;cannoli&quot;</span><span class="p">,</span>
-</span><span id="line-77">            <span class="s2">&quot;caprese_salad&quot;</span><span class="p">,</span>
-</span><span id="line-78">            <span class="s2">&quot;carrot_cake&quot;</span><span class="p">,</span>
-</span><span id="line-79">            <span class="s2">&quot;ceviche&quot;</span><span class="p">,</span>
-</span><span id="line-80">            <span class="s2">&quot;cheesecake&quot;</span><span class="p">,</span>
-</span><span id="line-81">            <span class="s2">&quot;cheese_plate&quot;</span><span class="p">,</span>
-</span><span id="line-82">            <span class="s2">&quot;chicken_curry&quot;</span><span class="p">,</span>
-</span><span id="line-83">            <span class="s2">&quot;chicken_quesadilla&quot;</span><span class="p">,</span>
-</span><span id="line-84">            <span class="s2">&quot;chicken_wings&quot;</span><span class="p">,</span>
-</span><span id="line-85">            <span class="s2">&quot;chocolate_cake&quot;</span><span class="p">,</span>
-</span><span id="line-86">            <span class="s2">&quot;chocolate_mousse&quot;</span><span class="p">,</span>
-</span><span id="line-87">            <span class="s2">&quot;churros&quot;</span><span class="p">,</span>
-</span><span id="line-88">            <span class="s2">&quot;clam_chowder&quot;</span><span class="p">,</span>
-</span><span id="line-89">            <span class="s2">&quot;club_sandwich&quot;</span><span class="p">,</span>
-</span><span id="line-90">            <span class="s2">&quot;crab_cakes&quot;</span><span class="p">,</span>
-</span><span id="line-91">            <span class="s2">&quot;creme_brulee&quot;</span><span class="p">,</span>
-</span><span id="line-92">            <span class="s2">&quot;croque_madame&quot;</span><span class="p">,</span>
-</span><span id="line-93">            <span class="s2">&quot;cup_cakes&quot;</span><span class="p">,</span>
-</span><span id="line-94">            <span class="s2">&quot;deviled_eggs&quot;</span><span class="p">,</span>
-</span><span id="line-95">            <span class="s2">&quot;donuts&quot;</span><span class="p">,</span>
-</span><span id="line-96">            <span class="s2">&quot;dumplings&quot;</span><span class="p">,</span>
-</span><span id="line-97">            <span class="s2">&quot;edamame&quot;</span><span class="p">,</span>
-</span><span id="line-98">            <span class="s2">&quot;eggs_benedict&quot;</span><span class="p">,</span>
-</span><span id="line-99">            <span class="s2">&quot;escargots&quot;</span><span class="p">,</span>
-</span><span id="line-100">            <span class="s2">&quot;falafel&quot;</span><span class="p">,</span>
-</span><span id="line-101">            <span class="s2">&quot;filet_mignon&quot;</span><span class="p">,</span>
-</span><span id="line-102">            <span class="s2">&quot;fish_and_chips&quot;</span><span class="p">,</span>
-</span><span id="line-103">            <span class="s2">&quot;foie_gras&quot;</span><span class="p">,</span>
-</span><span id="line-104">            <span class="s2">&quot;french_fries&quot;</span><span class="p">,</span>
-</span><span id="line-105">            <span class="s2">&quot;french_onion_soup&quot;</span><span class="p">,</span>
-</span><span id="line-106">            <span class="s2">&quot;french_toast&quot;</span><span class="p">,</span>
-</span><span id="line-107">            <span class="s2">&quot;fried_calamari&quot;</span><span class="p">,</span>
-</span><span id="line-108">            <span class="s2">&quot;fried_rice&quot;</span><span class="p">,</span>
-</span><span id="line-109">            <span class="s2">&quot;frozen_yogurt&quot;</span><span class="p">,</span>
-</span><span id="line-110">            <span class="s2">&quot;garlic_bread&quot;</span><span class="p">,</span>
-</span><span id="line-111">            <span class="s2">&quot;gnocchi&quot;</span><span class="p">,</span>
-</span><span id="line-112">            <span class="s2">&quot;greek_salad&quot;</span><span class="p">,</span>
-</span><span id="line-113">            <span class="s2">&quot;grilled_cheese_sandwich&quot;</span><span class="p">,</span>
-</span><span id="line-114">            <span class="s2">&quot;grilled_salmon&quot;</span><span class="p">,</span>
-</span><span id="line-115">            <span class="s2">&quot;guacamole&quot;</span><span class="p">,</span>
-</span><span id="line-116">            <span class="s2">&quot;gyoza&quot;</span><span class="p">,</span>
-</span><span id="line-117">            <span class="s2">&quot;hamburger&quot;</span><span class="p">,</span>
-</span><span id="line-118">            <span class="s2">&quot;hot_and_sour_soup&quot;</span><span class="p">,</span>
-</span><span id="line-119">            <span class="s2">&quot;hot_dog&quot;</span><span class="p">,</span>
-</span><span id="line-120">            <span class="s2">&quot;huevos_rancheros&quot;</span><span class="p">,</span>
-</span><span id="line-121">            <span class="s2">&quot;hummus&quot;</span><span class="p">,</span>
-</span><span id="line-122">            <span class="s2">&quot;ice_cream&quot;</span><span class="p">,</span>
-</span><span id="line-123">            <span class="s2">&quot;lasagna&quot;</span><span class="p">,</span>
-</span><span id="line-124">            <span class="s2">&quot;lobster_bisque&quot;</span><span class="p">,</span>
-</span><span id="line-125">            <span class="s2">&quot;lobster_roll_sandwich&quot;</span><span class="p">,</span>
-</span><span id="line-126">            <span class="s2">&quot;macaroni_and_cheese&quot;</span><span class="p">,</span>
-</span><span id="line-127">            <span class="s2">&quot;macarons&quot;</span><span class="p">,</span>
-</span><span id="line-128">            <span class="s2">&quot;miso_soup&quot;</span><span class="p">,</span>
-</span><span id="line-129">            <span class="s2">&quot;mussels&quot;</span><span class="p">,</span>
-</span><span id="line-130">            <span class="s2">&quot;nachos&quot;</span><span class="p">,</span>
-</span><span id="line-131">            <span class="s2">&quot;omelette&quot;</span><span class="p">,</span>
-</span><span id="line-132">            <span class="s2">&quot;onion_rings&quot;</span><span class="p">,</span>
-</span><span id="line-133">            <span class="s2">&quot;oysters&quot;</span><span class="p">,</span>
-</span><span id="line-134">            <span class="s2">&quot;pad_thai&quot;</span><span class="p">,</span>
-</span><span id="line-135">            <span class="s2">&quot;paella&quot;</span><span class="p">,</span>
-</span><span id="line-136">            <span class="s2">&quot;pancakes&quot;</span><span class="p">,</span>
-</span><span id="line-137">            <span class="s2">&quot;panna_cotta&quot;</span><span class="p">,</span>
-</span><span id="line-138">            <span class="s2">&quot;peking_duck&quot;</span><span class="p">,</span>
-</span><span id="line-139">            <span class="s2">&quot;pho&quot;</span><span class="p">,</span>
-</span><span id="line-140">            <span class="s2">&quot;pizza&quot;</span><span class="p">,</span>
-</span><span id="line-141">            <span class="s2">&quot;pork_chop&quot;</span><span class="p">,</span>
-</span><span id="line-142">            <span class="s2">&quot;poutine&quot;</span><span class="p">,</span>
-</span><span id="line-143">            <span class="s2">&quot;prime_rib&quot;</span><span class="p">,</span>
-</span><span id="line-144">            <span class="s2">&quot;pulled_pork_sandwich&quot;</span><span class="p">,</span>
-</span><span id="line-145">            <span class="s2">&quot;ramen&quot;</span><span class="p">,</span>
-</span><span id="line-146">            <span class="s2">&quot;ravioli&quot;</span><span class="p">,</span>
-</span><span id="line-147">            <span class="s2">&quot;red_velvet_cake&quot;</span><span class="p">,</span>
-</span><span id="line-148">            <span class="s2">&quot;risotto&quot;</span><span class="p">,</span>
-</span><span id="line-149">            <span class="s2">&quot;samosa&quot;</span><span class="p">,</span>
-</span><span id="line-150">            <span class="s2">&quot;sashimi&quot;</span><span class="p">,</span>
-</span><span id="line-151">            <span class="s2">&quot;scallops&quot;</span><span class="p">,</span>
-</span><span id="line-152">            <span class="s2">&quot;seaweed_salad&quot;</span><span class="p">,</span>
-</span><span id="line-153">            <span class="s2">&quot;shrimp_and_grits&quot;</span><span class="p">,</span>
-</span><span id="line-154">            <span class="s2">&quot;spaghetti_bolognese&quot;</span><span class="p">,</span>
-</span><span id="line-155">            <span class="s2">&quot;spaghetti_carbonara&quot;</span><span class="p">,</span>
-</span><span id="line-156">            <span class="s2">&quot;spring_rolls&quot;</span><span class="p">,</span>
-</span><span id="line-157">            <span class="s2">&quot;steak&quot;</span><span class="p">,</span>
-</span><span id="line-158">            <span class="s2">&quot;strawberry_shortcake&quot;</span><span class="p">,</span>
-</span><span id="line-159">            <span class="s2">&quot;sushi&quot;</span><span class="p">,</span>
-</span><span id="line-160">            <span class="s2">&quot;tacos&quot;</span><span class="p">,</span>
-</span><span id="line-161">            <span class="s2">&quot;takoyaki&quot;</span><span class="p">,</span>
-</span><span id="line-162">            <span class="s2">&quot;tiramisu&quot;</span><span class="p">,</span>
-</span><span id="line-163">            <span class="s2">&quot;tuna_tartare&quot;</span><span class="p">,</span>
-</span><span id="line-164">            <span class="s2">&quot;waffles&quot;</span><span class="p">,</span>
-</span><span id="line-165">        <span class="p">]</span></div>
+</span><span id="line-9"><span class="k">class</span><span class="w"> </span><span class="nc">Food101</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-10"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="line-11"><span class="sd">    Food-101 Dataset.</span>
+</span><span id="line-12">
+</span><span id="line-13"><span class="sd">    The Food-101 dataset consists of 101 food categories with 101,000 images.</span>
+</span><span id="line-14"><span class="sd">    For each class, 250 manually reviewed test images are provided as well as</span>
+</span><span id="line-15"><span class="sd">    750 training images.</span>
+</span><span id="line-16">
+</span><span id="line-17"><span class="sd">    Split sizes:</span>
+</span><span id="line-18"><span class="sd">    - train: 75,750 images (750 images × 101 classes)</span>
+</span><span id="line-19"><span class="sd">    - test: 25,250 images (250 images × 101 classes)</span>
+</span><span id="line-20">
+</span><span id="line-21"><span class="sd">    All images are automatically rescaled to have a maximum side length of 512 pixels.</span>
+</span><span id="line-22"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-23">
+</span><span id="line-24">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-25">
+</span><span id="line-26">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-27">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/&quot;</span><span class="p">,</span>
+</span><span id="line-28">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-29">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_train.tar&quot;</span><span class="p">,</span>
+</span><span id="line-30">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_test.tar&quot;</span><span class="p">,</span>
+</span><span id="line-31">        <span class="p">},</span>
+</span><span id="line-32">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@inproceedings{bossard14,</span>
+</span><span id="line-33"><span class="s2">            title = {Food-101 -- Mining Discriminative Components with Random Forests},</span>
+</span><span id="line-34"><span class="s2">            author = {Bossard, Lukas and Guillaumin, Matthieu and Van Gool, Luc},</span>
+</span><span id="line-35"><span class="s2">            booktitle = {European Conference on Computer Vision},</span>
+</span><span id="line-36"><span class="s2">            year = </span><span class="si">{2014}</span><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-37">    <span class="p">}</span>
+</span><span id="line-38">
+</span><span id="line-39">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-40">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-41">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Food-101 image classification dataset. It has 101 food categories, with 101&#39;000 images. For each class, 250 manually reviewed test images are provided as well as 750 training images. On purpose, the training images were not cleaned, and thus still contain some amount of noise. This comes mostly in the form of intense colors and sometimes wrong labels. All images were rescaled to have a maximum side length of 512 pixels&quot;</span><span class="p">,</span>
+</span><span id="line-42">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-43">                <span class="p">{</span>
+</span><span id="line-44">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-45">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()),</span>
+</span><span id="line-46">                <span class="p">}</span>
+</span><span id="line-47">            <span class="p">),</span>
+</span><span id="line-48">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-49">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-50">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-51">        <span class="p">)</span>
+</span><span id="line-52">
+</span><span id="line-53">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-54"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from uncompressed TAR archives.</span>
+</span><span id="line-55">
+</span><span id="line-56"><span class="sd">        Expects TAR structure: class_name/image_id.jpg</span>
+</span><span id="line-57">
+</span><span id="line-58"><span class="sd">        Using uncompressed TAR provides 5-10x speed improvement over gzip:</span>
+</span><span id="line-59"><span class="sd">        - No decompression overhead (direct disk I/O)</span>
+</span><span id="line-60"><span class="sd">        - Sequential reading is cache-friendly</span>
+</span><span id="line-61"><span class="sd">        - Processes 75k images in 1-2 hours vs 10-12 hours with gzip</span>
+</span><span id="line-62">
+</span><span id="line-63"><span class="sd">        File size increase is minimal (~80 MB, 2%) since JPEG is already compressed.</span>
+</span><span id="line-64"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="line-65">        <span class="c1"># Pre-build label lookup dictionary</span>
+</span><span id="line-66">        <span class="n">label_to_idx</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">())}</span>
+</span><span id="line-67">
+</span><span id="line-68">        <span class="c1"># Open TAR in auto-detect mode (handles both compressed and uncompressed)</span>
+</span><span id="line-69">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r:*&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+</span><span id="line-70">            <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">tar</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
+</span><span id="line-71">                <span class="c1"># Quick filter: only process files (skip directories)</span>
+</span><span id="line-72">                <span class="k">if</span> <span class="ow">not</span> <span class="n">member</span><span class="o">.</span><span class="n">isfile</span><span class="p">():</span>
+</span><span id="line-73">                    <span class="k">continue</span>
+</span><span id="line-74">
+</span><span id="line-75">                <span class="n">filename</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span>
+</span><span id="line-76">
+</span><span id="line-77">                <span class="c1"># Fast filter: skip non-jpg files</span>
+</span><span id="line-78">                <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jpg&quot;</span><span class="p">):</span>
+</span><span id="line-79">                    <span class="k">continue</span>
+</span><span id="line-80">
+</span><span id="line-81">                <span class="c1"># Extract class name from path: class_name/image_id.jpg</span>
+</span><span id="line-82">                <span class="c1"># Split path into parts</span>
+</span><span id="line-83">                <span class="n">path_parts</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+</span><span id="line-84">
+</span><span id="line-85">                <span class="c1"># Expected format: class_name/image_id.jpg</span>
+</span><span id="line-86">                <span class="c1"># Find the class_name (second-to-last part)</span>
+</span><span id="line-87">                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+</span><span id="line-88">                    <span class="k">continue</span>
+</span><span id="line-89">
+</span><span id="line-90">                <span class="n">class_name</span> <span class="o">=</span> <span class="n">path_parts</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># Directory name = class name</span>
+</span><span id="line-91">
+</span><span id="line-92">                <span class="c1"># Lookup label (skip if not found)</span>
+</span><span id="line-93">                <span class="n">label</span> <span class="o">=</span> <span class="n">label_to_idx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">class_name</span><span class="p">)</span>
+</span><span id="line-94">                <span class="k">if</span> <span class="n">label</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-95">                    <span class="k">continue</span>
+</span><span id="line-96">
+</span><span id="line-97">                <span class="c1"># Read and process image</span>
+</span><span id="line-98">                <span class="k">try</span><span class="p">:</span>
+</span><span id="line-99">                    <span class="n">file_obj</span> <span class="o">=</span> <span class="n">tar</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+</span><span id="line-100">                    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+</span><span id="line-101">
+</span><span id="line-102">                    <span class="c1"># Use full path as key for uniqueness</span>
+</span><span id="line-103">                    <span class="k">yield</span> <span class="n">filename</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
+</span><span id="line-104">                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span id="line-105">                    <span class="c1"># Skip corrupted images silently</span>
+</span><span id="line-106">                    <span class="k">continue</span>
+</span><span id="line-107">
+</span><span id="line-108">    <span class="nd">@staticmethod</span>
+</span><span id="line-109">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
+</span><span id="line-110">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-111">            <span class="s2">&quot;apple_pie&quot;</span><span class="p">,</span>
+</span><span id="line-112">            <span class="s2">&quot;baby_back_ribs&quot;</span><span class="p">,</span>
+</span><span id="line-113">            <span class="s2">&quot;baklava&quot;</span><span class="p">,</span>
+</span><span id="line-114">            <span class="s2">&quot;beef_carpaccio&quot;</span><span class="p">,</span>
+</span><span id="line-115">            <span class="s2">&quot;beef_tartare&quot;</span><span class="p">,</span>
+</span><span id="line-116">            <span class="s2">&quot;beet_salad&quot;</span><span class="p">,</span>
+</span><span id="line-117">            <span class="s2">&quot;beignets&quot;</span><span class="p">,</span>
+</span><span id="line-118">            <span class="s2">&quot;bibimbap&quot;</span><span class="p">,</span>
+</span><span id="line-119">            <span class="s2">&quot;bread_pudding&quot;</span><span class="p">,</span>
+</span><span id="line-120">            <span class="s2">&quot;breakfast_burrito&quot;</span><span class="p">,</span>
+</span><span id="line-121">            <span class="s2">&quot;bruschetta&quot;</span><span class="p">,</span>
+</span><span id="line-122">            <span class="s2">&quot;caesar_salad&quot;</span><span class="p">,</span>
+</span><span id="line-123">            <span class="s2">&quot;cannoli&quot;</span><span class="p">,</span>
+</span><span id="line-124">            <span class="s2">&quot;caprese_salad&quot;</span><span class="p">,</span>
+</span><span id="line-125">            <span class="s2">&quot;carrot_cake&quot;</span><span class="p">,</span>
+</span><span id="line-126">            <span class="s2">&quot;ceviche&quot;</span><span class="p">,</span>
+</span><span id="line-127">            <span class="s2">&quot;cheesecake&quot;</span><span class="p">,</span>
+</span><span id="line-128">            <span class="s2">&quot;cheese_plate&quot;</span><span class="p">,</span>
+</span><span id="line-129">            <span class="s2">&quot;chicken_curry&quot;</span><span class="p">,</span>
+</span><span id="line-130">            <span class="s2">&quot;chicken_quesadilla&quot;</span><span class="p">,</span>
+</span><span id="line-131">            <span class="s2">&quot;chicken_wings&quot;</span><span class="p">,</span>
+</span><span id="line-132">            <span class="s2">&quot;chocolate_cake&quot;</span><span class="p">,</span>
+</span><span id="line-133">            <span class="s2">&quot;chocolate_mousse&quot;</span><span class="p">,</span>
+</span><span id="line-134">            <span class="s2">&quot;churros&quot;</span><span class="p">,</span>
+</span><span id="line-135">            <span class="s2">&quot;clam_chowder&quot;</span><span class="p">,</span>
+</span><span id="line-136">            <span class="s2">&quot;club_sandwich&quot;</span><span class="p">,</span>
+</span><span id="line-137">            <span class="s2">&quot;crab_cakes&quot;</span><span class="p">,</span>
+</span><span id="line-138">            <span class="s2">&quot;creme_brulee&quot;</span><span class="p">,</span>
+</span><span id="line-139">            <span class="s2">&quot;croque_madame&quot;</span><span class="p">,</span>
+</span><span id="line-140">            <span class="s2">&quot;cup_cakes&quot;</span><span class="p">,</span>
+</span><span id="line-141">            <span class="s2">&quot;deviled_eggs&quot;</span><span class="p">,</span>
+</span><span id="line-142">            <span class="s2">&quot;donuts&quot;</span><span class="p">,</span>
+</span><span id="line-143">            <span class="s2">&quot;dumplings&quot;</span><span class="p">,</span>
+</span><span id="line-144">            <span class="s2">&quot;edamame&quot;</span><span class="p">,</span>
+</span><span id="line-145">            <span class="s2">&quot;eggs_benedict&quot;</span><span class="p">,</span>
+</span><span id="line-146">            <span class="s2">&quot;escargots&quot;</span><span class="p">,</span>
+</span><span id="line-147">            <span class="s2">&quot;falafel&quot;</span><span class="p">,</span>
+</span><span id="line-148">            <span class="s2">&quot;filet_mignon&quot;</span><span class="p">,</span>
+</span><span id="line-149">            <span class="s2">&quot;fish_and_chips&quot;</span><span class="p">,</span>
+</span><span id="line-150">            <span class="s2">&quot;foie_gras&quot;</span><span class="p">,</span>
+</span><span id="line-151">            <span class="s2">&quot;french_fries&quot;</span><span class="p">,</span>
+</span><span id="line-152">            <span class="s2">&quot;french_onion_soup&quot;</span><span class="p">,</span>
+</span><span id="line-153">            <span class="s2">&quot;french_toast&quot;</span><span class="p">,</span>
+</span><span id="line-154">            <span class="s2">&quot;fried_calamari&quot;</span><span class="p">,</span>
+</span><span id="line-155">            <span class="s2">&quot;fried_rice&quot;</span><span class="p">,</span>
+</span><span id="line-156">            <span class="s2">&quot;frozen_yogurt&quot;</span><span class="p">,</span>
+</span><span id="line-157">            <span class="s2">&quot;garlic_bread&quot;</span><span class="p">,</span>
+</span><span id="line-158">            <span class="s2">&quot;gnocchi&quot;</span><span class="p">,</span>
+</span><span id="line-159">            <span class="s2">&quot;greek_salad&quot;</span><span class="p">,</span>
+</span><span id="line-160">            <span class="s2">&quot;grilled_cheese_sandwich&quot;</span><span class="p">,</span>
+</span><span id="line-161">            <span class="s2">&quot;grilled_salmon&quot;</span><span class="p">,</span>
+</span><span id="line-162">            <span class="s2">&quot;guacamole&quot;</span><span class="p">,</span>
+</span><span id="line-163">            <span class="s2">&quot;gyoza&quot;</span><span class="p">,</span>
+</span><span id="line-164">            <span class="s2">&quot;hamburger&quot;</span><span class="p">,</span>
+</span><span id="line-165">            <span class="s2">&quot;hot_and_sour_soup&quot;</span><span class="p">,</span>
+</span><span id="line-166">            <span class="s2">&quot;hot_dog&quot;</span><span class="p">,</span>
+</span><span id="line-167">            <span class="s2">&quot;huevos_rancheros&quot;</span><span class="p">,</span>
+</span><span id="line-168">            <span class="s2">&quot;hummus&quot;</span><span class="p">,</span>
+</span><span id="line-169">            <span class="s2">&quot;ice_cream&quot;</span><span class="p">,</span>
+</span><span id="line-170">            <span class="s2">&quot;lasagna&quot;</span><span class="p">,</span>
+</span><span id="line-171">            <span class="s2">&quot;lobster_bisque&quot;</span><span class="p">,</span>
+</span><span id="line-172">            <span class="s2">&quot;lobster_roll_sandwich&quot;</span><span class="p">,</span>
+</span><span id="line-173">            <span class="s2">&quot;macaroni_and_cheese&quot;</span><span class="p">,</span>
+</span><span id="line-174">            <span class="s2">&quot;macarons&quot;</span><span class="p">,</span>
+</span><span id="line-175">            <span class="s2">&quot;miso_soup&quot;</span><span class="p">,</span>
+</span><span id="line-176">            <span class="s2">&quot;mussels&quot;</span><span class="p">,</span>
+</span><span id="line-177">            <span class="s2">&quot;nachos&quot;</span><span class="p">,</span>
+</span><span id="line-178">            <span class="s2">&quot;omelette&quot;</span><span class="p">,</span>
+</span><span id="line-179">            <span class="s2">&quot;onion_rings&quot;</span><span class="p">,</span>
+</span><span id="line-180">            <span class="s2">&quot;oysters&quot;</span><span class="p">,</span>
+</span><span id="line-181">            <span class="s2">&quot;pad_thai&quot;</span><span class="p">,</span>
+</span><span id="line-182">            <span class="s2">&quot;paella&quot;</span><span class="p">,</span>
+</span><span id="line-183">            <span class="s2">&quot;pancakes&quot;</span><span class="p">,</span>
+</span><span id="line-184">            <span class="s2">&quot;panna_cotta&quot;</span><span class="p">,</span>
+</span><span id="line-185">            <span class="s2">&quot;peking_duck&quot;</span><span class="p">,</span>
+</span><span id="line-186">            <span class="s2">&quot;pho&quot;</span><span class="p">,</span>
+</span><span id="line-187">            <span class="s2">&quot;pizza&quot;</span><span class="p">,</span>
+</span><span id="line-188">            <span class="s2">&quot;pork_chop&quot;</span><span class="p">,</span>
+</span><span id="line-189">            <span class="s2">&quot;poutine&quot;</span><span class="p">,</span>
+</span><span id="line-190">            <span class="s2">&quot;prime_rib&quot;</span><span class="p">,</span>
+</span><span id="line-191">            <span class="s2">&quot;pulled_pork_sandwich&quot;</span><span class="p">,</span>
+</span><span id="line-192">            <span class="s2">&quot;ramen&quot;</span><span class="p">,</span>
+</span><span id="line-193">            <span class="s2">&quot;ravioli&quot;</span><span class="p">,</span>
+</span><span id="line-194">            <span class="s2">&quot;red_velvet_cake&quot;</span><span class="p">,</span>
+</span><span id="line-195">            <span class="s2">&quot;risotto&quot;</span><span class="p">,</span>
+</span><span id="line-196">            <span class="s2">&quot;samosa&quot;</span><span class="p">,</span>
+</span><span id="line-197">            <span class="s2">&quot;sashimi&quot;</span><span class="p">,</span>
+</span><span id="line-198">            <span class="s2">&quot;scallops&quot;</span><span class="p">,</span>
+</span><span id="line-199">            <span class="s2">&quot;seaweed_salad&quot;</span><span class="p">,</span>
+</span><span id="line-200">            <span class="s2">&quot;shrimp_and_grits&quot;</span><span class="p">,</span>
+</span><span id="line-201">            <span class="s2">&quot;spaghetti_bolognese&quot;</span><span class="p">,</span>
+</span><span id="line-202">            <span class="s2">&quot;spaghetti_carbonara&quot;</span><span class="p">,</span>
+</span><span id="line-203">            <span class="s2">&quot;spring_rolls&quot;</span><span class="p">,</span>
+</span><span id="line-204">            <span class="s2">&quot;steak&quot;</span><span class="p">,</span>
+</span><span id="line-205">            <span class="s2">&quot;strawberry_shortcake&quot;</span><span class="p">,</span>
+</span><span id="line-206">            <span class="s2">&quot;sushi&quot;</span><span class="p">,</span>
+</span><span id="line-207">            <span class="s2">&quot;tacos&quot;</span><span class="p">,</span>
+</span><span id="line-208">            <span class="s2">&quot;takoyaki&quot;</span><span class="p">,</span>
+</span><span id="line-209">            <span class="s2">&quot;tiramisu&quot;</span><span class="p">,</span>
+</span><span id="line-210">            <span class="s2">&quot;tuna_tartare&quot;</span><span class="p">,</span>
+</span><span id="line-211">            <span class="s2">&quot;waffles&quot;</span><span class="p">,</span>
+</span><span id="line-212">        <span class="p">]</span></div>
 
 </span></code></pre></div>
     </div></div>
