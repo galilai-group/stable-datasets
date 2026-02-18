@@ -21,9 +21,9 @@
 <meta content="#ffffff" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="#030711" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>Kuzushiji-MNIST | stable-datasets</title>
-<meta content="Kuzushiji-MNIST | stable-datasets" property="og:title"/>
-<meta content="Kuzushiji-MNIST | stable-datasets" name="twitter:title"/>
+<title>Tiny ImageNet | stable-datasets</title>
+<meta content="Tiny ImageNet | stable-datasets" property="og:title"/>
+<meta content="Tiny ImageNet | stable-datasets" name="twitter:title"/>
 <link href="../../_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="../../_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
 <link href="../../_static/theme.css?v=73505e79" rel="stylesheet" type="text/css"/>
@@ -35,8 +35,8 @@
 <link href="../../_static/awesome-sphinx-design.css?v=c54898a4" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
-<link href="../medmnist/" rel="next" title="MedMNIST"/>
-<link href="../fashion_mnist/" rel="prev" title="Fashion-MNIST"/>
+<link href="../tiny_imagenet_c/" rel="next" title="Tiny ImageNet-C"/>
+<link href="../stl10/" rel="prev" title="STL-10"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" @scroll.window="showScrollTop = pageYOffset &gt; 100" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -94,12 +94,12 @@
 <li class="toctree-l2"><a class="reference internal" href="../cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../dtd/">Describable Textures Dataset (DTD)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../fashion_mnist/">Fashion-MNIST</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Kuzushiji-MNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../medmnist/">MedMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../awa2/">AWA2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../beans/">Beans</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../stl10/">STL-10</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tiny_imagenet/">Tiny ImageNet</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tiny ImageNet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tiny_imagenet_c/">Tiny ImageNet-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../flowers102/">Flowers102</a></li>
@@ -134,48 +134,41 @@
 </svg>
 </a>
 <div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../">Datasets</a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Kuzushiji-MNIST</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">Tiny ImageNet</span>
 </nav>
 <div id="content" role="main">
-<section id="kuzushiji-mnist">
-<h1>Kuzushiji-MNIST<a class="headerlink" href="#kuzushiji-mnist" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
+<section id="tiny-imagenet">
+<h1>Tiny ImageNet<a class="headerlink" href="#tiny-imagenet" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
 <p style="display: flex; gap: 10px;">
 <img alt="Task: Image Classification" src="https://img.shields.io/badge/Task-Image%20Classification-blue"/>
-<img alt="Classes: 10" src="https://img.shields.io/badge/Classes-10-green"/>
-<img alt="Image Size: 28x28" src="https://img.shields.io/badge/Size-28x28-orange"/>
+<img alt="Classes: 200" src="https://img.shields.io/badge/Classes-200-green"/>
+<img alt="Image Size: 64x64" src="https://img.shields.io/badge/Size-64x64-orange"/>
 </p><section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#overview'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>The Kuzushiji-MNIST dataset is a widely-used image classification benchmark for single-label classification consisting of 70,000 28×28 grayscale images of cursive Japanese characters across 10 balanced classes (o, ki, su, tsu, na, ha, ma, ya, re, wo), with 7,000 images per class.</p>
+<p>Tiny ImageNet is a downsampled subset of the ImageNet ILSVRC dataset created for the Tiny ImageNet Visual Recognition Challenge. It contains 200 classes and approximately 100,000 images resized to 64×64 pixels in RGB format. For each class there are typically 500 training images and 50 validation images.</p>
 <ul class="simple">
-<li><p><strong>Train</strong>: 60,000 images (6,000 per class)</p></li>
-<li><p><strong>Test</strong>: 10,000 images (1,000 per class)</p></li>
+<li><p><strong>Train</strong>: ~100,000 images total (500 images per class)</p></li>
+<li><p><strong>Validation</strong>: 10,000 images (50 images per class)</p></li>
 </ul>
-<a class="reference internal image-reference" href="../../_images/k_mnist_teaser.png"><img alt="../../_images/k_mnist_teaser.png" class="align-center" src="../../_images/k_mnist_teaser.png" style="width: 90%;">
-</img></a>
 </section>
 <section id="data-structure">
 <h2>Data Structure<a class="headerlink" href="#data-structure" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#data-structure'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<p>When accessing an example using <code class="docutils literal notranslate"><span class="pre">ds[i]</span></code>, you will receive a dictionary with the following keys:</p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 20.0%"/>
-<col style="width: 20.0%"/>
-<col style="width: 60.0%"/>
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Key</p></th>
-<th class="head"><p>Type</p></th>
-<th class="head"><p>Description</p></th>
-</tr>
-</thead>
+<p>When accessing an example using <code class="docutils literal notranslate"><span class="pre">ds[i]</span></code> you will receive a dictionary with these keys:</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-number">Table 1 </span><span class="caption-text">:header-rows: 1
+ :widths: 20 20 60</span><a class="headerlink" href="#id1" title="Link to this table"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></caption>
 <tbody>
+<tr class="row-odd"><td><p>Key</p></td>
+<td><p>Type</p></td>
+<td><p>Description</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">image</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">PIL.Image.Image</span></code></p></td>
-<td><p>28×28 grayscale image</p></td>
+<td><p>64×64×3 RGB image</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">label</span></code></p></td>
 <td><p>int</p></td>
-<td><p>Class label (0-9)</p></td>
+<td><p>Class label (0-199) or string class id depending on dataset builder</p></td>
 </tr>
 </tbody>
 </table>
@@ -183,49 +176,43 @@
 <section id="usage-example">
 <h2>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#usage-example'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <p><strong>Basic Usage</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images.k_mnist</span><span class="w"> </span><span class="kn">import</span> <span class="n">KMNIST</span>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">from stable_datasets.images.tiny_imagenet import TinyImagenet
 </span><span id="line-2">
-</span><span id="line-3"><span class="c1"># First run will download + prepare cache, then return the split as a HF Dataset</span>
-</span><span id="line-4"><span class="n">ds</span> <span class="o">=</span> <span class="n">KMNIST</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">"train"</span><span class="p">)</span>
+</span><span id="line-3"># First run will download + prepare cache, then return the split as a HF Dataset
+</span><span id="line-4">ds = TinyImagenet(split="train")
 </span><span id="line-5">
-</span><span id="line-6"><span class="c1"># If you omit the split (split=None), you get a DatasetDict with all available splits</span>
-</span><span id="line-7"><span class="n">ds_all</span> <span class="o">=</span> <span class="n">KMNIST</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span><span id="line-6"># If you omit the split (split=None), you get a DatasetDict with all available splits
+</span><span id="line-7">ds_all = TinyImagenet(split=None)
 </span><span id="line-8">
-</span><span id="line-9"><span class="n">sample</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-10"><span class="nb">print</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>  <span class="c1"># {"image", "label"}</span>
+</span><span id="line-9">sample = ds[0]
+</span><span id="line-10">print(sample.keys())  # {"image", "label"}
 </span><span id="line-11">
-</span><span id="line-12"><span class="c1"># Optional: make it PyTorch-friendly</span>
-</span><span id="line-13"><span class="n">ds_torch</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">with_format</span><span class="p">(</span><span class="s2">"torch"</span><span class="p">)</span>
+</span><span id="line-12"># Optional: make it PyTorch-friendly
+</span><span id="line-13">ds_torch = ds.with_format("torch")
 </span></code></pre></div>
 </div>
 </section>
 <section id="related-datasets">
 <h2>Related Datasets<a class="headerlink" href="#related-datasets" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#related-datasets'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <ul class="simple">
-<li><p><strong>MNIST</strong>: Original handwritten digit recognition dataset</p></li>
-<li><p><strong>Fashion-MNIST</strong>: Drop-in replacement for MNIST with fashion items</p></li>
-<li><p><strong>EMNIST</strong>: Extended MNIST with letters and digits</p></li>
-<li><p><strong>Kuzushiji-49</strong>: Extended version with 49 classes of Kuzushiji characters</p></li>
+<li><p><cite>tiny_imagenet_c</cite> : Corrupted version with common corruptions applied</p></li>
+<li><p>CIFAR variants: smaller benchmarks with similar tasks (see <cite>cifar10</cite>, <cite>cifar100</cite>)</p></li>
 </ul>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#references'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <ul class="simple">
-<li><p>Official website: <a class="reference external" href="http://codh.rois.ac.jp/kmnist/" rel="nofollow noopener">http://codh.rois.ac.jp/kmnist/<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
-<li><p>License: CC BY-SA 4.0</p></li>
+<li><p>Tiny ImageNet (CS231n page): <a class="reference external" href="http://cs231n.stanford.edu/tiny-imagenet-200.html" rel="nofollow noopener">http://cs231n.stanford.edu/tiny-imagenet-200.html<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
+<li><p>Competition / resources: <a class="reference external" href="https://www.kaggle.com/c/tiny-imagenet" rel="nofollow noopener">https://www.kaggle.com/c/tiny-imagenet<svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p></li>
 </ul>
 </section>
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
-<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@online</span><span class="p">{</span><span class="nl">clanuwat2018deep</span><span class="p">,</span>
-</span><span id="line-2"><span class="na">author</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{Tarin Clanuwat and Mikel Bober-Irizar and Asanobu Kitamoto and Alex Lamb and Kazuaki Yamamoto and David Ha}</span><span class="p">,</span>
-</span><span id="line-3"><span class="na">title</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">{Deep Learning for Classical Japanese Literature}</span><span class="p">,</span>
-</span><span id="line-4"><span class="na">date</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{2018-12-03}</span><span class="p">,</span>
-</span><span id="line-5"><span class="na">year</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">{2018}</span><span class="p">,</span>
-</span><span id="line-6"><span class="na">eprintclass</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">{cs.CV}</span><span class="p">,</span>
-</span><span id="line-7"><span class="na">eprinttype</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="s">{arXiv}</span><span class="p">,</span>
-</span><span id="line-8"><span class="na">eprint</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{cs.CV/1812.01718}</span>
-</span><span id="line-9"><span class="p">}</span>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">Le2015TinyIV</span><span class="p">,</span>
+</span><span id="line-2"><span class="w">        </span><span class="na">title</span><span class="p">=</span><span class="s">{Tiny ImageNet Visual Recognition Challenge}</span><span class="p">,</span>
+</span><span id="line-3"><span class="w">        </span><span class="na">author</span><span class="p">=</span><span class="s">{Ya Le and Xuan S. Yang}</span><span class="p">,</span>
+</span><span id="line-4"><span class="w">        </span><span class="na">year</span><span class="p">=</span><span class="s">{2015}</span>
+</span><span id="line-5"><span class="p">}</span>
 </span></code></pre></div>
 </div>
 </section>

@@ -133,6 +133,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/awa2/">AWA2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/beans/">Beans</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/stl10/">STL-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/tiny_imagenet/">Tiny ImageNet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/tiny_imagenet_c/">Tiny ImageNet-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/e_mnist/">EMNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/flowers102/">Flowers102</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cub200/">CUB-200</a></li>
@@ -189,275 +191,316 @@
     <div id="content" role="main">
       <h1>Source code for stable_datasets.images.tiny_imagenet</h1><div class="highlight"><pre>
 <span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 </span><span id="line-4">
-</span><span id="line-5">
+</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
+</span><span id="line-8">
+</span><span id="line-9">
 <div class="viewcode-block" id="TinyImagenet">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.tiny_imagenet.TinyImagenet">[docs]</a>
-</span><span id="line-6"><span class="k">class</span><span class="w"> </span><span class="nc">TinyImagenet</span><span class="p">(</span><span class="n">datasets</span><span class="o">.</span><span class="n">GeneratorBasedBuilder</span><span class="p">):</span>
-</span><span id="line-7"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="line-8"><span class="sd">    Tiny ImageNet dataset for image classification tasks.</span>
-</span><span id="line-9"><span class="sd">    It contains 200 classes with 500 training images, 50 validation images, and 50 test images per class.</span>
-</span><span id="line-10"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="line-11">
-</span><span id="line-12">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-13">
-</span><span id="line-14">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-15">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-16">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;In Tiny ImageNet, there are 100,000 images divided up into 200 classes. Every image in the</span>
-</span><span id="line-17"><span class="s2">            dataset is downsized to a 64×64 colored image. For every class, there are 500 training images, 50 validating</span>
-</span><span id="line-18"><span class="s2">            images, and 50 test images.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-19">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-20">                <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">())}</span>
-</span><span id="line-21">            <span class="p">),</span>
-</span><span id="line-22">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-23">            <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://www.kaggle.com/c/tiny-imagenet&quot;</span><span class="p">,</span>
-</span><span id="line-24">            <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@inproceedings{Le2015TinyIV,</span>
-</span><span id="line-25"><span class="s2">                          title={Tiny ImageNet Visual Recognition Challenge},</span>
-</span><span id="line-26"><span class="s2">                          author={Ya Le and Xuan S. Yang},</span>
-</span><span id="line-27"><span class="s2">                          year=</span><span class="si">{2015}</span>
-</span><span id="line-28"><span class="s2">                        }&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-29">            <span class="n">license</span><span class="o">=</span><span class="s2">&quot;MIT License&quot;</span><span class="p">,</span>
-</span><span id="line-30">        <span class="p">)</span>
-</span><span id="line-31">
-</span><span id="line-32">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
-</span><span id="line-33">        <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;http://cs231n.stanford.edu/tiny-imagenet-200.zip&quot;</span>
-</span><span id="line-34">        <span class="n">archive_path</span> <span class="o">=</span> <span class="n">dl_manager</span><span class="o">.</span><span class="n">download_and_extract</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-35">
-</span><span id="line-36">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-37">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-38">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-39">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">},</span>
-</span><span id="line-40">            <span class="p">),</span>
-</span><span id="line-41">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-42">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
-</span><span id="line-43">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;archive_path&quot;</span><span class="p">:</span> <span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;val&quot;</span><span class="p">},</span>
-</span><span id="line-44">            <span class="p">),</span>
-</span><span id="line-45">        <span class="p">]</span>
-</span><span id="line-46">
-</span><span id="line-47">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
-</span><span id="line-48">        <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">archive_path</span><span class="p">,</span> <span class="s2">&quot;tiny-imagenet-200&quot;</span><span class="p">)</span>
-</span><span id="line-49">
-</span><span id="line-50">        <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span><span class="p">:</span>
-</span><span id="line-51">            <span class="k">for</span> <span class="n">label_dir</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">)):</span>
-</span><span id="line-52">                <span class="n">class_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="n">label_dir</span><span class="p">,</span> <span class="s2">&quot;images&quot;</span><span class="p">)</span>
-</span><span id="line-53">                <span class="k">for</span> <span class="n">image_file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">class_path</span><span class="p">):</span>
-</span><span id="line-54">                    <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">class_path</span><span class="p">,</span> <span class="n">image_file</span><span class="p">)</span>
-</span><span id="line-55">                    <span class="k">yield</span> <span class="n">image_file</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image_path</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label_dir</span><span class="p">}</span>
-</span><span id="line-56">
-</span><span id="line-57">        <span class="k">elif</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span>
-</span><span id="line-58">            <span class="n">annotations</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;val_annotations.txt&quot;</span><span class="p">)</span>
-</span><span id="line-59">            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">annotations</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span id="line-60">                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-</span><span id="line-61">                    <span class="n">image_file</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="line-62">                    <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;images&quot;</span><span class="p">,</span> <span class="n">image_file</span><span class="p">)</span>
-</span><span id="line-63">                    <span class="k">yield</span> <span class="n">image_file</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image_path</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
-</span><span id="line-64">
-</span><span id="line-65">    <span class="nd">@staticmethod</span>
-</span><span id="line-66">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
-</span><span id="line-67">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-68">            <span class="s2">&quot;n02124075&quot;</span><span class="p">,</span>
-</span><span id="line-69">            <span class="s2">&quot;n04067472&quot;</span><span class="p">,</span>
-</span><span id="line-70">            <span class="s2">&quot;n04540053&quot;</span><span class="p">,</span>
-</span><span id="line-71">            <span class="s2">&quot;n04099969&quot;</span><span class="p">,</span>
-</span><span id="line-72">            <span class="s2">&quot;n07749582&quot;</span><span class="p">,</span>
-</span><span id="line-73">            <span class="s2">&quot;n01641577&quot;</span><span class="p">,</span>
-</span><span id="line-74">            <span class="s2">&quot;n02802426&quot;</span><span class="p">,</span>
-</span><span id="line-75">            <span class="s2">&quot;n09246464&quot;</span><span class="p">,</span>
-</span><span id="line-76">            <span class="s2">&quot;n07920052&quot;</span><span class="p">,</span>
-</span><span id="line-77">            <span class="s2">&quot;n03970156&quot;</span><span class="p">,</span>
-</span><span id="line-78">            <span class="s2">&quot;n03891332&quot;</span><span class="p">,</span>
-</span><span id="line-79">            <span class="s2">&quot;n02106662&quot;</span><span class="p">,</span>
-</span><span id="line-80">            <span class="s2">&quot;n03201208&quot;</span><span class="p">,</span>
-</span><span id="line-81">            <span class="s2">&quot;n02279972&quot;</span><span class="p">,</span>
-</span><span id="line-82">            <span class="s2">&quot;n02132136&quot;</span><span class="p">,</span>
-</span><span id="line-83">            <span class="s2">&quot;n04146614&quot;</span><span class="p">,</span>
-</span><span id="line-84">            <span class="s2">&quot;n07873807&quot;</span><span class="p">,</span>
-</span><span id="line-85">            <span class="s2">&quot;n02364673&quot;</span><span class="p">,</span>
-</span><span id="line-86">            <span class="s2">&quot;n04507155&quot;</span><span class="p">,</span>
-</span><span id="line-87">            <span class="s2">&quot;n03854065&quot;</span><span class="p">,</span>
-</span><span id="line-88">            <span class="s2">&quot;n03838899&quot;</span><span class="p">,</span>
-</span><span id="line-89">            <span class="s2">&quot;n03733131&quot;</span><span class="p">,</span>
-</span><span id="line-90">            <span class="s2">&quot;n01443537&quot;</span><span class="p">,</span>
-</span><span id="line-91">            <span class="s2">&quot;n07875152&quot;</span><span class="p">,</span>
-</span><span id="line-92">            <span class="s2">&quot;n03544143&quot;</span><span class="p">,</span>
-</span><span id="line-93">            <span class="s2">&quot;n09428293&quot;</span><span class="p">,</span>
-</span><span id="line-94">            <span class="s2">&quot;n03085013&quot;</span><span class="p">,</span>
-</span><span id="line-95">            <span class="s2">&quot;n02437312&quot;</span><span class="p">,</span>
-</span><span id="line-96">            <span class="s2">&quot;n07614500&quot;</span><span class="p">,</span>
-</span><span id="line-97">            <span class="s2">&quot;n03804744&quot;</span><span class="p">,</span>
-</span><span id="line-98">            <span class="s2">&quot;n04265275&quot;</span><span class="p">,</span>
-</span><span id="line-99">            <span class="s2">&quot;n02963159&quot;</span><span class="p">,</span>
-</span><span id="line-100">            <span class="s2">&quot;n02486410&quot;</span><span class="p">,</span>
-</span><span id="line-101">            <span class="s2">&quot;n01944390&quot;</span><span class="p">,</span>
-</span><span id="line-102">            <span class="s2">&quot;n09256479&quot;</span><span class="p">,</span>
-</span><span id="line-103">            <span class="s2">&quot;n02058221&quot;</span><span class="p">,</span>
-</span><span id="line-104">            <span class="s2">&quot;n04275548&quot;</span><span class="p">,</span>
-</span><span id="line-105">            <span class="s2">&quot;n02321529&quot;</span><span class="p">,</span>
-</span><span id="line-106">            <span class="s2">&quot;n02769748&quot;</span><span class="p">,</span>
-</span><span id="line-107">            <span class="s2">&quot;n02099712&quot;</span><span class="p">,</span>
-</span><span id="line-108">            <span class="s2">&quot;n07695742&quot;</span><span class="p">,</span>
-</span><span id="line-109">            <span class="s2">&quot;n02056570&quot;</span><span class="p">,</span>
-</span><span id="line-110">            <span class="s2">&quot;n02281406&quot;</span><span class="p">,</span>
-</span><span id="line-111">            <span class="s2">&quot;n01774750&quot;</span><span class="p">,</span>
-</span><span id="line-112">            <span class="s2">&quot;n02509815&quot;</span><span class="p">,</span>
-</span><span id="line-113">            <span class="s2">&quot;n03983396&quot;</span><span class="p">,</span>
-</span><span id="line-114">            <span class="s2">&quot;n07753592&quot;</span><span class="p">,</span>
-</span><span id="line-115">            <span class="s2">&quot;n04254777&quot;</span><span class="p">,</span>
-</span><span id="line-116">            <span class="s2">&quot;n02233338&quot;</span><span class="p">,</span>
-</span><span id="line-117">            <span class="s2">&quot;n04008634&quot;</span><span class="p">,</span>
-</span><span id="line-118">            <span class="s2">&quot;n02823428&quot;</span><span class="p">,</span>
-</span><span id="line-119">            <span class="s2">&quot;n02236044&quot;</span><span class="p">,</span>
-</span><span id="line-120">            <span class="s2">&quot;n03393912&quot;</span><span class="p">,</span>
-</span><span id="line-121">            <span class="s2">&quot;n07583066&quot;</span><span class="p">,</span>
-</span><span id="line-122">            <span class="s2">&quot;n04074963&quot;</span><span class="p">,</span>
-</span><span id="line-123">            <span class="s2">&quot;n01629819&quot;</span><span class="p">,</span>
-</span><span id="line-124">            <span class="s2">&quot;n09332890&quot;</span><span class="p">,</span>
-</span><span id="line-125">            <span class="s2">&quot;n02481823&quot;</span><span class="p">,</span>
-</span><span id="line-126">            <span class="s2">&quot;n03902125&quot;</span><span class="p">,</span>
-</span><span id="line-127">            <span class="s2">&quot;n03404251&quot;</span><span class="p">,</span>
-</span><span id="line-128">            <span class="s2">&quot;n09193705&quot;</span><span class="p">,</span>
-</span><span id="line-129">            <span class="s2">&quot;n03637318&quot;</span><span class="p">,</span>
-</span><span id="line-130">            <span class="s2">&quot;n04456115&quot;</span><span class="p">,</span>
-</span><span id="line-131">            <span class="s2">&quot;n02666196&quot;</span><span class="p">,</span>
-</span><span id="line-132">            <span class="s2">&quot;n03796401&quot;</span><span class="p">,</span>
-</span><span id="line-133">            <span class="s2">&quot;n02795169&quot;</span><span class="p">,</span>
-</span><span id="line-134">            <span class="s2">&quot;n02123045&quot;</span><span class="p">,</span>
-</span><span id="line-135">            <span class="s2">&quot;n01855672&quot;</span><span class="p">,</span>
-</span><span id="line-136">            <span class="s2">&quot;n01882714&quot;</span><span class="p">,</span>
-</span><span id="line-137">            <span class="s2">&quot;n02917067&quot;</span><span class="p">,</span>
-</span><span id="line-138">            <span class="s2">&quot;n02988304&quot;</span><span class="p">,</span>
-</span><span id="line-139">            <span class="s2">&quot;n04398044&quot;</span><span class="p">,</span>
-</span><span id="line-140">            <span class="s2">&quot;n02843684&quot;</span><span class="p">,</span>
-</span><span id="line-141">            <span class="s2">&quot;n02423022&quot;</span><span class="p">,</span>
-</span><span id="line-142">            <span class="s2">&quot;n02669723&quot;</span><span class="p">,</span>
-</span><span id="line-143">            <span class="s2">&quot;n04465501&quot;</span><span class="p">,</span>
-</span><span id="line-144">            <span class="s2">&quot;n02165456&quot;</span><span class="p">,</span>
-</span><span id="line-145">            <span class="s2">&quot;n03770439&quot;</span><span class="p">,</span>
-</span><span id="line-146">            <span class="s2">&quot;n02099601&quot;</span><span class="p">,</span>
-</span><span id="line-147">            <span class="s2">&quot;n04486054&quot;</span><span class="p">,</span>
-</span><span id="line-148">            <span class="s2">&quot;n02950826&quot;</span><span class="p">,</span>
-</span><span id="line-149">            <span class="s2">&quot;n03814639&quot;</span><span class="p">,</span>
-</span><span id="line-150">            <span class="s2">&quot;n04259630&quot;</span><span class="p">,</span>
-</span><span id="line-151">            <span class="s2">&quot;n03424325&quot;</span><span class="p">,</span>
-</span><span id="line-152">            <span class="s2">&quot;n02948072&quot;</span><span class="p">,</span>
-</span><span id="line-153">            <span class="s2">&quot;n03179701&quot;</span><span class="p">,</span>
-</span><span id="line-154">            <span class="s2">&quot;n03400231&quot;</span><span class="p">,</span>
-</span><span id="line-155">            <span class="s2">&quot;n02206856&quot;</span><span class="p">,</span>
-</span><span id="line-156">            <span class="s2">&quot;n03160309&quot;</span><span class="p">,</span>
-</span><span id="line-157">            <span class="s2">&quot;n01984695&quot;</span><span class="p">,</span>
-</span><span id="line-158">            <span class="s2">&quot;n03977966&quot;</span><span class="p">,</span>
-</span><span id="line-159">            <span class="s2">&quot;n03584254&quot;</span><span class="p">,</span>
-</span><span id="line-160">            <span class="s2">&quot;n04023962&quot;</span><span class="p">,</span>
-</span><span id="line-161">            <span class="s2">&quot;n02814860&quot;</span><span class="p">,</span>
-</span><span id="line-162">            <span class="s2">&quot;n01910747&quot;</span><span class="p">,</span>
-</span><span id="line-163">            <span class="s2">&quot;n04596742&quot;</span><span class="p">,</span>
-</span><span id="line-164">            <span class="s2">&quot;n03992509&quot;</span><span class="p">,</span>
-</span><span id="line-165">            <span class="s2">&quot;n04133789&quot;</span><span class="p">,</span>
-</span><span id="line-166">            <span class="s2">&quot;n03937543&quot;</span><span class="p">,</span>
-</span><span id="line-167">            <span class="s2">&quot;n02927161&quot;</span><span class="p">,</span>
-</span><span id="line-168">            <span class="s2">&quot;n01945685&quot;</span><span class="p">,</span>
-</span><span id="line-169">            <span class="s2">&quot;n02395406&quot;</span><span class="p">,</span>
-</span><span id="line-170">            <span class="s2">&quot;n02125311&quot;</span><span class="p">,</span>
-</span><span id="line-171">            <span class="s2">&quot;n03126707&quot;</span><span class="p">,</span>
-</span><span id="line-172">            <span class="s2">&quot;n04532106&quot;</span><span class="p">,</span>
-</span><span id="line-173">            <span class="s2">&quot;n02268443&quot;</span><span class="p">,</span>
-</span><span id="line-174">            <span class="s2">&quot;n02977058&quot;</span><span class="p">,</span>
-</span><span id="line-175">            <span class="s2">&quot;n07734744&quot;</span><span class="p">,</span>
-</span><span id="line-176">            <span class="s2">&quot;n03599486&quot;</span><span class="p">,</span>
-</span><span id="line-177">            <span class="s2">&quot;n04562935&quot;</span><span class="p">,</span>
-</span><span id="line-178">            <span class="s2">&quot;n03014705&quot;</span><span class="p">,</span>
-</span><span id="line-179">            <span class="s2">&quot;n04251144&quot;</span><span class="p">,</span>
-</span><span id="line-180">            <span class="s2">&quot;n04356056&quot;</span><span class="p">,</span>
-</span><span id="line-181">            <span class="s2">&quot;n02190166&quot;</span><span class="p">,</span>
-</span><span id="line-182">            <span class="s2">&quot;n03670208&quot;</span><span class="p">,</span>
-</span><span id="line-183">            <span class="s2">&quot;n02002724&quot;</span><span class="p">,</span>
-</span><span id="line-184">            <span class="s2">&quot;n02074367&quot;</span><span class="p">,</span>
-</span><span id="line-185">            <span class="s2">&quot;n04285008&quot;</span><span class="p">,</span>
-</span><span id="line-186">            <span class="s2">&quot;n04560804&quot;</span><span class="p">,</span>
-</span><span id="line-187">            <span class="s2">&quot;n04366367&quot;</span><span class="p">,</span>
-</span><span id="line-188">            <span class="s2">&quot;n02403003&quot;</span><span class="p">,</span>
-</span><span id="line-189">            <span class="s2">&quot;n07615774&quot;</span><span class="p">,</span>
-</span><span id="line-190">            <span class="s2">&quot;n04501370&quot;</span><span class="p">,</span>
-</span><span id="line-191">            <span class="s2">&quot;n03026506&quot;</span><span class="p">,</span>
-</span><span id="line-192">            <span class="s2">&quot;n02906734&quot;</span><span class="p">,</span>
-</span><span id="line-193">            <span class="s2">&quot;n01770393&quot;</span><span class="p">,</span>
-</span><span id="line-194">            <span class="s2">&quot;n04597913&quot;</span><span class="p">,</span>
-</span><span id="line-195">            <span class="s2">&quot;n03930313&quot;</span><span class="p">,</span>
-</span><span id="line-196">            <span class="s2">&quot;n04118538&quot;</span><span class="p">,</span>
-</span><span id="line-197">            <span class="s2">&quot;n04179913&quot;</span><span class="p">,</span>
-</span><span id="line-198">            <span class="s2">&quot;n04311004&quot;</span><span class="p">,</span>
-</span><span id="line-199">            <span class="s2">&quot;n02123394&quot;</span><span class="p">,</span>
-</span><span id="line-200">            <span class="s2">&quot;n04070727&quot;</span><span class="p">,</span>
-</span><span id="line-201">            <span class="s2">&quot;n02793495&quot;</span><span class="p">,</span>
-</span><span id="line-202">            <span class="s2">&quot;n02730930&quot;</span><span class="p">,</span>
-</span><span id="line-203">            <span class="s2">&quot;n02094433&quot;</span><span class="p">,</span>
-</span><span id="line-204">            <span class="s2">&quot;n04371430&quot;</span><span class="p">,</span>
-</span><span id="line-205">            <span class="s2">&quot;n04328186&quot;</span><span class="p">,</span>
-</span><span id="line-206">            <span class="s2">&quot;n03649909&quot;</span><span class="p">,</span>
-</span><span id="line-207">            <span class="s2">&quot;n04417672&quot;</span><span class="p">,</span>
-</span><span id="line-208">            <span class="s2">&quot;n03388043&quot;</span><span class="p">,</span>
-</span><span id="line-209">            <span class="s2">&quot;n01774384&quot;</span><span class="p">,</span>
-</span><span id="line-210">            <span class="s2">&quot;n02837789&quot;</span><span class="p">,</span>
-</span><span id="line-211">            <span class="s2">&quot;n07579787&quot;</span><span class="p">,</span>
-</span><span id="line-212">            <span class="s2">&quot;n04399382&quot;</span><span class="p">,</span>
-</span><span id="line-213">            <span class="s2">&quot;n02791270&quot;</span><span class="p">,</span>
-</span><span id="line-214">            <span class="s2">&quot;n03089624&quot;</span><span class="p">,</span>
-</span><span id="line-215">            <span class="s2">&quot;n02814533&quot;</span><span class="p">,</span>
-</span><span id="line-216">            <span class="s2">&quot;n04149813&quot;</span><span class="p">,</span>
-</span><span id="line-217">            <span class="s2">&quot;n07747607&quot;</span><span class="p">,</span>
-</span><span id="line-218">            <span class="s2">&quot;n03355925&quot;</span><span class="p">,</span>
-</span><span id="line-219">            <span class="s2">&quot;n01983481&quot;</span><span class="p">,</span>
-</span><span id="line-220">            <span class="s2">&quot;n04487081&quot;</span><span class="p">,</span>
-</span><span id="line-221">            <span class="s2">&quot;n03250847&quot;</span><span class="p">,</span>
-</span><span id="line-222">            <span class="s2">&quot;n03255030&quot;</span><span class="p">,</span>
-</span><span id="line-223">            <span class="s2">&quot;n02892201&quot;</span><span class="p">,</span>
-</span><span id="line-224">            <span class="s2">&quot;n02883205&quot;</span><span class="p">,</span>
-</span><span id="line-225">            <span class="s2">&quot;n03100240&quot;</span><span class="p">,</span>
-</span><span id="line-226">            <span class="s2">&quot;n02415577&quot;</span><span class="p">,</span>
-</span><span id="line-227">            <span class="s2">&quot;n02480495&quot;</span><span class="p">,</span>
-</span><span id="line-228">            <span class="s2">&quot;n01698640&quot;</span><span class="p">,</span>
-</span><span id="line-229">            <span class="s2">&quot;n01784675&quot;</span><span class="p">,</span>
-</span><span id="line-230">            <span class="s2">&quot;n04376876&quot;</span><span class="p">,</span>
-</span><span id="line-231">            <span class="s2">&quot;n03444034&quot;</span><span class="p">,</span>
-</span><span id="line-232">            <span class="s2">&quot;n01917289&quot;</span><span class="p">,</span>
-</span><span id="line-233">            <span class="s2">&quot;n01950731&quot;</span><span class="p">,</span>
-</span><span id="line-234">            <span class="s2">&quot;n03042490&quot;</span><span class="p">,</span>
-</span><span id="line-235">            <span class="s2">&quot;n07711569&quot;</span><span class="p">,</span>
-</span><span id="line-236">            <span class="s2">&quot;n04532670&quot;</span><span class="p">,</span>
-</span><span id="line-237">            <span class="s2">&quot;n03763968&quot;</span><span class="p">,</span>
-</span><span id="line-238">            <span class="s2">&quot;n07768694&quot;</span><span class="p">,</span>
-</span><span id="line-239">            <span class="s2">&quot;n02999410&quot;</span><span class="p">,</span>
-</span><span id="line-240">            <span class="s2">&quot;n03617480&quot;</span><span class="p">,</span>
-</span><span id="line-241">            <span class="s2">&quot;n06596364&quot;</span><span class="p">,</span>
-</span><span id="line-242">            <span class="s2">&quot;n01768244&quot;</span><span class="p">,</span>
-</span><span id="line-243">            <span class="s2">&quot;n02410509&quot;</span><span class="p">,</span>
-</span><span id="line-244">            <span class="s2">&quot;n03976657&quot;</span><span class="p">,</span>
-</span><span id="line-245">            <span class="s2">&quot;n01742172&quot;</span><span class="p">,</span>
-</span><span id="line-246">            <span class="s2">&quot;n03980874&quot;</span><span class="p">,</span>
-</span><span id="line-247">            <span class="s2">&quot;n02808440&quot;</span><span class="p">,</span>
-</span><span id="line-248">            <span class="s2">&quot;n02226429&quot;</span><span class="p">,</span>
-</span><span id="line-249">            <span class="s2">&quot;n02231487&quot;</span><span class="p">,</span>
-</span><span id="line-250">            <span class="s2">&quot;n02085620&quot;</span><span class="p">,</span>
-</span><span id="line-251">            <span class="s2">&quot;n01644900&quot;</span><span class="p">,</span>
-</span><span id="line-252">            <span class="s2">&quot;n02129165&quot;</span><span class="p">,</span>
-</span><span id="line-253">            <span class="s2">&quot;n02699494&quot;</span><span class="p">,</span>
-</span><span id="line-254">            <span class="s2">&quot;n03837869&quot;</span><span class="p">,</span>
-</span><span id="line-255">            <span class="s2">&quot;n02815834&quot;</span><span class="p">,</span>
-</span><span id="line-256">            <span class="s2">&quot;n07720875&quot;</span><span class="p">,</span>
-</span><span id="line-257">            <span class="s2">&quot;n02788148&quot;</span><span class="p">,</span>
-</span><span id="line-258">            <span class="s2">&quot;n02909870&quot;</span><span class="p">,</span>
-</span><span id="line-259">            <span class="s2">&quot;n03706229&quot;</span><span class="p">,</span>
-</span><span id="line-260">            <span class="s2">&quot;n07871810&quot;</span><span class="p">,</span>
-</span><span id="line-261">            <span class="s2">&quot;n03447447&quot;</span><span class="p">,</span>
-</span><span id="line-262">            <span class="s2">&quot;n02113799&quot;</span><span class="p">,</span>
-</span><span id="line-263">            <span class="s2">&quot;n12267677&quot;</span><span class="p">,</span>
-</span><span id="line-264">            <span class="s2">&quot;n03662601&quot;</span><span class="p">,</span>
-</span><span id="line-265">            <span class="s2">&quot;n02841315&quot;</span><span class="p">,</span>
-</span><span id="line-266">            <span class="s2">&quot;n07715103&quot;</span><span class="p">,</span>
-</span><span id="line-267">            <span class="s2">&quot;n02504458&quot;</span><span class="p">,</span>
-</span><span id="line-268">        <span class="p">]</span></div>
+</span><span id="line-10"><span class="k">class</span><span class="w"> </span><span class="nc">TinyImagenet</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-11"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="line-12"><span class="sd">    Tiny ImageNet dataset for image classification tasks.</span>
+</span><span id="line-13"><span class="sd">    It contains 200 classes with 500 training images, 50 validation images, and 50 test images per class.</span>
+</span><span id="line-14"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-15">
+</span><span id="line-16">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-17">
+</span><span id="line-18">    <span class="c1"># Single source-of-truth for dataset provenance + download locations.</span>
+</span><span id="line-19">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-20">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://www.kaggle.com/c/tiny-imagenet&quot;</span><span class="p">,</span>
+</span><span id="line-21">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-22">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;http://cs231n.stanford.edu/tiny-imagenet-200.zip&quot;</span><span class="p">,</span>
+</span><span id="line-23">            <span class="s2">&quot;validation&quot;</span><span class="p">:</span> <span class="s2">&quot;http://cs231n.stanford.edu/tiny-imagenet-200.zip&quot;</span><span class="p">,</span>
+</span><span id="line-24">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;http://cs231n.stanford.edu/tiny-imagenet-200.zip&quot;</span><span class="p">,</span>
+</span><span id="line-25">        <span class="p">},</span>
+</span><span id="line-26">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@inproceedings{Le2015TinyIV,</span>
+</span><span id="line-27"><span class="s2">                          title={Tiny ImageNet Visual Recognition Challenge},</span>
+</span><span id="line-28"><span class="s2">                          author={Ya Le and Xuan S. Yang},</span>
+</span><span id="line-29"><span class="s2">                          year=</span><span class="si">{2015}</span>
+</span><span id="line-30"><span class="s2">                        }&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-31">        <span class="s2">&quot;license&quot;</span><span class="p">:</span> <span class="s2">&quot;MIT License&quot;</span><span class="p">,</span>
+</span><span id="line-32">    <span class="p">}</span>
+</span><span id="line-33">
+</span><span id="line-34">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-35">        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">()</span>
+</span><span id="line-36">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-37">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;In Tiny ImageNet, there are 100,000 images divided up into 200 classes. Every image in the</span>
+</span><span id="line-38"><span class="s2">            dataset is downsized to a 64×64 colored image. For every class, there are 500 training images, 50 validating</span>
+</span><span id="line-39"><span class="s2">            images, and 50 test images.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-40">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-41">                <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">())}</span>
+</span><span id="line-42">            <span class="p">),</span>
+</span><span id="line-43">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-44">            <span class="n">homepage</span><span class="o">=</span><span class="n">source</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-45">            <span class="n">citation</span><span class="o">=</span><span class="n">source</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-46">            <span class="n">license</span><span class="o">=</span><span class="n">source</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;license&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+</span><span id="line-47">        <span class="p">)</span>
+</span><span id="line-48">
+</span><span id="line-49">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-50">        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">data_path</span><span class="o">.</span><span class="n">_str</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.zip&quot;</span><span class="p">):</span>
+</span><span id="line-51">            <span class="n">extract_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+</span><span id="line-52">                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">data_path</span><span class="p">),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">data_path</span><span class="p">))[</span><span class="mi">0</span><span class="p">])</span>
+</span><span id="line-53">            <span class="p">)</span>
+</span><span id="line-54">            <span class="n">extract_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-55">            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[tiny_imagenet] Extracting dataset... (this may take a while)&quot;</span><span class="p">)</span>
+</span><span id="line-56">            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;unzip&quot;</span><span class="p">,</span> <span class="s2">&quot;-nq&quot;</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">extract_dir</span><span class="p">)],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-57">            <span class="n">base_path</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-58">                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extract_dir</span><span class="p">,</span> <span class="s2">&quot;tiny-imagenet-200&quot;</span><span class="p">)</span>
+</span><span id="line-59">                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extract_dir</span><span class="p">,</span> <span class="s2">&quot;tiny-imagenet-200&quot;</span><span class="p">))</span>
+</span><span id="line-60">                <span class="k">else</span> <span class="n">extract_dir</span>
+</span><span id="line-61">            <span class="p">)</span>
+</span><span id="line-62">        <span class="k">else</span><span class="p">:</span>
+</span><span id="line-63">            <span class="n">base_path</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-64">                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;tiny-imagenet-200&quot;</span><span class="p">)</span>
+</span><span id="line-65">                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;tiny-imagenet-200&quot;</span><span class="p">))</span>
+</span><span id="line-66">                <span class="k">else</span> <span class="n">data_path</span>
+</span><span id="line-67">            <span class="p">)</span>
+</span><span id="line-68">
+</span><span id="line-69">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[tiny_imagenet] generating examples for split=</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">base_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-70">
+</span><span id="line-71">        <span class="k">if</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span><span class="p">:</span>
+</span><span id="line-72">            <span class="n">label_dirs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">)))</span>
+</span><span id="line-73">            <span class="n">total_labels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_dirs</span><span class="p">)</span>
+</span><span id="line-74">            <span class="n">processed</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span id="line-75">            <span class="k">for</span> <span class="n">label_dir</span> <span class="ow">in</span> <span class="n">label_dirs</span><span class="p">:</span>
+</span><span id="line-76">                <span class="n">class_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="n">label_dir</span><span class="p">,</span> <span class="s2">&quot;images&quot;</span><span class="p">)</span>
+</span><span id="line-77">                <span class="n">files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">class_path</span><span class="p">)</span>
+</span><span id="line-78">                <span class="k">for</span> <span class="n">image_file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+</span><span id="line-79">                    <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">class_path</span><span class="p">,</span> <span class="n">image_file</span><span class="p">)</span>
+</span><span id="line-80">                    <span class="k">yield</span> <span class="n">image_file</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image_path</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label_dir</span><span class="p">}</span>
+</span><span id="line-81">                <span class="n">processed</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span id="line-82">                <span class="k">if</span> <span class="n">processed</span> <span class="o">%</span> <span class="mi">50</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">processed</span> <span class="o">==</span> <span class="n">total_labels</span><span class="p">:</span>
+</span><span id="line-83">                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[tiny_imagenet] processed </span><span class="si">{</span><span class="n">processed</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total_labels</span><span class="si">}</span><span class="s2"> classes&quot;</span><span class="p">)</span>
+</span><span id="line-84">
+</span><span id="line-85">        <span class="k">elif</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;validation&quot;</span><span class="p">:</span>
+</span><span id="line-86">            <span class="n">annotations</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;val_annotations.txt&quot;</span><span class="p">)</span>
+</span><span id="line-87">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[tiny_imagenet] reading validation annotations: </span><span class="si">{</span><span class="n">annotations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-88">            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">annotations</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-89">                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+</span><span id="line-90">                    <span class="n">image_file</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-91">                    <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;images&quot;</span><span class="p">,</span> <span class="n">image_file</span><span class="p">)</span>
+</span><span id="line-92">                    <span class="k">if</span> <span class="n">i</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">1000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="line-93">                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[tiny_imagenet] yielded </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> validation examples&quot;</span><span class="p">)</span>
+</span><span id="line-94">                    <span class="k">yield</span> <span class="n">image_file</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image_path</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span>
+</span><span id="line-95">        <span class="k">elif</span> <span class="n">split</span> <span class="o">==</span> <span class="s2">&quot;test&quot;</span><span class="p">:</span>
+</span><span id="line-96">            <span class="n">test_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="s2">&quot;images&quot;</span><span class="p">)</span>
+</span><span id="line-97">            <span class="n">files</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">test_dir</span><span class="p">)</span>
+</span><span id="line-98">            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">image_file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+</span><span id="line-99">                <span class="n">image_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">test_dir</span><span class="p">,</span> <span class="n">image_file</span><span class="p">)</span>
+</span><span id="line-100">                <span class="k">if</span> <span class="n">i</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">1000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span id="line-101">                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[tiny_imagenet] yielded </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> test examples&quot;</span><span class="p">)</span>
+</span><span id="line-102">                <span class="k">yield</span> <span class="n">image_file</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image_path</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">}</span>  <span class="c1"># No labels for test set</span>
+</span><span id="line-103">        <span class="k">else</span><span class="p">:</span>
+</span><span id="line-104">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown split: </span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2"> | expected one of &#39;train&#39;, &#39;validation&#39;, &#39;test&#39;&quot;</span><span class="p">)</span>
+</span><span id="line-105">
+</span><span id="line-106">    <span class="nd">@staticmethod</span>
+</span><span id="line-107">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
+</span><span id="line-108">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-109">            <span class="s2">&quot;n02124075&quot;</span><span class="p">,</span>
+</span><span id="line-110">            <span class="s2">&quot;n04067472&quot;</span><span class="p">,</span>
+</span><span id="line-111">            <span class="s2">&quot;n04540053&quot;</span><span class="p">,</span>
+</span><span id="line-112">            <span class="s2">&quot;n04099969&quot;</span><span class="p">,</span>
+</span><span id="line-113">            <span class="s2">&quot;n07749582&quot;</span><span class="p">,</span>
+</span><span id="line-114">            <span class="s2">&quot;n01641577&quot;</span><span class="p">,</span>
+</span><span id="line-115">            <span class="s2">&quot;n02802426&quot;</span><span class="p">,</span>
+</span><span id="line-116">            <span class="s2">&quot;n09246464&quot;</span><span class="p">,</span>
+</span><span id="line-117">            <span class="s2">&quot;n07920052&quot;</span><span class="p">,</span>
+</span><span id="line-118">            <span class="s2">&quot;n03970156&quot;</span><span class="p">,</span>
+</span><span id="line-119">            <span class="s2">&quot;n03891332&quot;</span><span class="p">,</span>
+</span><span id="line-120">            <span class="s2">&quot;n02106662&quot;</span><span class="p">,</span>
+</span><span id="line-121">            <span class="s2">&quot;n03201208&quot;</span><span class="p">,</span>
+</span><span id="line-122">            <span class="s2">&quot;n02279972&quot;</span><span class="p">,</span>
+</span><span id="line-123">            <span class="s2">&quot;n02132136&quot;</span><span class="p">,</span>
+</span><span id="line-124">            <span class="s2">&quot;n04146614&quot;</span><span class="p">,</span>
+</span><span id="line-125">            <span class="s2">&quot;n07873807&quot;</span><span class="p">,</span>
+</span><span id="line-126">            <span class="s2">&quot;n02364673&quot;</span><span class="p">,</span>
+</span><span id="line-127">            <span class="s2">&quot;n04507155&quot;</span><span class="p">,</span>
+</span><span id="line-128">            <span class="s2">&quot;n03854065&quot;</span><span class="p">,</span>
+</span><span id="line-129">            <span class="s2">&quot;n03838899&quot;</span><span class="p">,</span>
+</span><span id="line-130">            <span class="s2">&quot;n03733131&quot;</span><span class="p">,</span>
+</span><span id="line-131">            <span class="s2">&quot;n01443537&quot;</span><span class="p">,</span>
+</span><span id="line-132">            <span class="s2">&quot;n07875152&quot;</span><span class="p">,</span>
+</span><span id="line-133">            <span class="s2">&quot;n03544143&quot;</span><span class="p">,</span>
+</span><span id="line-134">            <span class="s2">&quot;n09428293&quot;</span><span class="p">,</span>
+</span><span id="line-135">            <span class="s2">&quot;n03085013&quot;</span><span class="p">,</span>
+</span><span id="line-136">            <span class="s2">&quot;n02437312&quot;</span><span class="p">,</span>
+</span><span id="line-137">            <span class="s2">&quot;n07614500&quot;</span><span class="p">,</span>
+</span><span id="line-138">            <span class="s2">&quot;n03804744&quot;</span><span class="p">,</span>
+</span><span id="line-139">            <span class="s2">&quot;n04265275&quot;</span><span class="p">,</span>
+</span><span id="line-140">            <span class="s2">&quot;n02963159&quot;</span><span class="p">,</span>
+</span><span id="line-141">            <span class="s2">&quot;n02486410&quot;</span><span class="p">,</span>
+</span><span id="line-142">            <span class="s2">&quot;n01944390&quot;</span><span class="p">,</span>
+</span><span id="line-143">            <span class="s2">&quot;n09256479&quot;</span><span class="p">,</span>
+</span><span id="line-144">            <span class="s2">&quot;n02058221&quot;</span><span class="p">,</span>
+</span><span id="line-145">            <span class="s2">&quot;n04275548&quot;</span><span class="p">,</span>
+</span><span id="line-146">            <span class="s2">&quot;n02321529&quot;</span><span class="p">,</span>
+</span><span id="line-147">            <span class="s2">&quot;n02769748&quot;</span><span class="p">,</span>
+</span><span id="line-148">            <span class="s2">&quot;n02099712&quot;</span><span class="p">,</span>
+</span><span id="line-149">            <span class="s2">&quot;n07695742&quot;</span><span class="p">,</span>
+</span><span id="line-150">            <span class="s2">&quot;n02056570&quot;</span><span class="p">,</span>
+</span><span id="line-151">            <span class="s2">&quot;n02281406&quot;</span><span class="p">,</span>
+</span><span id="line-152">            <span class="s2">&quot;n01774750&quot;</span><span class="p">,</span>
+</span><span id="line-153">            <span class="s2">&quot;n02509815&quot;</span><span class="p">,</span>
+</span><span id="line-154">            <span class="s2">&quot;n03983396&quot;</span><span class="p">,</span>
+</span><span id="line-155">            <span class="s2">&quot;n07753592&quot;</span><span class="p">,</span>
+</span><span id="line-156">            <span class="s2">&quot;n04254777&quot;</span><span class="p">,</span>
+</span><span id="line-157">            <span class="s2">&quot;n02233338&quot;</span><span class="p">,</span>
+</span><span id="line-158">            <span class="s2">&quot;n04008634&quot;</span><span class="p">,</span>
+</span><span id="line-159">            <span class="s2">&quot;n02823428&quot;</span><span class="p">,</span>
+</span><span id="line-160">            <span class="s2">&quot;n02236044&quot;</span><span class="p">,</span>
+</span><span id="line-161">            <span class="s2">&quot;n03393912&quot;</span><span class="p">,</span>
+</span><span id="line-162">            <span class="s2">&quot;n07583066&quot;</span><span class="p">,</span>
+</span><span id="line-163">            <span class="s2">&quot;n04074963&quot;</span><span class="p">,</span>
+</span><span id="line-164">            <span class="s2">&quot;n01629819&quot;</span><span class="p">,</span>
+</span><span id="line-165">            <span class="s2">&quot;n09332890&quot;</span><span class="p">,</span>
+</span><span id="line-166">            <span class="s2">&quot;n02481823&quot;</span><span class="p">,</span>
+</span><span id="line-167">            <span class="s2">&quot;n03902125&quot;</span><span class="p">,</span>
+</span><span id="line-168">            <span class="s2">&quot;n03404251&quot;</span><span class="p">,</span>
+</span><span id="line-169">            <span class="s2">&quot;n09193705&quot;</span><span class="p">,</span>
+</span><span id="line-170">            <span class="s2">&quot;n03637318&quot;</span><span class="p">,</span>
+</span><span id="line-171">            <span class="s2">&quot;n04456115&quot;</span><span class="p">,</span>
+</span><span id="line-172">            <span class="s2">&quot;n02666196&quot;</span><span class="p">,</span>
+</span><span id="line-173">            <span class="s2">&quot;n03796401&quot;</span><span class="p">,</span>
+</span><span id="line-174">            <span class="s2">&quot;n02795169&quot;</span><span class="p">,</span>
+</span><span id="line-175">            <span class="s2">&quot;n02123045&quot;</span><span class="p">,</span>
+</span><span id="line-176">            <span class="s2">&quot;n01855672&quot;</span><span class="p">,</span>
+</span><span id="line-177">            <span class="s2">&quot;n01882714&quot;</span><span class="p">,</span>
+</span><span id="line-178">            <span class="s2">&quot;n02917067&quot;</span><span class="p">,</span>
+</span><span id="line-179">            <span class="s2">&quot;n02988304&quot;</span><span class="p">,</span>
+</span><span id="line-180">            <span class="s2">&quot;n04398044&quot;</span><span class="p">,</span>
+</span><span id="line-181">            <span class="s2">&quot;n02843684&quot;</span><span class="p">,</span>
+</span><span id="line-182">            <span class="s2">&quot;n02423022&quot;</span><span class="p">,</span>
+</span><span id="line-183">            <span class="s2">&quot;n02669723&quot;</span><span class="p">,</span>
+</span><span id="line-184">            <span class="s2">&quot;n04465501&quot;</span><span class="p">,</span>
+</span><span id="line-185">            <span class="s2">&quot;n02165456&quot;</span><span class="p">,</span>
+</span><span id="line-186">            <span class="s2">&quot;n03770439&quot;</span><span class="p">,</span>
+</span><span id="line-187">            <span class="s2">&quot;n02099601&quot;</span><span class="p">,</span>
+</span><span id="line-188">            <span class="s2">&quot;n04486054&quot;</span><span class="p">,</span>
+</span><span id="line-189">            <span class="s2">&quot;n02950826&quot;</span><span class="p">,</span>
+</span><span id="line-190">            <span class="s2">&quot;n03814639&quot;</span><span class="p">,</span>
+</span><span id="line-191">            <span class="s2">&quot;n04259630&quot;</span><span class="p">,</span>
+</span><span id="line-192">            <span class="s2">&quot;n03424325&quot;</span><span class="p">,</span>
+</span><span id="line-193">            <span class="s2">&quot;n02948072&quot;</span><span class="p">,</span>
+</span><span id="line-194">            <span class="s2">&quot;n03179701&quot;</span><span class="p">,</span>
+</span><span id="line-195">            <span class="s2">&quot;n03400231&quot;</span><span class="p">,</span>
+</span><span id="line-196">            <span class="s2">&quot;n02206856&quot;</span><span class="p">,</span>
+</span><span id="line-197">            <span class="s2">&quot;n03160309&quot;</span><span class="p">,</span>
+</span><span id="line-198">            <span class="s2">&quot;n01984695&quot;</span><span class="p">,</span>
+</span><span id="line-199">            <span class="s2">&quot;n03977966&quot;</span><span class="p">,</span>
+</span><span id="line-200">            <span class="s2">&quot;n03584254&quot;</span><span class="p">,</span>
+</span><span id="line-201">            <span class="s2">&quot;n04023962&quot;</span><span class="p">,</span>
+</span><span id="line-202">            <span class="s2">&quot;n02814860&quot;</span><span class="p">,</span>
+</span><span id="line-203">            <span class="s2">&quot;n01910747&quot;</span><span class="p">,</span>
+</span><span id="line-204">            <span class="s2">&quot;n04596742&quot;</span><span class="p">,</span>
+</span><span id="line-205">            <span class="s2">&quot;n03992509&quot;</span><span class="p">,</span>
+</span><span id="line-206">            <span class="s2">&quot;n04133789&quot;</span><span class="p">,</span>
+</span><span id="line-207">            <span class="s2">&quot;n03937543&quot;</span><span class="p">,</span>
+</span><span id="line-208">            <span class="s2">&quot;n02927161&quot;</span><span class="p">,</span>
+</span><span id="line-209">            <span class="s2">&quot;n01945685&quot;</span><span class="p">,</span>
+</span><span id="line-210">            <span class="s2">&quot;n02395406&quot;</span><span class="p">,</span>
+</span><span id="line-211">            <span class="s2">&quot;n02125311&quot;</span><span class="p">,</span>
+</span><span id="line-212">            <span class="s2">&quot;n03126707&quot;</span><span class="p">,</span>
+</span><span id="line-213">            <span class="s2">&quot;n04532106&quot;</span><span class="p">,</span>
+</span><span id="line-214">            <span class="s2">&quot;n02268443&quot;</span><span class="p">,</span>
+</span><span id="line-215">            <span class="s2">&quot;n02977058&quot;</span><span class="p">,</span>
+</span><span id="line-216">            <span class="s2">&quot;n07734744&quot;</span><span class="p">,</span>
+</span><span id="line-217">            <span class="s2">&quot;n03599486&quot;</span><span class="p">,</span>
+</span><span id="line-218">            <span class="s2">&quot;n04562935&quot;</span><span class="p">,</span>
+</span><span id="line-219">            <span class="s2">&quot;n03014705&quot;</span><span class="p">,</span>
+</span><span id="line-220">            <span class="s2">&quot;n04251144&quot;</span><span class="p">,</span>
+</span><span id="line-221">            <span class="s2">&quot;n04356056&quot;</span><span class="p">,</span>
+</span><span id="line-222">            <span class="s2">&quot;n02190166&quot;</span><span class="p">,</span>
+</span><span id="line-223">            <span class="s2">&quot;n03670208&quot;</span><span class="p">,</span>
+</span><span id="line-224">            <span class="s2">&quot;n02002724&quot;</span><span class="p">,</span>
+</span><span id="line-225">            <span class="s2">&quot;n02074367&quot;</span><span class="p">,</span>
+</span><span id="line-226">            <span class="s2">&quot;n04285008&quot;</span><span class="p">,</span>
+</span><span id="line-227">            <span class="s2">&quot;n04560804&quot;</span><span class="p">,</span>
+</span><span id="line-228">            <span class="s2">&quot;n04366367&quot;</span><span class="p">,</span>
+</span><span id="line-229">            <span class="s2">&quot;n02403003&quot;</span><span class="p">,</span>
+</span><span id="line-230">            <span class="s2">&quot;n07615774&quot;</span><span class="p">,</span>
+</span><span id="line-231">            <span class="s2">&quot;n04501370&quot;</span><span class="p">,</span>
+</span><span id="line-232">            <span class="s2">&quot;n03026506&quot;</span><span class="p">,</span>
+</span><span id="line-233">            <span class="s2">&quot;n02906734&quot;</span><span class="p">,</span>
+</span><span id="line-234">            <span class="s2">&quot;n01770393&quot;</span><span class="p">,</span>
+</span><span id="line-235">            <span class="s2">&quot;n04597913&quot;</span><span class="p">,</span>
+</span><span id="line-236">            <span class="s2">&quot;n03930313&quot;</span><span class="p">,</span>
+</span><span id="line-237">            <span class="s2">&quot;n04118538&quot;</span><span class="p">,</span>
+</span><span id="line-238">            <span class="s2">&quot;n04179913&quot;</span><span class="p">,</span>
+</span><span id="line-239">            <span class="s2">&quot;n04311004&quot;</span><span class="p">,</span>
+</span><span id="line-240">            <span class="s2">&quot;n02123394&quot;</span><span class="p">,</span>
+</span><span id="line-241">            <span class="s2">&quot;n04070727&quot;</span><span class="p">,</span>
+</span><span id="line-242">            <span class="s2">&quot;n02793495&quot;</span><span class="p">,</span>
+</span><span id="line-243">            <span class="s2">&quot;n02730930&quot;</span><span class="p">,</span>
+</span><span id="line-244">            <span class="s2">&quot;n02094433&quot;</span><span class="p">,</span>
+</span><span id="line-245">            <span class="s2">&quot;n04371430&quot;</span><span class="p">,</span>
+</span><span id="line-246">            <span class="s2">&quot;n04328186&quot;</span><span class="p">,</span>
+</span><span id="line-247">            <span class="s2">&quot;n03649909&quot;</span><span class="p">,</span>
+</span><span id="line-248">            <span class="s2">&quot;n04417672&quot;</span><span class="p">,</span>
+</span><span id="line-249">            <span class="s2">&quot;n03388043&quot;</span><span class="p">,</span>
+</span><span id="line-250">            <span class="s2">&quot;n01774384&quot;</span><span class="p">,</span>
+</span><span id="line-251">            <span class="s2">&quot;n02837789&quot;</span><span class="p">,</span>
+</span><span id="line-252">            <span class="s2">&quot;n07579787&quot;</span><span class="p">,</span>
+</span><span id="line-253">            <span class="s2">&quot;n04399382&quot;</span><span class="p">,</span>
+</span><span id="line-254">            <span class="s2">&quot;n02791270&quot;</span><span class="p">,</span>
+</span><span id="line-255">            <span class="s2">&quot;n03089624&quot;</span><span class="p">,</span>
+</span><span id="line-256">            <span class="s2">&quot;n02814533&quot;</span><span class="p">,</span>
+</span><span id="line-257">            <span class="s2">&quot;n04149813&quot;</span><span class="p">,</span>
+</span><span id="line-258">            <span class="s2">&quot;n07747607&quot;</span><span class="p">,</span>
+</span><span id="line-259">            <span class="s2">&quot;n03355925&quot;</span><span class="p">,</span>
+</span><span id="line-260">            <span class="s2">&quot;n01983481&quot;</span><span class="p">,</span>
+</span><span id="line-261">            <span class="s2">&quot;n04487081&quot;</span><span class="p">,</span>
+</span><span id="line-262">            <span class="s2">&quot;n03250847&quot;</span><span class="p">,</span>
+</span><span id="line-263">            <span class="s2">&quot;n03255030&quot;</span><span class="p">,</span>
+</span><span id="line-264">            <span class="s2">&quot;n02892201&quot;</span><span class="p">,</span>
+</span><span id="line-265">            <span class="s2">&quot;n02883205&quot;</span><span class="p">,</span>
+</span><span id="line-266">            <span class="s2">&quot;n03100240&quot;</span><span class="p">,</span>
+</span><span id="line-267">            <span class="s2">&quot;n02415577&quot;</span><span class="p">,</span>
+</span><span id="line-268">            <span class="s2">&quot;n02480495&quot;</span><span class="p">,</span>
+</span><span id="line-269">            <span class="s2">&quot;n01698640&quot;</span><span class="p">,</span>
+</span><span id="line-270">            <span class="s2">&quot;n01784675&quot;</span><span class="p">,</span>
+</span><span id="line-271">            <span class="s2">&quot;n04376876&quot;</span><span class="p">,</span>
+</span><span id="line-272">            <span class="s2">&quot;n03444034&quot;</span><span class="p">,</span>
+</span><span id="line-273">            <span class="s2">&quot;n01917289&quot;</span><span class="p">,</span>
+</span><span id="line-274">            <span class="s2">&quot;n01950731&quot;</span><span class="p">,</span>
+</span><span id="line-275">            <span class="s2">&quot;n03042490&quot;</span><span class="p">,</span>
+</span><span id="line-276">            <span class="s2">&quot;n07711569&quot;</span><span class="p">,</span>
+</span><span id="line-277">            <span class="s2">&quot;n04532670&quot;</span><span class="p">,</span>
+</span><span id="line-278">            <span class="s2">&quot;n03763968&quot;</span><span class="p">,</span>
+</span><span id="line-279">            <span class="s2">&quot;n07768694&quot;</span><span class="p">,</span>
+</span><span id="line-280">            <span class="s2">&quot;n02999410&quot;</span><span class="p">,</span>
+</span><span id="line-281">            <span class="s2">&quot;n03617480&quot;</span><span class="p">,</span>
+</span><span id="line-282">            <span class="s2">&quot;n06596364&quot;</span><span class="p">,</span>
+</span><span id="line-283">            <span class="s2">&quot;n01768244&quot;</span><span class="p">,</span>
+</span><span id="line-284">            <span class="s2">&quot;n02410509&quot;</span><span class="p">,</span>
+</span><span id="line-285">            <span class="s2">&quot;n03976657&quot;</span><span class="p">,</span>
+</span><span id="line-286">            <span class="s2">&quot;n01742172&quot;</span><span class="p">,</span>
+</span><span id="line-287">            <span class="s2">&quot;n03980874&quot;</span><span class="p">,</span>
+</span><span id="line-288">            <span class="s2">&quot;n02808440&quot;</span><span class="p">,</span>
+</span><span id="line-289">            <span class="s2">&quot;n02226429&quot;</span><span class="p">,</span>
+</span><span id="line-290">            <span class="s2">&quot;n02231487&quot;</span><span class="p">,</span>
+</span><span id="line-291">            <span class="s2">&quot;n02085620&quot;</span><span class="p">,</span>
+</span><span id="line-292">            <span class="s2">&quot;n01644900&quot;</span><span class="p">,</span>
+</span><span id="line-293">            <span class="s2">&quot;n02129165&quot;</span><span class="p">,</span>
+</span><span id="line-294">            <span class="s2">&quot;n02699494&quot;</span><span class="p">,</span>
+</span><span id="line-295">            <span class="s2">&quot;n03837869&quot;</span><span class="p">,</span>
+</span><span id="line-296">            <span class="s2">&quot;n02815834&quot;</span><span class="p">,</span>
+</span><span id="line-297">            <span class="s2">&quot;n07720875&quot;</span><span class="p">,</span>
+</span><span id="line-298">            <span class="s2">&quot;n02788148&quot;</span><span class="p">,</span>
+</span><span id="line-299">            <span class="s2">&quot;n02909870&quot;</span><span class="p">,</span>
+</span><span id="line-300">            <span class="s2">&quot;n03706229&quot;</span><span class="p">,</span>
+</span><span id="line-301">            <span class="s2">&quot;n07871810&quot;</span><span class="p">,</span>
+</span><span id="line-302">            <span class="s2">&quot;n03447447&quot;</span><span class="p">,</span>
+</span><span id="line-303">            <span class="s2">&quot;n02113799&quot;</span><span class="p">,</span>
+</span><span id="line-304">            <span class="s2">&quot;n12267677&quot;</span><span class="p">,</span>
+</span><span id="line-305">            <span class="s2">&quot;n03662601&quot;</span><span class="p">,</span>
+</span><span id="line-306">            <span class="s2">&quot;n02841315&quot;</span><span class="p">,</span>
+</span><span id="line-307">            <span class="s2">&quot;n07715103&quot;</span><span class="p">,</span>
+</span><span id="line-308">            <span class="s2">&quot;n02504458&quot;</span><span class="p">,</span>
+</span><span id="line-309">        <span class="p">]</span></div>
 
 </span></code></pre></div>
     </div></div>
