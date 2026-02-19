@@ -297,6 +297,7 @@ def bulk_download(
                         urls[i],
                         dest_folder,
                         False,  # disable per-file tqdm; Rich handles progress
+                        False,
                         _progress,
                         task_id,
                     )
