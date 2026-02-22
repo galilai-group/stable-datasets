@@ -1,0 +1,37 @@
+defaults:
+  - model: simclr
+  - backbone: vit_small
+  - _self_
+
+dataset: cifar10
+skip_datasets: []  # extra datasets to skip at runtime (e.g. [shapes3d, food101])
+data_dir: /mnt/data/sami/.stable-datasets  # override to set download/cache root (e.g. /mnt/data/sami/.stable-datasets)
+cache_dir: /mnt/data/sami/stable-datasets/.cached_224  # pre-cached 224x224 numpy memmaps (null to disable)
+smoke_test: false  # run 3 train + 3 val batches for 1 epoch to verify the pipeline works
+
+checkpoint:
+  dir: /mnt/data/sami/stable-datasets/.pretrain_checkpoints
+  every_n_epochs: 50
+  save_last: true
+  monitor: "eval/knn_probe_top1"
+  mode: "max"
+  save_top_k: 1
+
+training:
+  max_epochs: 50
+  precision: "16-mixed"
+  batch_size: 256
+  num_workers: 8
+  prefetch_factor: 4
+
+wandb:
+  enabled: true
+  entity: stable-ssl
+  project: stable-datasets-benchmarks
+
+hydra:
+  run:
+    dir: ${oc.env:PROJECT_ROOT,/mnt/data/sami/stable-datasets}/benchmark-runs/${model.name}_${backbone.name}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: ${oc.env:PROJECT_ROOT,/mnt/data/sami/stable-datasets}/benchmark-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${model.name}_${backbone.name}_${dataset}
