@@ -1,0 +1,103 @@
+name: nnclr
+forward: nnclr_forward
+
+transforms:
+  type: multiview
+  num_views: 2
+
+projector:
+  hidden_dim: 2048
+  output_dim: 256
+
+predictor:
+  hidden_dim: 4096
+  output_dim: 256
+
+loss:
+  temperature: 0.1
+
+queue_size: 4096
+
+
+params:
+  default:
+    batch_size: 256
+    max_epochs: 100
+  # CIFAR-scale (32x32)
+  cifar10:
+    batch_size: 256
+    max_epochs: 100
+  cifar100:
+    batch_size: 256
+    max_epochs: 100
+  svhn:
+    batch_size: 256
+    max_epochs: 100
+  # Grayscale 28x28
+  fashionmnist:
+    batch_size: 256
+    max_epochs: 100
+  emnist:
+    batch_size: 256
+    max_epochs: 100
+  kmnist:
+    batch_size: 256
+    max_epochs: 100
+  notmnist:
+    batch_size: 256
+    max_epochs: 150
+  medmnist:
+    batch_size: 256
+    max_epochs: 100
+  # Other small datasets
+  hasyv2:
+    batch_size: 256
+    max_epochs: 100
+  arabiccharacters:
+    batch_size: 256
+    max_epochs: 200
+  arabicdigits:
+    batch_size: 256
+    max_epochs: 200
+  # Larger resolution
+  stl10:
+    batch_size: 256
+    max_epochs: 100
+  # Small fine-grained
+  flowers102:
+    batch_size: 256
+    max_epochs: 200
+  cub200:
+    batch_size: 256
+    max_epochs: 200
+  dtd:
+    batch_size: 256
+    max_epochs: 200
+  country211:
+    batch_size: 256
+    max_epochs: 100
+  rockpaperscissor:
+    batch_size: 256
+    max_epochs: 200
+  facepointing:
+    batch_size: 256
+    max_epochs: 150
+  # Large datasets
+  food101:
+    batch_size: 256
+    max_epochs: 100
+  tinyimagenet:
+    batch_size: 256
+    max_epochs: 100
+  imagenet:
+    batch_size: 256
+    max_epochs: 50
+
+vit_optimizer:
+  type: AdamW
+  lr: 3e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
+
+scheduler:
+  type: LinearWarmupCosineAnnealing

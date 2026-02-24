@@ -1,0 +1,96 @@
+name: mae
+
+transforms:
+  type: single
+
+mask_ratio: 0.75
+norm_pix_loss: true
+
+decoder:
+  embed_dim: 512
+  depth: 4
+  num_heads: 16
+
+
+params:
+  default:
+    batch_size: 256
+    max_epochs: 200
+  # CIFAR-scale (32x32)
+  cifar10:
+    batch_size: 256
+    max_epochs: 400
+  cifar100:
+    batch_size: 256
+    max_epochs: 400
+  svhn:
+    batch_size: 256
+    max_epochs: 300
+  # Grayscale 28x28
+  fashionmnist:
+    batch_size: 256
+    max_epochs: 300
+  emnist:
+    batch_size: 256
+    max_epochs: 300
+  kmnist:
+    batch_size: 256
+    max_epochs: 300
+  notmnist:
+    batch_size: 256
+    max_epochs: 400
+  medmnist:
+    batch_size: 256
+    max_epochs: 400
+  # Other small datasets
+  hasyv2:
+    batch_size: 256
+    max_epochs: 300
+  arabiccharacters:
+    batch_size: 256
+    max_epochs: 500
+  arabicdigits:
+    batch_size: 256
+    max_epochs: 500
+  # Larger resolution
+  stl10:
+    batch_size: 256
+    max_epochs: 300
+  # Small fine-grained
+  flowers102:
+    batch_size: 256
+    max_epochs: 600
+  cub200:
+    batch_size: 256
+    max_epochs: 600
+  dtd:
+    batch_size: 256
+    max_epochs: 600
+  country211:
+    batch_size: 256
+    max_epochs: 400
+  rockpaperscissor:
+    batch_size: 256
+    max_epochs: 600
+  facepointing:
+    batch_size: 256
+    max_epochs: 400
+  # Large datasets
+  food101:
+    batch_size: 256
+    max_epochs: 200
+  tinyimagenet:
+    batch_size: 256
+    max_epochs: 200
+  imagenet:
+    batch_size: 256
+    max_epochs: 100
+
+vit_optimizer:
+  type: AdamW
+  lr: 1.5e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.95]
+
+scheduler:
+  type: LinearWarmupCosineAnnealing
