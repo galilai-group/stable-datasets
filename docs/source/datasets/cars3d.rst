@@ -79,9 +79,9 @@ Usage Example
 
 .. code-block:: python
 
-    from stable_datasets.images.cars3d import CARS3D
+    from stable_datasets.images.cars3d import Cars3D
 
-    ds = CARS3D(split="train")
+    ds = Cars3D(split="train")
 
     sample = ds[0]
     print(sample.keys())

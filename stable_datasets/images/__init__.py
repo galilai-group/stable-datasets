@@ -4,7 +4,7 @@ from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
 from .awa2 import AWA2
 from .beans import Beans
-from .cars3d import CARS3D
+from .cars3d import Cars3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
@@ -22,11 +22,7 @@ from .e_mnist import EMNIST
 from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
 
-# from .awa2 import AWA2
-# from .beans import Beans
 # from .celeb_a import CelebA
-# from .country211 import Country211
-# from .cub200 import CUB200
 from .fgvc_aircraft import FGVCAircraft
 from .flowers102 import Flowers102
 from .food101 import Food101
@@ -55,7 +51,7 @@ __all__ = [
     "AWA2",
     "Beans",
     "Cars196",
-    "CARS3D",
+    "Cars3D",
     "CIFAR10",
     "CIFAR10C",
     "CIFAR100",

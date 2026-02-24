@@ -1,11 +1,11 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images import CARS3D
+from stable_datasets.images import Cars3D
 
 
 def test_cars3d_dataset():
-    cars3d_train = CARS3D(split="train")
+    cars3d_train = Cars3D(split="train")
 
     expected_num_train_samples = 183 * 24 * 4
     assert len(cars3d_train) == expected_num_train_samples, (
