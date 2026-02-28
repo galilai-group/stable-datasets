@@ -57,3 +57,55 @@ def test_med_mnist_variants_download_and_format():
 
         ds_test = MedMNIST(split="test", config_name=variant)
         assert len(ds_test) > 0, f"{variant} test dataset should not be empty."
+
+
+def test_med_mnist_larger_sizes():
+    """
+    Download/integration test for MedMNIST+ larger size variants.
+    2D variants use size=224, 3D variant uses size=64.
+    """
+
+    variants_with_size = [
+        ("pathmnist", 64, False),
+        ("chestmnist", 64, True),
+        ("organmnist3d", 64, False),
+    ]
+
+    for variant, size, is_multi_label in variants_with_size:
+        ds = MedMNIST(split="train", config_name=variant, size=size)
+        assert len(ds) > 0, f"{variant} (size={size}) training dataset should not be empty."
+
+        sample = ds[0]
+        assert set(sample.keys()) == {"image", "label"}
+
+        image = sample["image"]
+        label = sample["label"]
+
+        if variant.endswith("3d"):
+            image_np = np.asarray(image)
+            assert image_np.shape == (size, size, size), (
+                f"{variant}: expected image shape {(size,) * 3}, got {image_np.shape}."
+            )
+        else:
+            assert isinstance(image, Image.Image), (
+                f"{variant}: 'image' should be a PIL.Image object, got {type(image)}."
+            )
+            image_np = np.asarray(image)
+            assert image_np.shape[0] == size and image_np.shape[1] == size, (
+                f"{variant}: expected {size}x{size} image, got {image_np.shape}."
+            )
+
+        if is_multi_label:
+            label_np = np.asarray(label)
+            assert label_np.ndim == 1, f"{variant}: expected 1D multi-label, got shape {label_np.shape}."
+            assert set(np.unique(label_np).tolist()).issubset({0, 1}), (
+                f"{variant}: labels must be 0/1, got {set(np.unique(label_np).tolist())}."
+            )
+        else:
+            assert isinstance(label, int | np.integer), f"{variant}: label should be an int, got {type(label)}."
+
+        ds_val = MedMNIST(split="validation", config_name=variant, size=size)
+        assert len(ds_val) > 0, f"{variant} (size={size}) validation dataset should not be empty."
+
+        ds_test = MedMNIST(split="test", config_name=variant, size=size)
+        assert len(ds_test) > 0, f"{variant} (size={size}) test dataset should not be empty."
