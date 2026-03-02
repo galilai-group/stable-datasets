@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.country211 import Country211
+from stable_datasets.images import Country211
 
 
 def test_country211_dataset():

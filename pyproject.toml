@@ -58,6 +58,7 @@ dev = [
     "coverage",
     "pytest-cov",
     "pytest-rich",
+    "pytest-split",
     "codecov",
     "pre-commit",
     "ruff",

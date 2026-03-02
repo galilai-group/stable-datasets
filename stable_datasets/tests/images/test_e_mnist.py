@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from stable_datasets.images.e_mnist import EMNIST
+from stable_datasets.images import EMNIST
 
 
 def test_emnist_digits_dataset():

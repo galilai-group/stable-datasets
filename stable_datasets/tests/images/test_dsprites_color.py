@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.dsprites_color import DSpritesColor
+from stable_datasets.images import DSpritesColor
 
 
 def test_dsprites_dataset():

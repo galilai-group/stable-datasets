@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.cub200 import CUB200
+from stable_datasets.images import CUB200
 
 
 def test_cub200_dataset():
