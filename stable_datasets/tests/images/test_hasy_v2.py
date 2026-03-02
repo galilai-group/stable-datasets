@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.hasy_v2 import HASYv2
+from stable_datasets.images import HASYv2
 
 
 def test_hasy_v2_fold1_integrity():

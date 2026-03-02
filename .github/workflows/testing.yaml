@@ -8,69 +8,157 @@ permissions:
 on:
   workflow_dispatch:
   pull_request:
-    branches:
-      - "main"
+    branches: ["main"]
   push:
-    branches:
-      - "main"
-  create:
-    branches:
-      - "main"
-    tags:
-      - "**"
+    branches: ["main"]
+    tags: ["**"]
 
 jobs:
   Test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      issues: write
     strategy:
       fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
     steps:
-      # Checkout repository
       - name: Checking Out Repository
         uses: actions/checkout@v4
 
-      # Setup Python
       - name: Setup Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
           cache: "pip"
 
-      # Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
-      # Run Tests
-      - name: Run Tests with Coverage
+      # Shared timing history across branches/PRs (restore-only)
+      - name: Restore pytest-split durations cache (shared)
+        uses: actions/cache/restore@v4
+        with:
+          path: .test_durations
+          key: pytest-split-${{ runner.os }}-py310-${{ github.run_id }}
+          restore-keys: |
+            pytest-split-${{ runner.os }}-py310-
+
+      - name: Run tests (pytest-split shard) and write coverage data
         run: |
           set -o pipefail
+
           pytest stable_datasets/ \
             -m "not large" \
             --verbose \
             --durations=0 \
+            --splits 4 \
+            --group ${{ matrix.shard }} \
+            --splitting-algorithm least_duration \
+            --store-durations \
             --cov=stable_datasets \
             --cov-report=term-missing:skip-covered \
-            --cov-report=xml \
-            --cov-report=html \
-            --junitxml=pytest.xml \
-            --cov-report=term | tee pytest-coverage.txt
+            --cov-report=term
 
-      # Post Coverage Comment on PR
-      # Only run if the PR is not from a fork
-      - name: Pytest coverage comment
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-        uses: MishaKav/pytest-coverage-comment@main
+            ls -la .test_durations .coverage* || true
+            find . -maxdepth 2 -name ".coverage*" -print || true
+
+            echo "=== normalize coverage filename for sharding ==="
+            if [ -f ".coverage" ]; then
+              mv .coverage .coverage.${{ matrix.shard }}
+            fi
+
+            echo "=== final files to upload ==="
+            ls -la .coverage.${{ matrix.shard }} .test_durations || true
+
+      - name: Upload shard artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          pytest-coverage-path: ./pytest-coverage.txt
-          junitxml-path: ./pytest.xml
+          name: shard-${{ matrix.shard }}
+          include-hidden-files: true
+          path: |
+            .coverage.${{ matrix.shard }}
+            .test_durations
 
-      # Upload Coverage Report as Artifact
+  MergeCoverage:
+    runs-on: ubuntu-latest
+    needs: [Test]
+    if: always()
+
+    steps:
+      - name: Checking Out Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install merge dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Download all shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      # Merge durations from shards into a single .test_durations
+      - name: Merge test durations from shards
+        run: |
+          python -c "
+          import json
+          from pathlib import Path
+
+          merged = {}
+          for f in sorted(Path('artifacts').rglob('.test_durations')):
+              try:
+                  with open(f) as fp:
+                      d = json.load(fp)
+                      if isinstance(d, dict):
+                          merged.update(d)
+              except Exception:
+                  pass
+
+          with open('.test_durations', 'w') as f:
+              json.dump(merged, f, sort_keys=True, indent=2)
+
+          print(f'Merged {len(merged)} test durations')
+          "
+
+      # Save the merged durations for future runs (save-only)
+      - name: Save merged pytest-split durations cache
+        if: needs.Test.result == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: .test_durations
+          key: pytest-split-${{ runner.os }}-py310-${{ github.run_id }}
+
+      - name: Combine coverage and generate reports
+        run: |
+          find artifacts -name ".coverage.*" -print -exec cp {} . \;
+          coverage combine
+          coverage html -d htmlcov
+          coverage report --show-missing --skip-covered > pytest-coverage.txt
+
+      - name: Post merged coverage to PR
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = "## Coverage (merged)\n\n```text\n" + fs.readFileSync('pytest-coverage.txt', 'utf8') + "\n```";
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
       - name: Upload coverage HTML report
         if: always()
         uses: actions/upload-artifact@v4

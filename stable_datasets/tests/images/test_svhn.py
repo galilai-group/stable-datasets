@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.svhn import SVHN
+from stable_datasets.images import SVHN
 
 
 def test_svhn_dataset():

@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.stl10 import STL10
+from stable_datasets.images import STL10
 
 
 def test_stl10_dataset():

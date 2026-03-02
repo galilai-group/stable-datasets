@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.arabic_characters import ArabicCharacters
+from stable_datasets.images import ArabicCharacters
 
 
 def test_arabic_characters_dataset():

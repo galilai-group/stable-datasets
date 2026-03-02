@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.dtd import DTD
+from stable_datasets.images import DTD
 
 
 def test_dtd_dataset():

@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.cifar100 import CIFAR100
+from stable_datasets.images import CIFAR100
 
 
 def test_cifar100_dataset():

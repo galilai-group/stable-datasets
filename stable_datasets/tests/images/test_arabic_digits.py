@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.arabic_digits import ArabicDigits
+from stable_datasets.images import ArabicDigits
 
 
 def test_arabic_digits_dataset():
