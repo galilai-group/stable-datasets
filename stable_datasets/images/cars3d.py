@@ -5,8 +5,9 @@ import numpy as np
 import scipy.io
 from PIL import Image as PILImage
 
+from stable_datasets.schema import DatasetInfo, Features, Sequence, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import DatasetInfo, Features, Image as ImageFeature, Sequence, Value, Version
 
 
 class CARS3D(BaseDatasetBuilder):

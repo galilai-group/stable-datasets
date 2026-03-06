@@ -4,7 +4,8 @@ from pathlib import Path
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, download
 
@@ -29,9 +30,7 @@ class FGVCAircraft(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="The FGVC Aircraft dataset for fine-grained visual categorization.",
-            features=Features(
-                {"image": ImageFeature(), "label": ClassLabel(names=self._labels())}
-            ),
+            features=Features({"image": ImageFeature(), "label": ClassLabel(names=self._labels())}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

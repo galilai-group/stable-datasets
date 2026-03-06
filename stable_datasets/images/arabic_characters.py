@@ -4,8 +4,9 @@ from zipfile import ZipFile
 from PIL import Image as PILImage
 from tqdm import tqdm
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class ArabicCharacters(BaseDatasetBuilder):
@@ -44,9 +45,7 @@ class ArabicCharacters(BaseDatasetBuilder):
             description="""Arabic Handwritten Characters Dataset, consisting of 16,800 characters
                            written by 60 participants. The dataset is split into training and test
                            sets, with a balanced distribution across all classes.""",
-            features=Features(
-                {"image": ImageFeature(), "label": ClassLabel(names=[str(i) for i in range(28)])}
-            ),
+            features=Features({"image": ImageFeature(), "label": ClassLabel(names=[str(i) for i in range(28)])}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

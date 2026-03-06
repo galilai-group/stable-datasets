@@ -1,9 +1,9 @@
-import os
 import zipfile
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
@@ -116,7 +116,7 @@ class AWA2(BaseDatasetBuilder):
                 if not image_path.endswith(".jpg"):
                     continue
                 # Extract class name from path: "Animals_with_Attributes2/JPEGImages/<class>/image.jpg"
-                rel = image_path[len(root_dir):]
+                rel = image_path[len(root_dir) :]
                 slash = rel.find("/")
                 if slash < 0:
                     continue

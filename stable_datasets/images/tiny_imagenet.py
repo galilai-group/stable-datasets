@@ -32,9 +32,7 @@ class TinyImagenet(BaseDatasetBuilder):
             description="""In Tiny ImageNet, there are 100,000 images divided up into 200 classes. Every image in the
             dataset is downsized to a 64×64 colored image. For every class, there are 500 training images, 50 validating
             images, and 50 test images.""",
-            features=Features(
-                {"image": Image(), "label": ClassLabel(names=self._labels())}
-            ),
+            features=Features({"image": Image(), "label": ClassLabel(names=self._labels())}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

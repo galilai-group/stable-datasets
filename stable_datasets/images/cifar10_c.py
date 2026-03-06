@@ -4,8 +4,9 @@ from io import BytesIO
 import numpy as np
 from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Value, Version
 
 
 class CIFAR10C(BaseDatasetBuilder):

@@ -1,8 +1,7 @@
 """Generator-to-Arrow caching pipeline.
 
-Replaces HuggingFace's ``download_and_prepare()`` / ``ArrowWriter`` with direct
-PyArrow IPC (Feather v2) writing.  Supports batched writes to limit memory and
-file-locking for concurrent access safety.
+Writes dataset examples to PyArrow IPC (Feather v2) files in batches to limit
+peak memory, with file-locking for concurrent access safety.
 """
 
 from __future__ import annotations
@@ -18,8 +17,7 @@ from filelock import FileLock
 from loguru import logger as logging
 from PIL import Image as PILImage
 
-from .schema import Array3D, Features, Image, Sequence, Value, Video
-
+from .schema import Array3D, Features, Image, Sequence, Video
 
 
 def _encode_image(img) -> bytes | None:
@@ -36,7 +34,7 @@ def _encode_image(img) -> bytes | None:
         buf = io.BytesIO()
         pil_img.save(buf, format="PNG")
         return buf.getvalue()
-    if isinstance(img, (str, Path)):
+    if isinstance(img, str | Path):
         with open(img, "rb") as f:
             return f.read()
     if isinstance(img, bytes):
@@ -78,13 +76,11 @@ def encode_example(example: dict, features: Features) -> dict:
     return encoded
 
 
-
 def cache_fingerprint(cls_name: str, version: str, config_name: str, split: str) -> str:
     """Deterministic cache filename for a dataset variant + split."""
     key = f"{cls_name}:{version}:{config_name}:{split}"
     digest = hashlib.sha256(key.encode()).hexdigest()[:16]
     return f"{cls_name.lower()}_{config_name}_{split}_{digest}.arrow"
-
 
 
 def write_arrow_cache(

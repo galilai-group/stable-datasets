@@ -1,8 +1,8 @@
-"""StableDataset: PyArrow-backed dataset with optional TorchDict conversion.
+"""PyArrow-backed dataset with optional TensorDict conversion.
 
-Drop-in replacement for ``datasets.Dataset`` / ``datasets.DatasetDict`` with
-the same ``__len__``, ``__getitem__``, ``.features``, ``.train_test_split()``
-API that downstream code (benchmarks) relies on.
+Provides ``StableDataset`` (single split) and ``StableDatasetDict`` (multi-split)
+with ``__len__``, ``__getitem__``, ``.features``, and ``.train_test_split()``
+for downstream benchmarks.
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ from .schema import (
     Features,
     Image,
     Sequence,
-    Value,
     Video,
 )
 
@@ -33,8 +32,6 @@ class StableDataset:
         self._features = features
         self._info = info
 
-    # -- public properties ---------------------------------------------------
-
     @property
     def features(self) -> Features:
         return self._features
@@ -42,8 +39,6 @@ class StableDataset:
     @property
     def info(self) -> DatasetInfo:
         return self._info
-
-    # -- sequence protocol ---------------------------------------------------
 
     def __len__(self) -> int:
         return self._table.num_rows
@@ -61,9 +56,7 @@ class StableDataset:
             return StableDataset(table, self._features, self._info)
         raise TypeError(f"Unsupported index type: {type(idx)}")
 
-    # -- splitting -----------------------------------------------------------
-
-    def train_test_split(self, test_size: float = 0.1, seed: int = 42) -> dict[str, "StableDataset"]:
+    def train_test_split(self, test_size: float = 0.1, seed: int = 42) -> dict[str, StableDataset]:
         """Random split. Returns ``{"train": StableDataset, "test": StableDataset}``."""
         rng = np.random.RandomState(seed)
         n = len(self)
@@ -76,20 +69,18 @@ class StableDataset:
             "test": StableDataset(self._table.take(test_indices), self._features, self._info),
         }
 
-    # -- optional TorchDict conversion ---------------------------------------
-
     def to_tensordict(self, columns: list[str] | None = None):
         """Convert numeric columns to a ``tensordict.TensorDict``.
 
         Image and Video columns are skipped (they stay lazy-decoded).
         Requires ``tensordict`` to be installed.
         """
-        from tensordict import TensorDict
         import torch
+        from tensordict import TensorDict
 
         td = {}
         for col_name, feat in self._features.items():
-            if isinstance(feat, (Image, Video, Array3D)):
+            if isinstance(feat, Image | Video | Array3D):
                 continue
             if columns and col_name not in columns:
                 continue
@@ -99,8 +90,6 @@ class StableDataset:
             else:
                 td[col_name] = torch.from_numpy(col.to_numpy(zero_copy_only=False))
         return TensorDict(td, batch_size=[len(self)])
-
-    # -- internal decoding ---------------------------------------------------
 
     def _decode_row(self, idx: int) -> dict:
         """Decode a single row, converting Arrow values back to Python objects."""
@@ -133,6 +122,6 @@ class StableDataset:
 
 
 class StableDatasetDict(dict):
-    """Dict of ``split_name -> StableDataset``, replacing ``datasets.DatasetDict``."""
+    """Dict of ``split_name -> StableDataset``."""
 
     pass

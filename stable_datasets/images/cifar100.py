@@ -1,9 +1,8 @@
 import pickle
 import tarfile
 
-
-from stable_datasets.utils import BaseDatasetBuilder
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class CIFAR100(BaseDatasetBuilder):

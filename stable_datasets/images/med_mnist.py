@@ -1,7 +1,17 @@
 import numpy as np
 
+from stable_datasets.schema import (
+    Array3D,
+    BuilderConfig,
+    ClassLabel,
+    DatasetInfo,
+    Features,
+    Image,
+    Sequence,
+    Value,
+    Version,
+)
 from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import Array3D, BuilderConfig, ClassLabel, DatasetInfo, Features, Image, Sequence, Value, Version
 
 
 MEDMNIST_VERSION = Version("1.0.0")
@@ -84,9 +94,7 @@ class MedMNIST(BaseDatasetBuilder):
             features=Features(
                 {
                     "image": (
-                        Array3D(shape=(28, 28, 28), dtype="uint8")
-                        if getattr(self.config, "is_3d", False)
-                        else Image()
+                        Array3D(shape=(28, 28, 28), dtype="uint8") if getattr(self.config, "is_3d", False) else Image()
                     ),
                     "label": label_feature,
                 }

@@ -44,10 +44,10 @@ def _default_processed_cache_dir() -> Path:
 
 class BaseDatasetBuilder:
     """
-    Base class for stable-datasets that enables direct dataset loading.
+    Base class for stable-datasets builders.
 
-    No longer depends on HuggingFace datasets. Uses PyArrow directly for
-    serialization and caching.
+    Handles downloading, Arrow caching, and split generation. Subclasses
+    implement ``_info``, ``_split_generators``, and ``_generate_examples``.
     """
 
     # Subclasses must define:
@@ -188,7 +188,6 @@ class BaseDatasetBuilder:
         split_names = list(assets.keys())
         ordered_urls = [assets[s] for s in split_names]
 
-        # stable-datasets standardizes on our local bulk downloader (not HF dl_manager).
         # Deduplicate URLs to avoid redundant downloads for datasets where all splits share a single file.
         unique_urls = list(dict.fromkeys(ordered_urls))
         download_dir = getattr(self, "_raw_download_dir", None)

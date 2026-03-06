@@ -3,10 +3,9 @@ import os
 import zipfile
 from pathlib import Path
 
-
-from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
 from stable_datasets.schema import DatasetInfo, Features, Value, Version, Video
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
 
 
 class CLEVRER(BaseDatasetBuilder):

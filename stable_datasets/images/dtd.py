@@ -4,8 +4,9 @@ from io import BytesIO
 from PIL import Image as PILImage
 from tqdm import tqdm
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class DTD(BaseDatasetBuilder):

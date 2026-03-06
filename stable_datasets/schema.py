@@ -1,20 +1,17 @@
-"""Schema definitions replacing HuggingFace datasets.Features / DatasetInfo.
+"""Feature and metadata schema definitions.
 
-Each feature type knows how to map itself to a PyArrow type for Arrow IPC
-serialization. The public API mirrors the HuggingFace equivalents so that
-dataset files need only change their imports.
+Each feature type maps itself to a PyArrow type for Arrow IPC serialization.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import pyarrow as pa
 
 
-
 class Version:
-    """Semantic version, replaces ``datasets.Version``."""
+    """Semantic version string (``major.minor.patch``)."""
 
     def __init__(self, version_str: str):
         parts = version_str.split(".")
@@ -36,7 +33,6 @@ class Version:
 
     def __hash__(self) -> int:
         return hash((self.major, self.minor, self.patch))
-
 
 
 class FeatureType:
@@ -95,7 +91,7 @@ class ClassLabel(FeatureType):
         else:
             raise ValueError("ClassLabel requires either 'names' or 'num_classes'")
         self._str2int: dict[str, int] = {n: i for i, n in enumerate(self.names)}
-        self._int2str: dict[int, str] = {i: n for i, n in enumerate(self.names)}
+        self._int2str: dict[int, str] = dict(enumerate(self.names))
 
     def str2int(self, name: str) -> int:
         return self._str2int[name]
@@ -159,7 +155,6 @@ class Array3D(FeatureType):
         return f"Array3D(shape={self.shape}, dtype='{self.dtype}')"
 
 
-
 class Features(dict):
     """Ordered dict of ``field_name -> FeatureType``.
 
@@ -175,10 +170,9 @@ class Features(dict):
         return pa.schema(fields)
 
 
-
 @dataclass
 class DatasetInfo:
-    """Metadata container replacing ``datasets.DatasetInfo``."""
+    """Metadata container for a dataset (description, features, citation, etc.)."""
 
     features: Features
     description: str = ""
@@ -188,10 +182,9 @@ class DatasetInfo:
     license: str = ""
 
 
-
 @dataclass
 class BuilderConfig:
-    """Base config for multi-variant datasets. Replaces ``datasets.BuilderConfig``."""
+    """Base config for multi-variant datasets."""
 
     name: str = "default"
     version: Version | None = None

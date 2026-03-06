@@ -4,8 +4,9 @@ import tarfile
 from PIL import Image as PILImage
 from tqdm import tqdm
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class Country211(BaseDatasetBuilder):
@@ -36,9 +37,7 @@ class Country211(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="Country211 dataset for image classification by country.",
-            features=Features(
-                {"image": ImageFeature(), "label": ClassLabel(names=self._class_names())}
-            ),
+            features=Features({"image": ImageFeature(), "label": ClassLabel(names=self._class_names())}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

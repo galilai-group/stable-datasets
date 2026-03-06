@@ -3,9 +3,10 @@ import io
 import rarfile
 from PIL import Image as PILImage
 
-from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class Linnaeus5(BaseDatasetBuilder):

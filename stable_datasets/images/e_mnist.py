@@ -4,8 +4,8 @@ import zipfile
 import numpy as np
 import scipy.io as sio
 
-from stable_datasets.utils import BaseDatasetBuilder
 from stable_datasets.schema import BuilderConfig, ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class EMNISTConfig(BuilderConfig):
@@ -79,9 +79,7 @@ class EMNIST(BaseDatasetBuilder):
 
         return DatasetInfo(
             description="""The EMNIST dataset is an image classification dataset of 28x28 grayscale handwritten character images, organized into 6 distinct configurations (ByClass, ByMerge, Balanced, Letters, Digits, MNIST) ranging from 10 to 62 classes. See https://www.nist.gov/itl/iad/image-group/emnist-dataset for more information.""",
-            features=Features(
-                {"image": Image(), "label": ClassLabel(num_classes=num_classes)}
-            ),
+            features=Features({"image": Image(), "label": ClassLabel(num_classes=num_classes)}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

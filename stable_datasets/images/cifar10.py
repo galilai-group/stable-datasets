@@ -3,8 +3,8 @@ import tarfile
 
 import numpy as np
 
-from stable_datasets.utils import BaseDatasetBuilder
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class CIFAR10(BaseDatasetBuilder):

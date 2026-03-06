@@ -1,4 +1,4 @@
-"""Split name constants and split generator, replacing datasets.Split / datasets.SplitGenerator."""
+"""Split name constants and split generator."""
 
 from __future__ import annotations
 

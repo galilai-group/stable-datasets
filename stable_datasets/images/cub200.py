@@ -4,8 +4,9 @@ import tarfile
 import pandas as pd
 from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class CUB200(BaseDatasetBuilder):
@@ -30,9 +31,7 @@ class CUB200(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="""The Caltech-UCSD Birds-200-2011 dataset consists of 11,788 images of 200 bird species.""",
-            features=Features(
-                {"image": ImageFeature(), "label": ClassLabel(names=self._labels())}
-            ),
+            features=Features({"image": ImageFeature(), "label": ClassLabel(names=self._labels())}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

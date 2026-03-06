@@ -3,8 +3,8 @@ from zipfile import ZipFile
 import numpy as np
 from PIL import Image as PILImage
 
+from stable_datasets.schema import DatasetInfo, Features, Image, Sequence, Value, Version
 from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import DatasetInfo, Features, Image as ImageFeature, Sequence, Value, Version
 
 
 def _read_binary_matrix_from_bytes(b: bytes):

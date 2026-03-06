@@ -1,8 +1,9 @@
 import scipy.io as sio
 from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class SVHN(BaseDatasetBuilder):

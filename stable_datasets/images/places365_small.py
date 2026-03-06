@@ -3,7 +3,8 @@ import tarfile
 
 from PIL import Image
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
@@ -89,7 +90,7 @@ class Places365Small(BaseDatasetBuilder):
                 labels = self._labels()
                 for member in tar.getmembers():
                     if member.isfile():
-                        filename = member.name[len(folder):]
+                        filename = member.name[len(folder) :]
                         if filename in label_mapping:
                             file_like = tar.extractfile(member)
                             if file_like:
