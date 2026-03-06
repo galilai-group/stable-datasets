@@ -1,15 +1,15 @@
 import io
 from zipfile import ZipFile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
 from stable_datasets.utils import BaseDatasetBuilder
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class Food101(BaseDatasetBuilder):
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
@@ -25,12 +25,12 @@ class Food101(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="Food-101 image classification dataset. It has 101 food categories, with 101'000 images. For each class, 250 manually reviewed test images are provided as well as 750 training images. On purpose, the training images were not cleaned, and thus still contain some amount of noise. This comes mostly in the form of intense colors and sometimes wrong labels. All images were rescaled to have a maximum side length of 512 pixels",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -46,7 +46,7 @@ class Food101(BaseDatasetBuilder):
             for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
                 if entry.filename.endswith(".jpg"):
                     content = archive.read(entry)
-                    image = Image.open(io.BytesIO(content)).convert("RGB")
+                    image = PILImage.open(io.BytesIO(content)).convert("RGB")
 
                     filename = entry.filename.split("/")[-1]
                     class_part = filename.split("_", 1)[1].rsplit(".", 1)[0]

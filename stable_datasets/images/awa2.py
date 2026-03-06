@@ -1,8 +1,9 @@
 import os
 import zipfile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
+from stable_datasets.splits import Split, SplitGenerator
 
 
 class AWA2(datasets.GeneratorBasedBuilder):
@@ -11,15 +12,15 @@ class AWA2(datasets.GeneratorBasedBuilder):
     and zero-shot learning research. See https://cvml.ista.ac.at/AwA2/ for more information.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The AWA2 dataset is an image classification dataset with images of 50 classes, primarily used in attribute-based image recognition research. See https://cvml.ista.ac.at/AwA2/ for more information.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(
+                    "image": ImageFeature(),
+                    "label": ClassLabel(
                         names=[
                             "antelope",
                             "grizzly+bear",
@@ -92,7 +93,7 @@ class AWA2(datasets.GeneratorBasedBuilder):
     def _split_generators(self, dl_manager):
         # Download the dataset
         archive_path = dl_manager.download({"data": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip"})
-        return [datasets.SplitGenerator(name=datasets.Split.TEST, gen_kwargs={"archive_paths": archive_path})]
+        return [SplitGenerator(name=Split.TEST, gen_kwargs={"archive_paths": archive_path})]
 
     def _generate_examples(self, archive_path):
         # Open the zip file
@@ -111,6 +112,6 @@ class AWA2(datasets.GeneratorBasedBuilder):
                 for image_path in z.namelist():
                     if image_path.startswith(class_dir) and image_path.endswith(".jpg"):
                         with z.open(image_path) as image_file:
-                            image = Image.open(image_file).convert("RGB")
+                            image = PILImage.open(image_file).convert("RGB")
                             label = label_mapping[class_name]
                             yield image_path, {"image": image, "label": label}

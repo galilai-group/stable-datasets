@@ -1,24 +1,26 @@
 from collections.abc import Mapping
 
-import datasets
 import pytest
 
+from stable_datasets.arrow_dataset import StableDataset, StableDatasetDict
+from stable_datasets.schema import DatasetInfo, Features, Value, Version
+from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class _TinyLocalBuilder(BaseDatasetBuilder):
     """A tiny local builder used to validate BaseDatasetBuilder return types."""
 
-    VERSION = datasets.Version("0.0.0")
+    VERSION = Version("0.0.0")
     SOURCE = {"homepage": "https://example.com", "citation": "TBD", "assets": {}}
 
     def _info(self):
-        return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+        return DatasetInfo(features=Features({"x": Value("int32")}))
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self, dl_manager=None):
         return [
-            datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 3}),
-            datasets.SplitGenerator(name=datasets.Split.TEST, gen_kwargs={"n": 2}),
+            SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 3}),
+            SplitGenerator(name=Split.TEST, gen_kwargs={"n": 2}),
         ]
 
     def _generate_examples(self, n):
@@ -29,23 +31,23 @@ class _TinyLocalBuilder(BaseDatasetBuilder):
 class _TinyDynamicSourceBuilder(BaseDatasetBuilder):
     """Validates that BaseDatasetBuilder supports runtime-computed source via _source()."""
 
-    VERSION = datasets.Version("0.0.0")
+    VERSION = Version("0.0.0")
 
     def _source(self):
         # In real datasets this might depend on self.config; here it's static but computed at runtime.
         return {"homepage": "https://example.com", "citation": "TBD", "assets": {}}
 
     def _info(self):
-        return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+        return DatasetInfo(features=Features({"x": Value("int32")}))
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self, dl_manager=None):
         # Ensure the runtime hook is available and returns an immutable mapping.
         src = self._source()
         assert isinstance(src, Mapping)
         with pytest.raises(TypeError):
             src["homepage"] = "https://mutate.example.com"
         return [
-            datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 1}),
+            SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1}),
         ]
 
     def _generate_examples(self, n):
@@ -56,7 +58,7 @@ class _TinyDynamicSourceBuilder(BaseDatasetBuilder):
 class _TinyBaseSplitBuilder(BaseDatasetBuilder):
     """Uses BaseDatasetBuilder's default _split_generators (SOURCE['assets'] + bulk_download)."""
 
-    VERSION = datasets.Version("0.0.0")
+    VERSION = Version("0.0.0")
     SOURCE = {
         "homepage": "https://example.com",
         "citation": "TBD",
@@ -64,7 +66,7 @@ class _TinyBaseSplitBuilder(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+        return DatasetInfo(features=Features({"x": Value("int32")}))
 
     def _generate_examples(self, data_path, split):
         # We don't touch data_path; tests monkeypatch bulk_download to avoid network.
@@ -73,27 +75,27 @@ class _TinyBaseSplitBuilder(BaseDatasetBuilder):
 
 def test_base_builder_returns_datasetdict_when_split_is_none(tmp_path):
     ds = _TinyLocalBuilder(split=None, processed_cache_dir=str(tmp_path))
-    assert isinstance(ds, datasets.DatasetDict)
+    assert isinstance(ds, StableDatasetDict)
     assert set(ds.keys()) == {"train", "test"}
 
 
 def test_base_builder_returns_dataset_when_split_is_set(tmp_path):
     ds = _TinyLocalBuilder(split="train", processed_cache_dir=str(tmp_path))
-    assert isinstance(ds, datasets.Dataset)
+    assert isinstance(ds, StableDataset)
     assert len(ds) == 3
 
 
 def test_base_builder_allows_runtime_source_override(tmp_path):
     ds = _TinyDynamicSourceBuilder(split="train", processed_cache_dir=str(tmp_path))
-    assert isinstance(ds, datasets.Dataset)
+    assert isinstance(ds, StableDataset)
     assert len(ds) == 1
 
 
 def test_base_builder_processed_cache_dir_is_used(tmp_path):
     ds = _TinyLocalBuilder(split="train", processed_cache_dir=str(tmp_path))
-    # HuggingFace datasets exposes the underlying Arrow cache files.
-    for cache_entry in ds.cache_files:
-        assert cache_entry["filename"].startswith(str(tmp_path))
+    # Verify that Arrow cache files were written to the specified directory.
+    arrow_files = list(tmp_path.glob("*.arrow"))
+    assert len(arrow_files) > 0
 
     # stable-datasets also exposes the processed cache location as a convenience attribute.
     assert getattr(ds, "_stable_datasets_processed_cache_dir") == tmp_path
@@ -104,7 +106,7 @@ def test_base_builder_passes_download_dir_to_bulk_download(tmp_path, monkeypatch
 
     seen = {}
 
-    def _fake_bulk_download(urls, dest_folder, backend="filesystem", cache_dir=utils.DEFAULT_CACHE_DIR):
+    def _fake_bulk_download(urls, dest_folder):
         seen["dest_folder"] = str(dest_folder)
         # Return fake local paths; _generate_examples ignores data_path.
         return [tmp_path / f"fake_{i}.bin" for i in range(len(list(urls)))]
@@ -131,7 +133,7 @@ def test_base_builder_requires_version():
             }
 
             def _info(self):
-                return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+                return DatasetInfo(features=Features({"x": Value("int32")}))
 
             def _generate_examples(self, data_path, split):
                 yield 0, {"x": 0}
@@ -141,10 +143,10 @@ def test_base_builder_requires_source_or_source_override():
     with pytest.raises(TypeError):
 
         class _MissingSource(BaseDatasetBuilder):
-            VERSION = datasets.Version("0.0.0")
+            VERSION = Version("0.0.0")
 
             def _info(self):
-                return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+                return DatasetInfo(features=Features({"x": Value("int32")}))
 
             def _generate_examples(self, data_path, split):
                 yield 0, {"x": 0}
@@ -152,13 +154,13 @@ def test_base_builder_requires_source_or_source_override():
 
 def test_base_builder_source_override_must_return_mapping(tmp_path):
     class _BadSource(BaseDatasetBuilder):
-        VERSION = datasets.Version("0.0.0")
+        VERSION = Version("0.0.0")
 
         def _source(self):
             return "not-a-dict"
 
         def _info(self):
-            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+            return DatasetInfo(features=Features({"x": Value("int32")}))
 
         def _generate_examples(self, data_path, split):
             yield 0, {"x": 0}
@@ -174,14 +176,14 @@ def test_source_is_frozen_for_static_source():
 
 def test_base_builder_requires_source_homepage(tmp_path):
     class _MissingHomepage(BaseDatasetBuilder):
-        VERSION = datasets.Version("0.0.0")
+        VERSION = Version("0.0.0")
         SOURCE = {"citation": "TBD", "assets": {}}
 
         def _info(self):
-            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+            return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _split_generators(self, dl_manager):
-            return [datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 1})]
+        def _split_generators(self, dl_manager=None):
+            return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
         def _generate_examples(self, n):
             yield 0, {"x": 0}
@@ -192,14 +194,14 @@ def test_base_builder_requires_source_homepage(tmp_path):
 
 def test_base_builder_requires_source_citation(tmp_path):
     class _MissingCitation(BaseDatasetBuilder):
-        VERSION = datasets.Version("0.0.0")
+        VERSION = Version("0.0.0")
         SOURCE = {"homepage": "https://example.com", "assets": {}}
 
         def _info(self):
-            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+            return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _split_generators(self, dl_manager):
-            return [datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 1})]
+        def _split_generators(self, dl_manager=None):
+            return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
         def _generate_examples(self, n):
             yield 0, {"x": 0}
@@ -210,14 +212,14 @@ def test_base_builder_requires_source_citation(tmp_path):
 
 def test_base_builder_requires_source_assets(tmp_path):
     class _MissingDownloadUrls(BaseDatasetBuilder):
-        VERSION = datasets.Version("0.0.0")
+        VERSION = Version("0.0.0")
         SOURCE = {"homepage": "https://example.com", "citation": "TBD"}
 
         def _info(self):
-            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+            return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _split_generators(self, dl_manager):
-            return [datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 1})]
+        def _split_generators(self, dl_manager=None):
+            return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
         def _generate_examples(self, n):
             yield 0, {"x": 0}
@@ -228,14 +230,14 @@ def test_base_builder_requires_source_assets(tmp_path):
 
 def test_base_builder_validates_source_field_types(tmp_path):
     class _BadTypes(BaseDatasetBuilder):
-        VERSION = datasets.Version("0.0.0")
+        VERSION = Version("0.0.0")
         SOURCE = {"homepage": 123, "citation": object(), "assets": "not-a-dict"}
 
         def _info(self):
-            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+            return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _split_generators(self, dl_manager):
-            return [datasets.SplitGenerator(name=datasets.Split.TRAIN, gen_kwargs={"n": 1})]
+        def _split_generators(self, dl_manager=None):
+            return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
         def _generate_examples(self, n):
             yield 0, {"x": 0}
@@ -246,11 +248,11 @@ def test_base_builder_validates_source_field_types(tmp_path):
 
 def test_base_builder_empty_urls_raises(tmp_path):
     class _EmptyUrls(BaseDatasetBuilder):
-        VERSION = datasets.Version("0.0.0")
+        VERSION = Version("0.0.0")
         SOURCE = {"homepage": "https://example.com", "citation": "TBD", "assets": {}}
 
         def _info(self):
-            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+            return DatasetInfo(features=Features({"x": Value("int32")}))
 
         def _generate_examples(self, data_path, split):
             yield 0, {"x": 0}
@@ -263,7 +265,7 @@ def test_base_builder_maps_val_to_validation(monkeypatch, tmp_path):
     import stable_datasets.utils as utils
 
     class _ValSplit(BaseDatasetBuilder):
-        VERSION = datasets.Version("0.0.0")
+        VERSION = Version("0.0.0")
         SOURCE = {
             "homepage": "https://example.com",
             "citation": "TBD",
@@ -271,29 +273,30 @@ def test_base_builder_maps_val_to_validation(monkeypatch, tmp_path):
         }
 
         def _info(self):
-            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+            return DatasetInfo(features=Features({"x": Value("int32")}))
 
         def _generate_examples(self, data_path, split):
             yield 0, {"x": 0}
 
-    def _fake_bulk_download(urls, dest_folder, backend="filesystem", cache_dir=utils.DEFAULT_CACHE_DIR):
+    def _fake_bulk_download(urls, dest_folder):
         return [tmp_path / "fake.bin" for _ in list(urls)]
 
     monkeypatch.setattr(utils, "bulk_download", _fake_bulk_download)
 
-    # Bypass __new__/download_and_prepare; directly test split generator mapping.
+    # Bypass __new__; directly test split generator mapping.
     inst = object.__new__(_ValSplit)
     inst._raw_download_dir = tmp_path
+    inst.__init__()
     splits = inst._split_generators(dl_manager=None)
     assert len(splits) == 1
-    assert splits[0].name == datasets.Split.VALIDATION
+    assert splits[0].name == Split.VALIDATION
 
 
 def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
     import stable_datasets.utils as utils
 
     class _SharedUrl(BaseDatasetBuilder):
-        VERSION = datasets.Version("0.0.0")
+        VERSION = Version("0.0.0")
         SOURCE = {
             "homepage": "https://example.com",
             "citation": "TBD",
@@ -301,14 +304,14 @@ def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
         }
 
         def _info(self):
-            return datasets.DatasetInfo(features=datasets.Features({"x": datasets.Value("int32")}))
+            return DatasetInfo(features=Features({"x": Value("int32")}))
 
         def _generate_examples(self, data_path, split):
             yield 0, {"x": 0}
 
     seen = {}
 
-    def _fake_bulk_download(urls, dest_folder, backend="filesystem", cache_dir=utils.DEFAULT_CACHE_DIR):
+    def _fake_bulk_download(urls, dest_folder):
         urls = list(urls)
         seen["urls"] = urls
         return [tmp_path / f"fake_{i}.bin" for i in range(len(urls))]
@@ -317,5 +320,30 @@ def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
 
     inst = object.__new__(_SharedUrl)
     inst._raw_download_dir = tmp_path
+    inst.__init__()
     _ = inst._split_generators(dl_manager=None)
     assert seen["urls"] == ["https://example.com/file.bin"]
+
+
+def test_stable_dataset_getitem(tmp_path):
+    """Verify StableDataset supports integer indexing and returns correct values."""
+    ds = _TinyLocalBuilder(split="train", processed_cache_dir=str(tmp_path))
+    assert ds[0] == {"x": 0}
+    assert ds[1] == {"x": 1}
+    assert ds[2] == {"x": 2}
+
+
+def test_stable_dataset_train_test_split(tmp_path):
+    """Verify StableDataset.train_test_split produces correct sizes."""
+    ds = _TinyLocalBuilder(split="train", processed_cache_dir=str(tmp_path))
+    splits = ds.train_test_split(test_size=0.34, seed=42)
+    assert "train" in splits
+    assert "test" in splits
+    assert len(splits["train"]) + len(splits["test"]) == 3
+
+
+def test_stable_dataset_features_property(tmp_path):
+    """Verify .features returns the Features dict."""
+    ds = _TinyLocalBuilder(split="train", processed_cache_dir=str(tmp_path))
+    assert "x" in ds.features
+    assert isinstance(ds.features["x"], Value)

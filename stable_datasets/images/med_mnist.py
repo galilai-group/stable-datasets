@@ -1,13 +1,13 @@
-import datasets
 import numpy as np
 
 from stable_datasets.utils import BaseDatasetBuilder
+from stable_datasets.schema import Array3D, BuilderConfig, ClassLabel, DatasetInfo, Features, Image, Sequence, Value, Version
 
 
-MEDMNIST_VERSION = datasets.Version("1.0.0")
+MEDMNIST_VERSION = Version("1.0.0")
 
 
-class MedMNISTConfig(datasets.BuilderConfig):
+class MedMNISTConfig(BuilderConfig):
     """BuilderConfig with per-variant metadata used by MedMNIST._info()."""
 
     def __init__(self, *, num_classes: int, is_3d: bool = False, multi_label: bool = False, **kwargs):
@@ -75,18 +75,18 @@ class MedMNIST(BaseDatasetBuilder):
         source = self._source()
 
         if getattr(self.config, "multi_label", False):  # multi-label instead of multi-class
-            label_feature = datasets.Sequence(datasets.Value("int8"))
+            label_feature = Sequence(Value("int8"))
         else:
-            label_feature = datasets.ClassLabel(num_classes=self.config.num_classes)
+            label_feature = ClassLabel(num_classes=self.config.num_classes)
 
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=f"MedMNIST variant: {variant} dataset.",
-            features=datasets.Features(
+            features=Features(
                 {
                     "image": (
-                        datasets.Array3D(shape=(28, 28, 28), dtype="uint8")
+                        Array3D(shape=(28, 28, 28), dtype="uint8")
                         if getattr(self.config, "is_3d", False)
-                        else datasets.Image()
+                        else Image()
                     ),
                     "label": label_feature,
                 }

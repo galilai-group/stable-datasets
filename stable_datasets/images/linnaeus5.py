@@ -1,10 +1,11 @@
 import io
 
-import datasets
 import rarfile
-from PIL import Image
+from PIL import Image as PILImage
 
 from stable_datasets.utils import BaseDatasetBuilder
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
+from stable_datasets.splits import Split, SplitGenerator
 
 
 class Linnaeus5(BaseDatasetBuilder):
@@ -23,7 +24,7 @@ class Linnaeus5(BaseDatasetBuilder):
     - **Splits:** Pre-split into Training (1,200 images per class) and Test (400 images per class).
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "http://chaladze.com/l5/",
@@ -38,12 +39,12 @@ class Linnaeus5(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="Linnaeus 5 dataset with 5 classes (berry, bird, dog, flower, other).",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -58,15 +59,15 @@ class Linnaeus5(BaseDatasetBuilder):
         archive_path = dl_manager.download(url)
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={
                     "archive_path": archive_path,
                     "split_name": "train",
                 },
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
+            SplitGenerator(
+                name=Split.TEST,
                 gen_kwargs={
                     "archive_path": archive_path,
                     "split_name": "test",
@@ -94,7 +95,7 @@ class Linnaeus5(BaseDatasetBuilder):
                         with rf.open(member) as f:
                             image_bytes = f.read()
 
-                        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+                        image = PILImage.open(io.BytesIO(image_bytes)).convert("RGB")
 
                         yield (
                             filename,

@@ -1,11 +1,11 @@
 import tarfile
 from io import BytesIO
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
 from stable_datasets.utils import BaseDatasetBuilder
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class DTD(BaseDatasetBuilder):
@@ -23,7 +23,7 @@ class DTD(BaseDatasetBuilder):
     for evaluation.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://www.robots.ox.ac.uk/~vgg/data/dtd/",
@@ -40,13 +40,13 @@ class DTD(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""Describing Textures in the Wild (DTD) is a dataset for texture classification.
                            It contains 5640 images organized into 47 categories.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -62,7 +62,7 @@ class DTD(BaseDatasetBuilder):
             for idx, file_name in enumerate(tqdm(file_names, desc=f"Processing {split} split")):
                 member = tar.getmember(f"dtd/images/{file_name}")
                 file = tar.extractfile(member)
-                image = Image.open(BytesIO(file.read())).convert("RGB")
+                image = PILImage.open(BytesIO(file.read())).convert("RGB")
 
                 yield (
                     idx,

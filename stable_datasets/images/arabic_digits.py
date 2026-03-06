@@ -1,18 +1,18 @@
 import io
 from zipfile import ZipFile
 
-import datasets
 import numpy as np
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
 from stable_datasets.utils import BaseDatasetBuilder
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class ArabicDigits(BaseDatasetBuilder):
     """Arabic Handwritten Digits Dataset."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -33,11 +33,11 @@ class ArabicDigits(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""Arabic Handwritten Digits Dataset containing 70,000 images of Arabic digits (0-9)
                            written by 700 participants. Images are 28x28 grayscale pixels.""",
-            features=datasets.Features(
-                {"image": datasets.Image(), "label": datasets.ClassLabel(names=[str(i) for i in range(10)])}
+            features=Features(
+                {"image": ImageFeature(), "label": ClassLabel(names=[str(i) for i in range(10)])}
             ),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
@@ -72,5 +72,5 @@ class ArabicDigits(BaseDatasetBuilder):
             tqdm(zip(images, labels), total=len(labels), desc=f"Processing {split} set")
         ):
             # Convert numpy array to PIL Image
-            pil_image = Image.fromarray(image, mode="L")  # "L" for grayscale
+            pil_image = PILImage.fromarray(image, mode="L")  # "L" for grayscale
             yield idx, {"image": pil_image, "label": int(label)}

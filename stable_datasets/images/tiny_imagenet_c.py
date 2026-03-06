@@ -1,6 +1,7 @@
 import os
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Value, Version
+from stable_datasets.splits import Split, SplitGenerator
 
-import datasets
 
 
 class TinyImagenetC(datasets.GeneratorBasedBuilder):
@@ -8,18 +9,18 @@ class TinyImagenetC(datasets.GeneratorBasedBuilder):
     Tiny ImageNet-C dataset for image classification tasks with corruptions applied.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The Tiny ImageNet-C dataset applies multiple corruptions to the Tiny ImageNet images. It
             includes 200 classes and various corruption levels.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
-                    "corruption_name": datasets.Value("string"),
-                    "corruption_level": datasets.Value("int32"),
+                    "image": Image(),
+                    "label": ClassLabel(names=self._labels()),
+                    "corruption_name": Value("string"),
+                    "corruption_level": Value("int32"),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -37,8 +38,8 @@ class TinyImagenetC(datasets.GeneratorBasedBuilder):
         archive_path = dl_manager.download_and_extract(url)
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
+            SplitGenerator(
+                name=Split.TEST,
                 gen_kwargs={"archive_path": archive_path},
             ),
         ]

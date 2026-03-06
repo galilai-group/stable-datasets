@@ -7,13 +7,13 @@ TODO: Implement as a HuggingFace-compatible builder using `BaseDatasetBuilder`
 and the local download helpers in `stable_datasets.utils`.
 """
 
-import datasets
 
 from stable_datasets.utils import BaseDatasetBuilder
+from stable_datasets.schema import DatasetInfo, Version
 
 
 class PatchCamelyon(BaseDatasetBuilder):
-    VERSION = datasets.Version("0.0.0")
+    VERSION = Version("0.0.0")
     SOURCE = {
         "homepage": "https://github.com/basveeling/pcam",
         "citation": "TBD",

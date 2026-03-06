@@ -1,6 +1,7 @@
 import os
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.splits import Split, SplitGenerator
 
-import datasets
 
 
 class TinyImagenet(datasets.GeneratorBasedBuilder):
@@ -9,15 +10,15 @@ class TinyImagenet(datasets.GeneratorBasedBuilder):
     It contains 200 classes with 500 training images, 50 validation images, and 50 test images per class.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""In Tiny ImageNet, there are 100,000 images divided up into 200 classes. Every image in the
             dataset is downsized to a 64×64 colored image. For every class, there are 500 training images, 50 validating
             images, and 50 test images.""",
-            features=datasets.Features(
-                {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}
+            features=Features(
+                {"image": Image(), "label": ClassLabel(names=self._labels())}
             ),
             supervised_keys=("image", "label"),
             homepage="https://www.kaggle.com/c/tiny-imagenet",
@@ -34,12 +35,12 @@ class TinyImagenet(datasets.GeneratorBasedBuilder):
         archive_path = dl_manager.download_and_extract(url)
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={"archive_path": archive_path, "split": "train"},
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION,
+            SplitGenerator(
+                name=Split.VALIDATION,
                 gen_kwargs={"archive_path": archive_path, "split": "val"},
             ),
         ]

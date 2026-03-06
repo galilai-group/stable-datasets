@@ -1,11 +1,11 @@
 import io
 import tarfile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
 from stable_datasets.utils import BaseDatasetBuilder
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class Country211(BaseDatasetBuilder):
@@ -14,7 +14,7 @@ class Country211(BaseDatasetBuilder):
     with ISO-3166 country codes. Each country has a balanced sample of images for training, validation, and testing.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://github.com/openai/CLIP/blob/main/data/country211.md",
@@ -34,10 +34,10 @@ class Country211(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="Country211 dataset for image classification by country.",
-            features=datasets.Features(
-                {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._class_names())}
+            features=Features(
+                {"image": ImageFeature(), "label": ClassLabel(names=self._class_names())}
             ),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
@@ -70,7 +70,7 @@ class Country211(BaseDatasetBuilder):
 
                         # Extract and open the image
                         with archive.extractfile(member) as file:
-                            image = Image.open(io.BytesIO(file.read())).convert("RGB")
+                            image = PILImage.open(io.BytesIO(file.read())).convert("RGB")
 
                             # Use the counter as the unique ID
                             yield (

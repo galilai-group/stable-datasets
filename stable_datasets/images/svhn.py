@@ -1,8 +1,8 @@
-import datasets
 import scipy.io as sio
-from PIL import Image
+from PIL import Image as PILImage
 
 from stable_datasets.utils import BaseDatasetBuilder
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 
 
 class SVHN(BaseDatasetBuilder):
@@ -15,7 +15,7 @@ class SVHN(BaseDatasetBuilder):
     in Google Street View images.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "http://ufldl.stanford.edu/housenumbers/",
@@ -37,15 +37,15 @@ class SVHN(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The Street View House Numbers (SVHN) Dataset is a real-world image dataset
                            for developing machine learning and object recognition algorithms with minimal
                            requirement on data preprocessing and formatting. SVHN is obtained from house
                            numbers in Google Street View images.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=[str(i) for i in range(10)]),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=[str(i) for i in range(10)]),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -70,7 +70,7 @@ class SVHN(BaseDatasetBuilder):
             yield (
                 idx,
                 {
-                    "image": Image.fromarray(X[idx]),
+                    "image": PILImage.fromarray(X[idx]),
                     "label": int(y[idx]),
                 },
             )

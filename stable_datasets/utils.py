@@ -8,12 +8,10 @@ from pathlib import Path
 from types import MappingProxyType
 from urllib.parse import urlparse
 
-import datasets
 import numpy as np
 import pandas as pd
 import requests
 import rich.progress
-from datasets import DownloadConfig
 from filelock import FileLock
 from loguru import logger as logging
 from rich.progress import (
@@ -24,6 +22,11 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 from tqdm import tqdm
+
+from .arrow_dataset import StableDataset, StableDatasetDict
+from .cache import cache_fingerprint, read_arrow_cache, write_arrow_cache
+from .schema import BuilderConfig, Version
+from .splits import Split, SplitGenerator
 
 
 DEFAULT_CACHE_DIR = "~/.stable_datasets/"
@@ -39,19 +42,26 @@ def _default_processed_cache_dir() -> Path:
     return Path(os.path.expanduser(DEFAULT_CACHE_DIR)) / "processed"
 
 
-class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
+class BaseDatasetBuilder:
     """
     Base class for stable-datasets that enables direct dataset loading.
+
+    No longer depends on HuggingFace datasets. Uses PyArrow directly for
+    serialization and caching.
     """
 
     # Subclasses must define:
-    # - VERSION: datasets.Version
+    # - VERSION: schema.Version
     #
     # For dataset provenance / downloads, subclasses can either:
     # - define a class attribute SOURCE (static), or
     # - override _source(self) to compute it at runtime (e.g. from self.config)
-    VERSION: datasets.Version
+    VERSION: Version
     SOURCE: Mapping
+
+    # Optional: multi-variant datasets define BUILDER_CONFIGS and optionally DEFAULT_CONFIG_NAME.
+    BUILDER_CONFIGS: list = []
+    DEFAULT_CONFIG_NAME: str | None = None
 
     @staticmethod
     def _freeze(obj):
@@ -84,11 +94,11 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
         if getattr(cls, "_SKIP_SOURCE_VALIDATION", False):
             return
 
-        # VERSION must exist and be a datasets.Version
+        # VERSION must exist and be a schema.Version
         if not hasattr(cls, "VERSION"):
-            raise TypeError(f"{cls.__name__} must define a class attribute VERSION = datasets.Version('x.y.z').")
-        if not isinstance(getattr(cls, "VERSION"), datasets.Version):
-            raise TypeError(f"{cls.__name__}.VERSION must be a datasets.Version instance.")
+            raise TypeError(f"{cls.__name__} must define a class attribute VERSION = Version('x.y.z').")
+        if not isinstance(getattr(cls, "VERSION"), Version):
+            raise TypeError(f"{cls.__name__}.VERSION must be a Version instance.")
 
         # Enforce that a source is provided either statically (SOURCE) or dynamically (_source override).
         has_static_source = hasattr(cls, "SOURCE")
@@ -112,6 +122,26 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
 
             _wrapped_source._stable_datasets_freezes_source = True  # type: ignore[attr-defined]
             cls._source = _wrapped_source  # type: ignore[method-assign]
+
+    def __init__(self, config_name: str | None = None, **kwargs):
+        """Initialize builder, selecting a BuilderConfig if applicable."""
+        if self.BUILDER_CONFIGS:
+            if config_name is None:
+                config_name = self.DEFAULT_CONFIG_NAME or self.BUILDER_CONFIGS[0].name
+            matched = [c for c in self.BUILDER_CONFIGS if c.name == config_name]
+            if not matched:
+                available = [c.name for c in self.BUILDER_CONFIGS]
+                raise ValueError(f"Unknown config '{config_name}'. Available: {available}")
+            self.config = matched[0]
+        else:
+            self.config = BuilderConfig(name=config_name or "default")
+
+        # Populate self.info / self._dataset_info so _generate_examples can use it
+        self._dataset_info = self._info()
+
+    @property
+    def info(self):
+        return self._dataset_info
 
     def _source(self) -> Mapping:
         """
@@ -139,7 +169,7 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
         if "assets" not in source or not isinstance(source["assets"], Mapping):
             raise TypeError("SOURCE must contain a mapping-valued 'assets' key.")
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self, dl_manager=None):
         """
         Default split generator implementation.
 
@@ -171,18 +201,26 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
         split_to_path = dict(zip(split_names, local_paths))
 
         name_map = {
-            "train": datasets.Split.TRAIN,
-            "test": datasets.Split.TEST,
-            "val": datasets.Split.VALIDATION,
+            "train": Split.TRAIN,
+            "test": Split.TEST,
+            "val": Split.VALIDATION,
         }
 
         return [
-            datasets.SplitGenerator(
+            SplitGenerator(
                 name=name_map.get(split_name, split_name),
                 gen_kwargs={"data_path": split_to_path[split_name], "split": split_name},
             )
             for split_name in split_names
         ]
+
+    def _info(self):
+        """Return a DatasetInfo describing this dataset's schema. Must be overridden."""
+        raise NotImplementedError
+
+    def _generate_examples(self, **kwargs):
+        """Yield (key, example_dict) pairs. Must be overridden."""
+        raise NotImplementedError
 
     def __new__(cls, *args, split=None, processed_cache_dir=None, download_dir=None, **kwargs):
         """
@@ -190,54 +228,71 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
 
         Args:
             split: Dataset split to load (e.g., "train", "test", "validation"). If None,
-                loads all available splits and returns a DatasetDict.
+                loads all available splits and returns a StableDatasetDict.
             processed_cache_dir: Cache directory for processed datasets (Arrow cache). If None,
                 defaults to ~/.stable_datasets/processed/.
             download_dir: Directory for raw downloads (ZIP/NPZ/etc). If None, defaults to
                 ~/.stable_datasets/downloads/.
-            **kwargs: Additional arguments passed to the dataset builder.
+            **kwargs: Additional arguments passed to the dataset builder (e.g. config_name).
 
         Returns:
-            Union[datasets.Dataset, datasets.DatasetDict]: The loaded dataset (single split)
-                or a DatasetDict (all splits).
+            Union[StableDataset, StableDatasetDict]: The loaded dataset (single split)
+                or a StableDatasetDict (all splits).
         """
-        instance = super().__new__(cls)
+        instance = object.__new__(cls)
 
         # 1) Decide cache locations
-        # Processed cache (Arrow)
         if processed_cache_dir is None:
             processed_cache_dir = str(_default_processed_cache_dir())
         instance._processed_cache_dir = Path(processed_cache_dir)
 
-        # Raw downloads
         if download_dir is None:
             download_dir = str(_default_dest_folder())
         instance._raw_download_dir = Path(download_dir)
 
-        # 2) Initialize builder with our processed cache_dir explicitly
-        instance.__init__(*args, cache_dir=str(processed_cache_dir), **kwargs)
+        # 2) Initialize builder (handles config selection, calls _info())
+        instance.__init__(*args, **kwargs)
 
-        # 2b) Validate dataset SOURCE contract early.
+        # 3) Validate dataset SOURCE contract early.
         source = instance._source()
         if not isinstance(source, Mapping):
             raise TypeError(f"{cls.__name__}._source() must return a mapping.")
         cls._validate_source(source)
 
-        # 3) Explicitly tell HF to use our processed cache_dir for any dl_manager downloads
-        download_config = DownloadConfig(cache_dir=str(processed_cache_dir))
+        # 4) Get split generators (downloads raw files)
+        split_generators = instance._split_generators(dl_manager=None)
 
-        instance.download_and_prepare(
-            download_config=download_config,
-        )
+        # 5) For each split: check Arrow cache or generate + write
+        features = instance._dataset_info.features
+        splits_data = {}
 
-        # 4) Load the split from the same cache_dir
-        if split is None:
-            result = instance.as_dataset()
+        for sg in split_generators:
+            fname = cache_fingerprint(
+                cls.__name__,
+                str(cls.VERSION),
+                instance.config.name,
+                sg.name,
+            )
+            cache_path = instance._processed_cache_dir / fname
+
+            if cache_path.exists():
+                table = read_arrow_cache(cache_path)
+            else:
+                generator = instance._generate_examples(**sg.gen_kwargs)
+                table = write_arrow_cache(generator, features, cache_path)
+
+            splits_data[sg.name] = StableDataset(table, features, instance._dataset_info)
+
+        # 6) Return single split or dict
+        if split is not None:
+            if split not in splits_data:
+                available = list(splits_data.keys())
+                raise ValueError(f"Split '{split}' not found. Available: {available}")
+            result = splits_data[split]
         else:
-            result = instance.as_dataset(split=split)
+            result = StableDatasetDict(splits_data)
 
         # Expose cache locations on the returned dataset object for convenience.
-        # Note: DatasetDict may not allow attribute assignment; ignore if not supported.
         try:
             setattr(result, "_stable_datasets_processed_cache_dir", instance._processed_cache_dir)
         except Exception:

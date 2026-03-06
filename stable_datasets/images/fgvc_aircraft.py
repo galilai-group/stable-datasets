@@ -1,19 +1,20 @@
 import os
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
+from stable_datasets.splits import Split, SplitGenerator
 
 
 class FGVCAircraft(datasets.GeneratorBasedBuilder):
     """FGVC Aircraft Dataset."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="The FGVC Aircraft dataset for fine-grained visual categorization.",
-            features=datasets.Features(
-                {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}
+            features=Features(
+                {"image": ImageFeature(), "label": ClassLabel(names=self._labels())}
             ),
             supervised_keys=("image", "label"),
             homepage="https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/",
@@ -30,14 +31,14 @@ class FGVCAircraft(datasets.GeneratorBasedBuilder):
         )
         base_path = os.path.join(archive_path, "fgvc-aircraft-2013b", "data")
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN, gen_kwargs={"base_dir": base_path, "split_file": "images_variant_train.txt"}
+            SplitGenerator(
+                name=Split.TRAIN, gen_kwargs={"base_dir": base_path, "split_file": "images_variant_train.txt"}
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST, gen_kwargs={"base_dir": base_path, "split_file": "images_variant_test.txt"}
+            SplitGenerator(
+                name=Split.TEST, gen_kwargs={"base_dir": base_path, "split_file": "images_variant_test.txt"}
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION,
+            SplitGenerator(
+                name=Split.VALIDATION,
                 gen_kwargs={"base_dir": base_path, "split_file": "images_variant_val.txt"},
             ),
         ]
@@ -51,7 +52,7 @@ class FGVCAircraft(datasets.GeneratorBasedBuilder):
                 image_path = os.path.join(base_dir, "images", f"{image_id}.jpg")
                 if os.path.exists(image_path):
                     # Remove the bottom 20 pixels from the image to remove the copyright banner
-                    image = Image.open(image_path)
+                    image = PILImage.open(image_path)
                     cropped_image = image.crop((0, 0, image.width, image.height - 20))
                     yield (
                         idx,
