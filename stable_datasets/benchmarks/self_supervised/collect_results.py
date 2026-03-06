@@ -149,9 +149,16 @@ def pivot_table(df: pd.DataFrame, metric: str) -> pd.DataFrame:
     df = df.sort_values(metric, ascending=False).drop_duplicates(
         subset=["dataset", "method"], keep="first"
     )
-    return df.pivot_table(
+    numeric = df.pivot_table(
         index="dataset", columns="method", values=metric, aggfunc="max"
     )
+    # Row-wise average: mean across methods for each dataset
+    numeric["Average"] = numeric.mean(axis=1)
+    # Col-wise average: mean across datasets for each method
+    avg_row = numeric.drop(columns="Average").mean(axis=0)
+    avg_row["Average"] = numeric["Average"].mean()
+    numeric.loc["Average"] = avg_row
+    return numeric
 
 
 def pivot_table_with_epochs(df: pd.DataFrame, metric: str) -> pd.DataFrame:
@@ -178,6 +185,11 @@ def pivot_table_with_epochs(df: pd.DataFrame, metric: str) -> pd.DataFrame:
     epoch_col = f"{metric}_best_epoch"
     has_epoch = epoch_col in df.columns
 
+    # Numeric pivot used for computing averages in both branches
+    numeric = df.pivot_table(
+        index="dataset", columns="method", values=metric, aggfunc="max"
+    )
+
     if has_epoch:
         df["_display"] = df.apply(
             lambda r: f"{r[metric]:.4f} (ep. {int(r[epoch_col])})"
@@ -185,14 +197,25 @@ def pivot_table_with_epochs(df: pd.DataFrame, metric: str) -> pd.DataFrame:
             else (f"{r[metric]:.4f}" if pd.notna(r[metric]) else ""),
             axis=1,
         )
-        return df.pivot_table(
+        result = df.pivot_table(
             index="dataset", columns="method", values="_display", aggfunc="first"
         )
+        # Row-wise average column
+        result["Average"] = numeric.mean(axis=1).map(
+            lambda v: f"{v:.4f}" if pd.notna(v) else ""
+        )
+        # Col-wise average row
+        avg_row = numeric.mean(axis=0).map(lambda v: f"{v:.4f}" if pd.notna(v) else "")
+        avg_row["Average"] = f"{numeric.mean(axis=1).mean():.4f}"
+        result.loc["Average"] = avg_row
+        return result
 
     # Fallback: no epoch info, just show numeric values
-    return df.pivot_table(
-        index="dataset", columns="method", values=metric, aggfunc="max"
-    )
+    numeric["Average"] = numeric.mean(axis=1)
+    avg_row = numeric.drop(columns="Average").mean(axis=0)
+    avg_row["Average"] = numeric["Average"].mean()
+    numeric.loc["Average"] = avg_row
+    return numeric
 
 
 def main():
