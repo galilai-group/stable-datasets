@@ -1,16 +1,31 @@
 import os
+import zipfile
+from pathlib import Path
+
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, download
 
 
-
-class TinyImagenet(datasets.GeneratorBasedBuilder):
+class TinyImagenet(BaseDatasetBuilder):
     """
     Tiny ImageNet dataset for image classification tasks.
     It contains 200 classes with 500 training images, 50 validation images, and 50 test images per class.
     """
 
     VERSION = Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://www.kaggle.com/c/tiny-imagenet",
+        "citation": """@inproceedings{Le2015TinyIV,
+                          title={Tiny ImageNet Visual Recognition Challenge},
+                          author={Ya Le and Xuan S. Yang},
+                          year={2015}
+                        }""",
+        "assets": {
+            "archive": "http://cs231n.stanford.edu/tiny-imagenet-200.zip",
+        },
+    }
 
     def _info(self):
         return DatasetInfo(
@@ -21,36 +36,44 @@ class TinyImagenet(datasets.GeneratorBasedBuilder):
                 {"image": Image(), "label": ClassLabel(names=self._labels())}
             ),
             supervised_keys=("image", "label"),
-            homepage="https://www.kaggle.com/c/tiny-imagenet",
-            citation="""@inproceedings{Le2015TinyIV,
-                          title={Tiny ImageNet Visual Recognition Challenge},
-                          author={Ya Le and Xuan S. Yang},
-                          year={2015}
-                        }""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
             license="MIT License",
         )
 
-    def _split_generators(self, dl_manager):
-        url = "http://cs231n.stanford.edu/tiny-imagenet-200.zip"
-        archive_path = dl_manager.download_and_extract(url)
+    def _split_generators(self, dl_manager=None):
+        source = self._source()
+        archive_url = source["assets"]["archive"]
+        archive_path = download(archive_url, dest_folder=self._raw_download_dir)
+
+        # Extract the zip file
+        extract_dir = Path(self._raw_download_dir) / "tiny-imagenet-extracted"
+        if not extract_dir.exists():
+            extract_dir.mkdir(parents=True, exist_ok=True)
+            with zipfile.ZipFile(archive_path, "r") as zf:
+                zf.extractall(extract_dir)
+
+        base_path = str(extract_dir / "tiny-imagenet-200")
 
         return [
             SplitGenerator(
                 name=Split.TRAIN,
-                gen_kwargs={"archive_path": archive_path, "split": "train"},
+                gen_kwargs={"archive_path": base_path, "split": "train"},
             ),
             SplitGenerator(
                 name=Split.VALIDATION,
-                gen_kwargs={"archive_path": archive_path, "split": "val"},
+                gen_kwargs={"archive_path": base_path, "split": "val"},
             ),
         ]
 
     def _generate_examples(self, archive_path, split):
-        base_path = os.path.join(archive_path, "tiny-imagenet-200")
+        base_path = archive_path
 
         if split == "train":
             for label_dir in os.listdir(os.path.join(base_path, "train")):
                 class_path = os.path.join(base_path, "train", label_dir, "images")
+                if not os.path.isdir(class_path):
+                    continue
                 for image_file in os.listdir(class_path):
                     image_path = os.path.join(class_path, image_file)
                     yield image_file, {"image": image_path, "label": label_dir}

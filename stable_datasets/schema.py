@@ -12,10 +12,6 @@ from dataclasses import dataclass, field
 import pyarrow as pa
 
 
-# ---------------------------------------------------------------------------
-# Version
-# ---------------------------------------------------------------------------
-
 
 class Version:
     """Semantic version, replaces ``datasets.Version``."""
@@ -41,10 +37,6 @@ class Version:
     def __hash__(self) -> int:
         return hash((self.major, self.minor, self.patch))
 
-
-# ---------------------------------------------------------------------------
-# Feature types
-# ---------------------------------------------------------------------------
 
 
 class FeatureType:
@@ -167,10 +159,6 @@ class Array3D(FeatureType):
         return f"Array3D(shape={self.shape}, dtype='{self.dtype}')"
 
 
-# ---------------------------------------------------------------------------
-# Features container
-# ---------------------------------------------------------------------------
-
 
 class Features(dict):
     """Ordered dict of ``field_name -> FeatureType``.
@@ -187,10 +175,6 @@ class Features(dict):
         return pa.schema(fields)
 
 
-# ---------------------------------------------------------------------------
-# DatasetInfo
-# ---------------------------------------------------------------------------
-
 
 @dataclass
 class DatasetInfo:
@@ -203,10 +187,6 @@ class DatasetInfo:
     citation: str = ""
     license: str = ""
 
-
-# ---------------------------------------------------------------------------
-# BuilderConfig
-# ---------------------------------------------------------------------------
 
 
 @dataclass

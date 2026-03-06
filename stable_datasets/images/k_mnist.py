@@ -1,7 +1,7 @@
 import numpy as np
 
-from stable_datasets.utils import (
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.utils import (
     BaseDatasetBuilder,
     _default_dest_folder,
     bulk_download,

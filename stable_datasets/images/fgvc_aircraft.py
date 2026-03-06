@@ -1,14 +1,30 @@
 import os
+import tarfile
+from pathlib import Path
 
 from PIL import Image as PILImage
+
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, download
 
 
-class FGVCAircraft(datasets.GeneratorBasedBuilder):
-    """FGVC Aircraft Dataset."""
+class FGVCAircraft(BaseDatasetBuilder):
+    """Fine-Grained Visual Classification of Aircraft (FGVC-Aircraft) Dataset."""
 
     VERSION = Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/",
+        "citation": """@article{maji2013fgvc,
+                         title={Fine-Grained Visual Classification of Aircraft},
+                         author={Maji, Subhransu and Rahtu, Esa and Kannala, Juho and Blaschko, Matthew and Vedaldi, Andrea},
+                         journal={arXiv preprint arXiv:1306.5151},
+                         year={2013}}""",
+        "assets": {
+            "archive": "https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz",
+        },
+    }
 
     def _info(self):
         return DatasetInfo(
@@ -17,19 +33,23 @@ class FGVCAircraft(datasets.GeneratorBasedBuilder):
                 {"image": ImageFeature(), "label": ClassLabel(names=self._labels())}
             ),
             supervised_keys=("image", "label"),
-            homepage="https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/",
-            citation="""@article{maji2013fgvc,
-                         title={Fine-Grained Visual Classification of Aircraft},
-                         author={Maji, Subhransu and Rahtu, Esa and Kannala, Juho and Blaschko, Matthew and Vedaldi, Andrea},
-                         journal={arXiv preprint arXiv:1306.5151},
-                         year={2013}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        archive_path = dl_manager.download_and_extract(
-            "https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz"
-        )
-        base_path = os.path.join(archive_path, "fgvc-aircraft-2013b", "data")
+    def _split_generators(self, dl_manager=None):
+        source = self._source()
+        archive_url = source["assets"]["archive"]
+        archive_path = download(archive_url, dest_folder=self._raw_download_dir)
+
+        # Extract the tarball
+        extract_dir = Path(self._raw_download_dir) / "fgvc-aircraft-extracted"
+        if not extract_dir.exists():
+            extract_dir.mkdir(parents=True, exist_ok=True)
+            with tarfile.open(archive_path, "r:gz") as tar:
+                tar.extractall(extract_dir)
+
+        base_path = os.path.join(extract_dir, "fgvc-aircraft-2013b", "data")
         return [
             SplitGenerator(
                 name=Split.TRAIN, gen_kwargs={"base_dir": base_path, "split_file": "images_variant_train.txt"}
@@ -51,16 +71,15 @@ class FGVCAircraft(datasets.GeneratorBasedBuilder):
                 label = parts[1] if len(parts) > 1 else None
                 image_path = os.path.join(base_dir, "images", f"{image_id}.jpg")
                 if os.path.exists(image_path):
-                    # Remove the bottom 20 pixels from the image to remove the copyright banner
-                    image = PILImage.open(image_path)
-                    cropped_image = image.crop((0, 0, image.width, image.height - 20))
-                    yield (
-                        idx,
-                        {
-                            "image": cropped_image,
-                            "label": label,
-                        },
-                    )
+                    with PILImage.open(image_path) as image:
+                        cropped_image = image.crop((0, 0, image.width, image.height - 20))
+                        yield (
+                            idx,
+                            {
+                                "image": cropped_image,
+                                "label": label,
+                            },
+                        )
 
     @staticmethod
     def _labels():

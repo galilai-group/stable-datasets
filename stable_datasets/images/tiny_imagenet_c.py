@@ -1,15 +1,30 @@
 import os
+import tarfile
+from pathlib import Path
+
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Value, Version
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, download
 
 
-
-class TinyImagenetC(datasets.GeneratorBasedBuilder):
+class TinyImagenetC(BaseDatasetBuilder):
     """
     Tiny ImageNet-C dataset for image classification tasks with corruptions applied.
     """
 
     VERSION = Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://zenodo.org/records/2536630",
+        "citation": """@article{hendrycks2019robustness,
+                        title={Benchmarking Neural Network Robustness to Common Corruptions and Perturbations},
+                        author={Dan Hendrycks and Thomas Dietterich},
+                        journal={Proceedings of the International Conference on Learning Representations},
+                        year={2019}}""",
+        "assets": {
+            "test": "https://zenodo.org/records/2536630/files/Tiny-ImageNet-C.tar?download=1",
+        },
+    }
 
     def _info(self):
         return DatasetInfo(
@@ -24,28 +39,34 @@ class TinyImagenetC(datasets.GeneratorBasedBuilder):
                 }
             ),
             supervised_keys=("image", "label"),
-            homepage="https://zenodo.org/records/2536630",
-            citation="""@article{hendrycks2019robustness,
-                        title={Benchmarking Neural Network Robustness to Common Corruptions and Perturbations},
-                        author={Dan Hendrycks and Thomas Dietterich},
-                        journal={Proceedings of the International Conference on Learning Representations},
-                        year={2019}}""",
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
             license="CC BY 4.0",
         )
 
-    def _split_generators(self, dl_manager):
-        url = "https://zenodo.org/records/2536630/files/Tiny-ImageNet-C.tar?download=1"
-        archive_path = dl_manager.download_and_extract(url)
+    def _split_generators(self, dl_manager=None):
+        source = self._source()
+        archive_url = source["assets"]["test"]
+        archive_path = download(archive_url, dest_folder=self._raw_download_dir)
+
+        # Extract the tar file
+        extract_dir = Path(self._raw_download_dir) / "tiny-imagenet-c-extracted"
+        if not extract_dir.exists():
+            extract_dir.mkdir(parents=True, exist_ok=True)
+            with tarfile.open(archive_path, "r") as tar:
+                tar.extractall(extract_dir)
+
+        base_path = str(extract_dir / "Tiny-ImageNet-C")
 
         return [
             SplitGenerator(
                 name=Split.TEST,
-                gen_kwargs={"archive_path": archive_path},
+                gen_kwargs={"archive_path": base_path},
             ),
         ]
 
     def _generate_examples(self, archive_path):
-        base_path = os.path.join(archive_path, "Tiny-ImageNet-C")
+        base_path = archive_path
         for root, _, files in os.walk(base_path):
             for file_name in files:
                 if file_name.endswith(".JPEG"):

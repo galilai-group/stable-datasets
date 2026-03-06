@@ -21,10 +21,6 @@ from PIL import Image as PILImage
 from .schema import Array3D, Features, Image, Sequence, Value, Video
 
 
-# ---------------------------------------------------------------------------
-# Example encoding
-# ---------------------------------------------------------------------------
-
 
 def _encode_image(img) -> bytes | None:
     """Encode a PIL Image, numpy array, or file path to PNG bytes."""
@@ -82,10 +78,6 @@ def encode_example(example: dict, features: Features) -> dict:
     return encoded
 
 
-# ---------------------------------------------------------------------------
-# Cache fingerprint
-# ---------------------------------------------------------------------------
-
 
 def cache_fingerprint(cls_name: str, version: str, config_name: str, split: str) -> str:
     """Deterministic cache filename for a dataset variant + split."""
@@ -93,10 +85,6 @@ def cache_fingerprint(cls_name: str, version: str, config_name: str, split: str)
     digest = hashlib.sha256(key.encode()).hexdigest()[:16]
     return f"{cls_name.lower()}_{config_name}_{split}_{digest}.arrow"
 
-
-# ---------------------------------------------------------------------------
-# Arrow IPC write / read
-# ---------------------------------------------------------------------------
 
 
 def write_arrow_cache(

@@ -10,7 +10,6 @@ from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.schema import Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
-from stable_datasets.splits import Split, SplitGenerator
 
 
 class Flowers102(BaseDatasetBuilder):

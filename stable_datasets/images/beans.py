@@ -1,14 +1,31 @@
 import zipfile
 
 from PIL import Image as PILImage
+
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image as ImageFeature, Version
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
-class Beans(datasets.GeneratorBasedBuilder):
+class Beans(BaseDatasetBuilder):
     """Bean disease dataset for classification of three classes: Angular Leaf Spot, Bean Rust, and Healthy leaves."""
 
     VERSION = Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://github.com/AI-Lab-Makerere/ibean/",
+        "citation": """@misc{makerere2020beans,
+                         author = "{Makerere AI Lab}",
+                         title = "{Bean Disease Dataset}",
+                         year = "2020",
+                         month = "January",
+                         url = "https://github.com/AI-Lab-Makerere/ibean/"}""",
+        "assets": {
+            "train": "https://storage.googleapis.com/ibeans/train.zip",
+            "test": "https://storage.googleapis.com/ibeans/test.zip",
+            "validation": "https://storage.googleapis.com/ibeans/validation.zip",
+        },
+    }
 
     def _info(self):
         return DatasetInfo(
@@ -22,36 +39,22 @@ class Beans(datasets.GeneratorBasedBuilder):
                 }
             ),
             supervised_keys=("image", "label"),
+            homepage=self.SOURCE["homepage"],
             license="MIT License",
-            citation="""@misc{makerere2020beans,
-                         author = "{Makerere AI Lab}",
-                         title = "{Bean Disease Dataset}",
-                         year = "2020",
-                         month = "January",
-                         url = "https://github.com/AI-Lab-Makerere/ibean/"}""",
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        urls = {
-            "train": "https://storage.googleapis.com/ibeans/train.zip",
-            "test": "https://storage.googleapis.com/ibeans/test.zip",
-            "validation": "https://storage.googleapis.com/ibeans/validation.zip",
-        }
-        downloaded_files = dl_manager.download(urls)
+    def _split_generators(self, dl_manager=None):
+        source = self._source()
+        assets = source["assets"]
+        urls = list(assets.values())
+        local_paths = bulk_download(urls, dest_folder=self._raw_download_dir)
+        path_map = dict(zip(assets.keys(), local_paths))
 
         return [
-            SplitGenerator(
-                name=Split.TRAIN,
-                gen_kwargs={"zip_path": downloaded_files["train"]},
-            ),
-            SplitGenerator(
-                name=Split.TEST,
-                gen_kwargs={"zip_path": downloaded_files["test"]},
-            ),
-            SplitGenerator(
-                name=Split.VALIDATION,
-                gen_kwargs={"zip_path": downloaded_files["validation"]},
-            ),
+            SplitGenerator(name=Split.TRAIN, gen_kwargs={"zip_path": path_map["train"]}),
+            SplitGenerator(name=Split.TEST, gen_kwargs={"zip_path": path_map["test"]}),
+            SplitGenerator(name=Split.VALIDATION, gen_kwargs={"zip_path": path_map["validation"]}),
         ]
 
     def _generate_examples(self, zip_path):
