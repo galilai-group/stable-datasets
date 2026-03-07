@@ -29,7 +29,7 @@ from .schema import BuilderConfig, Version
 from .splits import Split, SplitGenerator
 
 
-DEFAULT_CACHE_DIR = "~/.stable_datasets/"
+DEFAULT_CACHE_DIR = "/workspace/.stable-datasets/"
 
 
 def _default_dest_folder() -> Path:
@@ -280,7 +280,12 @@ class BaseDatasetBuilder:
                 generator = instance._generate_examples(**sg.gen_kwargs)
                 table = write_arrow_cache(generator, features, cache_path)
 
-            splits_data[sg.name] = StableDataset(table, features, instance._dataset_info)
+            splits_data[sg.name] = StableDataset(
+                path=cache_path,
+                features=features,
+                info=instance._dataset_info,
+                num_rows=table.num_rows,
+            )
 
         # 6) Return single split or dict
         if split is not None:
