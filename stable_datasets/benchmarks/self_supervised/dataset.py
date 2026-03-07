@@ -69,7 +69,7 @@ DATASET_KWARGS = {
     "medmnist": {"config_name": "pneumoniamnist"},
 }
 
-CACHE_DIR_DEFAULT = "/mnt/data/sami/stable-datasets/.cached_224"
+CACHE_DIR_DEFAULT = "/workspace/.stable-datasets/.cached_224"
 
 
 # =============================================================================
