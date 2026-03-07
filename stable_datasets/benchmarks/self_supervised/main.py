@@ -251,13 +251,13 @@ def main(cfg: DictConfig) -> None:
         default_root_dir=output_dir,
     )
 
-    # Run
-    manager = spt.Manager(trainer=trainer, module=module, data=data)
-    manager()
-
-    # Close wandb run so the next multirun job gets a fresh run
-    if cfg.wandb.enabled and not smoke_test:
-        wandb.finish()
+    # Run — ensure wandb is always cleaned up, even on crash
+    try:
+        manager = spt.Manager(trainer=trainer, module=module, data=data)
+        manager()
+    finally:
+        if cfg.wandb.enabled and not smoke_test:
+            wandb.finish()
 
 
 if __name__ == "__main__":
