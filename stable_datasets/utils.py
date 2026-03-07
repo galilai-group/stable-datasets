@@ -26,7 +26,7 @@ from rich.progress import (
 from tqdm import tqdm
 
 
-DEFAULT_CACHE_DIR = "~/.stable_datasets/"
+DEFAULT_CACHE_DIR = "/workspace/.stable-datasets/"
 
 
 def _default_dest_folder() -> Path:
@@ -199,7 +199,7 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
 
         Returns:
             Union[datasets.Dataset, datasets.DatasetDict]: The loaded dataset (single split)
-                or a DatasetDict (all splits).
+                or a DatasetDict (all splits).Try
         """
         instance = super().__new__(cls)
 

@@ -1,0 +1,10 @@
+defaults:
+  - config
+  - override hydra/launcher: joblib
+
+# Round-robin assign each job to a different GPU
+distribute_gpus: true
+
+hydra:
+  launcher:
+    n_jobs: ${oc.env:NUM_GPUS,8}
