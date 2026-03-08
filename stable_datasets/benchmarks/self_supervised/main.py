@@ -242,6 +242,7 @@ def main(cfg: DictConfig) -> None:
     trainer = pl.Trainer(
         max_epochs=1 if smoke_test else cfg.training.max_epochs,
         precision=cfg.training.precision,
+        accumulate_grad_batches=cfg.training.get("accumulate_grad_batches", 1),
         callbacks=callbacks,
         logger=logger,
         num_sanity_val_steps=0,
