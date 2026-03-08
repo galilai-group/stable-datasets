@@ -179,7 +179,9 @@ class StableDataset:
             if isinstance(feat, Image):
                 img_bytes = raw.as_py()
                 if img_bytes is not None:
-                    result[col_name] = PILImage.open(io.BytesIO(img_bytes))
+                    img = PILImage.open(io.BytesIO(img_bytes))
+                    img.load()  # Eagerly decode pixels so pickle doesn't pay decode cost
+                    result[col_name] = img
                 else:
                     result[col_name] = None
             elif isinstance(feat, Array3D):
