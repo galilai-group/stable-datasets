@@ -192,9 +192,9 @@ def pivot_table_with_epochs(df: pd.DataFrame, metric: str) -> pd.DataFrame:
 
     if has_epoch:
         df["_display"] = df.apply(
-            lambda r: f"{r[metric]:.4f} (ep. {int(r[epoch_col])})"
+            lambda r: f"{r[metric]*100:.1f}% (ep. {int(r[epoch_col])})"
             if pd.notna(r.get(epoch_col)) and pd.notna(r[metric])
-            else (f"{r[metric]:.4f}" if pd.notna(r[metric]) else ""),
+            else (f"{r[metric]*100:.1f}%" if pd.notna(r[metric]) else ""),
             axis=1,
         )
         result = df.pivot_table(
@@ -202,11 +202,11 @@ def pivot_table_with_epochs(df: pd.DataFrame, metric: str) -> pd.DataFrame:
         )
         # Row-wise average column
         result["Average"] = numeric.mean(axis=1).map(
-            lambda v: f"{v:.4f}" if pd.notna(v) else ""
+            lambda v: f"{v*100:.1f}%" if pd.notna(v) else ""
         )
         # Col-wise average row
-        avg_row = numeric.mean(axis=0).map(lambda v: f"{v:.4f}" if pd.notna(v) else "")
-        avg_row["Average"] = f"{numeric.mean(axis=1).mean():.4f}"
+        avg_row = numeric.mean(axis=0).map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "")
+        avg_row["Average"] = f"{numeric.mean(axis=1).mean()*100:.1f}%"
         result.loc["Average"] = avg_row
         return result
 
@@ -216,6 +216,79 @@ def pivot_table_with_epochs(df: pd.DataFrame, metric: str) -> pd.DataFrame:
     avg_row["Average"] = numeric["Average"].mean()
     numeric.loc["Average"] = avg_row
     return numeric
+
+
+def _format_latex(table: pd.DataFrame) -> str:
+    """Format a pivot table as a booktabs LaTeX table.
+
+    Columns are expected to be ``"model / backbone"`` strings plus an
+    ``"Average"`` column.  The backbone is extracted into a
+    ``\\multicolumn`` header row.
+    """
+    pct = table * 100
+
+    # Separate method columns from the Average column
+    method_cols = [c for c in pct.columns if c != "Average"]
+    # Parse model/backbone pairs
+    models = []
+    backbones = set()
+    for col in method_cols:
+        parts = col.split(" / ", 1)
+        models.append(parts[0].strip())
+        if len(parts) > 1:
+            backbones.add(parts[1].strip())
+    backbone_label = next(iter(backbones)) if len(backbones) == 1 else ", ".join(sorted(backbones))
+
+    n_methods = len(models)
+    n_cols = n_methods + 2  # dataset + methods + avg
+
+    # Dataset rows (exclude "Average")
+    datasets = [idx for idx in pct.index if idx != "Average"]
+
+    def _fmt(val):
+        if pd.isna(val):
+            return "---"
+        return f"{val:.1f}"
+
+    lines = []
+    lines.append("\\begin{tabular}{l " + " ".join(["c"] * (n_methods + 1)) + "}")
+    lines.append("\\toprule")
+    lines.append(
+        f" & \\multicolumn{{{n_methods}}}{{c}}"
+        f"{{\\textbf{{Method ({backbone_label})}}}} & \\\\"
+    )
+    lines.append(f"\\cmidrule(lr){{2-{n_methods + 1}}}")
+
+    # Header row
+    header = "\\textbf{Dataset}"
+    for m in models:
+        header += f" & {m}"
+    header += " & \\textbf{Avg.} \\\\"
+    lines.append(header)
+    lines.append("\\midrule")
+
+    # Data rows
+    for ds in datasets:
+        row = ds
+        for col in method_cols:
+            row += f" & {_fmt(pct.loc[ds, col])}"
+        row += f" & {_fmt(pct.loc[ds, 'Average'])}"
+        row += " \\\\"
+        lines.append(row)
+
+    # Average row
+    lines.append("\\midrule")
+    avg_row = "\\textbf{Average}"
+    for col in method_cols:
+        avg_row += f" & {_fmt(pct.loc['Average', col])}"
+    avg_row += f" & {_fmt(pct.loc['Average', 'Average'])}"
+    avg_row += " \\\\"
+    lines.append(avg_row)
+
+    lines.append("\\bottomrule")
+    lines.append("\\end{tabular}")
+
+    return "\n".join(lines) + "\n"
 
 
 def main():
@@ -280,7 +353,7 @@ def main():
         if table is None:
             log.warning("Cannot produce LaTeX: pivot table requires model, backbone, and dataset columns.")
         else:
-            latex_str = table.to_latex(float_format="%.4f", bold_rows=True)
+            latex_str = _format_latex(table)
             with open(args.latex, "w") as f:
                 f.write(latex_str)
             print(f"LaTeX table saved to {args.latex}")

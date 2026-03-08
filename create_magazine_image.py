@@ -23,6 +23,7 @@ Usage
 from __future__ import annotations
 
 import argparse
+import itertools
 import math
 import sys
 from pathlib import Path
@@ -150,6 +151,14 @@ DATASET_KWARGS: dict[str, dict] = {
     "MedMNIST": {"config_name": "pathmnist"},  # 2-D, colourful path-histology
 }
 
+# HuggingFace Hub fallbacks for datasets that are too large or fail to download.
+# Maps dataset name -> (hub_id, image_key) for streaming a single sample.
+HF_STREAMING_FALLBACKS: dict[str, tuple[str, str]] = {
+    "KMNIST":       ("tanganke/kmnist", "image"),
+    "Shapes3D":     ("eurecom-ds/shapes3d", "image"),
+    "TinyImagenet": ("Maysee/tiny-imagenet", "image"),
+}
+
 # ---------------------------------------------------------------------------
 # Modality render functions  (sample dict → PIL.Image)
 # ---------------------------------------------------------------------------
@@ -255,6 +264,35 @@ def standardize(img: Image.Image, size: int = 128) -> Image.Image:
 # Per-dataset loading + rendering
 # ---------------------------------------------------------------------------
 
+def _try_streaming_fallback(
+    dataset_name: str,
+    sample_idx: int,
+    renderer,
+    verbose: bool = False,
+) -> Image.Image | None:
+    """Try to stream a single sample from HuggingFace Hub as a fallback."""
+    fallback = HF_STREAMING_FALLBACKS.get(dataset_name)
+    if fallback is None:
+        return None
+
+    hub_id, image_key = fallback
+    try:
+        import datasets
+        print(f"(streaming from {hub_id}) ", end="", flush=True)
+        ds = datasets.load_dataset(hub_id, split="train", streaming=True)
+        # Skip to sample_idx by consuming the iterator
+        sample = next(itertools.islice(ds, sample_idx, sample_idx + 1))
+        # Build a sample dict with "image" key for the renderer
+        img = sample[image_key]
+        return _to_pil(img).convert("RGB")
+    except Exception as exc:
+        print(f"  [STREAM-FAIL] {dataset_name}: {type(exc).__name__}: {exc}", file=sys.stderr)
+        if verbose:
+            import traceback
+            traceback.print_exc()
+        return None
+
+
 def load_and_render(
     dataset_name: str,
     sample_idx: int = 42,
@@ -286,6 +324,10 @@ def load_and_render(
             continue
 
     if ds is None:
+        # Try HuggingFace Hub streaming as fallback
+        result = _try_streaming_fallback(dataset_name, sample_idx, renderer, verbose)
+        if result is not None:
+            return result
         print(f"  [SKIP] {dataset_name}: could not load any split")
         return None
 
@@ -298,6 +340,10 @@ def load_and_render(
         if verbose:
             import traceback
             traceback.print_exc()
+        # Try streaming fallback on render failure too
+        result = _try_streaming_fallback(dataset_name, sample_idx, renderer, verbose)
+        if result is not None:
+            return result
         return None
 
 # ---------------------------------------------------------------------------

@@ -21,6 +21,7 @@ training:
   max_epochs: 50
   precision: "16-mixed"
   batch_size: 256
+  accumulate_grad_batches: 1
   num_workers: 8
   prefetch_factor: 4
 
