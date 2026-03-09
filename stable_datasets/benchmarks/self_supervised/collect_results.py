@@ -218,6 +218,57 @@ def pivot_table_with_epochs(df: pd.DataFrame, metric: str) -> pd.DataFrame:
     return numeric
 
 
+_DATASET_DISPLAY_NAMES: dict[str, str] = {
+    "arabiccharacters": "Arabic Characters",
+    "arabicdigits": "Arabic Digits",
+    "awa2": "AWA2",
+    "beans": "Beans",
+    "cifar10": "CIFAR-10",
+    "cifar100": "CIFAR-100",
+    "country211": "Country-211",
+    "cub200": "CUB-200",
+    "dtd": "DTD",
+    "emnist": "EMNIST",
+    "facepointing": "Face Pointing",
+    "fashionmnist": "FashionMNIST",
+    "fgvcaircraft": "FGVC Aircraft",
+    "flowers102": "Flowers-102",
+    "food101": "Food-101",
+    "galaxy10decal": "Galaxy10 DECal",
+    "hasyv2": "HASYv2",
+    "imagenet": "ImageNet",
+    "kmnist": "KMNIST",
+    "linnaeus5": "Linnaeus 5",
+    "medmnist": "MedMNIST",
+    "notmnist": "NotMNIST",
+    "rockpaperscissor": "Rock-Paper-Scissors",
+    "stl10": "STL-10",
+    "svhn": "SVHN",
+    "tinyimagenet": "Tiny ImageNet",
+}
+
+_BACKBONE_DISPLAY_NAMES: dict[str, str] = {
+    "vit_small": "ViT-Small",
+    "vit_base": "ViT-Base",
+    "resnet18": "ResNet-18",
+    "resnet50": "ResNet-50",
+}
+
+_MODEL_DISPLAY_NAMES: dict[str, str] = {
+    "simclr": "SimCLR",
+    "dino": "DINO",
+    "mae": "MAE",
+    "lejepa": "LeJEPA",
+    "nnclr": "NNCLR",
+    "barlow_twins": "Barlow Twins",
+}
+
+
+def _display_name(raw: str, mapping: dict[str, str]) -> str:
+    """Return a human-readable display name, falling back to *raw*."""
+    return mapping.get(raw, raw)
+
+
 def _format_latex(table: pd.DataFrame) -> str:
     """Format a pivot table as a booktabs LaTeX table.
 
@@ -237,10 +288,14 @@ def _format_latex(table: pd.DataFrame) -> str:
         models.append(parts[0].strip())
         if len(parts) > 1:
             backbones.add(parts[1].strip())
-    backbone_label = next(iter(backbones)) if len(backbones) == 1 else ", ".join(sorted(backbones))
+    backbone_label = (
+        _display_name(next(iter(backbones)), _BACKBONE_DISPLAY_NAMES)
+        if len(backbones) == 1
+        else ", ".join(_display_name(b, _BACKBONE_DISPLAY_NAMES) for b in sorted(backbones))
+    )
+    model_labels = [_display_name(m, _MODEL_DISPLAY_NAMES) for m in models]
 
     n_methods = len(models)
-    n_cols = n_methods + 2  # dataset + methods + avg
 
     # Dataset rows (exclude "Average")
     datasets = [idx for idx in pct.index if idx != "Average"]
@@ -261,7 +316,7 @@ def _format_latex(table: pd.DataFrame) -> str:
 
     # Header row
     header = "\\textbf{Dataset}"
-    for m in models:
+    for m in model_labels:
         header += f" & {m}"
     header += " & \\textbf{Avg.} \\\\"
     lines.append(header)
@@ -269,7 +324,8 @@ def _format_latex(table: pd.DataFrame) -> str:
 
     # Data rows
     for ds in datasets:
-        row = ds
+        ds_label = _display_name(ds, _DATASET_DISPLAY_NAMES)
+        row = ds_label
         for col in method_cols:
             row += f" & {_fmt(pct.loc[ds, col])}"
         row += f" & {_fmt(pct.loc[ds, 'Average'])}"
