@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 from PIL import PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features,  Value, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
