@@ -70,6 +70,9 @@ DATASET_LABELS: dict[str, str] = {
     "SmallNORB":        "SmallNORB",
     "STL10":            "STL-10",
     "SVHN":             "SVHN",
+    "ImageNet1K":       "ImageNet-1K",
+    "ImageNet100":      "ImageNet-100",
+    "ImageNet10":       "ImageNet-10",
     "TinyImagenet":     "TinyImgNet",
     "TinyImagenetC":    "TinyImgNet-C",
 }
@@ -81,6 +84,7 @@ DATASET_ORDER: list[str] = [
     # Standard RGB benchmarks
     "CIFAR10", "CIFAR100", "CIFAR10C", "CIFAR100C",
     "STL10", "SVHN", "TinyImagenet", "TinyImagenetC",
+    "ImageNet1K", "ImageNet100", "ImageNet10",
     # Natural images: scenes / plants / food / textures
     "Food101", "Flowers102", "Beans", "DTD",
     "Linnaeus5", "Country211", "Galaxy10Decal", "RockPaperScissor",
@@ -120,6 +124,9 @@ DATASET_MODALITY: dict[str, str] = {
     "Flowers102":       "image_rgb",
     "Food101":          "image_rgb",
     "Galaxy10Decal":    "image_rgb",
+    "ImageNet1K":       "image_rgb",
+    "ImageNet100":      "image_rgb",
+    "ImageNet10":       "image_rgb",
     "Linnaeus5":        "image_rgb",
     "RockPaperScissor": "image_rgb",
     "Shapes3D":         "image_rgb",
@@ -147,17 +154,25 @@ DATASET_MODALITY: dict[str, str] = {
 
 # Extra constructor kwargs for datasets that require a config name
 DATASET_KWARGS: dict[str, dict] = {
-    "EMNIST":   {"config_name": "balanced"},
-    "MedMNIST": {"config_name": "pathmnist"},  # 2-D, colourful path-histology
+    "EMNIST":     {"config_name": "balanced"},
+    "ImageNet1K": {"streaming": True},
+    "ImageNet100":{"streaming": True},
+    "ImageNet10": {"streaming": True},
+    "MedMNIST":   {"config_name": "pathmnist"},  # 2-D, colourful path-histology
 }
 
 # HuggingFace Hub fallbacks for datasets that are too large or fail to download.
 # Maps dataset name -> (hub_id, image_key) for streaming a single sample.
 HF_STREAMING_FALLBACKS: dict[str, tuple[str, str]] = {
+    "ImageNet1K":   ("ILSVRC/imagenet-1k", "image"),
+    "ImageNet100":  ("clane9/imagenet-100", "image"),
     "KMNIST":       ("tanganke/kmnist", "image"),
     "Shapes3D":     ("eurecom-ds/shapes3d", "image"),
     "TinyImagenet": ("Maysee/tiny-imagenet", "image"),
 }
+
+# Datasets that should prefer HF streaming over local download (to avoid huge downloads)
+PREFER_STREAMING: set[str] = {"ImageNet1K", "ImageNet100"}
 
 # ---------------------------------------------------------------------------
 # Modality render functions  (sample dict → PIL.Image)
@@ -252,13 +267,10 @@ MODALITY_RENDERERS: dict[str, callable] = {
 # Standardisation: resize + white-pad to a square canvas
 # ---------------------------------------------------------------------------
 
-def standardize(img: Image.Image, size: int = 128) -> Image.Image:
-    """Fit *img* inside a *size* × *size* white square, centred."""
+def standardize(img: Image.Image, size: int = 224) -> Image.Image:
+    """Resize *img* to *size* × *size*, scaling up small images with LANCZOS."""
     img = img.convert("RGB")
-    img.thumbnail((size, size), Image.LANCZOS)
-    canvas = Image.new("RGB", (size, size), (255, 255, 255))
-    canvas.paste(img, ((size - img.width) // 2, (size - img.height) // 2))
-    return canvas
+    return img.resize((size, size), Image.LANCZOS)
 
 # ---------------------------------------------------------------------------
 # Per-dataset loading + rendering
@@ -307,12 +319,24 @@ def load_and_render(
 
     dataset_cls = getattr(sds_images, dataset_name, None)
     if dataset_cls is None:
+        # Not available locally — try HuggingFace streaming
+        modality = DATASET_MODALITY.get(dataset_name, "image_rgb")
+        renderer = MODALITY_RENDERERS[modality]
+        result = _try_streaming_fallback(dataset_name, sample_idx, renderer, verbose)
+        if result is not None:
+            return result
         print(f"  [SKIP] {dataset_name}: not found in stable_datasets.images")
         return None
 
     extra_kwargs = DATASET_KWARGS.get(dataset_name, {})
     modality = DATASET_MODALITY.get(dataset_name, "image_rgb")
     renderer = MODALITY_RENDERERS[modality]
+
+    # For very large datasets, prefer HF streaming to avoid huge downloads
+    if dataset_name in PREFER_STREAMING:
+        result = _try_streaming_fallback(dataset_name, sample_idx, renderer, verbose)
+        if result is not None:
+            return result
 
     # Try splits in priority order
     ds = None
@@ -332,8 +356,12 @@ def load_and_render(
         return None
 
     try:
-        idx = sample_idx % len(ds)
-        sample = ds[idx]
+        # Streaming datasets are iterable-only (no len / __getitem__)
+        if hasattr(ds, '__getitem__') and hasattr(ds, '__len__'):
+            idx = sample_idx % len(ds)
+            sample = ds[idx]
+        else:
+            sample = next(itertools.islice(ds, sample_idx, sample_idx + 1))
         return renderer(sample)
     except Exception as exc:
         print(f"  [FAIL] {dataset_name}: {type(exc).__name__}: {exc}", file=sys.stderr)
