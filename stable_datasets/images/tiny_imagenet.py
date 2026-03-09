@@ -6,6 +6,7 @@ from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
+
 class TinyImagenet(BaseDatasetBuilder):
     """
     Tiny ImageNet dataset for image classification tasks.
@@ -36,9 +37,7 @@ class TinyImagenet(BaseDatasetBuilder):
             description="""In Tiny ImageNet, there are 100,000 images divided up into 200 classes. Every image in the
             dataset is downsized to a 64×64 colored image. For every class, there are 500 training images, 50 validating
             images, and 50 test images.""",
-            features=Features(
-                {"image": ImageFeature(), "label": ClassLabel(names=self._labels())}
-            ),
+            features=Features({"image": ImageFeature(), "label": ClassLabel(names=self._labels())}),
             supervised_keys=("image", "label"),
             homepage=source["homepage"],
             citation=source["citation"],
