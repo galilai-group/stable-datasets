@@ -2,7 +2,7 @@ import tarfile
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import BuilderConfig, ClassLabel, DatasetInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -26,6 +26,12 @@ class FGVCAircraft(BaseDatasetBuilder):
     """
 
     VERSION = Version("1.0.0")
+    BUILDER_CONFIGS = [
+        BuilderConfig(name="variant", description="100 aircraft model variants (finest granularity)"),
+        BuilderConfig(name="family", description="70 aircraft families (medium granularity)"),
+        BuilderConfig(name="manufacturer", description="30 aircraft manufacturers (coarsest granularity)"),
+    ]
+    DEFAULT_CONFIG_NAME = "variant"
 
     SOURCE = {
         "homepage": "https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/",
@@ -45,33 +51,18 @@ class FGVCAircraft(BaseDatasetBuilder):
         "license": "Unknown",
     }
 
-    def __init__(self, config_name="variant", **kwargs):
-        """
-        Initialize FGVC Aircraft dataset.
-
-        Args:
-            config_name: str, one of "variant", "family", or "manufacturer"
-                - variant: 100 fine-grained aircraft model variants (default)
-                - family: 70 aircraft families
-                - manufacturer: 30 aircraft manufacturers
-            **kwargs: Additional arguments passed to BaseDatasetBuilder
-        """
-        if config_name not in ["variant", "family", "manufacturer"]:
-            raise ValueError(f"config_name must be one of 'variant', 'family', or 'manufacturer', got '{config_name}'")
-        self.config_name = config_name
-        super().__init__(**kwargs)
-
     def _info(self):
-        # Determine class labels based on config name
-        if self.config_name == "variant":
+        config_name = self.config.name
+        if config_name == "variant":
             class_names = self._variant_labels()
-            description = "100 aircraft model variants (finest granularity)"
-        elif self.config_name == "family":
+        elif config_name == "family":
             class_names = self._family_labels()
-            description = "70 aircraft families (medium granularity)"
-        elif self.config_name == "manufacturer":
+        elif config_name == "manufacturer":
             class_names = self._manufacturer_labels()
-            description = "30 aircraft manufacturers (coarsest granularity)"
+        else:
+            raise ValueError(f"Unknown config '{config_name}'. Expected one of: variant, family, manufacturer.")
+
+        description = self.config.description
 
         return DatasetInfo(
             description=f"""Fine-Grained Visual Classification of Aircraft (FGVC-Aircraft) dataset.
@@ -95,10 +86,11 @@ class FGVCAircraft(BaseDatasetBuilder):
         """Generate examples from the tar.gz archive."""
         # Map validation to val for internal tar.gz file structure
         internal_split = "val" if split == "validation" else split
+        config_name = self.config.name
 
         with tarfile.open(data_path, "r:gz") as tar:
             # Read only the label file we need based on config_name
-            label_file = f"fgvc-aircraft-2013b/data/images_{self.config_name}_{internal_split}.txt"
+            label_file = f"fgvc-aircraft-2013b/data/images_{config_name}_{internal_split}.txt"
 
             # Load annotations
             label_dict = {}
