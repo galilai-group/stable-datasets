@@ -4,8 +4,7 @@ from PIL import Image as PILImage
 
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
-from stable_datasets.splits import Split, SplitGenerator
-from stable_datasets.utils import BaseDatasetBuilder, bulk_download
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class Beans(BaseDatasetBuilder):
@@ -13,19 +12,20 @@ class Beans(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
+    # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
         "homepage": "https://github.com/AI-Lab-Makerere/ibean/",
+        "assets": {
+            "train": "https://storage.googleapis.com/ibeans/train.zip",
+            "test": "https://storage.googleapis.com/ibeans/test.zip",
+            "validation": "https://storage.googleapis.com/ibeans/validation.zip",
+        },
         "citation": """@misc{makerere2020beans,
                          author = "{Makerere AI Lab}",
                          title = "{Bean Disease Dataset}",
                          year = "2020",
                          month = "January",
                          url = "https://github.com/AI-Lab-Makerere/ibean/"}""",
-        "assets": {
-            "train": "https://storage.googleapis.com/ibeans/train.zip",
-            "test": "https://storage.googleapis.com/ibeans/test.zip",
-            "validation": "https://storage.googleapis.com/ibeans/validation.zip",
-        },
     }
 
     def _info(self):
@@ -45,21 +45,8 @@ class Beans(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager=None):
-        source = self._source()
-        assets = source["assets"]
-        urls = list(assets.values())
-        local_paths = bulk_download(urls, dest_folder=self._raw_download_dir)
-        path_map = dict(zip(assets.keys(), local_paths))
-
-        return [
-            SplitGenerator(name=Split.TRAIN, gen_kwargs={"zip_path": path_map["train"]}),
-            SplitGenerator(name=Split.TEST, gen_kwargs={"zip_path": path_map["test"]}),
-            SplitGenerator(name=Split.VALIDATION, gen_kwargs={"zip_path": path_map["validation"]}),
-        ]
-
-    def _generate_examples(self, zip_path):
-        with zipfile.ZipFile(zip_path, "r") as archive:
+    def _generate_examples(self, data_path, split):
+        with zipfile.ZipFile(data_path, "r") as archive:
             for file_name in archive.namelist():
                 if file_name.endswith(".jpg"):
                     with archive.open(file_name) as file:

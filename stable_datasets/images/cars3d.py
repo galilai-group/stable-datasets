@@ -10,8 +10,8 @@ from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
-class CARS3D(BaseDatasetBuilder):
-    """CARS3D
+class Cars3D(BaseDatasetBuilder):
+    """Cars3D
     183 car types x 24 azimuth angles x 4 elevation angles.
     """
 

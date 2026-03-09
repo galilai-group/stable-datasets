@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.rock_paper_scissor import RockPaperScissor
+from stable_datasets.images import RockPaperScissor
 
 
 def test_rock_paper_scissor_dataset():

@@ -156,9 +156,6 @@ class BaseDatasetBuilder:
 
     @staticmethod
     def _validate_source(source: Mapping) -> None:
-        if not isinstance(source, Mapping):
-            raise TypeError("source must be a mapping.")
-
         # Required for provenance
         if "homepage" not in source or source["homepage"] is None or not isinstance(source["homepage"], str):
             raise TypeError("SOURCE['homepage'] must be a string and must be present.")

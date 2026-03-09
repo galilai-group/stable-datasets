@@ -4,9 +4,8 @@ from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
 from .awa2 import AWA2
 from .beans import Beans
-from .cars3d import CARS3D
+from .cars3d import Cars3D
 from .cars196 import Cars196
-from .celeb_a import CelebA
 from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
 from .cifar100 import CIFAR100
@@ -22,17 +21,21 @@ from .dtd import DTD
 from .e_mnist import EMNIST
 from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
+
+# from .celeb_a import CelebA
 from .fgvc_aircraft import FGVCAircraft
 from .flowers102 import Flowers102
 from .food101 import Food101
+from .galaxy10 import Galaxy10Decal
 from .hasy_v2 import HASYv2
-from .imagenette import Imagenette
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
-from .mnist import MNIST
 from .not_mnist import NotMNIST
-from .places365_small import Places365Small
+
+# from .imagenette import Imagenette
+# from .mnist import MNIST
+# from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
@@ -47,9 +50,8 @@ __all__ = [
     "ArabicDigits",
     "AWA2",
     "Beans",
-    "CARS3D",
     "Cars196",
-    "CelebA",
+    "Cars3D",
     "CIFAR10",
     "CIFAR10C",
     "CIFAR100",
@@ -67,15 +69,13 @@ __all__ = [
     "FashionMNIST",
     "FGVCAircraft",
     "Flowers102",
+    "Galaxy10Decal",
     "Food101",
     "HASYv2",
-    "Imagenette",
     "KMNIST",
     "Linnaeus5",
     "MedMNIST",
-    "MNIST",
     "NotMNIST",
-    "Places365Small",
     "RockPaperScissor",
     "Shapes3D",
     "SmallNORB",

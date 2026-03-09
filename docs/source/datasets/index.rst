@@ -55,11 +55,18 @@ Available Datasets
    fashion_mnist
    k_mnist
    medmnist
+   awa2
+   beans
    stl10
+   tiny_imagenet
+   tiny_imagenet_c
    e_mnist
+   fgvc_aircraft
    flowers102
+   food101
    cub200
    country211
+   galaxy10
    hasy_v2
    face_pointing
    rock_paper_scissor
