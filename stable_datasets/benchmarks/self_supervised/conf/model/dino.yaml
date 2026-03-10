@@ -23,6 +23,7 @@ params:
   default:
     batch_size: 256
     max_epochs: 125
+    accumulate_grad_batches: 8
   # CIFAR-scale (32x32)
   cifar10:
     batch_size: 256
@@ -79,9 +80,6 @@ params:
   rockpaperscissor:
     batch_size: 256
     max_epochs: 375
-  facepointing:
-    batch_size: 256
-    max_epochs: 250
   # Large datasets
   food101:
     batch_size: 256

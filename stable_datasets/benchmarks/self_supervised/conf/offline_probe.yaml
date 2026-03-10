@@ -6,11 +6,11 @@ ssl_backbone: vit_small
 dataset: cifar10
 
 checkpoint:
-  dir: /workspace/.stable-datasets/.pretrain_checkpoints
+  dir: /oscar/home/sboughan/scratch/.stable-datasets/.pretrain_checkpoints
   name: last
 
-cache_dir: /workspace/.stable-datasets/.cached_224
-data_dir: /workspace/.stable-datasets
+cache_dir: /oscar/home/sboughan/scratch/.stable-datasets/.cached_224
+data_dir: /oscar/home/sboughan/scratch/.stable-datasets
 
 probe:
   epochs: 100
@@ -24,7 +24,7 @@ wandb:
 
 hydra:
   run:
-    dir: /workspace/.stable-datasets/probe-runs/${ssl_model}_${ssl_backbone}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: /oscar/home/sboughan/scratch/.stable-datasets/probe-runs/${ssl_model}_${ssl_backbone}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
   sweep:
-    dir: /workspace/.stable-datasets/probe-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
+    dir: /oscar/home/sboughan/scratch/.stable-datasets/probe-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
     subdir: ${ssl_model}_${ssl_backbone}_${dataset}
