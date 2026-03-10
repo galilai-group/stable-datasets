@@ -29,8 +29,8 @@ from .food101 import Food101
 from .galaxy10 import Galaxy10Decal
 from .hasy_v2 import HASYv2
 from .imagenet_1k import ImageNet1K
-from .imagenet_100 import ImageNet100
 from .imagenet_10 import ImageNet10
+from .imagenet_100 import ImageNet100
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST

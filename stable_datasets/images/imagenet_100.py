@@ -4,7 +4,7 @@ from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Ver
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, download
 
-from .imagenet_1k import _ImageNetArchiveMixin, _default_class_names
+from .imagenet_1k import _default_class_names, _ImageNetArchiveMixin
 
 
 class ImageNet100(_ImageNetArchiveMixin, BaseDatasetBuilder):
