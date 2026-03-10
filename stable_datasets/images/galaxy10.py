@@ -1,6 +1,6 @@
 import h5py
 import numpy as np
-from PIL import PILImage
+from PIL import Image as PILImage
 
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
 from stable_datasets.schema import Image as ImageFeature
