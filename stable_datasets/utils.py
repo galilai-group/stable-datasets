@@ -24,7 +24,11 @@ from rich.progress import (
 from tqdm import tqdm
 
 from .arrow_dataset import StableDataset, StableDatasetDict
-from .cache import cache_fingerprint, read_arrow_cache, write_arrow_cache
+from .cache import (
+    cache_fingerprint,
+    validate_sharded_cache,
+    write_sharded_arrow_cache,
+)
 from .schema import BuilderConfig, Version
 from .splits import Split, SplitGenerator
 
@@ -278,25 +282,27 @@ class BaseDatasetBuilder:
         splits_data = {}
 
         for sg in split_generators:
-            fname = cache_fingerprint(
+            shard_dir_name = cache_fingerprint(
                 cls.__name__,
                 str(cls.VERSION),
                 instance.config.name,
                 sg.name,
             )
-            cache_path = instance._processed_cache_dir / fname
+            shard_dir = instance._processed_cache_dir / shard_dir_name
 
-            if cache_path.exists():
-                table = read_arrow_cache(cache_path)
+            if (shard_dir / "_metadata.json").exists():
+                meta = validate_sharded_cache(shard_dir, features)
             else:
                 generator = instance._generate_examples(**sg.gen_kwargs)
-                table = write_arrow_cache(generator, features, cache_path)
+                meta = write_sharded_arrow_cache(generator, features, shard_dir)
 
             splits_data[sg.name] = StableDataset(
-                path=cache_path,
                 features=features,
                 info=instance._dataset_info,
-                num_rows=table.num_rows,
+                shard_dir=shard_dir,
+                shard_paths=meta.shard_paths,
+                shard_row_counts=meta.shard_row_counts,
+                num_rows=meta.num_rows,
             )
 
         # 6) Return single split or dict

@@ -95,9 +95,9 @@ def test_base_builder_allows_runtime_source_override(tmp_path):
 
 def test_base_builder_processed_cache_dir_is_used(tmp_path):
     ds = _TinyLocalBuilder(split="train", processed_cache_dir=str(tmp_path))
-    # Verify that Arrow cache files were written to the specified directory.
-    arrow_files = list(tmp_path.glob("*.arrow"))
-    assert len(arrow_files) > 0
+    # Verify that sharded cache directories were created in the specified directory.
+    shard_dirs = [d for d in tmp_path.iterdir() if d.is_dir()]
+    assert len(shard_dirs) > 0
 
     # stable-datasets also exposes the processed cache location as a convenience attribute.
     assert getattr(ds, "_stable_datasets_processed_cache_dir") == tmp_path

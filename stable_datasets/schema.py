@@ -119,7 +119,11 @@ class Image(FeatureType):
 
 
 class Video(FeatureType):
-    """Video feature. Stored as file path string in Arrow."""
+    """Video feature. Stored as file path string in Arrow (metadata-only).
+
+    Video bytes are never inlined into the Arrow cache.  The path points to
+    the source media file; decoding happens lazily at access time.
+    """
 
     def to_arrow_type(self) -> pa.DataType:
         return pa.string()
