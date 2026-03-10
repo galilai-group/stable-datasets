@@ -5,7 +5,6 @@ from PIL import Image as PILImage
 
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
-from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -35,7 +34,8 @@ class Linnaeus5(BaseDatasetBuilder):
                       journal={chaladze.com},
                       year={2017}}""",
         "assets": {
-            "data": "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar",
+            "train": "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar",
+            "test": "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar",
         },
     }
 
@@ -53,39 +53,16 @@ class Linnaeus5(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        source = self._source()
-        url = source["assets"]["data"]
-
-        archive_path = dl_manager.download(url)
-
-        return [
-            SplitGenerator(
-                name=Split.TRAIN,
-                gen_kwargs={
-                    "archive_path": archive_path,
-                    "split_name": "train",
-                },
-            ),
-            SplitGenerator(
-                name=Split.TEST,
-                gen_kwargs={
-                    "archive_path": archive_path,
-                    "split_name": "test",
-                },
-            ),
-        ]
-
-    def _generate_examples(self, archive_path, split_name):
+    def _generate_examples(self, data_path, split):
         """Iterate over the RAR archive and yield images matching the split."""
 
-        with rarfile.RarFile(archive_path) as rf:
+        with rarfile.RarFile(data_path) as rf:
             for member in rf.infolist():
                 if member.isdir():
                     continue
 
                 filename = member.filename
-                if f"/{split_name}/" in filename.lower() and filename.lower().endswith((".jpg", ".jpeg")):
+                if f"/{split}/" in filename.lower() and filename.lower().endswith((".jpg", ".jpeg")):
                     try:
                         parts = filename.replace("\\", "/").split("/")
                         label_name = parts[-2]
