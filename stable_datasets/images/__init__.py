@@ -28,6 +28,9 @@ from .flowers102 import Flowers102
 from .food101 import Food101
 from .galaxy10 import Galaxy10Decal
 from .hasy_v2 import HASYv2
+from .imagenet_1k import ImageNet1K
+from .imagenet_10 import ImageNet10
+from .imagenet_100 import ImageNet100
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
@@ -72,6 +75,9 @@ __all__ = [
     "Galaxy10Decal",
     "Food101",
     "HASYv2",
+    "ImageNet1K",
+    "ImageNet100",
+    "ImageNet10",
     "KMNIST",
     "Linnaeus5",
     "MedMNIST",
