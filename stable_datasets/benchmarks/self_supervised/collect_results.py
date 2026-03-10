@@ -30,6 +30,9 @@ log = logging.getLogger(__name__)
 
 OFFLINE_PROBE_TAG = "offline_probe"
 
+# Datasets excluded from result tables (e.g. no classification labels).
+SKIP_DATASETS = {"facepointing"}
+
 METRICS = [
     "eval/top1",
     "eval/top5",
@@ -76,6 +79,14 @@ def collect(entity: str, project: str) -> pd.DataFrame:
     if summary_df.empty:
         log.warning("No offline_probe runs found.")
         return summary_df
+
+    # Drop datasets that lack classification labels (e.g. facepointing)
+    if "dataset" in summary_df.columns and SKIP_DATASETS:
+        before = len(summary_df)
+        summary_df = summary_df[~summary_df["dataset"].isin(SKIP_DATASETS)].reset_index(drop=True)
+        skipped = before - len(summary_df)
+        if skipped:
+            log.info(f"Skipped {skipped} runs from excluded datasets: {SKIP_DATASETS}")
 
     # Download per-run history to find peak values and their epochs
     history_keys = METRICS + ["epoch"]

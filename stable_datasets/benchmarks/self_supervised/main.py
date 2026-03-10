@@ -171,6 +171,15 @@ def main(cfg: DictConfig) -> None:
     with open_dict(cfg):
         cfg.training.batch_size = _resolve("batch_size", cfg.training.batch_size)
         cfg.training.max_epochs = _resolve("max_epochs", cfg.training.max_epochs)
+        cfg.training.accumulate_grad_batches = _resolve(
+            "accumulate_grad_batches", cfg.training.get("accumulate_grad_batches", 1)
+        )
+        # Divide batch_size by accumulate_grad_batches so the effective
+        # (gradient) batch size stays the same while the per-forward-pass
+        # batch fits in GPU memory.
+        accum = cfg.training.accumulate_grad_batches
+        if accum > 1:
+            cfg.training.batch_size = cfg.training.batch_size // accum
         # LR override stored for optim builder
         lr_override = ds_params.get("lr", default_params.get("lr", None))
         if lr_override is not None:
@@ -179,6 +188,8 @@ def main(cfg: DictConfig) -> None:
     log.info(
         f"Running {cfg.model.name} | backbone={cfg.backbone.name} "
         f"| dataset={cfg.dataset} | batch_size={cfg.training.batch_size} "
+        f"| accumulate_grad_batches={cfg.training.accumulate_grad_batches} "
+        f"| effective_batch_size={cfg.training.batch_size * cfg.training.accumulate_grad_batches} "
         f"| max_epochs={cfg.training.max_epochs}"
     )
 
