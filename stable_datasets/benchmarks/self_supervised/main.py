@@ -160,8 +160,18 @@ def main(cfg: DictConfig) -> None:
     ds_params = params.get(cfg.dataset, {})
     default_params = params.get("default", {})
 
-    def _resolve(key, fallback):
-        """Check dataset-specific params, then default params, then global fallback."""
+    # Detect which keys were explicitly set on the CLI so they take precedence
+    cli_overrides = set()
+    try:
+        for override in HydraConfig.get().overrides.task:
+            cli_overrides.add(override.split("=")[0])
+    except ValueError:
+        pass
+
+    def _resolve(key, cfg_key, fallback):
+        """Check CLI override first, then dataset-specific, then default params."""
+        if cfg_key in cli_overrides:
+            return fallback  # CLI already set this — keep it
         if key in ds_params:
             return ds_params[key]
         if key in default_params:
@@ -169,8 +179,8 @@ def main(cfg: DictConfig) -> None:
         return fallback
 
     with open_dict(cfg):
-        cfg.training.batch_size = _resolve("batch_size", cfg.training.batch_size)
-        cfg.training.max_epochs = _resolve("max_epochs", cfg.training.max_epochs)
+        cfg.training.batch_size = _resolve("batch_size", "training.batch_size", cfg.training.batch_size)
+        cfg.training.max_epochs = _resolve("max_epochs", "training.max_epochs", cfg.training.max_epochs)
         # LR override stored for optim builder
         lr_override = ds_params.get("lr", default_params.get("lr", None))
         if lr_override is not None:
