@@ -463,7 +463,7 @@ def main() -> None:
         help="Number of image columns in the LaTeX grid (default: auto = ceil(sqrt(n)) for a square grid).",
     )
     parser.add_argument(
-        "--sample-idx", type=int, default=42,
+        "--sample-idx", type=int, default=24,
         help="Sample index to draw from each dataset (default: 42).",
     )
     parser.add_argument(
