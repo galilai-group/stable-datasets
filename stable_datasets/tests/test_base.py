@@ -1,7 +1,9 @@
 from collections.abc import Mapping
+from pathlib import Path
 
 import pytest
 
+from stable_datasets import utils
 from stable_datasets.arrow_dataset import StableDataset, StableDatasetDict
 from stable_datasets.schema import DatasetInfo, Features, Value, Version
 from stable_datasets.splits import Split, SplitGenerator
@@ -347,3 +349,46 @@ def test_stable_dataset_features_property(tmp_path):
     ds = _TinyLocalBuilder(split="train", processed_cache_dir=str(tmp_path))
     assert "x" in ds.features
     assert isinstance(ds.features["x"], Value)
+
+
+# STABLE_DATASETS_CACHE_DIR env variable tests
+
+
+def test_get_cache_dir_returns_default_when_env_unset(monkeypatch):
+    monkeypatch.delenv(utils.CACHE_DIR_ENV_VAR, raising=False)
+    assert utils._get_cache_dir() == utils.DEFAULT_CACHE_DIR
+
+
+def test_get_cache_dir_returns_env_value_when_set(monkeypatch):
+    monkeypatch.setenv(utils.CACHE_DIR_ENV_VAR, "/tmp/my_cache")
+    assert utils._get_cache_dir() == "/tmp/my_cache"
+
+
+def test_default_dest_folder_respects_env(monkeypatch):
+    custom = "/tmp/custom_stable"
+    monkeypatch.setenv(utils.CACHE_DIR_ENV_VAR, custom)
+    assert utils._default_dest_folder() == Path(custom) / "downloads"
+
+
+def test_default_processed_cache_dir_respects_env(monkeypatch):
+    custom = "/tmp/custom_stable"
+    monkeypatch.setenv(utils.CACHE_DIR_ENV_VAR, custom)
+    assert utils._default_processed_cache_dir() == Path(custom) / "processed"
+
+
+def test_default_dest_folder_uses_default_when_env_unset(monkeypatch):
+    monkeypatch.delenv(utils.CACHE_DIR_ENV_VAR, raising=False)
+    expected = Path.home() / ".stable_datasets" / "downloads"
+    assert utils._default_dest_folder() == expected
+
+
+def test_default_processed_cache_dir_uses_default_when_env_unset(monkeypatch):
+    monkeypatch.delenv(utils.CACHE_DIR_ENV_VAR, raising=False)
+    expected = Path.home() / ".stable_datasets" / "processed"
+    assert utils._default_processed_cache_dir() == expected
+
+
+def test_env_cache_dir_with_tilde_expansion(monkeypatch):
+    monkeypatch.setenv(utils.CACHE_DIR_ENV_VAR, "~/my_datasets_cache")
+    expected = Path.home() / "my_datasets_cache" / "downloads"
+    assert utils._default_dest_folder() == expected

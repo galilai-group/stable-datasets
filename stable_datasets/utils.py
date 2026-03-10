@@ -39,6 +39,14 @@ def _get_cache_dir() -> str:
     return os.environ.get(CACHE_DIR_ENV_VAR, DEFAULT_CACHE_DIR)
 
 
+CACHE_DIR_ENV_VAR = "STABLE_DATASETS_CACHE_DIR"
+
+
+def _get_cache_dir() -> str:
+    """Return the base cache directory, respecting the environment variable."""
+    return os.environ.get(CACHE_DIR_ENV_VAR, DEFAULT_CACHE_DIR)
+
+
 def _default_dest_folder() -> Path:
     """Default folder where files are saved."""
     return Path(os.path.expanduser(_get_cache_dir())) / "downloads"
