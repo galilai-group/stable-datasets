@@ -80,7 +80,13 @@ By default:
 - Downloads: `~/.stable_datasets/downloads/`
 - Processed Arrow cache: `~/.stable_datasets/processed/`
 
-You can override both when constructing a dataset:
+You can override the base cache directory globally with the `STABLE_DATASETS_CACHE_DIR` environment variable:
+
+```bash
+export STABLE_DATASETS_CACHE_DIR=/data/my_cache
+```
+
+Or override per-dataset when constructing:
 
 ```python
 ds = ArabicCharacters(
