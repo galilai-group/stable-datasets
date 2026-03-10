@@ -5,13 +5,11 @@ import json
 import pickle
 
 import numpy as np
-import pyarrow as pa
 import pytest
 from PIL import Image as PILImage
 
 from stable_datasets.arrow_dataset import StableDataset
 from stable_datasets.cache import (
-    ShardedCacheMeta,
     _encode_image,
     read_shard,
     read_sharded_cache_meta,
@@ -135,7 +133,7 @@ class TestShardedWriter:
         assert sorted(all_x) == list(range(20))
 
     def test_atomic_publish_no_temp_dir_on_success(self, tmp_path):
-        meta = _write_shards(tmp_path, n=10)
+        _write_shards(tmp_path, n=10)
         # No temp dirs should remain
         for child in tmp_path.iterdir():
             assert not child.name.startswith(".")
@@ -244,7 +242,6 @@ class TestCacheValidation:
             read_sharded_cache_meta(meta.cache_dir)
 
 
-
 # ── Sharded StableDataset tests ──────────────────────────────────────────────
 
 
@@ -254,8 +251,11 @@ def _make_sharded_ds(tmp_path, n=50, shard_size_bytes=512, batch_size=10):
     info = DatasetInfo(features=features)
     cache_dir = tmp_path / "ds_cache"
     meta = write_sharded_arrow_cache(
-        _simple_gen(n), features, cache_dir,
-        shard_size_bytes=shard_size_bytes, batch_size=batch_size,
+        _simple_gen(n),
+        features,
+        cache_dir,
+        shard_size_bytes=shard_size_bytes,
+        batch_size=batch_size,
     )
     return StableDataset(
         features=features,
@@ -394,4 +394,3 @@ class TestBuilderShardedIntegration:
         for f, mtime in mtimes.items():
             assert f.stat().st_mtime == mtime
         assert len(ds2) == 20
-
