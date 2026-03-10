@@ -17,7 +17,7 @@ from filelock import FileLock
 from loguru import logger as logging
 from PIL import Image as PILImage
 
-from .schema import Array3D, Features, Image, Sequence, Video
+from .schema import Array3D, ClassLabel, Features, Image, Sequence, Video
 
 
 def _encode_image(img) -> bytes | None:
@@ -59,6 +59,12 @@ def encode_example(example: dict, features: Features) -> dict:
             encoded[key] = _encode_image(value)
         elif isinstance(feat, Array3D):
             encoded[key] = _encode_array3d(value, feat)
+        elif isinstance(feat, ClassLabel):
+            # Convert string label names to integer indices
+            if isinstance(value, str):
+                encoded[key] = feat.str2int(value)
+            else:
+                encoded[key] = value
         elif isinstance(feat, Video):
             encoded[key] = str(value) if value is not None else None
         elif isinstance(feat, Sequence):

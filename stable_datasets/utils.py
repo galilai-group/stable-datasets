@@ -29,7 +29,7 @@ from .schema import BuilderConfig, Version
 from .splits import Split, SplitGenerator
 
 
-DEFAULT_CACHE_DIR = "/workspace/.stable-datasets/"
+DEFAULT_CACHE_DIR = "/mnt/data/sami/.stable-datasets/"
 
 
 def _default_dest_folder() -> Path:
