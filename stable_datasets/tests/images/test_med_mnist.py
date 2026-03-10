@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.med_mnist import MedMNIST
+from stable_datasets.images import MedMNIST
 
 
 def test_med_mnist_variants_download_and_format():

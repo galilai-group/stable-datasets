@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from stable_datasets.images.clevrer import CLEVRER
+from stable_datasets.images import CLEVRER
 
 
 pytestmark = pytest.mark.large
