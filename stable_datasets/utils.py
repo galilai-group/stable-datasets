@@ -26,7 +26,7 @@ from rich.progress import (
 from tqdm import tqdm
 
 
-DEFAULT_CACHE_DIR = "/workspace/.stable-datasets/"
+DEFAULT_CACHE_DIR = os.environ.get("STABLE_DATASETS_CACHE_DIR", "/workspace/.stable-datasets/")
 
 
 def _default_dest_folder() -> Path:

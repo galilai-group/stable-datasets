@@ -217,3 +217,6 @@ logs/
 benchmark-runs/
 environment*.json
 requirements_frozen*.txt
+
+# W&B result cache
+.result_cache/

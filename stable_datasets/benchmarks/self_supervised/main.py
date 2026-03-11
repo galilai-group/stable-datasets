@@ -179,11 +179,11 @@ def main(cfg: DictConfig) -> None:
         return fallback
 
     with open_dict(cfg):
-<<<<<<< HEAD
-        cfg.training.batch_size = _resolve("batch_size", cfg.training.batch_size)
-        cfg.training.max_epochs = _resolve("max_epochs", cfg.training.max_epochs)
+        cfg.training.batch_size = _resolve("batch_size", "training.batch_size", cfg.training.batch_size)
+        cfg.training.max_epochs = _resolve("max_epochs", "training.max_epochs", cfg.training.max_epochs)
         cfg.training.accumulate_grad_batches = _resolve(
-            "accumulate_grad_batches", cfg.training.get("accumulate_grad_batches", 1)
+            "accumulate_grad_batches", "training.accumulate_grad_batches",
+            cfg.training.get("accumulate_grad_batches", 1),
         )
         # Divide batch_size by accumulate_grad_batches so the effective
         # (gradient) batch size stays the same while the per-forward-pass
@@ -191,10 +191,6 @@ def main(cfg: DictConfig) -> None:
         accum = cfg.training.accumulate_grad_batches
         if accum > 1:
             cfg.training.batch_size = cfg.training.batch_size // accum
-=======
-        cfg.training.batch_size = _resolve("batch_size", "training.batch_size", cfg.training.batch_size)
-        cfg.training.max_epochs = _resolve("max_epochs", "training.max_epochs", cfg.training.max_epochs)
->>>>>>> refs/remotes/origin/ssl-baselines
         # LR override stored for optim builder
         lr_override = ds_params.get("lr", default_params.get("lr", None))
         if lr_override is not None:

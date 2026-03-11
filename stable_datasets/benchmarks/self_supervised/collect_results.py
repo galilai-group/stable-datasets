@@ -1,161 +1,206 @@
-"""Collect offline probe results from W&B into summary tables.
+"""Collect SSL and supervised results from W&B into summary tables.
 
-Pulls offline linear-probe top-1/top-5 accuracy for runs tagged
-``offline_probe``, then pivots into a {dataset x (model, backbone)} table.
-Shows the epoch at which peak performance was achieved.
+Pulls linear-probe top-1 accuracy from SSL runs and optionally supervised
+baseline results, then pivots into a {dataset x method} table.
 
 Usage:
     python -m stable_datasets.benchmarks.self_supervised.collect_results \\
         --entity stable-ssl --project stable-datasets-benchmarks
 
-    # Save to CSV
+    # With supervised baselines and LaTeX export
     python -m stable_datasets.benchmarks.self_supervised.collect_results \\
-        --entity stable-ssl --project stable-datasets-benchmarks --output results.csv
-
-    # Export pivot table as LaTeX
-    python -m stable_datasets.benchmarks.self_supervised.collect_results \\
-        --entity stable-ssl --project stable-datasets-benchmarks --latex table.tex
+        --entity stable-ssl --project stable-datasets-benchmarks \\
+        --supervised-entity samibg --supervised-project stable-datasets \\
+        --latex table.tex
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 import logging
+from pathlib import Path
 
 import pandas as pd
-from stable_pretraining.utils.log_reader import WandbLogReader
-from tqdm import tqdm
+import wandb
 
 log = logging.getLogger(__name__)
-
-OFFLINE_PROBE_TAG = "offline_probe"
 
 # Datasets excluded from result tables (e.g. no classification labels).
 SKIP_DATASETS = {"facepointing"}
 
-METRICS = [
-    "eval/top1",
-    "eval/top5",
-]
+SSL_METRIC = "eval/linear_probe_top1_epoch"
 
-# Offline probe runs store the SSL model name as "ssl_model" in the W&B config.
-# We remap it to "model" so the pivot tables stay consistent.
-CONFIG_COLS = ["model", "backbone", "dataset"]
+CACHE_DIR = Path(__file__).resolve().parent / ".result_cache"
 
 
-def collect(entity: str, project: str) -> pd.DataFrame:
-    """Pull per-run best metrics from offline-probe runs in a W&B project.
+def _collect_ssl(entity: str, project: str, refresh: bool = False) -> pd.DataFrame:
+    """Collect SSL linear-probe results from W&B summary (no history download needed).
 
-    Only includes runs tagged with ``offline_probe``.  For each run and
-    metric, finds the peak value across all epochs and records which
-    epoch it occurred at.
+    Looks for untagged, finished runs with vit_small backbone that have
+    ``eval/linear_probe_top1_epoch`` in their summary.
 
-    Returns a DataFrame with columns: model, backbone, dataset,
-    checkpoint_name, each metric value (peak), each metric's best epoch,
-    name, id.
+    Caches finished runs so subsequent calls skip W&B API for them.
     """
-    reader = WandbLogReader()
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_file = CACHE_DIR / f"ssl_{hashlib.md5(f'{entity}/{project}'.encode()).hexdigest()}.json"
 
-    # Get summary for metadata (name, id, config fields, tags)
-    summary_df = reader.read_project(entity, project, return_summary=True)
-    if summary_df.empty:
-        log.warning("No runs found.")
-        return summary_df
-
-    # Filter to only offline_probe runs by tag
-    if "tags" in summary_df.columns:
-        mask = summary_df["tags"].apply(
-            lambda t: OFFLINE_PROBE_TAG in t if isinstance(t, (list, set)) else False
-        )
-        n_total = len(summary_df)
-        summary_df = summary_df[mask].reset_index(drop=True)
-        log.info(
-            f"Filtered to {len(summary_df)}/{n_total} runs with "
-            f"tag '{OFFLINE_PROBE_TAG}'"
-        )
-    else:
-        log.warning("No 'tags' column in summary — cannot filter by tag.")
-
-    if summary_df.empty:
-        log.warning("No offline_probe runs found.")
-        return summary_df
-
-    # Drop datasets that lack classification labels (e.g. facepointing)
-    if "dataset" in summary_df.columns and SKIP_DATASETS:
-        before = len(summary_df)
-        summary_df = summary_df[~summary_df["dataset"].isin(SKIP_DATASETS)].reset_index(drop=True)
-        skipped = before - len(summary_df)
-        if skipped:
-            log.info(f"Skipped {skipped} runs from excluded datasets: {SKIP_DATASETS}")
-
-    # Download per-run history to find peak values and their epochs
-    history_keys = METRICS + ["epoch"]
-    rows = []
-    for _, run_row in tqdm(
-        summary_df.iterrows(), total=len(summary_df), desc="Downloading run histories"
-    ):
-        run_id = run_row["id"]
-        row = {"id": run_id, "name": run_row.get("name", "")}
-        if "created_at" in run_row:
-            row["created_at"] = run_row["created_at"]
-
-        # Remap ssl_model -> model for consistency with pivot tables
-        if "ssl_model" in run_row:
-            row["model"] = run_row["ssl_model"]
-        for col in CONFIG_COLS:
-            if col not in row and col in run_row:
-                row[col] = run_row[col]
-
-        # Include checkpoint name for display
-        if "checkpoint_name" in run_row:
-            row["checkpoint_name"] = run_row["checkpoint_name"]
-
+    cached_runs = {}
+    if not refresh and cache_file.exists():
         try:
-            history_df, _ = reader.read(
-                entity, project, run_id, keys=history_keys, _tqdm_disable=True
-            )
-        except Exception as e:
-            log.warning(f"Failed to read history for run {run_id}: {e}")
-            rows.append(row)
+            cached_runs = json.loads(cache_file.read_text())
+            log.info(f"Loaded {len(cached_runs)} cached SSL runs")
+        except Exception:
+            cached_runs = {}
+
+    api = wandb.Api(timeout=60)
+    runs = list(api.runs(f"{entity}/{project}", per_page=1000))
+    log.info(f"Found {len(runs)} total runs in {entity}/{project}")
+
+    rows = []
+    new_finished = 0
+    for run in runs:
+        run_id = run.id
+
+        # Use cached result for previously finished runs
+        if run_id in cached_runs:
+            rows.append(cached_runs[run_id])
             continue
 
-        for metric in METRICS:
-            if metric not in history_df.columns:
-                continue
-            valid = history_df[metric].dropna()
-            if valid.empty:
-                continue
-            best_idx = valid.idxmax()
-            row[metric] = valid.loc[best_idx]
-            if "epoch" in history_df.columns:
-                epoch_value = history_df.loc[best_idx, "epoch"]
-                if isinstance(epoch_value, pd.Series):
-                    epoch_value = epoch_value.iloc[0]
-                row[f"{metric}_best_epoch"] = int(epoch_value)
-            else:
-                row[f"{metric}_best_epoch"] = int(best_idx)
+        # Only include untagged runs (SSL training runs, not offline probes)
+        if run.tags:
+            continue
 
+        # Only finished runs
+        if run.state != "finished":
+            continue
+
+        backbone = run.config.get("backbone", "")
+        if backbone != "vit_small":
+            continue
+
+        dataset = run.config.get("dataset", "")
+        model = run.config.get("model", "")
+        if not dataset or not model:
+            continue
+
+        if dataset.lower() in SKIP_DATASETS:
+            continue
+
+        top1 = run.summary.get(SSL_METRIC)
+        if top1 is None:
+            continue
+
+        row = {
+            "dataset": dataset.lower(),
+            "model": model,
+            "backbone": backbone,
+            SSL_METRIC: float(top1),
+            "id": run_id,
+            "name": run.name,
+        }
         rows.append(row)
+        cached_runs[run_id] = row
+        new_finished += 1
 
-    return pd.DataFrame(rows)
+    if new_finished > 0:
+        cache_file.write_text(json.dumps(cached_runs, indent=2))
+        log.info(f"Cached {new_finished} new finished SSL runs")
+
+    if not rows:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(rows)
+    log.info(f"Collected {len(df)} SSL runs (vit_small, finished)")
+    return df
 
 
-def pivot_table(df: pd.DataFrame, metric: str) -> pd.DataFrame:
-    """Pivot results into {dataset x (model, backbone)} numeric table.
+def _collect_supervised(entity: str, project: str, refresh: bool = False) -> pd.DataFrame:
+    """Collect supervised baseline results from a W&B project.
 
-    When multiple runs exist for the same combo, keeps the one
-    with the highest metric value.
+    Supervised runs store ``test_accuracy`` in their W&B summary.
+    Caches finished runs to avoid re-downloading.
 
-    Args:
-        df: DataFrame from collect().
-        metric: Which metric column to use as values.
+    Returns a DataFrame with columns: dataset, test_accuracy.
+    Keeps the best test_accuracy per dataset when duplicates exist.
     """
-    if metric not in df.columns:
-        raise ValueError(
-            f"Metric '{metric}' not found. Available: {list(df.columns)}"
-        )
-    df = df.copy()
-    df["method"] = df["model"] + " / " + df["backbone"]
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_file = CACHE_DIR / f"supervised_{hashlib.md5(f'{entity}/{project}'.encode()).hexdigest()}.json"
+
+    cached_runs = {}
+    if not refresh and cache_file.exists():
+        try:
+            cached_runs = json.loads(cache_file.read_text())
+            log.info(f"Loaded {len(cached_runs)} cached supervised runs")
+        except Exception:
+            cached_runs = {}
+
+    api = wandb.Api(timeout=60)
+    runs = list(api.runs(f"{entity}/{project}", per_page=200))
+    log.info(f"Found {len(runs)} supervised runs in {entity}/{project}")
+
+    rows = []
+    new_finished = 0
+    for run in runs:
+        run_id = run.id
+
+        if run_id in cached_runs:
+            rows.append(cached_runs[run_id])
+            continue
+
+        if run.state != "finished":
+            continue
+
+        dataset = run.config.get("dataset", "")
+        if not dataset:
+            continue
+        dataset_key = dataset.lower()
+
+        if dataset_key in SKIP_DATASETS:
+            continue
+
+        test_acc = run.summary.get("test_accuracy")
+        if test_acc is None:
+            continue
+
+        row = {
+            "dataset": dataset_key,
+            "test_accuracy": float(test_acc),
+            "id": run_id,
+            "name": run.name,
+        }
+        rows.append(row)
+        cached_runs[run_id] = row
+        new_finished += 1
+
+    if new_finished > 0:
+        cache_file.write_text(json.dumps(cached_runs, indent=2))
+        log.info(f"Cached {new_finished} new finished supervised runs")
+
+    if not rows:
+        return pd.DataFrame()
+
+    df = pd.DataFrame(rows)
+    # Keep best test_accuracy per dataset
+    df = df.sort_values("test_accuracy", ascending=False).drop_duplicates(
+        subset=["dataset"], keep="first"
+    ).reset_index(drop=True)
+    return df
+
+
+def pivot_table(
+    ssl_df: pd.DataFrame,
+    supervised_df: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """Pivot SSL results into {dataset x method} numeric table.
+
+    Deduplicates by keeping the best run per (dataset, method) group.
+    Optionally adds a "Supervised" column.
+    """
+    metric = SSL_METRIC
+    df = ssl_df.copy()
+    df["method"] = df["model"]
     # Deduplicate: keep the best run per (dataset, method) group
     df = df.sort_values(metric, ascending=False).drop_duplicates(
         subset=["dataset", "method"], keep="first"
@@ -163,66 +208,14 @@ def pivot_table(df: pd.DataFrame, metric: str) -> pd.DataFrame:
     numeric = df.pivot_table(
         index="dataset", columns="method", values=metric, aggfunc="max"
     )
-    # Row-wise average: mean across methods for each dataset
+
+    if supervised_df is not None and not supervised_df.empty:
+        sup_series = supervised_df.set_index("dataset")["test_accuracy"]
+        numeric["Supervised"] = sup_series
+
+    # Row-wise average
     numeric["Average"] = numeric.mean(axis=1)
-    # Col-wise average: mean across datasets for each method
-    avg_row = numeric.drop(columns="Average").mean(axis=0)
-    avg_row["Average"] = numeric["Average"].mean()
-    numeric.loc["Average"] = avg_row
-    return numeric
-
-
-def pivot_table_with_epochs(df: pd.DataFrame, metric: str) -> pd.DataFrame:
-    """Pivot results with epoch annotations: "0.7618 (ep. 95)".
-
-    When multiple runs exist for the same combo, keeps the one
-    with the highest metric value.
-
-    Args:
-        df: DataFrame from collect().
-        metric: Which metric column to use as values.
-    """
-    if metric not in df.columns:
-        raise ValueError(
-            f"Metric '{metric}' not found. Available: {list(df.columns)}"
-        )
-    df = df.copy()
-    df["method"] = df["model"] + " / " + df["backbone"]
-    # Deduplicate: keep the best run per (dataset, method) group
-    df = df.sort_values(metric, ascending=False).drop_duplicates(
-        subset=["dataset", "method"], keep="first"
-    )
-
-    epoch_col = f"{metric}_best_epoch"
-    has_epoch = epoch_col in df.columns
-
-    # Numeric pivot used for computing averages in both branches
-    numeric = df.pivot_table(
-        index="dataset", columns="method", values=metric, aggfunc="max"
-    )
-
-    if has_epoch:
-        df["_display"] = df.apply(
-            lambda r: f"{r[metric]*100:.1f}% (ep. {int(r[epoch_col])})"
-            if pd.notna(r.get(epoch_col)) and pd.notna(r[metric])
-            else (f"{r[metric]*100:.1f}%" if pd.notna(r[metric]) else ""),
-            axis=1,
-        )
-        result = df.pivot_table(
-            index="dataset", columns="method", values="_display", aggfunc="first"
-        )
-        # Row-wise average column
-        result["Average"] = numeric.mean(axis=1).map(
-            lambda v: f"{v*100:.1f}%" if pd.notna(v) else ""
-        )
-        # Col-wise average row
-        avg_row = numeric.mean(axis=0).map(lambda v: f"{v*100:.1f}%" if pd.notna(v) else "")
-        avg_row["Average"] = f"{numeric.mean(axis=1).mean()*100:.1f}%"
-        result.loc["Average"] = avg_row
-        return result
-
-    # Fallback: no epoch info, just show numeric values
-    numeric["Average"] = numeric.mean(axis=1)
+    # Col-wise average
     avg_row = numeric.drop(columns="Average").mean(axis=0)
     avg_row["Average"] = numeric["Average"].mean()
     numeric.loc["Average"] = avg_row
@@ -258,13 +251,6 @@ _DATASET_DISPLAY_NAMES: dict[str, str] = {
     "tinyimagenet": "Tiny ImageNet",
 }
 
-_BACKBONE_DISPLAY_NAMES: dict[str, str] = {
-    "vit_small": "ViT-Small",
-    "vit_base": "ViT-Base",
-    "resnet18": "ResNet-18",
-    "resnet50": "ResNet-50",
-}
-
 _MODEL_DISPLAY_NAMES: dict[str, str] = {
     "simclr": "SimCLR",
     "dino": "DINO",
@@ -283,32 +269,18 @@ def _display_name(raw: str, mapping: dict[str, str]) -> str:
 def _format_latex(table: pd.DataFrame) -> str:
     """Format a pivot table as a booktabs LaTeX table.
 
-    Columns are expected to be ``"model / backbone"`` strings plus an
-    ``"Average"`` column.  The backbone is extracted into a
-    ``\\multicolumn`` header row.
+    Columns are SSL method names, optionally "Supervised", plus "Average".
     """
     pct = table * 100
 
-    # Separate method columns from the Average column
-    method_cols = [c for c in pct.columns if c != "Average"]
-    # Parse model/backbone pairs
-    models = []
-    backbones = set()
-    for col in method_cols:
-        parts = col.split(" / ", 1)
-        models.append(parts[0].strip())
-        if len(parts) > 1:
-            backbones.add(parts[1].strip())
-    backbone_label = (
-        _display_name(next(iter(backbones)), _BACKBONE_DISPLAY_NAMES)
-        if len(backbones) == 1
-        else ", ".join(_display_name(b, _BACKBONE_DISPLAY_NAMES) for b in sorted(backbones))
-    )
-    model_labels = [_display_name(m, _MODEL_DISPLAY_NAMES) for m in models]
+    ssl_cols = [c for c in pct.columns if c not in ("Average", "Supervised")]
+    has_supervised = "Supervised" in pct.columns
 
-    n_methods = len(models)
+    model_labels = [_display_name(m, _MODEL_DISPLAY_NAMES) for m in ssl_cols]
+    n_ssl = len(ssl_cols)
+    n_extra = 1 if has_supervised else 0
+    n_total_data = n_ssl + n_extra + 1  # +1 for Avg.
 
-    # Dataset rows (exclude "Average")
     datasets = [idx for idx in pct.index if idx != "Average"]
 
     def _fmt(val):
@@ -317,27 +289,38 @@ def _format_latex(table: pd.DataFrame) -> str:
         return f"{val:.1f}"
 
     lines = []
-    lines.append("\\begin{tabular}{l " + " ".join(["c"] * (n_methods + 1)) + "}")
+    lines.append("\\begin{tabular}{l " + " ".join(["c"] * n_total_data) + "}")
     lines.append("\\toprule")
-    lines.append(
-        f" & \\multicolumn{{{n_methods}}}{{c}}"
-        f"{{\\textbf{{Method ({backbone_label})}}}} & \\\\"
-    )
-    lines.append(f"\\cmidrule(lr){{2-{n_methods + 1}}}")
+
+    # Multicolumn header for SSL methods
+    if has_supervised:
+        lines.append(
+            f" & \\multicolumn{{{n_ssl}}}{{c}}"
+            f"{{\\textbf{{Method (ViT-Small)}}}} & & \\\\"
+        )
+    else:
+        lines.append(
+            f" & \\multicolumn{{{n_ssl}}}{{c}}"
+            f"{{\\textbf{{Method (ViT-Small)}}}} & \\\\"
+        )
+    lines.append(f"\\cmidrule(lr){{2-{n_ssl + 1}}}")
 
     # Header row
     header = "\\textbf{Dataset}"
     for m in model_labels:
         header += f" & {m}"
+    if has_supervised:
+        header += " & Supervised"
     header += " & \\textbf{Avg.} \\\\"
     lines.append(header)
     lines.append("\\midrule")
 
     # Data rows
+    all_data_cols = ssl_cols + (["Supervised"] if has_supervised else [])
     for ds in datasets:
         ds_label = _display_name(ds, _DATASET_DISPLAY_NAMES)
         row = ds_label
-        for col in method_cols:
+        for col in all_data_cols:
             row += f" & {_fmt(pct.loc[ds, col])}"
         row += f" & {_fmt(pct.loc[ds, 'Average'])}"
         row += " \\\\"
@@ -346,7 +329,7 @@ def _format_latex(table: pd.DataFrame) -> str:
     # Average row
     lines.append("\\midrule")
     avg_row = "\\textbf{Average}"
-    for col in method_cols:
+    for col in all_data_cols:
         avg_row += f" & {_fmt(pct.loc['Average', col])}"
     avg_row += f" & {_fmt(pct.loc['Average', 'Average'])}"
     avg_row += " \\\\"
@@ -360,70 +343,72 @@ def _format_latex(table: pd.DataFrame) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Collect offline probe results from W&B"
+        description="Collect SSL and supervised results from W&B"
     )
-    parser.add_argument("--entity", default="stable-ssl", help="W&B entity")
-    parser.add_argument("--project", default="stable-datasets-benchmarks", help="W&B project")
+    parser.add_argument("--entity", default="stable-ssl", help="W&B entity for SSL runs")
+    parser.add_argument("--project", default="stable-datasets-benchmarks", help="W&B project for SSL runs")
     parser.add_argument("--output", default="offline_probe_results.csv", help="Output CSV path")
     parser.add_argument("--latex", default=None, help="Output LaTeX table path (.tex)")
     parser.add_argument(
-        "--metric",
+        "--refresh",
+        action="store_true",
+        help="Bypass caches and re-download all data from W&B",
+    )
+    parser.add_argument(
+        "--supervised-entity",
         default=None,
-        choices=METRICS,
-        help="Metric to pivot on for the summary table (default: first available)",
+        help="W&B entity for supervised baselines (e.g. samibg)",
+    )
+    parser.add_argument(
+        "--supervised-project",
+        default=None,
+        help="W&B project for supervised baselines (e.g. stable-datasets)",
     )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
 
-    df = collect(args.entity, args.project)
-    if df.empty:
+    # Collect SSL results
+    ssl_df = _collect_ssl(args.entity, args.project, refresh=args.refresh)
+    if ssl_df.empty:
+        log.warning("No SSL runs found.")
         return
 
-    # Drop runs without any eval metrics
-    metric_cols = [m for m in METRICS if m in df.columns]
-    if metric_cols:
-        df = df.dropna(subset=metric_cols, how="all").reset_index(drop=True)
-    if df.empty:
-        log.warning("No offline probe runs with eval metrics found.")
+    # Drop runs without the metric
+    ssl_df = ssl_df.dropna(subset=[SSL_METRIC]).reset_index(drop=True)
+    if ssl_df.empty:
+        log.warning("No SSL runs with linear probe metrics found.")
         return
 
-    print(f"\n=== Offline Probe Results ({len(df)} runs) ===")
-    display_cols = [c for c in ["model", "backbone", "dataset", "checkpoint_name"] + metric_cols if c in df.columns]
-    print(df[display_cols].to_string(index=False))
+    print(f"\n=== SSL Results ({len(ssl_df)} runs) ===")
+    display_cols = [c for c in ["model", "backbone", "dataset", SSL_METRIC] if c in ssl_df.columns]
+    print(ssl_df[display_cols].to_string(index=False))
 
-    # Pick the requested metric, or fall back to the first available one
-    metric = args.metric
-    if metric is None or metric not in df.columns:
-        available = [m for m in METRICS if m in df.columns]
-        if not available:
-            log.warning("No known metric columns found for pivot table.")
-            metric = None
-        else:
-            metric = available[0]
-            if args.metric is not None:
-                log.warning(f"Metric '{args.metric}' not in results, falling back to '{metric}'")
+    # Collect supervised baselines if requested
+    supervised_df = None
+    if args.supervised_entity and args.supervised_project:
+        supervised_df = _collect_supervised(
+            args.supervised_entity, args.supervised_project, refresh=args.refresh
+        )
+        if supervised_df is not None and not supervised_df.empty:
+            print(f"\n=== Supervised Baselines ({len(supervised_df)} datasets) ===")
+            print(supervised_df[["dataset", "test_accuracy"]].to_string(index=False))
 
-    table = None
-    display_table = None
-    if metric and all(c in df.columns for c in ("model", "backbone", "dataset")):
-        table = pivot_table(df, metric)
-        display_table = pivot_table_with_epochs(df, metric)
-        print(f"\n=== {metric} (dataset x method) ===")
-        print(display_table.to_markdown())
+    # Build pivot table
+    table = pivot_table(ssl_df, supervised_df=supervised_df)
+    print(f"\n=== Linear Probe Top-1 (dataset x method) ===")
+    # Display as percentages
+    print((table * 100).round(1).to_markdown())
 
     if args.output:
-        df.to_csv(args.output, index=False)
+        ssl_df.to_csv(args.output, index=False)
         print(f"\nSaved to {args.output}")
 
     if args.latex:
-        if table is None:
-            log.warning("Cannot produce LaTeX: pivot table requires model, backbone, and dataset columns.")
-        else:
-            latex_str = _format_latex(table)
-            with open(args.latex, "w") as f:
-                f.write(latex_str)
-            print(f"LaTeX table saved to {args.latex}")
+        latex_str = _format_latex(table)
+        with open(args.latex, "w") as f:
+            f.write(latex_str)
+        print(f"LaTeX table saved to {args.latex}")
 
 
 if __name__ == "__main__":
