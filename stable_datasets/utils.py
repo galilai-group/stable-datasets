@@ -26,7 +26,7 @@ from rich.progress import (
 from tqdm import tqdm
 
 
-DEFAULT_CACHE_DIR = "~/.stable_datasets/"
+DEFAULT_CACHE_DIR = os.environ.get("STABLE_DATASETS_CACHE_DIR", "/workspace/.stable-datasets/")
 
 CACHE_DIR_ENV_VAR = "STABLE_DATASETS_CACHE_DIR"
 
@@ -206,7 +206,7 @@ class BaseDatasetBuilder(datasets.GeneratorBasedBuilder):
 
         Returns:
             Union[datasets.Dataset, datasets.DatasetDict]: The loaded dataset (single split)
-                or a DatasetDict (all splits).
+                or a DatasetDict (all splits).Try
         """
         instance = super().__new__(cls)
 

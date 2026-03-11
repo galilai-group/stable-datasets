@@ -32,7 +32,7 @@ def main(kwargs, job_dir):
     mem_gb = 48
     timeout_min = 4320  # 3 days (should be enough for most datasets)
     gpus_per_node = 1
-    partition = "gpu"
+    partition = "3090-gcondo"
 
     executor.update_parameters(
         mem_gb=mem_gb,  # Memory allocation
@@ -44,18 +44,16 @@ def main(kwargs, job_dir):
         slurm_partition=partition,  # Partition name
         slurm_job_name=f"supervised_{model.split('/')[-1]}_{dataset}{f'_{config_name}' if config_name else ''}_seed{seed}",  # Job name
         slurm_mail_type="ALL",  # Email settings
-        slurm_mail_user="leyang_hu@brown.edu",  # Email address
+        slurm_mail_user="sami_bou_ghanem@brown.edu",  # Email address
     )
 
     # Build command
     script_path = Path(__file__).parent / "supervised.py"
-    # Fix libstdc++ compatibility: conda activate in non-interactive shells may not set LD_LIBRARY_PATH
-    # Explicitly set it to use conda's libstdc++ instead of system's older version
-    conda_prefix = "/users/hleyang/miniconda3/envs/sdata"
+    venv_prefix = "/oscar/home/sboughan/stable-datasets/.venv"
+    data_dir = "/oscar/home/sboughan/scratch/.stable-datasets"
     command = (
-        "source /users/hleyang/miniconda3/etc/profile.d/conda.sh && "
-        "conda activate sdata && "
-        f"export LD_LIBRARY_PATH={conda_prefix}/lib:$LD_LIBRARY_PATH && "
+        f"source {venv_prefix}/bin/activate && "
+        f"export STABLE_DATASETS_CACHE_DIR={data_dir} && "
         f"python -u {script_path} "
         f"--dataset {dataset} "
         f"--model {model} "
@@ -128,46 +126,35 @@ if __name__ == "__main__":
 
     # Models to evaluate
     model_list = [
-        "microsoft/resnet-50",
-        "google/vit-base-patch16-224",
+        "WinKawaks/vit-small-patch16-224",
     ]
 
     # Datasets to evaluate (matching class names in stable_datasets.images)
+    # These match the datasets used in results.tex (SSL benchmarks table)
     dataset_list = [
         "ArabicCharacters",
-        "Cars196",
+        "ArabicDigits",
         "CIFAR10",
         "CIFAR100",
-        "CIFAR100C",
-        "CIFAR10C",
-        "DTD",
-        "MedMNIST",
-        "FashionMNIST",
-        "KMNIST",
-        "NotMNIST",
         "Country211",
         "CUB200",
-        # "DSprites",
+        "DTD",
         "EMNIST",
+        "FashionMNIST",
         "Flowers102",
+        "HASYv2",
+        "KMNIST",
+        "MedMNIST",
+        "NotMNIST",
+        "RockPaperScissor",
+        "STL10",
         "SVHN",
     ]
 
     # Config names for datasets that require them
     dataset_configs = {
-        "EMNIST": ["byclass", "bymerge", "balanced", "letters", "digits", "mnist"],
-        "MedMNIST": [
-            "pathmnist",
-            "dermamnist",
-            "octmnist",
-            "pneumoniamnist",
-            "breastmnist",
-            "bloodmnist",
-            "tissuemnist",
-            "organamnist",
-            "organcmnist",
-            "organsmnist",
-        ],  # skipping chestmnist (multi-label classification task), retinamnist (ordinal regression task), and all 3D variants (organmnist3d, nodulemnist3d, adrenalmnist3d, fracturemnist3d, vesselmnist3d, synapsemnist3d)
+        "EMNIST": ["balanced"],
+        "MedMNIST": ["pneumoniamnist"],
     }
 
     # Seeds for reproducibility

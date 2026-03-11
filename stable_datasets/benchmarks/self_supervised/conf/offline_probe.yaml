@@ -1,0 +1,30 @@
+defaults:
+  - _self_
+
+ssl_model: simclr
+ssl_backbone: vit_small
+dataset: cifar10
+
+checkpoint:
+  dir: /oscar/home/sboughan/scratch/.stable-datasets/.pretrain_checkpoints
+  name: last
+
+cache_dir: /oscar/home/sboughan/scratch/.stable-datasets/.cached_224
+data_dir: /oscar/home/sboughan/scratch/.stable-datasets
+
+probe:
+  epochs: 100
+  lr: 0.1
+  batch_size: 256
+
+wandb:
+  enabled: true
+  entity: stable-ssl
+  project: stable-datasets-benchmarks
+
+hydra:
+  run:
+    dir: /oscar/home/sboughan/scratch/.stable-datasets/probe-runs/${ssl_model}_${ssl_backbone}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: /oscar/home/sboughan/scratch/.stable-datasets/probe-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${ssl_model}_${ssl_backbone}_${dataset}
