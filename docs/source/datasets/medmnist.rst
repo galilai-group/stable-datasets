@@ -14,7 +14,7 @@ Overview
 
 MedMNIST is a large-scale MNIST-like collection of standardized biomedical images. In stable-datasets, MedMNIST is exposed via the `MedMNIST` class, but **the actual dataset depends on the selected variant** (passed as ``config_name``, e.g. ``dermamnist``, ``pathmnist``). Each variant provides train/validation/test splits.
 
-All 2D variants are pre-processed to **28×28** images and all 3D variants are pre-processed to **28×28×28** volumes, with corresponding labels.
+All 2D variants default to **28×28** images (with optional sizes **64**, **128**, **224**), and all 3D variants default to **28×28×28** volumes (with optional size **64**). Pass ``size=`` to select a larger resolution.
 
 .. image:: teasers/medmnist_dermamnist_teaser.png
    :align: center
@@ -217,6 +217,9 @@ Usage Example
     # Optional: make it PyTorch-friendly
     ds_train_torch = ds_train.with_format("torch")
 
+    # Load a larger resolution (MedMNIST+): 64, 128, or 224 for 2D; 64 for 3D
+    ds_train_224 = MedMNIST(split="train", config_name=variant, size=224)
+
 **Basic Usage (2D multi-label variant: chestmnist)**
 
 .. code-block:: python
@@ -247,6 +250,9 @@ Usage Example
 
     image = sample["image"]  # nested list, shape (28, 28, 28)
     label = sample["label"]  # int
+
+    # Load a larger resolution (MedMNIST+): 64 for 3D
+    ds_train_64 = MedMNIST(split="train", config_name=variant, size=64)
 
 References
 ----------

@@ -6,15 +6,41 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 MEDMNIST_VERSION = datasets.Version("1.0.0")
 
+_VALID_SIZES_2D = (28, 64, 128, 224)
+_VALID_SIZES_3D = (28, 64)
+
 
 class MedMNISTConfig(datasets.BuilderConfig):
-    """BuilderConfig with per-variant metadata used by MedMNIST._info()."""
+    """BuilderConfig with per-variant metadata used by MedMNIST._info().
 
-    def __init__(self, *, num_classes: int, is_3d: bool = False, multi_label: bool = False, **kwargs):
+    Args:
+        num_classes: Number of target classes.
+        is_3d: Whether the variant is a 3D volumetric dataset.
+        multi_label: Whether the task is multi-label classification.
+        size: Image resolution. 2D datasets support 28, 64, 128, 224;
+              3D datasets support 28, 64. Defaults to 28 (MNIST-like).
+    """
+
+    def __init__(
+        self,
+        *,
+        num_classes: int,
+        is_3d: bool = False,
+        multi_label: bool = False,
+        size: int = 28,
+        **kwargs,
+    ):
         super().__init__(version=MEDMNIST_VERSION, **kwargs)
+        valid_sizes = _VALID_SIZES_3D if is_3d else _VALID_SIZES_2D
+        if size not in valid_sizes:
+            raise ValueError(
+                f"size={size} is not valid for {'3D' if is_3d else '2D'} variant "
+                f"'{kwargs.get('name', '?')}'. Choose from {valid_sizes}."
+            )
         self.num_classes = num_classes
         self.is_3d = is_3d
         self.multi_label = multi_label
+        self.size = size
 
 
 class MedMNIST(BaseDatasetBuilder):
@@ -51,43 +77,56 @@ class MedMNIST(BaseDatasetBuilder):
     ]
 
     def _source(self) -> dict:
-        """Variant-aware source definition (computed from self.config at runtime)."""
+        """Variant- and size-aware source definition."""
         variant = self.config.name
-        url = f"https://zenodo.org/records/10519652/files/{variant}.npz?download=1"
-        # Single NPZ contains all splits; we map each split name to the same URL.
+        size = getattr(self.config, "size", 28)
+        is_3d = getattr(self.config, "is_3d", False)
+
+        valid_sizes = _VALID_SIZES_3D if is_3d else _VALID_SIZES_2D
+        if size not in valid_sizes:
+            raise ValueError(
+                f"size={size} is not valid for {'3D' if is_3d else '2D'} variant "
+                f"'{variant}'. Choose from {valid_sizes}."
+            )
+
+        filename = f"{variant}.npz" if size == 28 else f"{variant}_{size}.npz"
+        url = f"https://zenodo.org/records/10519652/files/{filename}?download=1"
+
         return {
             "homepage": "https://medmnist.com/",
             "assets": {"train": url, "test": url, "val": url},
             "citation": """@article{medmnistv2,
-                        title={MedMNIST v2-A large-scale lightweight benchmark for 2D and 3D biomedical image classification},
-                        author={Yang, Jiancheng and Shi, Rui and Wei, Donglai and Liu, Zequan and Zhao, Lin and Ke, Bilian and Pfister, Hanspeter and Ni, Bingbing},
-                        journal={Scientific Data},
-                        volume={10},
-                        number={1},
-                        pages={41},
-                        year={2023},
-                        publisher={Nature Publishing Group UK London}
-                    }""",
+                title={MedMNIST v2-A large-scale lightweight benchmark for 2D and 3D biomedical image classification},
+                author={Yang, Jiancheng and Shi, Rui and Wei, Donglai and Liu, Zequan and Zhao, Lin and Ke, Bilian and Pfister, Hanspeter and Ni, Bingbing},
+                journal={Scientific Data},
+                volume={10},
+                number={1},
+                pages={41},
+                year={2023},
+                publisher={Nature Publishing Group UK London}
+            }""",
         }
 
     def _info(self):
         variant = self.config.name
+        size = getattr(self.config, "size", 28)
         source = self._source()
 
-        if getattr(self.config, "multi_label", False):  # multi-label instead of multi-class
+        if getattr(self.config, "multi_label", False):
             label_feature = datasets.Sequence(datasets.Value("int8"))
         else:
             label_feature = datasets.ClassLabel(num_classes=self.config.num_classes)
 
+        if getattr(self.config, "is_3d", False):
+            image_feature = datasets.Array3D(shape=(size, size, size), dtype="uint8")
+        else:
+            image_feature = datasets.Image()
+
         return datasets.DatasetInfo(
-            description=f"MedMNIST variant: {variant} dataset.",
+            description=f"MedMNIST variant: {variant} (size={size}).",
             features=datasets.Features(
                 {
-                    "image": (
-                        datasets.Array3D(shape=(28, 28, 28), dtype="uint8")
-                        if getattr(self.config, "is_3d", False)
-                        else datasets.Image()
-                    ),
+                    "image": image_feature,
                     "label": label_feature,
                 }
             ),
