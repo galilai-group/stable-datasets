@@ -69,7 +69,7 @@ class CLEVRER(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self):
         source = self._source()
         assets = source["assets"]
 

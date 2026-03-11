@@ -37,7 +37,7 @@ class ImageNet100(_ImageNetArchiveMixin, BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager=None):
+    def _split_generators(self):
         train_path = download(self.SOURCE["assets"]["train"], dest_folder=self._raw_download_dir)
         return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"data_path": train_path})]
 

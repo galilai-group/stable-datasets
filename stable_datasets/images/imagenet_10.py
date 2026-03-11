@@ -53,7 +53,7 @@ class ImageNet10(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager=None):
+    def _split_generators(self):
         archive_path = download(self.SOURCE["assets"]["archive"], dest_folder=self._raw_download_dir)
         return [
             SplitGenerator(name=Split.TRAIN, gen_kwargs={"data_path": archive_path, "split": "train"}),

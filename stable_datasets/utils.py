@@ -185,7 +185,7 @@ class BaseDatasetBuilder:
         if "assets" not in source or not isinstance(source["assets"], Mapping):
             raise TypeError("SOURCE must contain a mapping-valued 'assets' key.")
 
-    def _split_generators(self, dl_manager=None):
+    def _split_generators(self):
         """
         Default split generator implementation.
 
@@ -275,7 +275,7 @@ class BaseDatasetBuilder:
         cls._validate_source(source)
 
         # 4) Get split generators (downloads raw files)
-        split_generators = instance._split_generators(dl_manager=None)
+        split_generators = instance._split_generators()
 
         # 5) For each split: check Arrow cache or generate + write
         features = instance._dataset_info.features

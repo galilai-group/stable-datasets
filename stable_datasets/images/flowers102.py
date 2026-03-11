@@ -60,7 +60,7 @@ class Flowers102(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self):
         """
         Override default splitting because we need all 3 files (images, labels, IDs)
         to generate examples for any split.

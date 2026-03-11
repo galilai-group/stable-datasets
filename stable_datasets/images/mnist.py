@@ -44,7 +44,7 @@ class MNIST(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager=None):
+    def _split_generators(self):
         source = self._source()
         assets = source["assets"]
         urls = list(assets.values())

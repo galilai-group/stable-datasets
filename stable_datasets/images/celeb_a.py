@@ -50,7 +50,7 @@ class CelebA(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager=None):
+    def _split_generators(self):
         source = self._source()
         assets = source["assets"]
         cache_dir = Path(self._raw_download_dir) / "celebA"
