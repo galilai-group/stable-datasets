@@ -378,13 +378,13 @@ def test_default_processed_cache_dir_respects_env(monkeypatch):
 
 def test_default_dest_folder_uses_default_when_env_unset(monkeypatch):
     monkeypatch.delenv(utils.CACHE_DIR_ENV_VAR, raising=False)
-    expected = Path.home() / ".stable_datasets" / "downloads"
+    expected = Path.home() / ".stable-datasets" / "downloads"
     assert utils._default_dest_folder() == expected
 
 
 def test_default_processed_cache_dir_uses_default_when_env_unset(monkeypatch):
     monkeypatch.delenv(utils.CACHE_DIR_ENV_VAR, raising=False)
-    expected = Path.home() / ".stable_datasets" / "processed"
+    expected = Path.home() / ".stable-datasets" / "processed"
     assert utils._default_processed_cache_dir() == expected
 
 
