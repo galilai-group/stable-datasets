@@ -295,7 +295,6 @@ class StableDataset:
         """Decode a single row from the full table."""
         return _decode_row_from_table(self.table, idx, self._features)
 
-
     def _decode_row_sharded(self, idx: int) -> dict:
         """Decode a single row (only maps the needed shard via LRU)."""
         shard_id, local_offset = self._locate_row(idx)
@@ -362,7 +361,6 @@ class StableDatasetDict(dict):
     """Dict of ``split_name -> StableDataset``."""
 
     pass
-
 
 
 def _mmap_ipc(path: Path) -> pa.Table:
