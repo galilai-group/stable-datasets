@@ -21,7 +21,7 @@ class DCLDE(BaseDatasetBuilder):
     def _info(self) -> DatasetInfo:  # pragma: no cover
         raise NotImplementedError("DCLDE builder not implemented yet.")
 
-    def _split_generators(self, dl_manager=None):  # pragma: no cover
+    def _split_generators(self):  # pragma: no cover
         raise NotImplementedError("DCLDE builder not implemented yet.")
 
     def _generate_examples(self, **kwargs):  # pragma: no cover

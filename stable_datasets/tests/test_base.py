@@ -19,7 +19,7 @@ class _TinyLocalBuilder(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(features=Features({"x": Value("int32")}))
 
-    def _split_generators(self, dl_manager=None):
+    def _split_generators(self):
         return [
             SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 3}),
             SplitGenerator(name=Split.TEST, gen_kwargs={"n": 2}),
@@ -42,7 +42,7 @@ class _TinyDynamicSourceBuilder(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(features=Features({"x": Value("int32")}))
 
-    def _split_generators(self, dl_manager=None):
+    def _split_generators(self):
         # Ensure the runtime hook is available and returns an immutable mapping.
         src = self._source()
         assert isinstance(src, Mapping)
@@ -184,7 +184,7 @@ def test_base_builder_requires_source_homepage(tmp_path):
         def _info(self):
             return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _split_generators(self, dl_manager=None):
+        def _split_generators(self):
             return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
         def _generate_examples(self, n):
@@ -202,7 +202,7 @@ def test_base_builder_requires_source_citation(tmp_path):
         def _info(self):
             return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _split_generators(self, dl_manager=None):
+        def _split_generators(self):
             return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
         def _generate_examples(self, n):
@@ -220,7 +220,7 @@ def test_base_builder_requires_source_assets(tmp_path):
         def _info(self):
             return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _split_generators(self, dl_manager=None):
+        def _split_generators(self):
             return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
         def _generate_examples(self, n):
@@ -238,7 +238,7 @@ def test_base_builder_validates_source_field_types(tmp_path):
         def _info(self):
             return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _split_generators(self, dl_manager=None):
+        def _split_generators(self):
             return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
         def _generate_examples(self, n):
@@ -289,7 +289,7 @@ def test_base_builder_maps_val_to_validation(monkeypatch, tmp_path):
     inst = object.__new__(_ValSplit)
     inst._raw_download_dir = tmp_path
     inst.__init__()
-    splits = inst._split_generators(dl_manager=None)
+    splits = inst._split_generators()
     assert len(splits) == 1
     assert splits[0].name == Split.VALIDATION
 
@@ -323,7 +323,7 @@ def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
     inst = object.__new__(_SharedUrl)
     inst._raw_download_dir = tmp_path
     inst.__init__()
-    _ = inst._split_generators(dl_manager=None)
+    _ = inst._split_generators()
     assert seen["urls"] == ["https://example.com/file.bin"]
 
 

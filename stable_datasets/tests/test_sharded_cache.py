@@ -366,7 +366,7 @@ class _TinyShardedBuilder(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(features=Features({"x": Value("int32")}))
 
-    def _split_generators(self, dl_manager=None):
+    def _split_generators(self):
         return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 20})]
 
     def _generate_examples(self, n):

@@ -48,7 +48,7 @@ class Places365Small(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager=None):
+    def _split_generators(self):
         source = self._source()
         assets = source["assets"]
         urls = [assets["train"], assets["val"], assets["devkit"]]
