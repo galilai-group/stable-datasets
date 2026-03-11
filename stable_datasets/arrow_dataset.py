@@ -134,7 +134,7 @@ class StableDataset:
     def _is_shard_backed(self) -> bool:
         return self._shard_paths is not None
 
-    # ── Lazy table access ────────────────────────────────────────────────────
+    # Lazy table access
 
     @property
     def table(self) -> pa.Table:
@@ -159,8 +159,6 @@ class StableDataset:
             if self._num_rows is None:
                 self._num_rows = self._table.num_rows
         return self._table
-
-    # ── Pickle: serialise paths (tiny) instead of table (huge) ───────────────
 
     def __getstate__(self):
         state = {
@@ -189,7 +187,7 @@ class StableDataset:
             max_open_shards=state.get("max_open_shards", _DEFAULT_MAX_OPEN_SHARDS),
         )
 
-    # ── Public API ───────────────────────────────────────────────────────────
+    # Public API
 
     @property
     def features(self) -> Features:
@@ -291,13 +289,12 @@ class StableDataset:
                 td[col_name] = torch.from_numpy(col.to_numpy(zero_copy_only=False))
         return TensorDict(td, batch_size=[len(self)])
 
-    # ── Internal: in-memory row decoding ─────────────────────────────────────
+    # Internal: in-memory row decoding
 
     def _decode_row(self, idx: int) -> dict:
         """Decode a single row from the full table."""
         return _decode_row_from_table(self.table, idx, self._features)
 
-    # ── Internal: shard-backed operations ────────────────────────────────────
 
     def _decode_row_sharded(self, idx: int) -> dict:
         """Decode a single row (only maps the needed shard via LRU)."""
@@ -366,8 +363,6 @@ class StableDatasetDict(dict):
 
     pass
 
-
-# Helpers
 
 
 def _mmap_ipc(path: Path) -> pa.Table:

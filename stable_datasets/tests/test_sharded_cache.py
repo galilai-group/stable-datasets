@@ -28,7 +28,7 @@ from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# Helpers
 
 
 def _simple_features():
@@ -66,7 +66,7 @@ def _write_shards(tmp_path, n=100, shard_size_bytes=1024, batch_size=10, feature
     )
 
 
-# ── Sharded writer tests ────────────────────────────────────────────────────
+# Sharded writer tests
 
 
 class TestShardedWriter:
@@ -154,7 +154,7 @@ class TestShardedWriter:
             assert not child.name.startswith(".")
 
 
-# ── Image encoding tests ────────────────────────────────────────────────────
+# Image encoding tests
 
 
 class TestImageEncoding:
@@ -203,7 +203,7 @@ class TestImageEncoding:
         assert _encode_image(None) is None
 
 
-# ── Cache validation tests ───────────────────────────────────────────────────
+# Cache validation tests
 
 
 class TestCacheValidation:
@@ -242,7 +242,7 @@ class TestCacheValidation:
             read_sharded_cache_meta(meta.cache_dir)
 
 
-# ── Sharded StableDataset tests ──────────────────────────────────────────────
+# Sharded StableDataset tests
 
 
 def _make_sharded_ds(tmp_path, n=50, shard_size_bytes=512, batch_size=10):
@@ -356,7 +356,7 @@ class TestShardedDataset:
         assert len(ds._shard_lru) <= 4
 
 
-# ── Builder integration tests ───────────────────────────────────────────────
+# Builder integration tests
 
 
 class _TinyShardedBuilder(BaseDatasetBuilder):
