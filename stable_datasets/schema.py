@@ -184,6 +184,7 @@ class DatasetInfo:
     homepage: str = ""
     citation: str = ""
     license: str = ""
+    config_name: str = ""
 
 
 @dataclass

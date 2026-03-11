@@ -157,6 +157,7 @@ class BaseDatasetBuilder:
 
         # Populate self.info / self._dataset_info so _generate_examples can use it
         self._dataset_info = self._info()
+        self._dataset_info.config_name = self.config.name
 
     @property
     def info(self):

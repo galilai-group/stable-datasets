@@ -47,7 +47,7 @@ def test_hasy_v2_default_config():
     """
     ds = HASYv2(split="train")
 
-    assert ds.config.name == "fold-1", f"Expected default config to be 'fold-1', got '{ds.config.name}'"
+    assert ds.info.config_name == "fold-1", f"Expected default config to be 'fold-1', got '{ds.info.config_name}'"
     assert len(ds) > 0, "Default dataset should not be empty."
 
     print("HASYv2 default config test passed!")
@@ -62,7 +62,7 @@ def test_hasy_v2_fold_switching():
 
     ds_fold5 = HASYv2(config_name="fold-5", split="test")
 
-    assert ds_fold5.config.name == "fold-5"
+    assert ds_fold5.info.config_name == "fold-5"
     assert len(ds_fold5) > 10000
 
     sample1 = ds_fold1[0]
