@@ -432,9 +432,7 @@ def download(
 
         try:
             with requests.Session() as session:
-                session.headers.update(
-                    {"User-Agent": "stable-datasets"}
-                )
+                session.headers.update({"User-Agent": "stable-datasets"})
                 logging.info(f"Downloading: {url}")
 
                 with session.get(
