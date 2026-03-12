@@ -29,14 +29,13 @@ from .food101 import Food101
 from .galaxy10 import Galaxy10Decal
 from .hasy_v2 import HASYv2
 from .imagenet_1k import ImageNet1K
-from .imagenet_10 import ImageNet10
+from .imagenet_10 import Imagenette
 from .imagenet_100 import ImageNet100
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
 
-# from .imagenette import Imagenette
 # from .mnist import MNIST
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
@@ -77,7 +76,7 @@ __all__ = [
     "HASYv2",
     "ImageNet1K",
     "ImageNet100",
-    "ImageNet10",
+    "Imagenette",
     "KMNIST",
     "Linnaeus5",
     "MedMNIST",

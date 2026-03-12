@@ -23,8 +23,8 @@ _IN10_CLASSES = [
 ]
 
 
-class ImageNet10(BaseDatasetBuilder):
-    """Imagenette (ImageNet-10) from FastAI's public tarball."""
+class Imagenette(BaseDatasetBuilder):
+    """Imagenette: 10 easily classified classes from ImageNet."""
 
     VERSION = Version("2.0.0")
     SOURCE = {
@@ -46,7 +46,7 @@ class ImageNet10(BaseDatasetBuilder):
 
     def _info(self):
         return DatasetInfo(
-            description="ImageNet-10 (Imagenette) with train/validation splits.",
+            description="Imagenette with train/validation splits.",
             features=Features({"image": Image(), "label": ClassLabel(names=_IN10_CLASSES)}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
