@@ -5,7 +5,7 @@ from PIL import Image
 
 from stable_datasets.images.imagenet_1k import ImageNet1K
 from stable_datasets.images.imagenet_10 import Imagenette
-from stable_datasets.images.imagenet_100 import Imagenette0
+from stable_datasets.images.imagenet_100 import ImageNet100
 
 
 def _jpeg_bytes(color=(255, 0, 0)):
@@ -64,7 +64,7 @@ def test_imagenet_100_streaming_integration(tmp_path, monkeypatch):
 
     monkeypatch.setattr("stable_datasets.images.imagenet_100.download", lambda *args, **kwargs: tar_path)
 
-    dataset = Imagenette0(split="train", streaming=True, processed_cache_dir=tmp_path / "processed")
+    dataset = ImageNet100(split="train", streaming=True, processed_cache_dir=tmp_path / "processed")
     assert len(dataset) == 100
     labels = {dataset[i]["label"] for i in range(len(dataset))}
     assert labels == set(range(100))
