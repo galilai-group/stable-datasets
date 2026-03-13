@@ -26,7 +26,7 @@ Usage::
 from __future__ import annotations
 
 import math
-from typing import Iterator
+from collections.abc import Iterator
 
 import torch
 from torch.utils.data import Sampler
@@ -107,15 +107,6 @@ class ShardAwareSampler(Sampler[int]):
         """Set the epoch for deterministic shuffling."""
         self.epoch = epoch
 
-    def _assign_shards(self, shard_order: list[int]) -> list[int]:
-        """Partition shards across ranks, returning this rank's shards."""
-        n = len(shard_order)
-        # Pad shard list so it's divisible by num_replicas
-        remainder = n % self.num_replicas
-        if remainder:
-            shard_order = shard_order + shard_order[: self.num_replicas - remainder]
-        return shard_order[self.rank :: self.num_replicas]
-
     def __iter__(self) -> Iterator[int]:
         g = torch.Generator()
         g.manual_seed(self.seed + self.epoch)
@@ -125,11 +116,11 @@ class ShardAwareSampler(Sampler[int]):
         else:
             shard_order = list(range(self._num_shards))
 
-        my_shards = self._assign_shards(shard_order)
-
-        # Build the full index list for this rank's shards
-        indices: list[int] = []
-        for shard_id in my_shards:
+        # Build the full shard-grouped index list, then partition across ranks.
+        # This mirrors DistributedSampler: build all indices, pad/truncate to
+        # a length divisible by num_replicas, then slice for this rank.
+        all_indices: list[int] = []
+        for shard_id in shard_order:
             shard_start = self._cumulative_offsets[shard_id]
             shard_len = self._shard_row_counts[shard_id]
 
@@ -141,16 +132,20 @@ class ShardAwareSampler(Sampler[int]):
                 local_perm = range(shard_len)
 
             for local_idx in local_perm:
-                indices.append(shard_start + local_idx)
+                all_indices.append(shard_start + local_idx)
 
-        # Pad or truncate to num_samples so all DDP ranks emit equal counts.
-        if len(indices) < self.num_samples:
-            # Pad by wrapping from the start (preserves shard grouping for
-            # the original indices; the padding tail is small).
-            indices += indices[: self.num_samples - len(indices)]
-        elif len(indices) > self.num_samples:
-            indices = indices[: self.num_samples]
+        # Pad or truncate so total length = num_samples * num_replicas,
+        # then each rank takes a contiguous chunk.  Contiguous slicing
+        # (not interleaving) preserves shard grouping within each rank.
+        total_needed = self.num_samples * self.num_replicas
+        if len(all_indices) < total_needed:
+            deficit = total_needed - len(all_indices)
+            all_indices += all_indices[:deficit]
+        elif len(all_indices) > total_needed:
+            all_indices = all_indices[:total_needed]
 
+        start = self.rank * self.num_samples
+        indices = all_indices[start : start + self.num_samples]
         return iter(indices)
 
     def __len__(self) -> int:

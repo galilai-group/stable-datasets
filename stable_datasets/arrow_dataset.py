@@ -266,32 +266,6 @@ class StableDataset:
             "test": StableDataset(features=self._features, info=self._info, table=tbl.take(test_indices)),
         }
 
-    def to_iterable(self, seed: int = 0) -> _ShardStreamWrapper:
-        """Return an IterableDataset wrapper for shard-aware DataLoader streaming.
-
-        Each DataLoader worker is assigned a disjoint slice of shards via
-        round-robin.  Within each shard, rows are shuffled.  Shard order is
-        also shuffled.  The *seed* controls all randomness — change it each
-        epoch to get a different ordering.
-
-        Requires ``torch`` to be installed.  Only useful for shard-backed
-        datasets with many shards; for small datasets, use the default
-        map-style access with ``DataLoader(ds, shuffle=True)``.
-
-        Example::
-
-            for epoch in range(100):
-                loader = DataLoader(ds.to_iterable(seed=epoch), num_workers=4)
-                for batch in loader:
-                    ...
-        """
-        if not self._is_shard_backed:
-            raise RuntimeError(
-                "to_iterable() requires a shard-backed dataset. "
-                "For in-memory datasets, use DataLoader(ds, shuffle=True) instead."
-            )
-        return _ShardStreamWrapper(self, seed)
-
     def to_tensordict(self, columns: list[str] | None = None):
         """Convert numeric columns to a ``tensordict.TensorDict``.
 
@@ -395,60 +369,6 @@ class StableDatasetDict(dict):
     """Dict of ``split_name -> StableDataset``."""
 
     pass
-
-
-def _assign_shards(num_shards: int, worker_id: int, num_workers: int, seed: int) -> list[int]:
-    """Assign a disjoint subset of shards to a worker.
-
-    Shuffles shard order by *seed*, then round-robin assigns to workers.
-    Deterministic: same inputs always produce the same assignment.
-    """
-    rng = np.random.RandomState(seed)
-    order = rng.permutation(num_shards).tolist()
-    return order[worker_id::num_workers]
-
-
-class _ShardStreamWrapper:
-    """IterableDataset wrapper that partitions shards across DataLoader workers.
-
-    Inherits from ``torch.utils.data.IterableDataset`` at runtime so that
-    ``torch`` remains an optional dependency.
-    """
-
-    def __init__(self, dataset: StableDataset, seed: int):
-        # Defer torch import and dynamically inherit IterableDataset
-        import torch.utils.data
-
-        # Make this instance recognized as an IterableDataset
-        if not isinstance(self, torch.utils.data.IterableDataset):
-            _ShardStreamWrapper.__bases__ = (torch.utils.data.IterableDataset,)
-            torch.utils.data.IterableDataset.__init__(self)
-
-        self._dataset = dataset
-        self._seed = seed
-
-    def __iter__(self):
-        import torch.utils.data
-
-        info = torch.utils.data.get_worker_info()
-        num_shards = len(self._dataset._shard_paths)
-
-        if info is not None:
-            my_shards = _assign_shards(num_shards, info.id, info.num_workers, self._seed)
-        else:
-            my_shards = _assign_shards(num_shards, 0, 1, self._seed)
-
-        rng = np.random.RandomState(self._seed)
-
-        for shard_id in my_shards:
-            shard_table = _mmap_ipc(self._dataset._shard_paths[shard_id])
-            row_order = rng.permutation(shard_table.num_rows)
-            for row_idx in row_order:
-                yield _decode_row_from_table(shard_table, row_idx, self._dataset._features)
-            del shard_table
-
-    def __len__(self):
-        return len(self._dataset)
 
 
 def _mmap_ipc(path: Path) -> pa.Table:
