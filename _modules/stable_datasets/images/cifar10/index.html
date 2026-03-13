@@ -196,9 +196,9 @@
 <span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
 </span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
 </span><span id="line-3">
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="line-6">
+</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">DatasetInfo</span><span class="p">,</span> <span class="n">Features</span><span class="p">,</span> <span class="n">Image</span><span class="p">,</span> <span class="n">Version</span>
 </span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
 </span><span id="line-8">
 </span><span id="line-9">
@@ -218,7 +218,7 @@
 </span><span id="line-21"><span class="sd">    training batches contain exactly 5000 images from each class.</span>
 </span><span id="line-22"><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="line-23">
-</span><span id="line-24">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-24">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
 </span><span id="line-25">
 </span><span id="line-26">    <span class="c1"># Single source-of-truth for dataset provenance + download locations.</span>
 </span><span id="line-27">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
@@ -235,12 +235,12 @@
 </span><span id="line-38">    <span class="p">}</span>
 </span><span id="line-39">
 </span><span id="line-40">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-41">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-41">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
 </span><span id="line-42">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;The CIFAR-10 dataset is an image classification dataset of 50,000 32x32 color training images and 10,000 test images, labeled over 10 categories. See https://www.cs.toronto.edu/~kriz/cifar.html for more information.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-43">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-43">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">(</span>
 </span><span id="line-44">                <span class="p">{</span>
-</span><span id="line-45">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-46">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span>
+</span><span id="line-45">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-46">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">ClassLabel</span><span class="p">(</span>
 </span><span id="line-47">                        <span class="n">names</span><span class="o">=</span><span class="p">[</span>
 </span><span id="line-48">                            <span class="s2">&quot;airplane&quot;</span><span class="p">,</span>
 </span><span id="line-49">                            <span class="s2">&quot;automobile&quot;</span><span class="p">,</span>

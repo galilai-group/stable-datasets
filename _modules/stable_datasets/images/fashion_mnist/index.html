@@ -195,9 +195,9 @@
       <h1>Source code for stable_datasets.images.fashion_mnist</h1><div class="highlight"><pre>
 <span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="line-5">
+</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">DatasetInfo</span><span class="p">,</span> <span class="n">Features</span><span class="p">,</span> <span class="n">Image</span><span class="p">,</span> <span class="n">Version</span>
 </span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
 </span><span id="line-7">
 </span><span id="line-8">
@@ -210,7 +210,7 @@
 </span><span id="line-13"><span class="sd">    and a test set of 10,000 examples. Each example is a 28x28 grayscale image, associated with a label from 10 classes.</span>
 </span><span id="line-14"><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="line-15">
-</span><span id="line-16">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-16">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
 </span><span id="line-17">
 </span><span id="line-18">    <span class="c1"># Single source-of-truth for dataset provenance + download locations.</span>
 </span><span id="line-19">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
@@ -227,12 +227,12 @@
 </span><span id="line-30">    <span class="p">}</span>
 </span><span id="line-31">
 </span><span id="line-32">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-33">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-33">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
 </span><span id="line-34">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Fashion-MNIST is a dataset of Zalando&#39;s article images for image classification tasks.&quot;</span><span class="p">,</span>
-</span><span id="line-35">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-35">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">(</span>
 </span><span id="line-36">                <span class="p">{</span>
-</span><span id="line-37">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-38">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span>
+</span><span id="line-37">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-38">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">ClassLabel</span><span class="p">(</span>
 </span><span id="line-39">                        <span class="n">names</span><span class="o">=</span><span class="p">[</span>
 </span><span id="line-40">                            <span class="s2">&quot;T-shirt/top&quot;</span><span class="p">,</span>
 </span><span id="line-41">                            <span class="s2">&quot;Trouser&quot;</span><span class="p">,</span>

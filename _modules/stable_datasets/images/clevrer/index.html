@@ -198,8 +198,8 @@
 </span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
 </span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 </span><span id="line-5">
-</span><span id="line-6"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-7">
+</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetInfo</span><span class="p">,</span> <span class="n">Features</span><span class="p">,</span> <span class="n">Value</span><span class="p">,</span> <span class="n">Version</span><span class="p">,</span> <span class="n">Video</span>
+</span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.splits</span><span class="w"> </span><span class="kn">import</span> <span class="n">Split</span><span class="p">,</span> <span class="n">SplitGenerator</span>
 </span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span><span class="p">,</span> <span class="n">_default_dest_folder</span><span class="p">,</span> <span class="n">bulk_download</span>
 </span><span id="line-9">
 </span><span id="line-10">
@@ -222,7 +222,7 @@
 </span><span id="line-25"><span class="sd">        - test: 5,000 videos (index 15000 - 19999)</span>
 </span><span id="line-26"><span class="sd">    &quot;&quot;&quot;</span>
 </span><span id="line-27">
-</span><span id="line-28">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-28">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
 </span><span id="line-29">
 </span><span id="line-30">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
 </span><span id="line-31">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;http://clevrer.csail.mit.edu/&quot;</span><span class="p">,</span>
@@ -245,19 +245,19 @@
 </span><span id="line-48">    <span class="p">}</span>
 </span><span id="line-49">
 </span><span id="line-50">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-51">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-51">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
 </span><span id="line-52">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;CLEVRER is a diagnostic video dataset for temporal and causal reasoning.</span>
 </span><span id="line-53"><span class="s2">            It contains 20,000 synthetic videos of moving and colliding objects, with four types</span>
 </span><span id="line-54"><span class="s2">            of questions: descriptive, explanatory, predictive, and counterfactual.&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-55">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-55">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">(</span>
 </span><span id="line-56">                <span class="p">{</span>
-</span><span id="line-57">                    <span class="s2">&quot;video&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Video</span><span class="p">(),</span>
-</span><span id="line-58">                    <span class="s2">&quot;scene_index&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
-</span><span id="line-59">                    <span class="s2">&quot;video_filename&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
+</span><span id="line-57">                    <span class="s2">&quot;video&quot;</span><span class="p">:</span> <span class="n">Video</span><span class="p">(),</span>
+</span><span id="line-58">                    <span class="s2">&quot;scene_index&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
+</span><span id="line-59">                    <span class="s2">&quot;video_filename&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
 </span><span id="line-60">                    <span class="c1"># Store questions as JSON string to avoid nested Sequence issues</span>
-</span><span id="line-61">                    <span class="s2">&quot;questions_json&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
+</span><span id="line-61">                    <span class="s2">&quot;questions_json&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
 </span><span id="line-62">                    <span class="c1"># Store annotations as JSON string</span>
-</span><span id="line-63">                    <span class="s2">&quot;annotations_json&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
+</span><span id="line-63">                    <span class="s2">&quot;annotations_json&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
 </span><span id="line-64">                <span class="p">}</span>
 </span><span id="line-65">            <span class="p">),</span>
 </span><span id="line-66">            <span class="n">supervised_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -266,7 +266,7 @@
 </span><span id="line-69">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
 </span><span id="line-70">        <span class="p">)</span>
 </span><span id="line-71">
-</span><span id="line-72">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dl_manager</span><span class="p">):</span>
+</span><span id="line-72">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-73">        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">()</span>
 </span><span id="line-74">        <span class="n">assets</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">]</span>
 </span><span id="line-75">
@@ -281,8 +281,8 @@
 </span><span id="line-84">        <span class="n">url_to_path</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">urls</span><span class="p">,</span> <span class="n">downloaded_paths</span><span class="p">))</span>
 </span><span id="line-85">
 </span><span id="line-86">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-87">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-88">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
+</span><span id="line-87">            <span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-88">                <span class="n">name</span><span class="o">=</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
 </span><span id="line-89">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
 </span><span id="line-90">                    <span class="s2">&quot;videos_path&quot;</span><span class="p">:</span> <span class="n">url_to_path</span><span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;train_videos&quot;</span><span class="p">]],</span>
 </span><span id="line-91">                    <span class="s2">&quot;annotations_path&quot;</span><span class="p">:</span> <span class="n">url_to_path</span><span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;train_annotations&quot;</span><span class="p">]],</span>
@@ -290,8 +290,8 @@
 </span><span id="line-93">                    <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span>
 </span><span id="line-94">                <span class="p">},</span>
 </span><span id="line-95">            <span class="p">),</span>
-</span><span id="line-96">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-97">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
+</span><span id="line-96">            <span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-97">                <span class="n">name</span><span class="o">=</span><span class="n">Split</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
 </span><span id="line-98">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
 </span><span id="line-99">                    <span class="s2">&quot;videos_path&quot;</span><span class="p">:</span> <span class="n">url_to_path</span><span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;validation_videos&quot;</span><span class="p">]],</span>
 </span><span id="line-100">                    <span class="s2">&quot;annotations_path&quot;</span><span class="p">:</span> <span class="n">url_to_path</span><span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;validation_annotations&quot;</span><span class="p">]],</span>
@@ -299,8 +299,8 @@
 </span><span id="line-102">                    <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;validation&quot;</span><span class="p">,</span>
 </span><span id="line-103">                <span class="p">},</span>
 </span><span id="line-104">            <span class="p">),</span>
-</span><span id="line-105">            <span class="n">datasets</span><span class="o">.</span><span class="n">SplitGenerator</span><span class="p">(</span>
-</span><span id="line-106">                <span class="n">name</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
+</span><span id="line-105">            <span class="n">SplitGenerator</span><span class="p">(</span>
+</span><span id="line-106">                <span class="n">name</span><span class="o">=</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
 </span><span id="line-107">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
 </span><span id="line-108">                    <span class="s2">&quot;videos_path&quot;</span><span class="p">:</span> <span class="n">url_to_path</span><span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;test_videos&quot;</span><span class="p">]],</span>
 </span><span id="line-109">                    <span class="s2">&quot;annotations_path&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Test split has no annotations</span>

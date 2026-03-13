@@ -23,9 +23,9 @@
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#030711" />
   
-  <title>stable_datasets.cassava | stable-datasets</title>
-  <meta property="og:title" content="stable_datasets.cassava | stable-datasets" />
-  <meta name="twitter:title" content="stable_datasets.cassava | stable-datasets" />
+  <title>stable_datasets.splits | stable-datasets</title>
+  <meta property="og:title" content="stable_datasets.splits | stable-datasets" />
+  <meta name="twitter:title" content="stable_datasets.splits | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../_static/pygments_dark.css" />
   <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=73505e79" />
@@ -188,139 +188,35 @@
        href="../../">Module code</a>
     
 <div class="mr-1">/</div><span aria-current="page"
-        class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">stable_datasets.cassava</span>
+        class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">stable_datasets.splits</span>
 </nav>
 
     <div id="content" role="main">
-      <h1>Source code for stable_datasets.cassava</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="ch">#!/usr/bin/env python</span>
-</span><span id="line-2"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
-</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
-</span><span id="line-5"><span class="kn">import</span><span class="w"> </span><span class="nn">urllib</span>
-</span><span id="line-6"><span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+      <h1>Source code for stable_datasets.splits</h1><div class="highlight"><pre>
+<span></span><code><span id="line-1"><span class="sd">&quot;&quot;&quot;Split name constants and split generator.&quot;&quot;&quot;</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+</span><span id="line-6">
 </span><span id="line-7">
-</span><span id="line-8"><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.image</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpimg</span>
-</span><span id="line-9"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="line-10">
-</span><span id="line-11">
-</span><span id="line-12"><span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Randall Balestriero&quot;</span>
-</span><span id="line-13">
-</span><span id="line-14">
-<div class="viewcode-block" id="cassava">
-<a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.cassava.cassava">[docs]</a>
-</span><span id="line-15"><span class="k">class</span><span class="w"> </span><span class="nc">cassava</span><span class="p">:</span>
-</span><span id="line-16"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Plant images classification.</span>
-</span><span id="line-17">
-</span><span id="line-18"><span class="sd">    The data consists of two folders, a training folder that contains 5</span>
-</span><span id="line-19"><span class="sd">    subfolders that contain the respective images for the different 5 classes</span>
-</span><span id="line-20"><span class="sd">    and a test folder containing test images.</span>
-</span><span id="line-21">
-</span><span id="line-22"><span class="sd">    Participants are to train their models using the images in the training</span>
-</span><span id="line-23"><span class="sd">    folder and provide a submission file like the sample provided which contains</span>
-</span><span id="line-24"><span class="sd">    the image name exactly matching the image name in the test folder and the</span>
-</span><span id="line-25"><span class="sd">    corresponding class prediction with labels corresponding to the disease</span>
-</span><span id="line-26"><span class="sd">    categories, cmd, healthy, cgm, cbsd, cbb.</span>
-</span><span id="line-27">
-</span><span id="line-28"><span class="sd">    Please cite this paper if you use the dataset for your project:</span>
-</span><span id="line-29"><span class="sd">    https://arxiv.org/pdf/1908.02900.pdf</span>
-</span><span id="line-30">
-</span><span id="line-31"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="line-32">
-</span><span id="line-33">    <span class="n">classes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;cbb&quot;</span><span class="p">,</span> <span class="s2">&quot;cmd&quot;</span><span class="p">,</span> <span class="s2">&quot;cbsd&quot;</span><span class="p">,</span> <span class="s2">&quot;cgm&quot;</span><span class="p">,</span> <span class="s2">&quot;healthy&quot;</span><span class="p">]</span>
-</span><span id="line-34">
-<div class="viewcode-block" id="cassava.download">
-<a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.cassava.cassava.download">[docs]</a>
-</span><span id="line-35">    <span class="nd">@staticmethod</span>
-</span><span id="line-36">    <span class="k">def</span><span class="w"> </span><span class="nf">download</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-</span><span id="line-37"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="line-38"><span class="sd">        Download the cassava dataset and store the result into the given</span>
-</span><span id="line-39"><span class="sd">        path</span>
-</span><span id="line-40">
-</span><span id="line-41"><span class="sd">        Parameters</span>
-</span><span id="line-42"><span class="sd">        ----------</span>
-</span><span id="line-43">
-</span><span id="line-44"><span class="sd">            path: str</span>
-</span><span id="line-45"><span class="sd">                the path where the downloaded files will be stored. If the</span>
-</span><span id="line-46"><span class="sd">                directory does not exist, it is created.</span>
-</span><span id="line-47"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="line-48">
-</span><span id="line-49">        <span class="c1"># Check if directory exists</span>
-</span><span id="line-50">        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava&quot;</span><span class="p">):</span>
-</span><span id="line-51">            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating cassava Directory&quot;</span><span class="p">)</span>
-</span><span id="line-52">            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava&quot;</span><span class="p">)</span>
-</span><span id="line-53">        <span class="c1"># Check if file exists</span>
-</span><span id="line-54">        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava/cassavaleafdata.zip&quot;</span><span class="p">):</span>
-</span><span id="line-55">            <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://storage.googleapis.com/emcassavadata/&quot;</span> <span class="o">+</span> <span class="s2">&quot;cassavaleafdata.zip&quot;</span>
-</span><span id="line-56">            <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava/cassavaleafdata.zip&quot;</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Split">
+<a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.splits.Split">[docs]</a>
+</span><span id="line-8"><span class="k">class</span><span class="w"> </span><span class="nc">Split</span><span class="p">:</span>
+</span><span id="line-9">    <span class="n">TRAIN</span> <span class="o">=</span> <span class="s2">&quot;train&quot;</span>
+</span><span id="line-10">    <span class="n">TEST</span> <span class="o">=</span> <span class="s2">&quot;test&quot;</span>
+</span><span id="line-11">    <span class="n">VALIDATION</span> <span class="o">=</span> <span class="s2">&quot;validation&quot;</span></div>
 
-</span><span id="line-57">
-<div class="viewcode-block" id="cassava.load">
-<a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.cassava.cassava.load">[docs]</a>
-</span><span id="line-58">    <span class="nd">@staticmethod</span>
-</span><span id="line-59">    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="line-60"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="line-61"><span class="sd">        Parameters</span>
-</span><span id="line-62"><span class="sd">        ----------</span>
-</span><span id="line-63"><span class="sd">            path: str (optional)</span>
-</span><span id="line-64"><span class="sd">                default ($DATASET_PATH), the path to look for the data and</span>
-</span><span id="line-65"><span class="sd">                where the data will be downloaded if not present</span>
-</span><span id="line-66">
-</span><span id="line-67"><span class="sd">        Returns</span>
-</span><span id="line-68"><span class="sd">        -------</span>
-</span><span id="line-69">
-</span><span id="line-70"><span class="sd">            train_images: array</span>
-</span><span id="line-71">
-</span><span id="line-72"><span class="sd">            train_labels: array</span>
-</span><span id="line-73">
-</span><span id="line-74"><span class="sd">            valid_images: array</span>
-</span><span id="line-75">
-</span><span id="line-76"><span class="sd">            valid_labels: array</span>
-</span><span id="line-77">
-</span><span id="line-78"><span class="sd">            test_images: array</span>
-</span><span id="line-79">
-</span><span id="line-80"><span class="sd">            test_labels: array</span>
-</span><span id="line-81">
-</span><span id="line-82"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="line-83">
-</span><span id="line-84">        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-85">            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;DATASET_PATH&quot;</span><span class="p">]</span>
-</span><span id="line-86">
-</span><span id="line-87">        <span class="n">cassava</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span id="line-88">
-</span><span id="line-89">        <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-</span><span id="line-90">
-</span><span id="line-91">        <span class="c1"># Loading the file</span>
-</span><span id="line-92">        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[]],</span> <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[]],</span> <span class="s2">&quot;validation&quot;</span><span class="p">:</span> <span class="p">[[],</span> <span class="p">[]]}</span>
-</span><span id="line-93">
-</span><span id="line-94">        <span class="n">f</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span> <span class="s2">&quot;cassava/cassavaleafdata.zip&quot;</span><span class="p">)</span>
-</span><span id="line-95">        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
-</span><span id="line-96">            <span class="k">if</span> <span class="s2">&quot;.jpg&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
-</span><span id="line-97">                <span class="k">continue</span>
-</span><span id="line-98">            <span class="n">setname</span><span class="p">,</span> <span class="n">foldername</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
-</span><span id="line-99">            <span class="n">img</span> <span class="o">=</span> <span class="n">mpimg</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">filename</span><span class="p">)),</span> <span class="s2">&quot;jpg&quot;</span><span class="p">)</span>
-</span><span id="line-100">            <span class="n">data</span><span class="p">[</span><span class="n">setname</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
-</span><span id="line-101">            <span class="n">data</span><span class="p">[</span><span class="n">setname</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cassava</span><span class="o">.</span><span class="n">classes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">foldername</span><span class="p">))</span>
-</span><span id="line-102">
-</span><span id="line-103">        <span class="n">train_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</span><span id="line-104">        <span class="n">test_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</span><span id="line-105">        <span class="n">valid_images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
-</span><span id="line-106">
-</span><span id="line-107">        <span class="n">train_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
-</span><span id="line-108">        <span class="n">test_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
-</span><span id="line-109">        <span class="n">valid_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;validation&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
-</span><span id="line-110">
-</span><span id="line-111">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset cassava loaded in </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t0</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s.&quot;</span><span class="p">)</span>
-</span><span id="line-112">
-</span><span id="line-113">        <span class="k">return</span> <span class="p">(</span>
-</span><span id="line-114">            <span class="n">train_images</span><span class="p">,</span>
-</span><span id="line-115">            <span class="n">train_labels</span><span class="p">,</span>
-</span><span id="line-116">            <span class="n">valid_images</span><span class="p">,</span>
-</span><span id="line-117">            <span class="n">valid_labels</span><span class="p">,</span>
-</span><span id="line-118">            <span class="n">test_images</span><span class="p">,</span>
-</span><span id="line-119">            <span class="n">test_labels</span><span class="p">,</span>
-</span><span id="line-120">        <span class="p">)</span></div>
-</div>
+</span><span id="line-12">
+</span><span id="line-13">
+<div class="viewcode-block" id="SplitGenerator">
+<a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.splits.SplitGenerator">[docs]</a>
+</span><span id="line-14"><span class="nd">@dataclass</span>
+</span><span id="line-15"><span class="k">class</span><span class="w"> </span><span class="nc">SplitGenerator</span><span class="p">:</span>
+</span><span id="line-16"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Describes one split and the kwargs to pass to ``_generate_examples``.&quot;&quot;&quot;</span>
+</span><span id="line-17">
+</span><span id="line-18">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="line-19">    <span class="n">gen_kwargs</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
 
 </span></code></pre></div>
     </div></div>

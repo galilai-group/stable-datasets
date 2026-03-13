@@ -196,270 +196,271 @@
 <span></span><code><span id="line-1"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 </span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">zipfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZipFile</span>
 </span><span id="line-3">
-</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">datasets</span>
-</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
-</span><span id="line-7">
-</span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
-</span><span id="line-9">
+</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
+</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+</span><span id="line-6">
+</span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">DatasetInfo</span><span class="p">,</span> <span class="n">Features</span><span class="p">,</span> <span class="n">Version</span>
+</span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">ImageFeature</span>
+</span><span id="line-9"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
 </span><span id="line-10">
+</span><span id="line-11">
 <div class="viewcode-block" id="Cars196">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.cars196.Cars196">[docs]</a>
-</span><span id="line-11"><span class="k">class</span><span class="w"> </span><span class="nc">Cars196</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
-</span><span id="line-12"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Cars-196 Dataset</span>
-</span><span id="line-13"><span class="sd">    The Cars-196 dataset, also known as the Stanford Cars dataset, is a benchmark dataset for fine-grained visual classification of automobiles.</span>
-</span><span id="line-14"><span class="sd">    It contains 16,185 color images covering 196 car categories, where each category is defined by a specific combination of make, model, and year.</span>
-</span><span id="line-15"><span class="sd">    The dataset is split into 8,144 training images and 8,041 test images, with the first 98 classes used exclusively for training and the remaining 98 classes</span>
-</span><span id="line-16"><span class="sd">    reserved for testing, ensuring that training and test classes are disjoint. Images are collected from real-world scenes and exhibit significant variation in v</span>
-</span><span id="line-17"><span class="sd">    iewpoint, background, and lighting conditions. Each image is annotated with a class label and a tight bounding box around the car, making the dataset suitable</span>
-</span><span id="line-18"><span class="sd">    for fine-grained recognition tasks that require precise object localization and strong generalization to unseen categories.</span>
-</span><span id="line-19">
-</span><span id="line-20"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="line-21">
-</span><span id="line-22">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
-</span><span id="line-23">
-</span><span id="line-24">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-25">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://ai.stanford.edu/~jkrause/cars/car_dataset.html&quot;</span><span class="p">,</span>
-</span><span id="line-26">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="line-27">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_train.zip&quot;</span><span class="p">,</span>
-</span><span id="line-28">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_test.zip&quot;</span><span class="p">,</span>
-</span><span id="line-29">        <span class="p">},</span>
-</span><span id="line-30">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@inproceedings{krause20133d,</span>
-</span><span id="line-31"><span class="s2">            title={3d object representations for fine-grained categorization},</span>
-</span><span id="line-32"><span class="s2">            author={Krause, Jonathan and Stark, Michael and Deng, Jia and Fei-Fei, Li},</span>
-</span><span id="line-33"><span class="s2">            booktitle={Proceedings of the IEEE international conference on computer vision workshops},</span>
-</span><span id="line-34"><span class="s2">            pages={554--561},</span>
-</span><span id="line-35"><span class="s2">            year=</span><span class="si">{2013}</span><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-36">    <span class="p">}</span>
-</span><span id="line-37">
-</span><span id="line-38">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-39">        <span class="k">return</span> <span class="n">datasets</span><span class="o">.</span><span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-40">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The Cars dataset contains 16,185 images of 196 classes of cars. The data is split into 8,144 training images and 8,041 testing images, where each class has been split roughly in a 50-50 split. Classes are typically at the level of Make, Model, Year, e.g. 2012 Tesla Model S or 2012 BMW M3 coupe.&quot;</span><span class="p">,</span>
-</span><span id="line-41">            <span class="n">features</span><span class="o">=</span><span class="n">datasets</span><span class="o">.</span><span class="n">Features</span><span class="p">(</span>
-</span><span id="line-42">                <span class="p">{</span>
-</span><span id="line-43">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-44">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">datasets</span><span class="o">.</span><span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()),</span>
-</span><span id="line-45">                <span class="p">}</span>
-</span><span id="line-46">            <span class="p">),</span>
-</span><span id="line-47">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-48">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
-</span><span id="line-49">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
-</span><span id="line-50">        <span class="p">)</span>
-</span><span id="line-51">
-</span><span id="line-52">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
-</span><span id="line-53"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the ZIP archives of images and labels.&quot;&quot;&quot;</span>
-</span><span id="line-54">        <span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
-</span><span id="line-55">            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">infolist</span><span class="p">(),</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Processing </span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2"> set&quot;</span><span class="p">):</span>
-</span><span id="line-56">                <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jpg&quot;</span><span class="p">):</span>
-</span><span id="line-57">                    <span class="n">content</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
-</span><span id="line-58">                    <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">content</span><span class="p">))</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
-</span><span id="line-59">
-</span><span id="line-60">                    <span class="n">filename</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span><span id="line-61">                    <span class="n">class_part</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-</span><span id="line-62">                    <span class="n">label_name</span> <span class="o">=</span> <span class="n">class_part</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-</span><span id="line-63">
-</span><span id="line-64">                    <span class="k">yield</span> <span class="n">entry</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label_name</span><span class="p">}</span>
-</span><span id="line-65">
-</span><span id="line-66">    <span class="nd">@staticmethod</span>
-</span><span id="line-67">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
-</span><span id="line-68">        <span class="k">return</span> <span class="p">[</span>
-</span><span id="line-69">            <span class="s2">&quot;am_general_hummer_suv_2000&quot;</span><span class="p">,</span>
-</span><span id="line-70">            <span class="s2">&quot;acura_rl_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-71">            <span class="s2">&quot;acura_tl_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-72">            <span class="s2">&quot;acura_tl_type_s_2008&quot;</span><span class="p">,</span>
-</span><span id="line-73">            <span class="s2">&quot;acura_tsx_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-74">            <span class="s2">&quot;acura_integra_type_r_2001&quot;</span><span class="p">,</span>
-</span><span id="line-75">            <span class="s2">&quot;acura_zdx_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-76">            <span class="s2">&quot;aston_martin_v8_vantage_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-77">            <span class="s2">&quot;aston_martin_v8_vantage_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-78">            <span class="s2">&quot;aston_martin_virage_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-79">            <span class="s2">&quot;aston_martin_virage_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-80">            <span class="s2">&quot;audi_rs_4_convertible_2008&quot;</span><span class="p">,</span>
-</span><span id="line-81">            <span class="s2">&quot;audi_a5_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-82">            <span class="s2">&quot;audi_tts_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-83">            <span class="s2">&quot;audi_r8_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-84">            <span class="s2">&quot;audi_v8_sedan_1994&quot;</span><span class="p">,</span>
-</span><span id="line-85">            <span class="s2">&quot;audi_100_sedan_1994&quot;</span><span class="p">,</span>
-</span><span id="line-86">            <span class="s2">&quot;audi_100_wagon_1994&quot;</span><span class="p">,</span>
-</span><span id="line-87">            <span class="s2">&quot;audi_tt_hatchback_2011&quot;</span><span class="p">,</span>
-</span><span id="line-88">            <span class="s2">&quot;audi_s6_sedan_2011&quot;</span><span class="p">,</span>
-</span><span id="line-89">            <span class="s2">&quot;audi_s5_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-90">            <span class="s2">&quot;audi_s5_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-91">            <span class="s2">&quot;audi_s4_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-92">            <span class="s2">&quot;audi_s4_sedan_2007&quot;</span><span class="p">,</span>
-</span><span id="line-93">            <span class="s2">&quot;audi_tt_rs_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-94">            <span class="s2">&quot;bmw_activehybrid_5_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-95">            <span class="s2">&quot;bmw_1_series_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-96">            <span class="s2">&quot;bmw_1_series_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-97">            <span class="s2">&quot;bmw_3_series_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-98">            <span class="s2">&quot;bmw_3_series_wagon_2012&quot;</span><span class="p">,</span>
-</span><span id="line-99">            <span class="s2">&quot;bmw_6_series_convertible_2007&quot;</span><span class="p">,</span>
-</span><span id="line-100">            <span class="s2">&quot;bmw_x5_suv_2007&quot;</span><span class="p">,</span>
-</span><span id="line-101">            <span class="s2">&quot;bmw_x6_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-102">            <span class="s2">&quot;bmw_m3_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-103">            <span class="s2">&quot;bmw_m5_sedan_2010&quot;</span><span class="p">,</span>
-</span><span id="line-104">            <span class="s2">&quot;bmw_m6_convertible_2010&quot;</span><span class="p">,</span>
-</span><span id="line-105">            <span class="s2">&quot;bmw_x3_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-106">            <span class="s2">&quot;bmw_z4_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-107">            <span class="s2">&quot;bentley_continental_supersports_conv_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-108">            <span class="s2">&quot;bentley_arnage_sedan_2009&quot;</span><span class="p">,</span>
-</span><span id="line-109">            <span class="s2">&quot;bentley_mulsanne_sedan_2011&quot;</span><span class="p">,</span>
-</span><span id="line-110">            <span class="s2">&quot;bentley_continental_gt_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-111">            <span class="s2">&quot;bentley_continental_gt_coupe_2007&quot;</span><span class="p">,</span>
-</span><span id="line-112">            <span class="s2">&quot;bentley_continental_flying_spur_sedan_2007&quot;</span><span class="p">,</span>
-</span><span id="line-113">            <span class="s2">&quot;bugatti_veyron_164_convertible_2009&quot;</span><span class="p">,</span>
-</span><span id="line-114">            <span class="s2">&quot;bugatti_veyron_164_coupe_2009&quot;</span><span class="p">,</span>
-</span><span id="line-115">            <span class="s2">&quot;buick_regal_gs_2012&quot;</span><span class="p">,</span>
-</span><span id="line-116">            <span class="s2">&quot;buick_rainier_suv_2007&quot;</span><span class="p">,</span>
-</span><span id="line-117">            <span class="s2">&quot;buick_verano_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-118">            <span class="s2">&quot;buick_enclave_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-119">            <span class="s2">&quot;cadillac_cts_v_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-120">            <span class="s2">&quot;cadillac_srx_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-121">            <span class="s2">&quot;cadillac_escalade_ext_crew_cab_2007&quot;</span><span class="p">,</span>
-</span><span id="line-122">            <span class="s2">&quot;chevrolet_silverado_1500_hybrid_crew_cab_2012&quot;</span><span class="p">,</span>
-</span><span id="line-123">            <span class="s2">&quot;chevrolet_corvette_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-124">            <span class="s2">&quot;chevrolet_corvette_zr1_2012&quot;</span><span class="p">,</span>
-</span><span id="line-125">            <span class="s2">&quot;chevrolet_corvette_ron_fellows_edition_z06_2007&quot;</span><span class="p">,</span>
-</span><span id="line-126">            <span class="s2">&quot;chevrolet_traverse_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-127">            <span class="s2">&quot;chevrolet_camaro_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-128">            <span class="s2">&quot;chevrolet_hhr_ss_2010&quot;</span><span class="p">,</span>
-</span><span id="line-129">            <span class="s2">&quot;chevrolet_impala_sedan_2007&quot;</span><span class="p">,</span>
-</span><span id="line-130">            <span class="s2">&quot;chevrolet_tahoe_hybrid_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-131">            <span class="s2">&quot;chevrolet_sonic_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-132">            <span class="s2">&quot;chevrolet_express_cargo_van_2007&quot;</span><span class="p">,</span>
-</span><span id="line-133">            <span class="s2">&quot;chevrolet_avalanche_crew_cab_2012&quot;</span><span class="p">,</span>
-</span><span id="line-134">            <span class="s2">&quot;chevrolet_cobalt_ss_2010&quot;</span><span class="p">,</span>
-</span><span id="line-135">            <span class="s2">&quot;chevrolet_malibu_hybrid_sedan_2010&quot;</span><span class="p">,</span>
-</span><span id="line-136">            <span class="s2">&quot;chevrolet_trailblazer_ss_2009&quot;</span><span class="p">,</span>
-</span><span id="line-137">            <span class="s2">&quot;chevrolet_silverado_2500hd_regular_cab_2012&quot;</span><span class="p">,</span>
-</span><span id="line-138">            <span class="s2">&quot;chevrolet_silverado_1500_classic_extended_cab_2007&quot;</span><span class="p">,</span>
-</span><span id="line-139">            <span class="s2">&quot;chevrolet_express_van_2007&quot;</span><span class="p">,</span>
-</span><span id="line-140">            <span class="s2">&quot;chevrolet_monte_carlo_coupe_2007&quot;</span><span class="p">,</span>
-</span><span id="line-141">            <span class="s2">&quot;chevrolet_malibu_sedan_2007&quot;</span><span class="p">,</span>
-</span><span id="line-142">            <span class="s2">&quot;chevrolet_silverado_1500_extended_cab_2012&quot;</span><span class="p">,</span>
-</span><span id="line-143">            <span class="s2">&quot;chevrolet_silverado_1500_regular_cab_2012&quot;</span><span class="p">,</span>
-</span><span id="line-144">            <span class="s2">&quot;chrysler_aspen_suv_2009&quot;</span><span class="p">,</span>
-</span><span id="line-145">            <span class="s2">&quot;chrysler_sebring_convertible_2010&quot;</span><span class="p">,</span>
-</span><span id="line-146">            <span class="s2">&quot;chrysler_town_and_country_minivan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-147">            <span class="s2">&quot;chrysler_300_srt_8_2010&quot;</span><span class="p">,</span>
-</span><span id="line-148">            <span class="s2">&quot;chrysler_crossfire_convertible_2008&quot;</span><span class="p">,</span>
-</span><span id="line-149">            <span class="s2">&quot;chrysler_pt_cruiser_convertible_2008&quot;</span><span class="p">,</span>
-</span><span id="line-150">            <span class="s2">&quot;daewoo_nubira_wagon_2002&quot;</span><span class="p">,</span>
-</span><span id="line-151">            <span class="s2">&quot;dodge_caliber_wagon_2012&quot;</span><span class="p">,</span>
-</span><span id="line-152">            <span class="s2">&quot;dodge_caliber_wagon_2007&quot;</span><span class="p">,</span>
-</span><span id="line-153">            <span class="s2">&quot;dodge_caravan_minivan_1997&quot;</span><span class="p">,</span>
-</span><span id="line-154">            <span class="s2">&quot;dodge_ram_pickup_3500_crew_cab_2010&quot;</span><span class="p">,</span>
-</span><span id="line-155">            <span class="s2">&quot;dodge_ram_pickup_3500_quad_cab_2009&quot;</span><span class="p">,</span>
-</span><span id="line-156">            <span class="s2">&quot;dodge_sprinter_cargo_van_2009&quot;</span><span class="p">,</span>
-</span><span id="line-157">            <span class="s2">&quot;dodge_journey_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-158">            <span class="s2">&quot;dodge_dakota_crew_cab_2010&quot;</span><span class="p">,</span>
-</span><span id="line-159">            <span class="s2">&quot;dodge_dakota_club_cab_2007&quot;</span><span class="p">,</span>
-</span><span id="line-160">            <span class="s2">&quot;dodge_magnum_wagon_2008&quot;</span><span class="p">,</span>
-</span><span id="line-161">            <span class="s2">&quot;dodge_challenger_srt8_2011&quot;</span><span class="p">,</span>
-</span><span id="line-162">            <span class="s2">&quot;dodge_durango_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-163">            <span class="s2">&quot;dodge_durango_suv_2007&quot;</span><span class="p">,</span>
-</span><span id="line-164">            <span class="s2">&quot;dodge_charger_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-165">            <span class="s2">&quot;dodge_charger_srt_8_2009&quot;</span><span class="p">,</span>
-</span><span id="line-166">            <span class="s2">&quot;eagle_talon_hatchback_1998&quot;</span><span class="p">,</span>
-</span><span id="line-167">            <span class="s2">&quot;fiat_500_abarth_2012&quot;</span><span class="p">,</span>
-</span><span id="line-168">            <span class="s2">&quot;fiat_500_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-169">            <span class="s2">&quot;ferrari_ff_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-170">            <span class="s2">&quot;ferrari_california_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-171">            <span class="s2">&quot;ferrari_458_italia_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-172">            <span class="s2">&quot;ferrari_458_italia_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-173">            <span class="s2">&quot;fisker_karma_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-174">            <span class="s2">&quot;ford_f_450_super_duty_crew_cab_2012&quot;</span><span class="p">,</span>
-</span><span id="line-175">            <span class="s2">&quot;ford_mustang_convertible_2007&quot;</span><span class="p">,</span>
-</span><span id="line-176">            <span class="s2">&quot;ford_freestar_minivan_2007&quot;</span><span class="p">,</span>
-</span><span id="line-177">            <span class="s2">&quot;ford_expedition_el_suv_2009&quot;</span><span class="p">,</span>
-</span><span id="line-178">            <span class="s2">&quot;ford_edge_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-179">            <span class="s2">&quot;ford_ranger_supercab_2011&quot;</span><span class="p">,</span>
-</span><span id="line-180">            <span class="s2">&quot;ford_gt_coupe_2006&quot;</span><span class="p">,</span>
-</span><span id="line-181">            <span class="s2">&quot;ford_f_150_regular_cab_2012&quot;</span><span class="p">,</span>
-</span><span id="line-182">            <span class="s2">&quot;ford_f_150_regular_cab_2007&quot;</span><span class="p">,</span>
-</span><span id="line-183">            <span class="s2">&quot;ford_focus_sedan_2007&quot;</span><span class="p">,</span>
-</span><span id="line-184">            <span class="s2">&quot;ford_e_series_wagon_van_2012&quot;</span><span class="p">,</span>
-</span><span id="line-185">            <span class="s2">&quot;ford_fiesta_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-186">            <span class="s2">&quot;gmc_terrain_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-187">            <span class="s2">&quot;gmc_savana_van_2012&quot;</span><span class="p">,</span>
-</span><span id="line-188">            <span class="s2">&quot;gmc_yukon_hybrid_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-189">            <span class="s2">&quot;gmc_acadia_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-190">            <span class="s2">&quot;gmc_canyon_extended_cab_2012&quot;</span><span class="p">,</span>
-</span><span id="line-191">            <span class="s2">&quot;geo_metro_convertible_1993&quot;</span><span class="p">,</span>
-</span><span id="line-192">            <span class="s2">&quot;hummer_h3t_crew_cab_2010&quot;</span><span class="p">,</span>
-</span><span id="line-193">            <span class="s2">&quot;hummer_h2_sut_crew_cab_2009&quot;</span><span class="p">,</span>
-</span><span id="line-194">            <span class="s2">&quot;honda_odyssey_minivan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-195">            <span class="s2">&quot;honda_odyssey_minivan_2007&quot;</span><span class="p">,</span>
-</span><span id="line-196">            <span class="s2">&quot;honda_accord_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-197">            <span class="s2">&quot;honda_accord_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-198">            <span class="s2">&quot;hyundai_veloster_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-199">            <span class="s2">&quot;hyundai_santa_fe_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-200">            <span class="s2">&quot;hyundai_tucson_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-201">            <span class="s2">&quot;hyundai_veracruz_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-202">            <span class="s2">&quot;hyundai_sonata_hybrid_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-203">            <span class="s2">&quot;hyundai_elantra_sedan_2007&quot;</span><span class="p">,</span>
-</span><span id="line-204">            <span class="s2">&quot;hyundai_accent_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-205">            <span class="s2">&quot;hyundai_genesis_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-206">            <span class="s2">&quot;hyundai_sonata_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-207">            <span class="s2">&quot;hyundai_elantra_touring_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-208">            <span class="s2">&quot;hyundai_azera_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-209">            <span class="s2">&quot;infiniti_g_coupe_ipl_2012&quot;</span><span class="p">,</span>
-</span><span id="line-210">            <span class="s2">&quot;infiniti_qx56_suv_2011&quot;</span><span class="p">,</span>
-</span><span id="line-211">            <span class="s2">&quot;isuzu_ascender_suv_2008&quot;</span><span class="p">,</span>
-</span><span id="line-212">            <span class="s2">&quot;jaguar_xk_xkr_2012&quot;</span><span class="p">,</span>
-</span><span id="line-213">            <span class="s2">&quot;jeep_patriot_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-214">            <span class="s2">&quot;jeep_wrangler_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-215">            <span class="s2">&quot;jeep_liberty_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-216">            <span class="s2">&quot;jeep_grand_cherokee_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-217">            <span class="s2">&quot;jeep_compass_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-218">            <span class="s2">&quot;lamborghini_reventon_coupe_2008&quot;</span><span class="p">,</span>
-</span><span id="line-219">            <span class="s2">&quot;lamborghini_aventador_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-220">            <span class="s2">&quot;lamborghini_gallardo_lp_570_4_superleggera_2012&quot;</span><span class="p">,</span>
-</span><span id="line-221">            <span class="s2">&quot;lamborghini_diablo_coupe_2001&quot;</span><span class="p">,</span>
-</span><span id="line-222">            <span class="s2">&quot;land_rover_range_rover_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-223">            <span class="s2">&quot;land_rover_lr2_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-224">            <span class="s2">&quot;lincoln_town_car_sedan_2011&quot;</span><span class="p">,</span>
-</span><span id="line-225">            <span class="s2">&quot;mini_cooper_roadster_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-226">            <span class="s2">&quot;maybach_landaulet_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-227">            <span class="s2">&quot;mazda_tribute_suv_2011&quot;</span><span class="p">,</span>
-</span><span id="line-228">            <span class="s2">&quot;mclaren_mp4_12c_coupe_2012&quot;</span><span class="p">,</span>
-</span><span id="line-229">            <span class="s2">&quot;mercedes_benz_300_class_convertible_1993&quot;</span><span class="p">,</span>
-</span><span id="line-230">            <span class="s2">&quot;mercedes_benz_c_class_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-231">            <span class="s2">&quot;mercedes_benz_sl_class_coupe_2009&quot;</span><span class="p">,</span>
-</span><span id="line-232">            <span class="s2">&quot;mercedes_benz_e_class_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-233">            <span class="s2">&quot;mercedes_benz_s_class_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-234">            <span class="s2">&quot;mercedes_benz_sprinter_van_2012&quot;</span><span class="p">,</span>
-</span><span id="line-235">            <span class="s2">&quot;mitsubishi_lancer_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-236">            <span class="s2">&quot;nissan_leaf_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-237">            <span class="s2">&quot;nissan_nv_passenger_van_2012&quot;</span><span class="p">,</span>
-</span><span id="line-238">            <span class="s2">&quot;nissan_juke_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-239">            <span class="s2">&quot;nissan_240sx_coupe_1998&quot;</span><span class="p">,</span>
-</span><span id="line-240">            <span class="s2">&quot;plymouth_neon_coupe_1999&quot;</span><span class="p">,</span>
-</span><span id="line-241">            <span class="s2">&quot;porsche_panamera_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-242">            <span class="s2">&quot;ram_c_v_cargo_van_minivan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-243">            <span class="s2">&quot;rolls_royce_phantom_drophead_coupe_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-244">            <span class="s2">&quot;rolls_royce_ghost_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-245">            <span class="s2">&quot;rolls_royce_phantom_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-246">            <span class="s2">&quot;scion_xd_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-247">            <span class="s2">&quot;spyker_c8_convertible_2009&quot;</span><span class="p">,</span>
-</span><span id="line-248">            <span class="s2">&quot;spyker_c8_coupe_2009&quot;</span><span class="p">,</span>
-</span><span id="line-249">            <span class="s2">&quot;suzuki_aerio_sedan_2007&quot;</span><span class="p">,</span>
-</span><span id="line-250">            <span class="s2">&quot;suzuki_kizashi_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-251">            <span class="s2">&quot;suzuki_sx4_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-252">            <span class="s2">&quot;suzuki_sx4_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-253">            <span class="s2">&quot;tesla_model_s_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-254">            <span class="s2">&quot;toyota_sequoia_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-255">            <span class="s2">&quot;toyota_camry_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-256">            <span class="s2">&quot;toyota_corolla_sedan_2012&quot;</span><span class="p">,</span>
-</span><span id="line-257">            <span class="s2">&quot;toyota_4runner_suv_2012&quot;</span><span class="p">,</span>
-</span><span id="line-258">            <span class="s2">&quot;volkswagen_golf_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-259">            <span class="s2">&quot;volkswagen_golf_hatchback_1991&quot;</span><span class="p">,</span>
-</span><span id="line-260">            <span class="s2">&quot;volkswagen_beetle_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-261">            <span class="s2">&quot;volvo_c30_hatchback_2012&quot;</span><span class="p">,</span>
-</span><span id="line-262">            <span class="s2">&quot;volvo_240_sedan_1993&quot;</span><span class="p">,</span>
-</span><span id="line-263">            <span class="s2">&quot;volvo_xc90_suv_2007&quot;</span><span class="p">,</span>
-</span><span id="line-264">            <span class="s2">&quot;smart_fortwo_convertible_2012&quot;</span><span class="p">,</span>
-</span><span id="line-265">        <span class="p">]</span></div>
+</span><span id="line-12"><span class="k">class</span><span class="w"> </span><span class="nc">Cars196</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-13"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Cars-196 Dataset</span>
+</span><span id="line-14"><span class="sd">    The Cars-196 dataset, also known as the Stanford Cars dataset, is a benchmark dataset for fine-grained visual classification of automobiles.</span>
+</span><span id="line-15"><span class="sd">    It contains 16,185 color images covering 196 car categories, where each category is defined by a specific combination of make, model, and year.</span>
+</span><span id="line-16"><span class="sd">    The dataset is split into 8,144 training images and 8,041 test images, with the first 98 classes used exclusively for training and the remaining 98 classes</span>
+</span><span id="line-17"><span class="sd">    reserved for testing, ensuring that training and test classes are disjoint. Images are collected from real-world scenes and exhibit significant variation in v</span>
+</span><span id="line-18"><span class="sd">    iewpoint, background, and lighting conditions. Each image is annotated with a class label and a tight bounding box around the car, making the dataset suitable</span>
+</span><span id="line-19"><span class="sd">    for fine-grained recognition tasks that require precise object localization and strong generalization to unseen categories.</span>
+</span><span id="line-20">
+</span><span id="line-21"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-22">
+</span><span id="line-23">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-24">
+</span><span id="line-25">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-26">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://ai.stanford.edu/~jkrause/cars/car_dataset.html&quot;</span><span class="p">,</span>
+</span><span id="line-27">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-28">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_train.zip&quot;</span><span class="p">,</span>
+</span><span id="line-29">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_test.zip&quot;</span><span class="p">,</span>
+</span><span id="line-30">        <span class="p">},</span>
+</span><span id="line-31">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@inproceedings{krause20133d,</span>
+</span><span id="line-32"><span class="s2">            title={3d object representations for fine-grained categorization},</span>
+</span><span id="line-33"><span class="s2">            author={Krause, Jonathan and Stark, Michael and Deng, Jia and Fei-Fei, Li},</span>
+</span><span id="line-34"><span class="s2">            booktitle={Proceedings of the IEEE international conference on computer vision workshops},</span>
+</span><span id="line-35"><span class="s2">            pages={554--561},</span>
+</span><span id="line-36"><span class="s2">            year=</span><span class="si">{2013}</span><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-37">    <span class="p">}</span>
+</span><span id="line-38">
+</span><span id="line-39">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-40">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-41">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The Cars dataset contains 16,185 images of 196 classes of cars. The data is split into 8,144 training images and 8,041 testing images, where each class has been split roughly in a 50-50 split. Classes are typically at the level of Make, Model, Year, e.g. 2012 Tesla Model S or 2012 BMW M3 coupe.&quot;</span><span class="p">,</span>
+</span><span id="line-42">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-43">                <span class="p">{</span>
+</span><span id="line-44">                    <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">ImageFeature</span><span class="p">(),</span>
+</span><span id="line-45">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">()),</span>
+</span><span id="line-46">                <span class="p">}</span>
+</span><span id="line-47">            <span class="p">),</span>
+</span><span id="line-48">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
+</span><span id="line-49">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
+</span><span id="line-50">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-51">        <span class="p">)</span>
+</span><span id="line-52">
+</span><span id="line-53">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-54"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate examples from the ZIP archives of images and labels.&quot;&quot;&quot;</span>
+</span><span id="line-55">        <span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
+</span><span id="line-56">            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">archive</span><span class="o">.</span><span class="n">infolist</span><span class="p">(),</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Processing </span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2"> set&quot;</span><span class="p">):</span>
+</span><span id="line-57">                <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.jpg&quot;</span><span class="p">):</span>
+</span><span id="line-58">                    <span class="n">content</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+</span><span id="line-59">                    <span class="n">image</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">content</span><span class="p">))</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGB&quot;</span><span class="p">)</span>
+</span><span id="line-60">
+</span><span id="line-61">                    <span class="n">filename</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span><span id="line-62">                    <span class="n">class_part</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="line-63">                    <span class="n">label_name</span> <span class="o">=</span> <span class="n">class_part</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span id="line-64">
+</span><span id="line-65">                    <span class="k">yield</span> <span class="n">entry</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">label_name</span><span class="p">}</span>
+</span><span id="line-66">
+</span><span id="line-67">    <span class="nd">@staticmethod</span>
+</span><span id="line-68">    <span class="k">def</span><span class="w"> </span><span class="nf">_labels</span><span class="p">():</span>
+</span><span id="line-69">        <span class="k">return</span> <span class="p">[</span>
+</span><span id="line-70">            <span class="s2">&quot;am_general_hummer_suv_2000&quot;</span><span class="p">,</span>
+</span><span id="line-71">            <span class="s2">&quot;acura_rl_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-72">            <span class="s2">&quot;acura_tl_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-73">            <span class="s2">&quot;acura_tl_type_s_2008&quot;</span><span class="p">,</span>
+</span><span id="line-74">            <span class="s2">&quot;acura_tsx_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-75">            <span class="s2">&quot;acura_integra_type_r_2001&quot;</span><span class="p">,</span>
+</span><span id="line-76">            <span class="s2">&quot;acura_zdx_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-77">            <span class="s2">&quot;aston_martin_v8_vantage_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-78">            <span class="s2">&quot;aston_martin_v8_vantage_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-79">            <span class="s2">&quot;aston_martin_virage_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-80">            <span class="s2">&quot;aston_martin_virage_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-81">            <span class="s2">&quot;audi_rs_4_convertible_2008&quot;</span><span class="p">,</span>
+</span><span id="line-82">            <span class="s2">&quot;audi_a5_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-83">            <span class="s2">&quot;audi_tts_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-84">            <span class="s2">&quot;audi_r8_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-85">            <span class="s2">&quot;audi_v8_sedan_1994&quot;</span><span class="p">,</span>
+</span><span id="line-86">            <span class="s2">&quot;audi_100_sedan_1994&quot;</span><span class="p">,</span>
+</span><span id="line-87">            <span class="s2">&quot;audi_100_wagon_1994&quot;</span><span class="p">,</span>
+</span><span id="line-88">            <span class="s2">&quot;audi_tt_hatchback_2011&quot;</span><span class="p">,</span>
+</span><span id="line-89">            <span class="s2">&quot;audi_s6_sedan_2011&quot;</span><span class="p">,</span>
+</span><span id="line-90">            <span class="s2">&quot;audi_s5_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-91">            <span class="s2">&quot;audi_s5_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-92">            <span class="s2">&quot;audi_s4_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-93">            <span class="s2">&quot;audi_s4_sedan_2007&quot;</span><span class="p">,</span>
+</span><span id="line-94">            <span class="s2">&quot;audi_tt_rs_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-95">            <span class="s2">&quot;bmw_activehybrid_5_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-96">            <span class="s2">&quot;bmw_1_series_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-97">            <span class="s2">&quot;bmw_1_series_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-98">            <span class="s2">&quot;bmw_3_series_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-99">            <span class="s2">&quot;bmw_3_series_wagon_2012&quot;</span><span class="p">,</span>
+</span><span id="line-100">            <span class="s2">&quot;bmw_6_series_convertible_2007&quot;</span><span class="p">,</span>
+</span><span id="line-101">            <span class="s2">&quot;bmw_x5_suv_2007&quot;</span><span class="p">,</span>
+</span><span id="line-102">            <span class="s2">&quot;bmw_x6_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-103">            <span class="s2">&quot;bmw_m3_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-104">            <span class="s2">&quot;bmw_m5_sedan_2010&quot;</span><span class="p">,</span>
+</span><span id="line-105">            <span class="s2">&quot;bmw_m6_convertible_2010&quot;</span><span class="p">,</span>
+</span><span id="line-106">            <span class="s2">&quot;bmw_x3_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-107">            <span class="s2">&quot;bmw_z4_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-108">            <span class="s2">&quot;bentley_continental_supersports_conv_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-109">            <span class="s2">&quot;bentley_arnage_sedan_2009&quot;</span><span class="p">,</span>
+</span><span id="line-110">            <span class="s2">&quot;bentley_mulsanne_sedan_2011&quot;</span><span class="p">,</span>
+</span><span id="line-111">            <span class="s2">&quot;bentley_continental_gt_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-112">            <span class="s2">&quot;bentley_continental_gt_coupe_2007&quot;</span><span class="p">,</span>
+</span><span id="line-113">            <span class="s2">&quot;bentley_continental_flying_spur_sedan_2007&quot;</span><span class="p">,</span>
+</span><span id="line-114">            <span class="s2">&quot;bugatti_veyron_164_convertible_2009&quot;</span><span class="p">,</span>
+</span><span id="line-115">            <span class="s2">&quot;bugatti_veyron_164_coupe_2009&quot;</span><span class="p">,</span>
+</span><span id="line-116">            <span class="s2">&quot;buick_regal_gs_2012&quot;</span><span class="p">,</span>
+</span><span id="line-117">            <span class="s2">&quot;buick_rainier_suv_2007&quot;</span><span class="p">,</span>
+</span><span id="line-118">            <span class="s2">&quot;buick_verano_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-119">            <span class="s2">&quot;buick_enclave_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-120">            <span class="s2">&quot;cadillac_cts_v_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-121">            <span class="s2">&quot;cadillac_srx_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-122">            <span class="s2">&quot;cadillac_escalade_ext_crew_cab_2007&quot;</span><span class="p">,</span>
+</span><span id="line-123">            <span class="s2">&quot;chevrolet_silverado_1500_hybrid_crew_cab_2012&quot;</span><span class="p">,</span>
+</span><span id="line-124">            <span class="s2">&quot;chevrolet_corvette_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-125">            <span class="s2">&quot;chevrolet_corvette_zr1_2012&quot;</span><span class="p">,</span>
+</span><span id="line-126">            <span class="s2">&quot;chevrolet_corvette_ron_fellows_edition_z06_2007&quot;</span><span class="p">,</span>
+</span><span id="line-127">            <span class="s2">&quot;chevrolet_traverse_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-128">            <span class="s2">&quot;chevrolet_camaro_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-129">            <span class="s2">&quot;chevrolet_hhr_ss_2010&quot;</span><span class="p">,</span>
+</span><span id="line-130">            <span class="s2">&quot;chevrolet_impala_sedan_2007&quot;</span><span class="p">,</span>
+</span><span id="line-131">            <span class="s2">&quot;chevrolet_tahoe_hybrid_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-132">            <span class="s2">&quot;chevrolet_sonic_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-133">            <span class="s2">&quot;chevrolet_express_cargo_van_2007&quot;</span><span class="p">,</span>
+</span><span id="line-134">            <span class="s2">&quot;chevrolet_avalanche_crew_cab_2012&quot;</span><span class="p">,</span>
+</span><span id="line-135">            <span class="s2">&quot;chevrolet_cobalt_ss_2010&quot;</span><span class="p">,</span>
+</span><span id="line-136">            <span class="s2">&quot;chevrolet_malibu_hybrid_sedan_2010&quot;</span><span class="p">,</span>
+</span><span id="line-137">            <span class="s2">&quot;chevrolet_trailblazer_ss_2009&quot;</span><span class="p">,</span>
+</span><span id="line-138">            <span class="s2">&quot;chevrolet_silverado_2500hd_regular_cab_2012&quot;</span><span class="p">,</span>
+</span><span id="line-139">            <span class="s2">&quot;chevrolet_silverado_1500_classic_extended_cab_2007&quot;</span><span class="p">,</span>
+</span><span id="line-140">            <span class="s2">&quot;chevrolet_express_van_2007&quot;</span><span class="p">,</span>
+</span><span id="line-141">            <span class="s2">&quot;chevrolet_monte_carlo_coupe_2007&quot;</span><span class="p">,</span>
+</span><span id="line-142">            <span class="s2">&quot;chevrolet_malibu_sedan_2007&quot;</span><span class="p">,</span>
+</span><span id="line-143">            <span class="s2">&quot;chevrolet_silverado_1500_extended_cab_2012&quot;</span><span class="p">,</span>
+</span><span id="line-144">            <span class="s2">&quot;chevrolet_silverado_1500_regular_cab_2012&quot;</span><span class="p">,</span>
+</span><span id="line-145">            <span class="s2">&quot;chrysler_aspen_suv_2009&quot;</span><span class="p">,</span>
+</span><span id="line-146">            <span class="s2">&quot;chrysler_sebring_convertible_2010&quot;</span><span class="p">,</span>
+</span><span id="line-147">            <span class="s2">&quot;chrysler_town_and_country_minivan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-148">            <span class="s2">&quot;chrysler_300_srt_8_2010&quot;</span><span class="p">,</span>
+</span><span id="line-149">            <span class="s2">&quot;chrysler_crossfire_convertible_2008&quot;</span><span class="p">,</span>
+</span><span id="line-150">            <span class="s2">&quot;chrysler_pt_cruiser_convertible_2008&quot;</span><span class="p">,</span>
+</span><span id="line-151">            <span class="s2">&quot;daewoo_nubira_wagon_2002&quot;</span><span class="p">,</span>
+</span><span id="line-152">            <span class="s2">&quot;dodge_caliber_wagon_2012&quot;</span><span class="p">,</span>
+</span><span id="line-153">            <span class="s2">&quot;dodge_caliber_wagon_2007&quot;</span><span class="p">,</span>
+</span><span id="line-154">            <span class="s2">&quot;dodge_caravan_minivan_1997&quot;</span><span class="p">,</span>
+</span><span id="line-155">            <span class="s2">&quot;dodge_ram_pickup_3500_crew_cab_2010&quot;</span><span class="p">,</span>
+</span><span id="line-156">            <span class="s2">&quot;dodge_ram_pickup_3500_quad_cab_2009&quot;</span><span class="p">,</span>
+</span><span id="line-157">            <span class="s2">&quot;dodge_sprinter_cargo_van_2009&quot;</span><span class="p">,</span>
+</span><span id="line-158">            <span class="s2">&quot;dodge_journey_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-159">            <span class="s2">&quot;dodge_dakota_crew_cab_2010&quot;</span><span class="p">,</span>
+</span><span id="line-160">            <span class="s2">&quot;dodge_dakota_club_cab_2007&quot;</span><span class="p">,</span>
+</span><span id="line-161">            <span class="s2">&quot;dodge_magnum_wagon_2008&quot;</span><span class="p">,</span>
+</span><span id="line-162">            <span class="s2">&quot;dodge_challenger_srt8_2011&quot;</span><span class="p">,</span>
+</span><span id="line-163">            <span class="s2">&quot;dodge_durango_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-164">            <span class="s2">&quot;dodge_durango_suv_2007&quot;</span><span class="p">,</span>
+</span><span id="line-165">            <span class="s2">&quot;dodge_charger_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-166">            <span class="s2">&quot;dodge_charger_srt_8_2009&quot;</span><span class="p">,</span>
+</span><span id="line-167">            <span class="s2">&quot;eagle_talon_hatchback_1998&quot;</span><span class="p">,</span>
+</span><span id="line-168">            <span class="s2">&quot;fiat_500_abarth_2012&quot;</span><span class="p">,</span>
+</span><span id="line-169">            <span class="s2">&quot;fiat_500_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-170">            <span class="s2">&quot;ferrari_ff_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-171">            <span class="s2">&quot;ferrari_california_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-172">            <span class="s2">&quot;ferrari_458_italia_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-173">            <span class="s2">&quot;ferrari_458_italia_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-174">            <span class="s2">&quot;fisker_karma_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-175">            <span class="s2">&quot;ford_f_450_super_duty_crew_cab_2012&quot;</span><span class="p">,</span>
+</span><span id="line-176">            <span class="s2">&quot;ford_mustang_convertible_2007&quot;</span><span class="p">,</span>
+</span><span id="line-177">            <span class="s2">&quot;ford_freestar_minivan_2007&quot;</span><span class="p">,</span>
+</span><span id="line-178">            <span class="s2">&quot;ford_expedition_el_suv_2009&quot;</span><span class="p">,</span>
+</span><span id="line-179">            <span class="s2">&quot;ford_edge_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-180">            <span class="s2">&quot;ford_ranger_supercab_2011&quot;</span><span class="p">,</span>
+</span><span id="line-181">            <span class="s2">&quot;ford_gt_coupe_2006&quot;</span><span class="p">,</span>
+</span><span id="line-182">            <span class="s2">&quot;ford_f_150_regular_cab_2012&quot;</span><span class="p">,</span>
+</span><span id="line-183">            <span class="s2">&quot;ford_f_150_regular_cab_2007&quot;</span><span class="p">,</span>
+</span><span id="line-184">            <span class="s2">&quot;ford_focus_sedan_2007&quot;</span><span class="p">,</span>
+</span><span id="line-185">            <span class="s2">&quot;ford_e_series_wagon_van_2012&quot;</span><span class="p">,</span>
+</span><span id="line-186">            <span class="s2">&quot;ford_fiesta_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-187">            <span class="s2">&quot;gmc_terrain_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-188">            <span class="s2">&quot;gmc_savana_van_2012&quot;</span><span class="p">,</span>
+</span><span id="line-189">            <span class="s2">&quot;gmc_yukon_hybrid_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-190">            <span class="s2">&quot;gmc_acadia_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-191">            <span class="s2">&quot;gmc_canyon_extended_cab_2012&quot;</span><span class="p">,</span>
+</span><span id="line-192">            <span class="s2">&quot;geo_metro_convertible_1993&quot;</span><span class="p">,</span>
+</span><span id="line-193">            <span class="s2">&quot;hummer_h3t_crew_cab_2010&quot;</span><span class="p">,</span>
+</span><span id="line-194">            <span class="s2">&quot;hummer_h2_sut_crew_cab_2009&quot;</span><span class="p">,</span>
+</span><span id="line-195">            <span class="s2">&quot;honda_odyssey_minivan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-196">            <span class="s2">&quot;honda_odyssey_minivan_2007&quot;</span><span class="p">,</span>
+</span><span id="line-197">            <span class="s2">&quot;honda_accord_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-198">            <span class="s2">&quot;honda_accord_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-199">            <span class="s2">&quot;hyundai_veloster_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-200">            <span class="s2">&quot;hyundai_santa_fe_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-201">            <span class="s2">&quot;hyundai_tucson_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-202">            <span class="s2">&quot;hyundai_veracruz_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-203">            <span class="s2">&quot;hyundai_sonata_hybrid_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-204">            <span class="s2">&quot;hyundai_elantra_sedan_2007&quot;</span><span class="p">,</span>
+</span><span id="line-205">            <span class="s2">&quot;hyundai_accent_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-206">            <span class="s2">&quot;hyundai_genesis_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-207">            <span class="s2">&quot;hyundai_sonata_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-208">            <span class="s2">&quot;hyundai_elantra_touring_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-209">            <span class="s2">&quot;hyundai_azera_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-210">            <span class="s2">&quot;infiniti_g_coupe_ipl_2012&quot;</span><span class="p">,</span>
+</span><span id="line-211">            <span class="s2">&quot;infiniti_qx56_suv_2011&quot;</span><span class="p">,</span>
+</span><span id="line-212">            <span class="s2">&quot;isuzu_ascender_suv_2008&quot;</span><span class="p">,</span>
+</span><span id="line-213">            <span class="s2">&quot;jaguar_xk_xkr_2012&quot;</span><span class="p">,</span>
+</span><span id="line-214">            <span class="s2">&quot;jeep_patriot_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-215">            <span class="s2">&quot;jeep_wrangler_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-216">            <span class="s2">&quot;jeep_liberty_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-217">            <span class="s2">&quot;jeep_grand_cherokee_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-218">            <span class="s2">&quot;jeep_compass_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-219">            <span class="s2">&quot;lamborghini_reventon_coupe_2008&quot;</span><span class="p">,</span>
+</span><span id="line-220">            <span class="s2">&quot;lamborghini_aventador_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-221">            <span class="s2">&quot;lamborghini_gallardo_lp_570_4_superleggera_2012&quot;</span><span class="p">,</span>
+</span><span id="line-222">            <span class="s2">&quot;lamborghini_diablo_coupe_2001&quot;</span><span class="p">,</span>
+</span><span id="line-223">            <span class="s2">&quot;land_rover_range_rover_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-224">            <span class="s2">&quot;land_rover_lr2_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-225">            <span class="s2">&quot;lincoln_town_car_sedan_2011&quot;</span><span class="p">,</span>
+</span><span id="line-226">            <span class="s2">&quot;mini_cooper_roadster_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-227">            <span class="s2">&quot;maybach_landaulet_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-228">            <span class="s2">&quot;mazda_tribute_suv_2011&quot;</span><span class="p">,</span>
+</span><span id="line-229">            <span class="s2">&quot;mclaren_mp4_12c_coupe_2012&quot;</span><span class="p">,</span>
+</span><span id="line-230">            <span class="s2">&quot;mercedes_benz_300_class_convertible_1993&quot;</span><span class="p">,</span>
+</span><span id="line-231">            <span class="s2">&quot;mercedes_benz_c_class_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-232">            <span class="s2">&quot;mercedes_benz_sl_class_coupe_2009&quot;</span><span class="p">,</span>
+</span><span id="line-233">            <span class="s2">&quot;mercedes_benz_e_class_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-234">            <span class="s2">&quot;mercedes_benz_s_class_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-235">            <span class="s2">&quot;mercedes_benz_sprinter_van_2012&quot;</span><span class="p">,</span>
+</span><span id="line-236">            <span class="s2">&quot;mitsubishi_lancer_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-237">            <span class="s2">&quot;nissan_leaf_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-238">            <span class="s2">&quot;nissan_nv_passenger_van_2012&quot;</span><span class="p">,</span>
+</span><span id="line-239">            <span class="s2">&quot;nissan_juke_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-240">            <span class="s2">&quot;nissan_240sx_coupe_1998&quot;</span><span class="p">,</span>
+</span><span id="line-241">            <span class="s2">&quot;plymouth_neon_coupe_1999&quot;</span><span class="p">,</span>
+</span><span id="line-242">            <span class="s2">&quot;porsche_panamera_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-243">            <span class="s2">&quot;ram_c_v_cargo_van_minivan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-244">            <span class="s2">&quot;rolls_royce_phantom_drophead_coupe_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-245">            <span class="s2">&quot;rolls_royce_ghost_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-246">            <span class="s2">&quot;rolls_royce_phantom_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-247">            <span class="s2">&quot;scion_xd_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-248">            <span class="s2">&quot;spyker_c8_convertible_2009&quot;</span><span class="p">,</span>
+</span><span id="line-249">            <span class="s2">&quot;spyker_c8_coupe_2009&quot;</span><span class="p">,</span>
+</span><span id="line-250">            <span class="s2">&quot;suzuki_aerio_sedan_2007&quot;</span><span class="p">,</span>
+</span><span id="line-251">            <span class="s2">&quot;suzuki_kizashi_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-252">            <span class="s2">&quot;suzuki_sx4_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-253">            <span class="s2">&quot;suzuki_sx4_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-254">            <span class="s2">&quot;tesla_model_s_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-255">            <span class="s2">&quot;toyota_sequoia_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-256">            <span class="s2">&quot;toyota_camry_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-257">            <span class="s2">&quot;toyota_corolla_sedan_2012&quot;</span><span class="p">,</span>
+</span><span id="line-258">            <span class="s2">&quot;toyota_4runner_suv_2012&quot;</span><span class="p">,</span>
+</span><span id="line-259">            <span class="s2">&quot;volkswagen_golf_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-260">            <span class="s2">&quot;volkswagen_golf_hatchback_1991&quot;</span><span class="p">,</span>
+</span><span id="line-261">            <span class="s2">&quot;volkswagen_beetle_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-262">            <span class="s2">&quot;volvo_c30_hatchback_2012&quot;</span><span class="p">,</span>
+</span><span id="line-263">            <span class="s2">&quot;volvo_240_sedan_1993&quot;</span><span class="p">,</span>
+</span><span id="line-264">            <span class="s2">&quot;volvo_xc90_suv_2007&quot;</span><span class="p">,</span>
+</span><span id="line-265">            <span class="s2">&quot;smart_fortwo_convertible_2012&quot;</span><span class="p">,</span>
+</span><span id="line-266">        <span class="p">]</span></div>
 
 </span></code></pre></div>
     </div></div>
