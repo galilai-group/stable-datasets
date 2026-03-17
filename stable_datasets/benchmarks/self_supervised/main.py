@@ -266,6 +266,7 @@ def main(cfg: DictConfig) -> None:
                 "dataset": cfg.dataset,
                 "lr": cfg.model.vit_optimizer.lr if hasattr(cfg.model, "vit_optimizer") else cfg.model.optimizer.lr,
                 "batch_size": cfg.training.batch_size,
+                "accumulate_grad_batches": cfg.training.accumulate_grad_batches,
                 "max_epochs": cfg.training.max_epochs,
                 "seed": seed,
             },

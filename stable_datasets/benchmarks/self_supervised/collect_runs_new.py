@@ -35,10 +35,19 @@ SKIP_DATASETS = {"facepointing", "kmnist"}
 
 SSL_METRIC = "eval/linear_probe_top1_epoch"
 
-# Per-model LR requirements: only accept runs with these LRs.
+# Per-model run requirements: only accept runs matching these configs.
+# This filters out runs from before fixes (wrong LR, grad accum, batch size).
 _REQUIRED_LR: dict[str, float] = {
-    "lejepa": 2e-4,
-    "dino": 2e-4,
+    "lejepa": 5e-4,
+    "dino": 5e-4,
+}
+_REQUIRED_BS: dict[str, int] = {
+    "lejepa": 256,
+    "dino": 256,
+}
+_REQUIRED_ACCUM: dict[str, int] = {
+    "lejepa": 1,
+    "dino": 1,
 }
 
 CACHE_DIR = Path(__file__).resolve().parent / ".result_cache"
@@ -176,18 +185,36 @@ def _collect_ssl(
             dirty = True
             continue
 
-        # Filter by required LR
-        if model in _REQUIRED_LR:
-            run_lr = config.get("lr")
-            required_lr = _REQUIRED_LR[model]
-            if run_lr is None or abs(float(run_lr) - required_lr) > 1e-8:
-                log.debug(
-                    f"Skipping {run_id} ({model}/{dataset}): "
-                    f"lr={run_lr}, required={required_lr}"
-                )
-                cached_runs[run_id] = {"_skip": True, "reason": "wrong_lr"}
+        # Filter by required LR, batch size, and grad accum
+        def _check_required(config_key, required_dict, reason, is_int=False):
+            if model not in required_dict:
+                return True
+            val = config.get(config_key)
+            req = required_dict[model]
+            if is_int:
+                if val is None or int(val) != req:
+                    log.debug(f"Skipping {run_id} ({model}/{dataset}): {config_key}={val}, required={req}")
+                    cached_runs[run_id] = {"_skip": True, "reason": reason}
+                    return False
+            else:
+                if val is None or abs(float(val) - req) > 1e-8:
+                    log.debug(f"Skipping {run_id} ({model}/{dataset}): {config_key}={val}, required={req}")
+                    cached_runs[run_id] = {"_skip": True, "reason": reason}
+                    return False
+            return True
+
+        skip = False
+        for cfg_key, req_dict, reason, is_int in [
+            ("lr", _REQUIRED_LR, "wrong_lr", False),
+            ("batch_size", _REQUIRED_BS, "wrong_bs", True),
+            ("accumulate_grad_batches", _REQUIRED_ACCUM, "wrong_accum", True),
+        ]:
+            if not _check_required(cfg_key, req_dict, reason, is_int):
                 dirty = True
-                continue
+                skip = True
+                break
+        if skip:
+            continue
 
         top1 = summary.get(SSL_METRIC)
         if top1 is None:
