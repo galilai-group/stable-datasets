@@ -1,17 +1,16 @@
 """Collect SSL and supervised results from W&B into summary tables.
 
-Pulls linear-probe top-1 accuracy from SSL runs and optionally supervised
-baseline results, then pivots into a {dataset x method} table.
+Optimized version with retry-on-429 instead of fixed sleeps, server-side
+filters, and negative caching for skipped runs.
 
 Usage:
-    python -m stable_datasets.benchmarks.self_supervised.collect_results \\
+    python -m stable_datasets.benchmarks.self_supervised.collect_runs_new \
         --entity stable-ssl --project stable-datasets-benchmarks
 
-    # With supervised baselines and LaTeX export
-    python -m stable_datasets.benchmarks.self_supervised.collect_results \\
-        --entity stable-ssl --project stable-datasets-benchmarks \\
-        --supervised-entity samibg --supervised-project stable-datasets \\
-        --latex table.tex
+    # With supervised baselines
+    python -m stable_datasets.benchmarks.self_supervised.collect_runs_new \
+        --entity stable-ssl --project stable-datasets-benchmarks \
+        --supervised-entity samibg --supervised-project stable-datasets
 """
 
 from __future__ import annotations
@@ -21,14 +20,13 @@ import hashlib
 import json
 import logging
 import time
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+import requests
 import wandb
 from tqdm import tqdm
-
-# Seconds to sleep between consecutive W&B API attribute accesses to avoid 429s.
-_RATE_LIMIT_SECONDS = 1
 
 log = logging.getLogger(__name__)
 
@@ -38,136 +36,187 @@ SKIP_DATASETS = {"facepointing", "kmnist"}
 SSL_METRIC = "eval/linear_probe_top1_epoch"
 
 # Per-model LR requirements: only accept runs with these LRs.
-# This filters out runs from before LR/scheduler fixes.
 _REQUIRED_LR: dict[str, float] = {
-    "lejepa": 5e-4,
-    "dino": 5e-4,
+    "lejepa": 2e-4,
+    "dino": 2e-4,
 }
 
 CACHE_DIR = Path(__file__).resolve().parent / ".result_cache"
 
+# Run states that are final and safe to cache.
+_TERMINAL_STATES = {"finished", "failed", "crashed"}
 
-def _collect_ssl(entity: str, project: str, refresh: bool = False, require_tag: str | None = None) -> pd.DataFrame:
-    """Collect SSL linear-probe results from W&B summary (no history download needed).
 
-    Looks for untagged runs with vit_small backbone that have
-    ``eval/linear_probe_top1_epoch`` in their summary.  Accepts any run state
-    (finished *or* failed) as long as the metric is present — some runs that
-    W&B marks "failed" still produced valid linear-probe results.
+def _retry_on_429(fn, max_retries=5):
+    """Call fn(), retrying with exponential backoff on HTTP 429."""
+    for attempt in range(max_retries):
+        try:
+            return fn()
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 429:
+                wait = 2 ** attempt
+                log.warning(f"Rate limited (429), retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                raise
+    return fn()
 
-    Caches runs that have the metric so subsequent calls skip W&B API for them.
-    Use ``--refresh`` to clear the cache and re-download everything.
-    """
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    cache_file = CACHE_DIR / f"ssl_{hashlib.md5(f'{entity}/{project}'.encode()).hexdigest()}.json"
 
-    cached_runs: dict[str, dict] = {}
+def _load_cache(cache_file: Path, refresh: bool) -> dict[str, dict]:
     if refresh:
-        # Wipe the cache so every run is re-checked
         if cache_file.exists():
             cache_file.unlink()
-            log.info("Cleared SSL cache (--refresh)")
-    elif cache_file.exists():
+            log.info("Cleared cache (--refresh)")
+        return {}
+    if cache_file.exists():
         try:
-            cached_runs = json.loads(cache_file.read_text())
-            # Evict cached runs that now fail the LR filter
-            evicted = [
-                rid for rid, row in cached_runs.items()
-                if row.get("model") in _REQUIRED_LR
-                and abs(float(row.get("lr", 0)) - _REQUIRED_LR[row["model"]]) > 1e-8
-            ]
-            for rid in evicted:
-                del cached_runs[rid]
-            if evicted:
-                log.info(f"Evicted {len(evicted)} cached runs failing LR filter")
-                cache_file.write_text(json.dumps(cached_runs, indent=2))
-            log.info(f"Loaded {len(cached_runs)} cached SSL runs")
+            data = json.loads(cache_file.read_text())
+            log.info(f"Loaded {len(data)} cached entries from {cache_file.name}")
+            return data
         except Exception:
-            cached_runs = {}
+            return {}
+    return {}
 
+
+def _save_cache(cache_file: Path, data: dict[str, dict]) -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_file.write_text(json.dumps(data, indent=2))
+
+
+def _collect_ssl(
+    entity: str,
+    project: str,
+    refresh: bool = False,
+    require_tag: str | None = None,
+) -> pd.DataFrame:
+    """Collect SSL linear-probe results from W&B.
+
+    Uses server-side filters to only fetch vit_small runs.
+    Caches both accepted and rejected (negative cache) terminal runs.
+    Uses retry-on-429 instead of fixed sleeps.
+    """
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    proj_hash = hashlib.md5(f"{entity}/{project}".encode()).hexdigest()
+    cache_file = CACHE_DIR / f"ssl_v2_{proj_hash}.json"
+
+    cached_runs = _load_cache(cache_file, refresh)
+
+    # Evict cached runs that now fail the LR filter
+    evicted = [
+        rid
+        for rid, row in cached_runs.items()
+        if not row.get("_skip")
+        and row.get("model") in _REQUIRED_LR
+        and abs(float(row.get("lr", 0)) - _REQUIRED_LR[row["model"]]) > 1e-8
+    ]
+    for rid in evicted:
+        del cached_runs[rid]
+    if evicted:
+        log.info(f"Evicted {len(evicted)} cached runs failing LR filter")
+        _save_cache(cache_file, cached_runs)
+
+    # Server-side filter: only fetch vit_small backbone runs
     api = wandb.Api(timeout=60)
-    runs = list(api.runs(f"{entity}/{project}", per_page=1000))
-    log.info(f"Found {len(runs)} total runs in {entity}/{project}")
+    filters = {"config.backbone": "vit_small"}
+    runs = _retry_on_429(
+        lambda: list(api.runs(f"{entity}/{project}", filters=filters, per_page=1000))
+    )
+    log.info(f"Found {len(runs)} vit_small runs in {entity}/{project}")
 
+    _KNOWN_TAGS = {"seed", "final_runs", "rescaled"}
     rows = []
     new_cached = 0
-    for i, run in enumerate(tqdm(runs, desc="Scanning SSL runs")):
+    dirty = False
+
+    for run in tqdm(runs, desc="Scanning SSL runs"):
         run_id = run.id
 
         # Use cached result if available
         if run_id in cached_runs:
-            rows.append(cached_runs[run_id])
+            entry = cached_runs[run_id]
+            if not entry.get("_skip"):
+                rows.append(entry)
             continue
 
-        # Rate-limit W&B API access (accessing .tags, .config, .summary hits API)
-        if i > 0:
-            time.sleep(_RATE_LIMIT_SECONDS)
+        # Access run attributes with retry protection
+        state = _retry_on_429(lambda: run.state)
+
+        # Skip in-progress runs — don't cache them since state may change
+        if state not in _TERMINAL_STATES:
+            log.debug(f"Skipping {run_id} (state={state}, not terminal)")
+            continue
+
+        tags = set(_retry_on_429(lambda: run.tags or []))
+        config = _retry_on_429(lambda: run.config)
+        summary = _retry_on_429(lambda: run.summary)
 
         # Only include runs whose tags are a subset of known SSL tags
-        tags = set(run.tags or [])
-        _KNOWN_TAGS = {"seed", "final_runs"}
         is_seed_run = "seed" in tags
         if tags - _KNOWN_TAGS:
             log.debug(f"Skipping {run_id} (unknown tags: {tags - _KNOWN_TAGS})")
+            cached_runs[run_id] = {"_skip": True, "reason": "unknown_tags"}
+            dirty = True
             continue
 
-        # If --tag is specified, only include runs with that tag
-        if require_tag and require_tag not in tags:
-            continue
-
-        # Skip still-running runs
-        if run.state == "running":
-            log.debug(f"Skipping {run_id} (still running)")
-            continue
-
-        backbone = run.config.get("backbone", "")
-        if backbone != "vit_small":
-            continue
-
-        dataset = run.config.get("dataset", "")
-        model = run.config.get("model", "")
+        dataset = config.get("dataset", "")
+        model = config.get("model", "")
         if not dataset or not model:
+            cached_runs[run_id] = {"_skip": True, "reason": "missing_dataset_or_model"}
+            dirty = True
+            continue
+
+        # If --tag is specified, enforce it for lejepa and dino runs
+        if require_tag and model in ("lejepa", "dino") and require_tag not in tags:
+            cached_runs[run_id] = {"_skip": True, "reason": f"missing_tag_{require_tag}"}
+            dirty = True
             continue
 
         if dataset.lower() in SKIP_DATASETS:
+            cached_runs[run_id] = {"_skip": True, "reason": "skip_dataset"}
+            dirty = True
             continue
 
-        # Filter by required LR (rejects old runs with wrong LR/scheduler)
+        # Filter by required LR
         if model in _REQUIRED_LR:
-            run_lr = run.config.get("lr")
+            run_lr = config.get("lr")
             required_lr = _REQUIRED_LR[model]
             if run_lr is None or abs(float(run_lr) - required_lr) > 1e-8:
                 log.debug(
                     f"Skipping {run_id} ({model}/{dataset}): "
                     f"lr={run_lr}, required={required_lr}"
                 )
+                cached_runs[run_id] = {"_skip": True, "reason": "wrong_lr"}
+                dirty = True
                 continue
 
-        top1 = run.summary.get(SSL_METRIC)
+        top1 = summary.get(SSL_METRIC)
         if top1 is None:
-            log.debug(f"Skipping {run_id} ({model}/{dataset}): no {SSL_METRIC} in summary")
+            log.debug(f"Skipping {run_id} ({model}/{dataset}): no {SSL_METRIC}")
+            cached_runs[run_id] = {"_skip": True, "reason": "no_metric"}
+            dirty = True
             continue
 
         row = {
             "dataset": dataset.lower(),
             "model": model,
-            "backbone": backbone,
-            "lr": run.config.get("lr"),
-            "seed": run.config.get("seed"),
+            "backbone": "vit_small",
+            "lr": config.get("lr"),
+            "seed": config.get("seed"),
             "is_seed_run": is_seed_run,
             SSL_METRIC: float(top1),
             "id": run_id,
             "name": run.name,
-            "state": run.state,
+            "state": state,
         }
         rows.append(row)
         cached_runs[run_id] = row
         new_cached += 1
-        log.info(f"  Found {model}/{dataset} = {float(top1):.4f} (state={run.state})")
+        dirty = True
+        log.info(f"  Found {model}/{dataset} = {float(top1):.4f} (state={state})")
 
-    if new_cached > 0:
-        cache_file.write_text(json.dumps(cached_runs, indent=2))
-        log.info(f"Cached {new_cached} new SSL runs")
+    if dirty:
+        _save_cache(cache_file, cached_runs)
+        log.info(f"Updated SSL cache ({new_cached} new result runs)")
 
     if not rows:
         return pd.DataFrame()
@@ -177,59 +226,64 @@ def _collect_ssl(entity: str, project: str, refresh: bool = False, require_tag: 
     return df
 
 
-def _collect_supervised(entity: str, project: str, refresh: bool = False) -> pd.DataFrame:
+def _collect_supervised(
+    entity: str, project: str, refresh: bool = False
+) -> pd.DataFrame:
     """Collect supervised baseline results from a W&B project.
 
-    Supervised runs store ``test_accuracy`` in their W&B summary.
-    Caches runs to avoid re-downloading.
-
-    Returns a DataFrame with columns: dataset, test_accuracy.
-    Keeps the best test_accuracy per dataset when duplicates exist.
+    Uses retry-on-429 and negative caching.
+    Returns a DataFrame with the best test_accuracy per dataset.
     """
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    cache_file = CACHE_DIR / f"supervised_{hashlib.md5(f'{entity}/{project}'.encode()).hexdigest()}.json"
+    proj_hash = hashlib.md5(f"{entity}/{project}".encode()).hexdigest()
+    cache_file = CACHE_DIR / f"supervised_v2_{proj_hash}.json"
 
-    cached_runs: dict[str, dict] = {}
-    if refresh:
-        if cache_file.exists():
-            cache_file.unlink()
-            log.info("Cleared supervised cache (--refresh)")
-    elif cache_file.exists():
-        try:
-            cached_runs = json.loads(cache_file.read_text())
-            log.info(f"Loaded {len(cached_runs)} cached supervised runs")
-        except Exception:
-            cached_runs = {}
+    cached_runs = _load_cache(cache_file, refresh)
 
     api = wandb.Api(timeout=60)
-    runs = list(api.runs(f"{entity}/{project}", per_page=200))
+    runs = _retry_on_429(
+        lambda: list(api.runs(f"{entity}/{project}", per_page=200))
+    )
     log.info(f"Found {len(runs)} supervised runs in {entity}/{project}")
 
     rows = []
     new_cached = 0
-    for i, run in enumerate(tqdm(runs, desc="Scanning supervised runs")):
+    dirty = False
+
+    for run in tqdm(runs, desc="Scanning supervised runs"):
         run_id = run.id
 
         if run_id in cached_runs:
-            rows.append(cached_runs[run_id])
+            entry = cached_runs[run_id]
+            if not entry.get("_skip"):
+                rows.append(entry)
             continue
 
-        if i > 0:
-            time.sleep(_RATE_LIMIT_SECONDS)
+        state = _retry_on_429(lambda: run.state)
 
-        if run.state == "running":
+        # Skip non-terminal runs — don't cache them
+        if state not in _TERMINAL_STATES:
             continue
 
-        dataset = run.config.get("dataset", "")
+        config = _retry_on_429(lambda: run.config)
+        summary = _retry_on_429(lambda: run.summary)
+
+        dataset = config.get("dataset", "")
         if not dataset:
+            cached_runs[run_id] = {"_skip": True, "reason": "no_dataset"}
+            dirty = True
             continue
+
         dataset_key = dataset.lower()
-
         if dataset_key in SKIP_DATASETS:
+            cached_runs[run_id] = {"_skip": True, "reason": "skip_dataset"}
+            dirty = True
             continue
 
-        test_acc = run.summary.get("test_accuracy")
+        test_acc = summary.get("test_accuracy")
         if test_acc is None:
+            cached_runs[run_id] = {"_skip": True, "reason": "no_test_accuracy"}
+            dirty = True
             continue
 
         row = {
@@ -241,19 +295,22 @@ def _collect_supervised(entity: str, project: str, refresh: bool = False) -> pd.
         rows.append(row)
         cached_runs[run_id] = row
         new_cached += 1
+        dirty = True
 
-    if new_cached > 0:
-        cache_file.write_text(json.dumps(cached_runs, indent=2))
-        log.info(f"Cached {new_cached} new supervised runs")
+    if dirty:
+        _save_cache(cache_file, cached_runs)
+        log.info(f"Updated supervised cache ({new_cached} new result runs)")
 
     if not rows:
         return pd.DataFrame()
 
     df = pd.DataFrame(rows)
     # Keep best test_accuracy per dataset
-    df = df.sort_values("test_accuracy", ascending=False).drop_duplicates(
-        subset=["dataset"], keep="first"
-    ).reset_index(drop=True)
+    df = (
+        df.sort_values("test_accuracy", ascending=False)
+        .drop_duplicates(subset=["dataset"], keep="first")
+        .reset_index(drop=True)
+    )
     return df
 
 
@@ -264,10 +321,6 @@ def pivot_table(
     """Pivot SSL results into {dataset x method} numeric table.
 
     Returns (mean_table, std_table). std_table is None if no seed runs exist.
-
-    Primary (non-seed) runs: deduplicates by keeping the best run per
-    (dataset, method) group. Seed runs are aggregated separately to compute
-    mean +/- std across seeds for each (dataset, method).
     """
     metric = SSL_METRIC
     df = ssl_df.copy()
@@ -295,7 +348,6 @@ def pivot_table(
         seed_std = seed_df.pivot_table(
             index="dataset", columns="method", values=metric, aggfunc="std"
         )
-        # Overlay: where we have seed data, use seed mean instead of primary
         for col in seed_mean.columns:
             if col in numeric.columns:
                 mask = seed_mean[col].notna()
@@ -364,16 +416,11 @@ _MODEL_DISPLAY_NAMES: dict[str, str] = {
 
 
 def _display_name(raw: str, mapping: dict[str, str]) -> str:
-    """Return a human-readable display name, falling back to *raw*."""
     return mapping.get(raw, raw)
 
 
 def _format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) -> str:
-    """Format a pivot table as a booktabs LaTeX table.
-
-    Columns are SSL method names, optionally "Supervised", plus "Average".
-    When std_table is provided, cells with seed data render as ``mean {\\pm} std``.
-    """
+    """Format a pivot table as a booktabs LaTeX table."""
     pct = table * 100
     pct_std = std_table * 100 if std_table is not None else None
 
@@ -383,7 +430,7 @@ def _format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) ->
     model_labels = [_display_name(m, _MODEL_DISPLAY_NAMES) for m in ssl_cols]
     n_ssl = len(ssl_cols)
     n_extra = 1 if has_supervised else 0
-    n_total_data = n_ssl + n_extra + 1  # +1 for Avg.
+    n_total_data = n_ssl + n_extra + 1
 
     datasets = [idx for idx in pct.index if idx != "Average"]
 
@@ -405,7 +452,6 @@ def _format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) ->
     lines.append("\\begin{tabular}{l " + " ".join(["c"] * n_total_data) + "}")
     lines.append("\\toprule")
 
-    # Multicolumn header for SSL methods
     if has_supervised:
         lines.append(
             f" & \\multicolumn{{{n_ssl}}}{{c}}"
@@ -418,7 +464,6 @@ def _format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) ->
         )
     lines.append(f"\\cmidrule(lr){{2-{n_ssl + 1}}}")
 
-    # Header row
     header = "\\textbf{Dataset}"
     for m in model_labels:
         header += f" & {m}"
@@ -428,7 +473,6 @@ def _format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) ->
     lines.append(header)
     lines.append("\\midrule")
 
-    # Data rows
     all_data_cols = ssl_cols + (["Supervised"] if has_supervised else [])
     for ds in datasets:
         ds_label = _display_name(ds, _DATASET_DISPLAY_NAMES)
@@ -439,7 +483,6 @@ def _format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) ->
         row += " \\\\"
         lines.append(row)
 
-    # Average row
     lines.append("\\midrule")
     avg_row = "\\textbf{Average}"
     for col in all_data_cols:
@@ -458,10 +501,10 @@ def main():
     parser = argparse.ArgumentParser(
         description="Collect SSL and supervised results from W&B"
     )
-    parser.add_argument("--entity", default="stable-ssl", help="W&B entity for SSL runs")
-    parser.add_argument("--project", default="stable-datasets-benchmarks", help="W&B project for SSL runs")
+    parser.add_argument("--entity", default="samibg", help="W&B entity for SSL runs")
+    parser.add_argument("--project", default="finalized-stable-datasets", help="W&B project for SSL runs")
     parser.add_argument("--output", default="offline_probe_results.csv", help="Output CSV path")
-    parser.add_argument("--latex", default=None, help="Output LaTeX table path (.tex)")
+    parser.add_argument("--latex", default=None, help="Output LaTeX table path (.tex); auto-generated if not set")
     parser.add_argument(
         "--refresh",
         action="store_true",
@@ -469,18 +512,18 @@ def main():
     )
     parser.add_argument(
         "--supervised-entity",
-        default=None,
-        help="W&B entity for supervised baselines (e.g. samibg)",
+        default="samibg",
+        help="W&B entity for supervised baselines",
     )
     parser.add_argument(
         "--supervised-project",
-        default=None,
-        help="W&B project for supervised baselines (e.g. stable-datasets)",
+        default="finalized-stable-datasets",
+        help="W&B project for supervised baselines",
     )
     parser.add_argument(
         "--tag",
-        default=None,
-        help="Only include runs with this wandb tag (e.g. final_runs)",
+        default="rescaled",
+        help="Only include lejepa/dino runs with this wandb tag (e.g. rescaled, final_runs)",
     )
     args = parser.parse_args()
 
@@ -492,7 +535,6 @@ def main():
         log.warning("No SSL runs found.")
         return
 
-    # Drop runs without the metric
     ssl_df = ssl_df.dropna(subset=[SSL_METRIC]).reset_index(drop=True)
     if ssl_df.empty:
         log.warning("No SSL runs with linear probe metrics found.")
@@ -515,7 +557,6 @@ def main():
     # Build pivot table
     table, std_table = pivot_table(ssl_df, supervised_df=supervised_df)
     print(f"\n=== Linear Probe Top-1 (dataset x method) ===")
-    # Display as percentages
     print((table * 100).round(1).to_markdown())
 
     if std_table is not None:
@@ -526,11 +567,12 @@ def main():
         ssl_df.to_csv(args.output, index=False)
         print(f"\nSaved to {args.output}")
 
-    if args.latex:
-        latex_str = _format_latex(table, std_table=std_table)
-        with open(args.latex, "w") as f:
-            f.write(latex_str)
-        print(f"LaTeX table saved to {args.latex}")
+    # Auto-generate LaTeX file with datetime stamp
+    latex_path = args.latex or f"results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.tex"
+    latex_str = _format_latex(table, std_table=std_table)
+    with open(latex_path, "w") as f:
+        f.write(latex_str)
+    print(f"LaTeX table saved to {latex_path}")
 
 
 if __name__ == "__main__":
