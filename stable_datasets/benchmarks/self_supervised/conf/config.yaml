@@ -4,6 +4,8 @@ defaults:
   - _self_
 
 dataset: cifar10
+seed: null  # set to an int to run a seeded ablation (tagged "seed" in wandb)
+run_tag: null  # extra wandb tag for this run (e.g. "final_runs")
 skip_datasets: []  # extra datasets to skip at runtime (e.g. [shapes3d, food101])
 data_dir: /oscar/home/sboughan/scratch/.stable-datasets  # override to set download/cache root
 cache_dir: null  # pre-cached 224x224 numpy memmaps (null to disable)
@@ -27,8 +29,8 @@ training:
 
 wandb:
   enabled: true
-  entity: stable-ssl
-  project: stable-datasets-benchmarks
+  entity: samibg
+  project: finalized-stable-datasets
 
 hydra:
   run:

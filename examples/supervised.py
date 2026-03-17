@@ -554,6 +554,7 @@ def main(args):
     run_name = f"{model_name}-{args.dataset.lower()}"
 
     logger = WandbLogger(
+        entity=args.wandb_entity,
         project=args.wandb_project,
         name=run_name,
     )
@@ -753,10 +754,16 @@ if __name__ == "__main__":
         help="Maximum number of epochs (default: 100)",
     )
     parser.add_argument(
+        "--wandb_entity",
+        type=str,
+        default="samibg",
+        help="W&B entity (default: samibg)",
+    )
+    parser.add_argument(
         "--wandb_project",
         type=str,
-        default="stable-datasets",
-        help="W&B project name (default: stable-datasets)",
+        default="finalized-stable-datasets",
+        help="W&B project name (default: finalized-stable-datasets)",
     )
     parser.add_argument(
         "--results_file",

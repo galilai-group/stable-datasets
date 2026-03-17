@@ -77,22 +77,30 @@ def build_optim_config(model_cfg, backbone_cfg) -> dict:
     else:
         opt_cfg = model_cfg.optimizer
 
+    scheduler_cfg = {"type": model_cfg.scheduler.type}
+    # Use explicitly computed total_steps instead of estimated_stepping_batches
+    # to avoid double-counting accumulate_grad_batches (batch_size is already
+    # divided by accum for memory, and the Module frequency mechanism also
+    # divides by accum).
+    if hasattr(model_cfg, "_total_steps"):
+        total_steps = int(model_cfg._total_steps)
+        scheduler_cfg["total_steps"] = total_steps
+        scheduler_cfg["peak_step"] = max(1, int(0.01 * total_steps))
+
     optim = {
         "optimizer": {
             "type": opt_cfg.type,
             "lr": opt_cfg.lr,
             "weight_decay": opt_cfg.weight_decay,
         },
-        "scheduler": {"type": model_cfg.scheduler.type},
-        "interval": "epoch",
+        "scheduler": scheduler_cfg,
+        "interval": "step",
     }
     if hasattr(opt_cfg, "betas"):
         optim["optimizer"]["betas"] = tuple(opt_cfg.betas)
     # Apply per-dataset LR override if present
     if hasattr(model_cfg, "_lr_override"):
         optim["optimizer"]["lr"] = model_cfg._lr_override
-    # Scheduler params are handled by stable_pretraining's SCHEDULER_FACTORY defaults
-    # which auto-computes total_steps, peak_step, etc. from trainer context
     return optim
 
 
@@ -187,10 +195,11 @@ def _lejepa_forward(self, batch, stage):
         V, N = len(views), views[0]["image"].size(0)
         all_images = torch.cat([v["image"] for v in views], dim=0)
         all_emb = self.backbone(all_images)
-        out["embedding"] = all_emb
+        # Only pass first view's embedding to probes (avoid noisy augmented views)
+        out["embedding"] = all_emb[:N]
 
         if "label" in views[0]:
-            out["label"] = torch.cat([v["label"] for v in views], dim=0)
+            out["label"] = views[0]["label"]
 
         if self.training:
             all_proj = self.projector(all_emb)

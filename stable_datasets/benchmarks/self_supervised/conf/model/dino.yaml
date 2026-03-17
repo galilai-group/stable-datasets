@@ -14,7 +14,7 @@ loss:
   temperature_student: 0.1
   temperature_teacher: 0.04
   warmup_temperature_teacher: 0.04
-  warmup_epochs_temperature_teacher: 30
+  warmup_epochs_temperature_teacher: 301
 
 momentum_teacher: 0.996
 
@@ -23,7 +23,6 @@ params:
   default:
     batch_size: 256
     max_epochs: 125
-    accumulate_grad_batches: 8
   # CIFAR-scale (32x32)
   cifar10:
     batch_size: 256
@@ -93,7 +92,7 @@ params:
 
 vit_optimizer:
   type: AdamW
-  lr: 5e-4
+  lr: 2e-4
   weight_decay: 0.05
   betas: [0.9, 0.999]
 

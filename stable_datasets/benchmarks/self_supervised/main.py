@@ -49,6 +49,7 @@ Usage:
 from __future__ import annotations
 
 import logging
+import math
 import os
 
 import hydra
@@ -149,6 +150,12 @@ def main(cfg: DictConfig) -> None:
     if cfg.get("distribute_gpus", False):
         _assign_gpu()
 
+    # Seed for reproducibility / seed ablations
+    seed = cfg.get("seed", None)
+    if seed is not None:
+        pl.seed_everything(int(seed), workers=True)
+        log.info(f"Seeded everything with seed={seed}")
+
     # Skip datasets in the skip list
     skip_list = {s.lower() for s in cfg.get("skip_datasets", [])}
     if cfg.dataset.lower() in skip_list:
@@ -211,6 +218,22 @@ def main(cfg: DictConfig) -> None:
         cache_dir=cfg.get("cache_dir", None),
     )
 
+    # Compute total optimizer steps explicitly for the LR scheduler.
+    # With manual optimization, batch_size is already divided by
+    # accumulate_grad_batches (for memory), and the Module's frequency
+    # mechanism steps the optimizer every `accum` batches. We must
+    # avoid relying on estimated_stepping_batches which can double-count
+    # the accumulation factor.
+    num_batches = len(data.train)
+    accum = cfg.training.accumulate_grad_batches
+    total_steps = math.ceil(num_batches / accum) * cfg.training.max_epochs
+    with open_dict(cfg):
+        cfg.model._total_steps = total_steps
+    log.info(
+        f"Scheduler total_steps={total_steps} "
+        f"(num_batches={num_batches}, accum={accum}, epochs={cfg.training.max_epochs})"
+    )
+
     # Build module from registry
     module, embed_dim = build_module(cfg, ds_config)
 
@@ -221,6 +244,14 @@ def main(cfg: DictConfig) -> None:
     logger = True  # default Lightning logger
     if cfg.wandb.enabled and not cfg.get("smoke_test", False):
         run_name = f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}"
+        if seed is not None:
+            run_name += f"_seed{seed}"
+        wandb_tags = []
+        if seed is not None:
+            wandb_tags.append("seed")
+        run_tag = cfg.get("run_tag", None)
+        if run_tag is not None:
+            wandb_tags.append(str(run_tag))
         logger = WandbLogger(
             entity=cfg.wandb.entity,
             project=cfg.wandb.project,
@@ -228,10 +259,15 @@ def main(cfg: DictConfig) -> None:
             id=wandb.util.generate_id(),
             log_model=False,
             save_dir=os.getcwd(),
+            tags=wandb_tags if wandb_tags else None,
             config={
                 "model": cfg.model.name,
                 "backbone": cfg.backbone.name,
                 "dataset": cfg.dataset,
+                "lr": cfg.model.vit_optimizer.lr if hasattr(cfg.model, "vit_optimizer") else cfg.model.optimizer.lr,
+                "batch_size": cfg.training.batch_size,
+                "max_epochs": cfg.training.max_epochs,
+                "seed": seed,
             },
         )
 

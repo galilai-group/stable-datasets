@@ -22,7 +22,8 @@ def main(kwargs, job_dir):
     lr = kwargs.get("lr", 5e-4)
     weight_decay = kwargs.get("weight_decay", 0.02)
     max_epochs = kwargs.get("max_epochs", 100)
-    wandb_project = kwargs.get("wandb_project", "stable-datasets")
+    wandb_entity = kwargs.get("wandb_entity", "samibg")
+    wandb_project = kwargs.get("wandb_project", "finalized-stable-datasets")
     config_name = kwargs.get("config_name", None)
 
     # Set up the executor folder to include the job ID placeholder
@@ -64,6 +65,7 @@ def main(kwargs, job_dir):
         f"--weight_decay {weight_decay} "
         f"--max_epochs {max_epochs} "
         f"--seed {seed} "
+        f"--wandb_entity {wandb_entity} "
         f"--wandb_project {wandb_project} "
         f"--results_file {results_file}"
     )
@@ -134,6 +136,7 @@ if __name__ == "__main__":
     dataset_list = [
         "ArabicCharacters",
         "ArabicDigits",
+        "Beans",
         "CIFAR10",
         "CIFAR100",
         "Country211",
@@ -141,9 +144,11 @@ if __name__ == "__main__":
         "DTD",
         "EMNIST",
         "FashionMNIST",
+        "FGVCAircraft",
         "Flowers102",
+        "Food101",
         "HASYv2",
-        "KMNIST",
+        "Imagenette",
         "MedMNIST",
         "NotMNIST",
         "RockPaperScissor",

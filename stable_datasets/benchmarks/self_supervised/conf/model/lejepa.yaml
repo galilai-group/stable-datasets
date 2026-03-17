@@ -20,7 +20,6 @@ params:
   default:
     batch_size: 256
     max_epochs: 125
-    accumulate_grad_batches: 8
   # CIFAR-scale (32x32)
   cifar10:
     batch_size: 256
@@ -53,10 +52,10 @@ params:
     max_epochs: 188
   arabiccharacters:
     batch_size: 256
-    max_epochs: 313
+    max_epochs: 40
   arabicdigits:
     batch_size: 256
-    max_epochs: 313
+    max_epochs: 40
   # Larger resolution
   stl10:
     batch_size: 256
@@ -90,7 +89,7 @@ params:
 
 vit_optimizer:
   type: AdamW
-  lr: 1e-3
+  lr: 2e-4
   weight_decay: 0.05
   betas: [0.9, 0.999]
 

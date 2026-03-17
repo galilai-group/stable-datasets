@@ -50,10 +50,10 @@ params:
     max_epochs: 100
   arabiccharacters:
     batch_size: 256
-    max_epochs: 200
+    max_epochs: 40
   arabicdigits:
     batch_size: 256
-    max_epochs: 200
+    max_epochs: 40
   # Larger resolution
   stl10:
     batch_size: 256
