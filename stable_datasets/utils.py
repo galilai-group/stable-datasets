@@ -109,6 +109,11 @@ class BaseDatasetBuilder:
         if cls is BaseDatasetBuilder:
             return
 
+        # Allow abstract intermediate base classes to opt out.  Checked via
+        # cls.__dict__ (not getattr) so the flag is NOT inherited by subclasses.
+        if cls.__dict__.get("_ABSTRACT_BUILDER", False):
+            return
+
         # Allow tests / internal helpers to opt out if needed
         if getattr(cls, "_SKIP_SOURCE_VALIDATION", False):
             return
