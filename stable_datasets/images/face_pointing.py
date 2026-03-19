@@ -2,16 +2,17 @@ import io
 import re
 import tarfile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import DatasetInfo, Features, Sequence, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class FacePointing(BaseDatasetBuilder):
     """Head angle classification dataset."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -26,16 +27,16 @@ class FacePointing(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The head pose database consists of 15 sets of images. Each set contains 2 series of 93 images
                            of the same person at different poses. The database has a total size of approximately 30 MB.
                            Files are organized in directories, with each directory containing images from one person (2 series).
                            All images are in JPEG format. A Front directory contains 30 frontal images (pan and tilt angles equal to 0).""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "person_id": datasets.Value("int32"),
-                    "angles": datasets.Sequence(datasets.Value("int32")),
+                    "image": ImageFeature(),
+                    "person_id": Value("int32"),
+                    "angles": Sequence(Value("int32")),
                 }
             ),
             supervised_keys=("image", "angles"),
@@ -57,7 +58,7 @@ class FacePointing(BaseDatasetBuilder):
                     if match:
                         person_id, tilt_angle, pan_angle = map(int, match.groups())
                         file = tar.extractfile(member)
-                        image = Image.open(io.BytesIO(file.read())).convert("RGB")
+                        image = PILImage.open(io.BytesIO(file.read())).convert("RGB")
 
                         yield (
                             f"{person_id}_{tilt_angle}_{pan_angle}_{member.name}",

@@ -1,10 +1,11 @@
 import io
 from zipfile import ZipFile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -19,7 +20,7 @@ class Cars196(BaseDatasetBuilder):
 
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://ai.stanford.edu/~jkrause/cars/car_dataset.html",
@@ -36,12 +37,12 @@ class Cars196(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="The Cars dataset contains 16,185 images of 196 classes of cars. The data is split into 8,144 training images and 8,041 testing images, where each class has been split roughly in a 50-50 split. Classes are typically at the level of Make, Model, Year, e.g. 2012 Tesla Model S or 2012 BMW M3 coupe.",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -55,7 +56,7 @@ class Cars196(BaseDatasetBuilder):
             for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
                 if entry.filename.endswith(".jpg"):
                     content = archive.read(entry)
-                    image = Image.open(io.BytesIO(content)).convert("RGB")
+                    image = PILImage.open(io.BytesIO(content)).convert("RGB")
 
                     filename = entry.filename.split("/")[-1]
                     class_part = filename.split("_", 1)[1].rsplit(".", 1)[0]

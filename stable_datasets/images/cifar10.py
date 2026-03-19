@@ -1,9 +1,9 @@
 import pickle
 import tarfile
 
-import datasets
 import numpy as np
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -21,7 +21,7 @@ class CIFAR10(BaseDatasetBuilder):
     training batches contain exactly 5000 images from each class.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -38,12 +38,12 @@ class CIFAR10(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The CIFAR-10 dataset is an image classification dataset of 50,000 32x32 color training images and 10,000 test images, labeled over 10 categories. See https://www.cs.toronto.edu/~kriz/cifar.html for more information.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(
+                    "image": Image(),
+                    "label": ClassLabel(
                         names=[
                             "airplane",
                             "automobile",

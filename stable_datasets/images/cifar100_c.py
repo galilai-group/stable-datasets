@@ -1,17 +1,18 @@
 import tarfile
 from io import BytesIO
 
-import datasets
 import numpy as np
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class CIFAR100C(BaseDatasetBuilder):
     """CIFAR-100-C dataset with corrupted CIFAR-100 images."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -27,16 +28,16 @@ class CIFAR100C(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""CIFAR-100-C is a corrupted version of the CIFAR-100 dataset, with 19 different types of
                            corruptions applied to the images. The dataset consists of 100 classes and 5 levels
                            of severity per corruption type.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._fine_labels()),
-                    "corruption_name": datasets.Value("string"),
-                    "corruption_level": datasets.Value("int32"),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._fine_labels()),
+                    "corruption_name": Value("string"),
+                    "corruption_level": Value("int32"),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -85,7 +86,7 @@ class CIFAR100C(BaseDatasetBuilder):
                 yield (
                     idx,
                     {
-                        "image": Image.fromarray(image),
+                        "image": PILImage.fromarray(image),
                         "label": label,
                         "corruption_name": corruption_name,
                         "corruption_level": corruption_level,

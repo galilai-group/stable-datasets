@@ -1,9 +1,10 @@
 import os
 
-import datasets
 import numpy as np
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import DatasetInfo, Features, Sequence, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -18,7 +19,7 @@ class DSpritesScream(BaseDatasetBuilder):
     """DSprites
     dSprites is a dataset of 2D shapes procedurally generated from 6 ground truth independent latent factors. These factors are color, shape, scale, rotation, x and y positions of a sprite."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://github.com/deepmind/dsprites-dataset",
@@ -33,29 +34,29 @@ class DSpritesScream(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=""""dSprites dataset: procedurally generated 2D shapes dataset with known ground-truth factors, "
                 "commonly used for disentangled representation learning. "
                 "Factors: color (1), shape (3), scale (6), orientation (40), position X (32), position Y (32). "
                 "Images are 64x64 binary black-and-white.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),  # (64, 64), grayscale
-                    "index": datasets.Value("int32"),  # index of the image
-                    "label": datasets.Sequence(datasets.Value("int32")),  # 6 factor indices (classes)
-                    "label_values": datasets.Sequence(datasets.Value("float32")),  # 6 factor continuous values
-                    "color": datasets.Value("int32"),  # color index (always 0)
-                    "shape": datasets.Value("int32"),  # shape index (0-2)
-                    "scale": datasets.Value("int32"),  # scale index (0-5)
-                    "orientation": datasets.Value("int32"),  # orientation index (0-39)
-                    "posX": datasets.Value("int32"),  # posX index (0-31)
-                    "posY": datasets.Value("int32"),  # posY index (0-31)
-                    "colorValue": datasets.Value("float64"),  # color value (always 1.0)
-                    "shapeValue": datasets.Value("float64"),  # shape value (1.0, 2.0, 3.0)
-                    "scaleValue": datasets.Value("float64"),  # scale value (0.5, 1)
-                    "orientationValue": datasets.Value("float64"),  # orientation value (0, 2pi)
-                    "posXValue": datasets.Value("float64"),  # posX value (0, 1)
-                    "posYValue": datasets.Value("float64"),  # posY value (0, 1)
+                    "image": ImageFeature(),  # (64, 64), grayscale
+                    "index": Value("int32"),  # index of the image
+                    "label": Sequence(Value("int32")),  # 6 factor indices (classes)
+                    "label_values": Sequence(Value("float32")),  # 6 factor continuous values
+                    "color": Value("int32"),  # color index (always 0)
+                    "shape": Value("int32"),  # shape index (0-2)
+                    "scale": Value("int32"),  # scale index (0-5)
+                    "orientation": Value("int32"),  # orientation index (0-39)
+                    "posX": Value("int32"),  # posX index (0-31)
+                    "posY": Value("int32"),  # posY index (0-31)
+                    "colorValue": Value("float64"),  # color value (always 1.0)
+                    "shapeValue": Value("float64"),  # shape value (1.0, 2.0, 3.0)
+                    "scaleValue": Value("float64"),  # scale value (0.5, 1)
+                    "orientationValue": Value("float64"),  # orientation value (0, 2pi)
+                    "posXValue": Value("float64"),  # posX value (0, 1)
+                    "posYValue": Value("float64"),  # posY value (0, 1)
                 }
             ),
             supervised_keys=("image", "label"),
@@ -71,7 +72,7 @@ class DSpritesScream(BaseDatasetBuilder):
         latents_values = data["latents_values"]  # shape: (737280, 6), float64
 
         # Load Scream image once
-        scream_img = Image.open(scream_path).convert("RGB")
+        scream_img = PILImage.open(scream_path).convert("RGB")
         scream_img = scream_img.resize((350, 274))
         scream = np.array(scream_img).astype(np.float32) / 255.0  # (H, W, 3)
 
@@ -93,7 +94,7 @@ class DSpritesScream(BaseDatasetBuilder):
             output_img[mask.squeeze()] = 1.0 - background_patch[mask.squeeze()]
 
             # Convert to RGB PIL
-            img_pil = Image.fromarray((output_img * 255).astype(np.uint8), mode="RGB")
+            img_pil = PILImage.fromarray((output_img * 255).astype(np.uint8), mode="RGB")
 
             # Labels
             factors_classes = latents_classes[idx].tolist()

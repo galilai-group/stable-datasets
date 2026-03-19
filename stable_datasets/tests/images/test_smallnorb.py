@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.small_norb import SmallNORB
+from stable_datasets.images import SmallNORB
 
 
 def test_smallnorb_dataset():

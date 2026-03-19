@@ -1,15 +1,14 @@
 import pickle
 import tarfile
 
-import datasets
-
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class CIFAR100(BaseDatasetBuilder):
     """CIFAR-100 dataset, a variant of CIFAR-10 with 100 classes."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -26,15 +25,15 @@ class CIFAR100(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The CIFAR-100 dataset contains 50,000 32x32 color training images and 10,000 test images,
                            categorized into 100 classes, grouped into 20 superclasses. Each image has a 'fine' label
                            (the class it belongs to) and a 'coarse' label (the superclass it belongs to).""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._fine_labels()),
-                    "superclass": datasets.ClassLabel(names=self._coarse_labels()),
+                    "image": Image(),
+                    "label": ClassLabel(names=self._fine_labels()),
+                    "superclass": ClassLabel(names=self._coarse_labels()),
                 }
             ),
             supervised_keys=("image", "label"),

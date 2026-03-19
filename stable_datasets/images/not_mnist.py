@@ -1,16 +1,17 @@
 import gzip
 import struct
 
-import datasets
 import numpy as np
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
 
 
 class NotMNIST(BaseDatasetBuilder):
     """NotMNIST Dataset that contains images of letters A-J."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -30,13 +31,13 @@ class NotMNIST(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""A dataset that was created by Yaroslav Bulatov by taking some publicly available fonts and
             extracting glyphs from them to make a dataset similar to MNIST. There are 10 classes, with letters A-J.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": Image(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -44,7 +45,7 @@ class NotMNIST(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self):
         source = self._source()
         assets = source["assets"]
 
@@ -58,16 +59,16 @@ class NotMNIST(BaseDatasetBuilder):
         url_to_path = dict(zip(urls, downloaded_paths))
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={
                     "images_path": url_to_path[assets["train_images"]],
                     "labels_path": url_to_path[assets["train_labels"]],
                     "split": "train",
                 },
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
+            SplitGenerator(
+                name=Split.TEST,
                 gen_kwargs={
                     "images_path": url_to_path[assets["test_images"]],
                     "labels_path": url_to_path[assets["test_labels"]],

@@ -1,5 +1,5 @@
 MedMNIST
-=======
+========
 
 .. raw:: html
 

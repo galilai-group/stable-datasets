@@ -1,14 +1,15 @@
-import datasets
 import numpy as np
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import DatasetInfo, Features, Sequence, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class Shapes3D(BaseDatasetBuilder):
     """Shapes3D dataset: 10x10x10x8x4x15 factor combinations, 64x64 RGB images."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://github.com/google-deepmind/3dshapes-dataset/",
@@ -33,30 +34,30 @@ class Shapes3D(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=(
                 "Shapes3D dataset: procedurally generated images of 3D shapes with 6 independent factors of variation. "
                 "Commonly used for disentangled representation learning. "
                 "Factors: floor hue (10), wall hue (10), object hue (10), scale (8), shape (4), orientation (15). "
                 "Images are stored as the Cartesian product of the factors in row-major order."
             ),
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.Sequence(datasets.Value("float64")),
-                    "label_index": datasets.Sequence(datasets.Value("int64")),
-                    "floor": datasets.Value("float64"),
-                    "wall": datasets.Value("float64"),
-                    "object": datasets.Value("float64"),
-                    "scale": datasets.Value("float64"),
-                    "shape": datasets.Value("float64"),
-                    "orientation": datasets.Value("float64"),
-                    "floor_idx": datasets.Value("int32"),
-                    "wall_idx": datasets.Value("int32"),
-                    "object_idx": datasets.Value("int32"),
-                    "scale_idx": datasets.Value("int32"),
-                    "shape_idx": datasets.Value("int32"),
-                    "orientation_idx": datasets.Value("int32"),
+                    "image": ImageFeature(),
+                    "label": Sequence(Value("float64")),
+                    "label_index": Sequence(Value("int64")),
+                    "floor": Value("float64"),
+                    "wall": Value("float64"),
+                    "object": Value("float64"),
+                    "scale": Value("float64"),
+                    "shape": Value("float64"),
+                    "orientation": Value("float64"),
+                    "floor_idx": Value("int32"),
+                    "wall_idx": Value("int32"),
+                    "object_idx": Value("int32"),
+                    "scale_idx": Value("int32"),
+                    "shape_idx": Value("int32"),
+                    "orientation_idx": Value("int32"),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -77,7 +78,7 @@ class Shapes3D(BaseDatasetBuilder):
             return [int((index // int(base)) % int(size)) for base, size in zip(factor_bases, factor_sizes)]
 
         for idx in range(len(images)):
-            img_pil = Image.fromarray(images[idx])
+            img_pil = PILImage.fromarray(images[idx])
 
             label_value = labels[idx].tolist()
             label_index = index_to_factors(idx)

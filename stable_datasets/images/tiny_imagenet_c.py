@@ -1,68 +1,106 @@
 import os
+import tarfile
+from pathlib import Path
 
-import datasets
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
+from stable_datasets.schema import Image as ImageFeature
+from stable_datasets.utils import BaseDatasetBuilder
 
 
-class TinyImagenetC(datasets.GeneratorBasedBuilder):
+class TinyImagenetC(BaseDatasetBuilder):
     """
     Tiny ImageNet-C dataset for image classification tasks with corruptions applied.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
-    def _info(self):
-        return datasets.DatasetInfo(
-            description="""The Tiny ImageNet-C dataset applies multiple corruptions to the Tiny ImageNet images. It
-            includes 200 classes and various corruption levels.""",
-            features=datasets.Features(
-                {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
-                    "corruption_name": datasets.Value("string"),
-                    "corruption_level": datasets.Value("int32"),
-                }
-            ),
-            supervised_keys=("image", "label"),
-            homepage="https://zenodo.org/records/2536630",
-            citation="""@article{hendrycks2019robustness,
+    SOURCE = {
+        "homepage": "https://zenodo.org/records/2536630",
+        "assets": {
+            "test": "https://zenodo.org/records/2536630/files/Tiny-ImageNet-C.tar?download=1",
+        },
+        "citation": """@article{hendrycks2019robustness,
                         title={Benchmarking Neural Network Robustness to Common Corruptions and Perturbations},
                         author={Dan Hendrycks and Thomas Dietterich},
                         journal={Proceedings of the International Conference on Learning Representations},
                         year={2019}}""",
-            license="CC BY 4.0",
+        "license": "CC BY 4.0",
+    }
+
+    def _info(self):
+        source = self._source()
+        return DatasetInfo(
+            description="""The Tiny ImageNet-C dataset applies multiple corruptions to the Tiny ImageNet images. It
+            includes 200 classes and various corruption levels.""",
+            features=Features(
+                {
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
+                    "corruption_name": Value("string"),
+                    "corruption_level": Value("int32"),
+                }
+            ),
+            supervised_keys=("image", "label"),
+            homepage=source["homepage"],
+            citation=source["citation"],
+            license=source.get("license", None),
         )
 
-    def _split_generators(self, dl_manager):
-        url = "https://zenodo.org/records/2536630/files/Tiny-ImageNet-C.tar?download=1"
-        archive_path = dl_manager.download_and_extract(url)
+    def _generate_examples(self, data_path, split=None):
+        data_path = Path(data_path)
 
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={"archive_path": archive_path},
-            ),
-        ]
+        # Default BaseDatasetBuilder flow: data_path is the downloaded .tar asset.
+        extract_dir = data_path.with_suffix("")
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        with tarfile.open(data_path, "r:") as tar:
+            tar.extractall(path=extract_dir)
+        base_path = extract_dir / "Tiny-ImageNet-C"
 
-    def _generate_examples(self, archive_path):
-        base_path = os.path.join(archive_path, "Tiny-ImageNet-C")
-        for root, _, files in os.walk(base_path):
-            for file_name in files:
-                if file_name.endswith(".JPEG"):
-                    full_path = os.path.join(root, file_name)
-                    parts = full_path.split(os.sep)
-                    corruption_name = parts[-4]
-                    corruption_level = int(parts[-3])
-                    label = parts[-2]
+        if split == "test":
+            corruption_types = [
+                "gaussian_noise",
+                "shot_noise",
+                "impulse_noise",
+                "defocus_blur",
+                "glass_blur",
+                "motion_blur",
+                "zoom_blur",
+                "snow",
+                "frost",
+                "fog",
+                "brightness",
+                "contrast",
+                "elastic_transform",
+                "pixelate",
+                "jpeg_compression",
+            ]
 
-                    yield (
-                        full_path,
-                        {
-                            "image": full_path,
-                            "label": label,
-                            "corruption_name": corruption_name,
-                            "corruption_level": corruption_level,
-                        },
-                    )
+            for corruption_name in corruption_types:
+                for level in range(1, 6):
+                    corruption_dir = os.path.join(base_path, corruption_name, str(level))
+
+                    if not os.path.isdir(corruption_dir):
+                        continue
+
+                    # Each corruption/level folder contains subfolders per label (e.g., n01443537)
+                    for label_dir in sorted(os.listdir(corruption_dir)):
+                        label_path = os.path.join(corruption_dir, label_dir)
+                        if not os.path.isdir(label_path):
+                            continue
+                        for image_file in sorted(os.listdir(label_path)):
+                            image_path = os.path.join(label_path, image_file)
+                            label_str = label_dir
+                            yield (
+                                f"{corruption_name}_{level}_{label_dir}_{image_file}",
+                                {
+                                    "image": image_path,
+                                    "label": label_str,
+                                    "corruption_name": corruption_name,
+                                    "corruption_level": level,
+                                },
+                            )
+        else:
+            raise ValueError(f"Unknown split: {split} | expected 'test'")
 
     @staticmethod
     def _labels():

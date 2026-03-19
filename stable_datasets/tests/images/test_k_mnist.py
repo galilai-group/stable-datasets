@@ -1,7 +1,7 @@
 # import numpy as np
 # from PIL import Image
 
-# from stable_datasets.images.k_mnist import KMNIST
+# from stable_datasets.images import KMNIST
 
 
 # def test_kmnist_dataset():

@@ -1,17 +1,18 @@
 import io
 import tarfile
 
-import datasets
 import pandas as pd
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class CUB200(BaseDatasetBuilder):
     """Caltech-UCSD Birds-200-2011 (CUB-200-2011) Dataset"""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://www.vision.caltech.edu/datasets/cub_200_2011/",
@@ -28,11 +29,9 @@ class CUB200(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The Caltech-UCSD Birds-200-2011 dataset consists of 11,788 images of 200 bird species.""",
-            features=datasets.Features(
-                {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}
-            ),
+            features=Features({"image": ImageFeature(), "label": ClassLabel(names=self._labels())}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],
@@ -68,7 +67,7 @@ class CUB200(BaseDatasetBuilder):
 
                 # Read the image from the tar archive
                 with archive.extractfile(image_path) as img_file:
-                    image = Image.open(io.BytesIO(img_file.read())).convert("RGB")
+                    image = PILImage.open(io.BytesIO(img_file.read())).convert("RGB")
 
                     yield (
                         row["image_id"],

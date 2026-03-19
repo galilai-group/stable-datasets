@@ -14,20 +14,18 @@ readme = {file = "README.md", content-type = "text/markdown"}
 dependencies = [
     "numpy",
     "loguru",
-    "datasets",
+    "pyarrow",
     "tqdm",
     "pillow",
     "pandas",
     "rich",
     "filelock",
-    "requests-cache",
+    "requests",
     "gdown",
     "scikit-learn",
     "rarfile",
     "torch",
-    "rich",
     "h5py",
-    "requests_cache",
     "pre-commit>=4.5.0",
 ]
 
@@ -40,6 +38,8 @@ packages = { find = { include = ["stable_datasets*"] } }
 version = {attr = "stable_datasets.__version__"}
 
 [project.optional-dependencies]
+
+tensordict = ["tensordict"]
 
 # Development tools
 dev = [

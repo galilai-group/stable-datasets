@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.dsprites_noise import DSpritesNoise
+from stable_datasets.images import DSpritesNoise
 
 
 def test_dsprites_noise_dataset():

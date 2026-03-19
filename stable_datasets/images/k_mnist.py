@@ -1,6 +1,6 @@
-import datasets
 import numpy as np
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
 from stable_datasets.utils import (
     BaseDatasetBuilder,
     _default_dest_folder,
@@ -18,7 +18,7 @@ class KMNIST(BaseDatasetBuilder):
     alternative for benchmarking machine learning algorithms.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -38,12 +38,12 @@ class KMNIST(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The Kuzushiji-MNIST dataset is an image classification dataset of 60,000 28x28 grayscale training images and 10,000 test images, labeled over 10 classes of cursive Japanese characters. See http://codh.rois.ac.jp/kmnist/ for more information.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(
+                    "image": Image(),
+                    "label": ClassLabel(
                         names=[
                             "o",
                             "ki",

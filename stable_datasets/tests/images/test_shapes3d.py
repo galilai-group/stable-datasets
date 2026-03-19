@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from stable_datasets.images.shapes3d import Shapes3D
+from stable_datasets.images import Shapes3D
 
 
 def test_shapes3d_dataset():
