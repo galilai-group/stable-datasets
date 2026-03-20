@@ -531,10 +531,7 @@ def download(
                         h_check.update(block)
                 if h_check.hexdigest() != expected:
                     tmp.unlink()
-                    raise ValueError(
-                        f"Checksum mismatch for {url}: "
-                        f"expected {expected}, got {h_check.hexdigest()}"
-                    )
+                    raise ValueError(f"Checksum mismatch for {url}: expected {expected}, got {h_check.hexdigest()}")
 
             tmp.replace(dest)  # atomic rename
             logging.info(f"Download finished: {dest}")

@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from stable_datasets.arrow_dataset import StableDataset
 from stable_datasets.cache import write_sharded_arrow_cache
 from stable_datasets.iterable import StableIterableDataset
@@ -21,8 +19,11 @@ def _make_ds(tmp_path, n=20, shard_size_bytes=512, batch_size=5):
             yield i, {"x": i, "label": i % 2}
 
     meta = write_sharded_arrow_cache(
-        gen(), features, cache_dir,
-        shard_size_bytes=shard_size_bytes, batch_size=batch_size,
+        gen(),
+        features,
+        cache_dir,
+        shard_size_bytes=shard_size_bytes,
+        batch_size=batch_size,
     )
     return StableDataset(
         features=features,

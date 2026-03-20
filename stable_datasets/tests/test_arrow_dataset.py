@@ -1,6 +1,5 @@
 """Tests for StableDataset lazy-mmap and pickle behaviour."""
 
-import io
 import pickle
 
 import numpy as np

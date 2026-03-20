@@ -277,8 +277,11 @@ class StableDataset:
             # In-memory without indices: materialize the slice
             sub = self.table.take(list(range(*idx.indices(len(self)))))
             return StableDataset(
-                features=self._features, info=self._info, table=sub,
-                _format_type=self._format_type, _transform=self._transform,
+                features=self._features,
+                info=self._info,
+                table=sub,
+                _format_type=self._format_type,
+                _transform=self._transform,
             )
         raise TypeError(f"Unsupported index type: {type(idx)}")
 
@@ -324,8 +327,11 @@ class StableDataset:
             return self._view_with_indices(indices)
         sub = self.table.take(indices.tolist())
         return StableDataset(
-            features=self._features, info=self._info, table=sub,
-            _format_type=self._format_type, _transform=self._transform,
+            features=self._features,
+            info=self._info,
+            table=sub,
+            _format_type=self._format_type,
+            _transform=self._transform,
         )
 
     def shuffle(self, seed: int = 42) -> StableDataset:
@@ -547,7 +553,10 @@ def _mmap_ipc(path: Path) -> pa.Table:
 
 
 def _decode_row_from_table(
-    tbl: pa.Table, idx: int, features: Features, format_type: str | None = None,
+    tbl: pa.Table,
+    idx: int,
+    features: Features,
+    format_type: str | None = None,
 ) -> dict:
     """Decode a single row from an Arrow table into a Python dict.
 

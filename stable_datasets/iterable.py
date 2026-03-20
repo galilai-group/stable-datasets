@@ -11,6 +11,7 @@ from collections.abc import Callable
 
 import numpy as np
 
+
 try:
     from torch.utils.data import IterableDataset as _IterableBase
 except ImportError:
