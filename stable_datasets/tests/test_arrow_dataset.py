@@ -184,9 +184,6 @@ class TestBuilderIntegration:
         assert len(ds2) == 5
 
 
-# ── Phase 1: Index Indirection ────────────────────────────────────────────────
-
-
 class TestSelect:
     def test_select_returns_correct_rows(self, tmp_path):
         ds = _make_ds(tmp_path, n=10)
@@ -260,9 +257,6 @@ class TestColumnNamesAndNumRows:
     def test_num_rows(self, tmp_path):
         ds = _make_ds(tmp_path, n=5)
         assert ds.num_rows == 5
-
-
-# ── Phase 4: Format Control + Transform Pipeline ─────────────────────────────
 
 
 def _make_image_cache(tmp_path, name="img_cache", n=5):

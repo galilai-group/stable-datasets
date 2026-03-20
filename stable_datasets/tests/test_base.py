@@ -396,9 +396,6 @@ def test_env_cache_dir_with_tilde_expansion(monkeypatch):
     assert utils._default_dest_folder() == expected
 
 
-# ── Phase 5: Download Robustness ─────────────────────────────────────────────
-
-
 def test_download_resume_sends_range_header(tmp_path, monkeypatch):
     """When a .tmp file exists, download should send a Range header."""
     from stable_datasets.utils import download

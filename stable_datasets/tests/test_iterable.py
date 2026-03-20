@@ -1,4 +1,4 @@
-"""Tests for StableIterableDataset (Phase 3)."""
+"""Tests for StableIterableDataset."""
 
 from unittest.mock import MagicMock, patch
 

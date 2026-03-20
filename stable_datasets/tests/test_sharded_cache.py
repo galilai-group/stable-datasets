@@ -396,9 +396,6 @@ class TestBuilderShardedIntegration:
         assert len(ds2) == 20
 
 
-# Phase 2: IPC Compression + Parallel Encoding
-
-
 class TestCompression:
     def test_write_with_zstd_compression(self, tmp_path):
         features = _simple_features()
