@@ -1,5 +1,7 @@
+import hashlib
 from collections.abc import Mapping
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -397,10 +399,6 @@ def test_env_cache_dir_with_tilde_expansion(monkeypatch):
 # ── Phase 5: Download Robustness ─────────────────────────────────────────────
 
 
-import hashlib
-from unittest.mock import MagicMock, patch
-
-
 def test_download_resume_sends_range_header(tmp_path, monkeypatch):
     """When a .tmp file exists, download should send a Range header."""
     from stable_datasets.utils import download
@@ -475,7 +473,6 @@ def test_download_resume_fallback_on_200(tmp_path, monkeypatch):
     p = Path("file2.bin")
     h = hashlib.sha256(url.encode("utf-8")).hexdigest()[:10]
     dest = dest_folder / f"{p.stem}.{h}{p.suffix}"
-    tmp_file = dest / ".." / f"{p.stem}.{h}{p.suffix}.tmp"
     # Ensure no leftover dest
     if dest.exists():
         dest.unlink()

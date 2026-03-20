@@ -134,7 +134,9 @@ def _encode_gen(generator, features, batch_size, num_workers):
             yield key, encode_example(example, features)
         return
 
-    encode_fn = lambda ex: encode_example(ex, features)
+    def encode_fn(ex):
+        return encode_example(ex, features)
+
     with ThreadPoolExecutor(max_workers=num_workers) as pool:
         chunk = []
         for key, example in generator:

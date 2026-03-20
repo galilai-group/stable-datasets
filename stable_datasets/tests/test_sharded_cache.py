@@ -439,7 +439,7 @@ class TestCompression:
     def test_backward_compat_reads_uncompressed(self, tmp_path):
         features = _simple_features()
         cache_dir = tmp_path / "uncompressed"
-        meta = write_sharded_arrow_cache(
+        write_sharded_arrow_cache(
             _simple_gen(10),
             features,
             cache_dir,
