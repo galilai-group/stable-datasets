@@ -1,12 +1,15 @@
 """Tests for StableDataset lazy-mmap and pickle behaviour."""
 
+import io
 import pickle
 
+import numpy as np
 import pytest
+from PIL import Image as PILImage
 
 from stable_datasets.arrow_dataset import StableDataset
 from stable_datasets.cache import write_sharded_arrow_cache
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Value, Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -104,10 +107,10 @@ class TestPickle:
         for i in range(5):
             assert ds2[i]["x"] == i
 
-    def test_in_memory_slice_pickle_includes_table(self, tmp_path):
+    def test_indexed_slice_pickle_roundtrip(self, tmp_path):
         ds = _make_ds(tmp_path, n=5)
         sub = ds[0:3]
-        assert sub._shard_paths is None
+        assert sub._indices is not None
         sub2 = pickle.loads(pickle.dumps(sub))
         assert len(sub2) == 3
         assert sub2[0]["x"] == 0
@@ -123,11 +126,12 @@ class TestPickle:
 
 
 class TestSliceAndSplit:
-    def test_slice_returns_in_memory_dataset(self, tmp_path):
+    def test_slice_returns_indexed_view(self, tmp_path):
         ds = _make_ds(tmp_path, n=10)
         sub = ds[2:5]
         assert isinstance(sub, StableDataset)
-        assert sub._shard_paths is None
+        assert sub._indices is not None
+        assert sub._table is None  # no materialization
         assert len(sub) == 3
         assert sub[0]["x"] == 2
 
@@ -179,3 +183,153 @@ class TestBuilderIntegration:
         for f, mtime in mtimes.items():
             assert f.stat().st_mtime == mtime
         assert len(ds2) == 5
+
+
+# ── Phase 1: Index Indirection ────────────────────────────────────────────────
+
+
+class TestSelect:
+    def test_select_returns_correct_rows(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        sub = ds.select([3, 1, 4])
+        assert len(sub) == 3
+        assert sub[0]["x"] == 3
+        assert sub[1]["x"] == 1
+        assert sub[2]["x"] == 4
+
+    def test_shuffle_preserves_all_rows(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        shuffled = ds.shuffle(seed=42)
+        assert len(shuffled) == 10
+        assert sorted(shuffled[i]["x"] for i in range(10)) == list(range(10))
+
+    def test_filter_returns_matching_rows(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        evens = ds.filter(lambda row: row["x"] % 2 == 0)
+        assert len(evens) == 5
+        assert all(evens[i]["x"] % 2 == 0 for i in range(len(evens)))
+
+    def test_train_test_split_no_materialization(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        splits = ds.train_test_split(test_size=0.3, seed=42)
+        # Both splits should be indexed views, not materialized tables
+        assert splits["train"]._table is None
+        assert splits["test"]._table is None
+        assert splits["train"]._indices is not None
+        assert splits["test"]._indices is not None
+        assert len(splits["train"]) + len(splits["test"]) == 10
+
+    def test_indices_compose_through_select(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        sub1 = ds.select([3, 1, 4, 1, 5])
+        sub2 = sub1.select([0, 2])
+        assert len(sub2) == 2
+        assert sub2[0]["x"] == 3
+        assert sub2[1]["x"] == 4
+
+    def test_indices_pickle_roundtrip(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        sub = ds.select([3, 1, 4])
+        sub2 = pickle.loads(pickle.dumps(sub))
+        assert sub2._indices is not None
+        assert len(sub2) == 3
+        assert sub2[0]["x"] == 3
+        assert sub2[1]["x"] == 1
+        assert sub2[2]["x"] == 4
+
+    def test_iter_epoch_with_indices(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        sub = ds.select([3, 1, 4])
+        rows = list(sub.iter_epoch(shuffle_shards=False))
+        assert len(rows) == 3
+        assert sorted(r["x"] for r in rows) == [1, 3, 4]
+
+    def test_slice_returns_indexed_not_materialized(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        sub = ds[2:5]
+        assert sub._indices is not None
+        assert sub._table is None
+        assert len(sub) == 3
+        assert sub[0]["x"] == 2
+
+
+class TestColumnNamesAndNumRows:
+    def test_column_names(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        assert ds.column_names == ["x", "label"]
+
+    def test_num_rows(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        assert ds.num_rows == 5
+
+
+# ── Phase 4: Format Control + Transform Pipeline ─────────────────────────────
+
+
+def _make_image_cache(tmp_path, name="img_cache", n=5):
+    """Write a small image sharded cache."""
+    features = Features({"image": Image(), "label": Value("int32")})
+    info = DatasetInfo(features=features)
+
+    def gen():
+        for i in range(n):
+            img = PILImage.new("RGB", (4, 4), color=(i * 10, i * 10, i * 10))
+            yield i, {"image": img, "label": i}
+
+    cache_dir = tmp_path / name
+    meta = write_sharded_arrow_cache(gen(), features, cache_dir, batch_size=5)
+    return StableDataset(
+        features=features,
+        info=info,
+        shard_dir=meta.cache_dir,
+        shard_paths=meta.shard_paths,
+        shard_row_counts=meta.shard_row_counts,
+        num_rows=meta.num_rows,
+    )
+
+
+class TestFormatAndTransform:
+    def test_with_format_numpy_returns_arrays(self, tmp_path):
+        ds = _make_image_cache(tmp_path)
+        ds_np = ds.with_format("numpy")
+        row = ds_np[0]
+        assert isinstance(row["image"], np.ndarray)
+        assert row["image"].shape == (4, 4, 3)
+
+    def test_with_format_raw_skips_pil_decode(self, tmp_path):
+        ds = _make_image_cache(tmp_path)
+        ds_raw = ds.with_format("raw")
+        row = ds_raw[0]
+        assert isinstance(row["image"], bytes)
+
+    def test_with_transform_applied(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+
+        def add_one(row):
+            row["x"] = row["x"] + 1
+            return row
+
+        ds_t = ds.with_transform(add_one)
+        assert ds_t[0]["x"] == 1
+        assert ds_t[4]["x"] == 5
+
+    def test_format_preserved_through_select(self, tmp_path):
+        ds = _make_image_cache(tmp_path).with_format("numpy")
+        sub = ds.select([0, 2])
+        row = sub[0]
+        assert isinstance(row["image"], np.ndarray)
+
+    def test_format_preserved_through_shuffle(self, tmp_path):
+        ds = _make_image_cache(tmp_path).with_format("numpy")
+        shuffled = ds.shuffle(seed=42)
+        row = shuffled[0]
+        assert isinstance(row["image"], np.ndarray)
+
+    def test_with_format_torch_returns_tensors(self, tmp_path):
+        torch = pytest.importorskip("torch")
+        ds = _make_image_cache(tmp_path)
+        ds_t = ds.with_format("torch")
+        row = ds_t[0]
+        assert isinstance(row["image"], torch.Tensor)
+        assert row["image"].shape == (3, 4, 4)  # CHW
+        assert isinstance(row["label"], torch.Tensor)

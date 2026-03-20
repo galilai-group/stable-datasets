@@ -1,0 +1,1242 @@
+{
+  "p7gcy2he": {
+    "dataset": "cifar10",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.5480999946594238,
+    "id": "p7gcy2he",
+    "name": "barlow_twins_vit_small_cifar10",
+    "state": "crashed"
+  },
+  "vrfl4n7f": {
+    "dataset": "cifar100",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.2378000020980835,
+    "id": "vrfl4n7f",
+    "name": "simclr_vit_small_cifar100",
+    "state": "crashed"
+  },
+  "0yltdwio": {
+    "dataset": "cifar10",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.5687999725341797,
+    "id": "0yltdwio",
+    "name": "simclr_vit_small_cifar10",
+    "state": "crashed"
+  },
+  "j8rdc40q": {
+    "dataset": "cifar100",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.1379999965429306,
+    "id": "j8rdc40q",
+    "name": "mae_vit_small_cifar100",
+    "state": "crashed"
+  },
+  "m1amfi3p": {
+    "dataset": "cifar10",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.38920003175735474,
+    "id": "m1amfi3p",
+    "name": "mae_vit_small_cifar10",
+    "state": "crashed"
+  },
+  "ppuhpmsb": {
+    "dataset": "cifar10",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.25200000405311584,
+    "id": "ppuhpmsb",
+    "name": "mae_vit_small_cifar10",
+    "state": "crashed"
+  },
+  "fjk8a4cd": {
+    "dataset": "cifar100",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.07890000194311142,
+    "id": "fjk8a4cd",
+    "name": "mae_vit_small_cifar100",
+    "state": "crashed"
+  },
+  "afiysdb7": {
+    "dataset": "flowers102",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.26091423630714417,
+    "id": "afiysdb7",
+    "name": "barlow_twins_vit_small_flowers102",
+    "state": "finished"
+  },
+  "dulz7w4u": {
+    "dataset": "flowers102",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.16564849019050598,
+    "id": "dulz7w4u",
+    "name": "mae_vit_small_flowers102",
+    "state": "finished"
+  },
+  "gabh64jt": {
+    "dataset": "rockpaperscissor",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7715053558349609,
+    "id": "gabh64jt",
+    "name": "simclr_vit_small_rockpaperscissor",
+    "state": "finished"
+  },
+  "k9ivwk58": {
+    "dataset": "flowers102",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.17354337871074677,
+    "id": "k9ivwk58",
+    "name": "simclr_vit_small_flowers102",
+    "state": "finished"
+  },
+  "3hezxgml": {
+    "dataset": "flowers102",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.198944091796875,
+    "id": "3hezxgml",
+    "name": "simclr_vit_small_flowers102",
+    "state": "finished"
+  },
+  "eesapmj4": {
+    "dataset": "flowers102",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.25672000646591187,
+    "id": "eesapmj4",
+    "name": "barlow_twins_vit_small_flowers102",
+    "state": "finished"
+  },
+  "je9yprvc": {
+    "dataset": "rockpaperscissor",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7204301357269287,
+    "id": "je9yprvc",
+    "name": "simclr_vit_small_rockpaperscissor",
+    "state": "finished"
+  },
+  "l2hoqemb": {
+    "dataset": "flowers102",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.20359350740909576,
+    "id": "l2hoqemb",
+    "name": "nnclr_vit_small_flowers102",
+    "state": "finished"
+  },
+  "mjxx5er2": {
+    "dataset": "flowers102",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.12658876180648804,
+    "id": "mjxx5er2",
+    "name": "mae_vit_small_flowers102",
+    "state": "finished"
+  },
+  "lfp96nz7": {
+    "dataset": "rockpaperscissor",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.5537633895874023,
+    "id": "lfp96nz7",
+    "name": "mae_vit_small_rockpaperscissor",
+    "state": "finished"
+  },
+  "zeuxqrgi": {
+    "dataset": "rockpaperscissor",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7580645084381104,
+    "id": "zeuxqrgi",
+    "name": "nnclr_vit_small_rockpaperscissor",
+    "state": "finished"
+  },
+  "q9czeimx": {
+    "dataset": "rockpaperscissor",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7580645084381104,
+    "id": "q9czeimx",
+    "name": "barlow_twins_vit_small_rockpaperscissor",
+    "state": "finished"
+  },
+  "kv7d1hdp": {
+    "dataset": "dtd",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.29308509826660156,
+    "id": "kv7d1hdp",
+    "name": "simclr_vit_small_dtd",
+    "state": "finished"
+  },
+  "gtmz5sy1": {
+    "dataset": "dtd",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.15691488981246948,
+    "id": "gtmz5sy1",
+    "name": "mae_vit_small_dtd",
+    "state": "finished"
+  },
+  "6w364zrr": {
+    "dataset": "dtd",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.2186170220375061,
+    "id": "6w364zrr",
+    "name": "nnclr_vit_small_dtd",
+    "state": "finished"
+  },
+  "exastffu": {
+    "dataset": "dtd",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.2952127456665039,
+    "id": "exastffu",
+    "name": "barlow_twins_vit_small_dtd",
+    "state": "finished"
+  },
+  "6rqh0h17": {
+    "dataset": "cub200",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.09967778623104095,
+    "id": "6rqh0h17",
+    "name": "simclr_vit_small_cub200",
+    "state": "finished"
+  },
+  "9wvgbtvo": {
+    "dataset": "cub200",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.044006142765283585,
+    "id": "9wvgbtvo",
+    "name": "mae_vit_small_cub200",
+    "state": "finished"
+  },
+  "9wx32s8f": {
+    "dataset": "cub200",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.08841344714164734,
+    "id": "9wx32s8f",
+    "name": "nnclr_vit_small_cub200",
+    "state": "finished"
+  },
+  "nyapok3w": {
+    "dataset": "cub200",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.13753804564476013,
+    "id": "nyapok3w",
+    "name": "barlow_twins_vit_small_cub200",
+    "state": "finished"
+  },
+  "bnzolc5n": {
+    "dataset": "arabicdigits",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.9887999892234802,
+    "id": "bnzolc5n",
+    "name": "simclr_vit_small_arabicdigits",
+    "state": "finished"
+  },
+  "mqe6ct9x": {
+    "dataset": "arabicdigits",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8553000092506409,
+    "id": "mqe6ct9x",
+    "name": "mae_vit_small_arabicdigits",
+    "state": "finished"
+  },
+  "u6heyvs0": {
+    "dataset": "arabicdigits",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.9869999885559082,
+    "id": "u6heyvs0",
+    "name": "nnclr_vit_small_arabicdigits",
+    "state": "finished"
+  },
+  "suf5mdmc": {
+    "dataset": "arabicdigits",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.9855999946594238,
+    "id": "suf5mdmc",
+    "name": "barlow_twins_vit_small_arabicdigits",
+    "state": "finished"
+  },
+  "posl88op": {
+    "dataset": "arabiccharacters",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.2648809552192688,
+    "id": "posl88op",
+    "name": "mae_vit_small_arabiccharacters",
+    "state": "finished"
+  },
+  "gx3j43e1": {
+    "dataset": "arabiccharacters",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7696428298950195,
+    "id": "gx3j43e1",
+    "name": "nnclr_vit_small_arabiccharacters",
+    "state": "finished"
+  },
+  "1em3wpc7": {
+    "dataset": "arabiccharacters",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8863095045089722,
+    "id": "1em3wpc7",
+    "name": "barlow_twins_vit_small_arabiccharacters",
+    "state": "finished"
+  },
+  "6us1u7u1": {
+    "dataset": "notmnist",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.9021999835968018,
+    "id": "6us1u7u1",
+    "name": "simclr_vit_small_notmnist",
+    "state": "finished"
+  },
+  "733qf77a": {
+    "dataset": "notmnist",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.4415000081062317,
+    "id": "733qf77a",
+    "name": "mae_vit_small_notmnist",
+    "state": "finished"
+  },
+  "2m2lylys": {
+    "dataset": "notmnist",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.1110062450170517,
+    "id": "2m2lylys",
+    "name": "barlow_twins_vit_small_notmnist",
+    "state": "failed"
+  },
+  "uoquqkt7": {
+    "dataset": "country211",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.05303317680954933,
+    "id": "uoquqkt7",
+    "name": "simclr_vit_small_country211",
+    "state": "finished"
+  },
+  "4xd0f8bk": {
+    "dataset": "country211",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.0414218008518219,
+    "id": "4xd0f8bk",
+    "name": "nnclr_vit_small_country211",
+    "state": "finished"
+  },
+  "sqeinx11": {
+    "dataset": "country211",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.0692417100071907,
+    "id": "sqeinx11",
+    "name": "barlow_twins_vit_small_country211",
+    "state": "finished"
+  },
+  "37iy51qu": {
+    "dataset": "medmnist",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8833333253860474,
+    "id": "37iy51qu",
+    "name": "nnclr_vit_small_medmnist",
+    "state": "finished"
+  },
+  "1bsqmxbt": {
+    "dataset": "cifar10",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7961000204086304,
+    "id": "1bsqmxbt",
+    "name": "simclr_vit_small_cifar10",
+    "state": "finished"
+  },
+  "izz7hzw4": {
+    "dataset": "cifar10",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.42980003356933594,
+    "id": "izz7hzw4",
+    "name": "mae_vit_small_cifar10",
+    "state": "finished"
+  },
+  "vc83d27i": {
+    "dataset": "cifar10",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7045000195503235,
+    "id": "vc83d27i",
+    "name": "nnclr_vit_small_cifar10",
+    "state": "finished"
+  },
+  "ozit7rlo": {
+    "dataset": "cifar10",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7879999876022339,
+    "id": "ozit7rlo",
+    "name": "barlow_twins_vit_small_cifar10",
+    "state": "finished"
+  },
+  "zco7gl6q": {
+    "dataset": "cifar100",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.40070000290870667,
+    "id": "zco7gl6q",
+    "name": "nnclr_vit_small_cifar100",
+    "state": "finished"
+  },
+  "4jbpx3a2": {
+    "dataset": "cifar100",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.486299991607666,
+    "id": "4jbpx3a2",
+    "name": "barlow_twins_vit_small_cifar100",
+    "state": "finished"
+  },
+  "91zkliu5": {
+    "dataset": "fashionmnist",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8567000031471252,
+    "id": "91zkliu5",
+    "name": "simclr_vit_small_fashionmnist",
+    "state": "finished"
+  },
+  "e5m1sxow": {
+    "dataset": "fashionmnist",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8582000136375427,
+    "id": "e5m1sxow",
+    "name": "nnclr_vit_small_fashionmnist",
+    "state": "finished"
+  },
+  "5wqh1ifk": {
+    "dataset": "fashionmnist",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8603999614715576,
+    "id": "5wqh1ifk",
+    "name": "barlow_twins_vit_small_fashionmnist",
+    "state": "finished"
+  },
+  "pusdnhd6": {
+    "dataset": "svhn",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8320145010948181,
+    "id": "pusdnhd6",
+    "name": "simclr_vit_small_svhn",
+    "state": "finished"
+  },
+  "b3pfm79e": {
+    "dataset": "svhn",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.1746162474155426,
+    "id": "b3pfm79e",
+    "name": "mae_vit_small_svhn",
+    "state": "finished"
+  },
+  "wmwxcjg7": {
+    "dataset": "svhn",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8573299646377563,
+    "id": "wmwxcjg7",
+    "name": "nnclr_vit_small_svhn",
+    "state": "finished"
+  },
+  "jx5jb5u1": {
+    "dataset": "svhn",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8767058849334717,
+    "id": "jx5jb5u1",
+    "name": "barlow_twins_vit_small_svhn",
+    "state": "finished"
+  },
+  "61rj7g94": {
+    "dataset": "stl10",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.5041249990463257,
+    "id": "61rj7g94",
+    "name": "simclr_vit_small_stl10",
+    "state": "finished"
+  },
+  "4uc6g68i": {
+    "dataset": "stl10",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.37187501788139343,
+    "id": "4uc6g68i",
+    "name": "mae_vit_small_stl10",
+    "state": "finished"
+  },
+  "t88i5ryv": {
+    "dataset": "stl10",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.4628750085830689,
+    "id": "t88i5ryv",
+    "name": "nnclr_vit_small_stl10",
+    "state": "finished"
+  },
+  "w45h4dan": {
+    "dataset": "emnist",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8238829374313354,
+    "id": "w45h4dan",
+    "name": "simclr_vit_small_emnist",
+    "state": "finished"
+  },
+  "xf129ir7": {
+    "dataset": "emnist",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.2640957236289978,
+    "id": "xf129ir7",
+    "name": "mae_vit_small_emnist",
+    "state": "finished"
+  },
+  "1j6kxa7r": {
+    "dataset": "emnist",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8062766194343567,
+    "id": "1j6kxa7r",
+    "name": "nnclr_vit_small_emnist",
+    "state": "finished"
+  },
+  "pna89nay": {
+    "dataset": "emnist",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.823563814163208,
+    "id": "pna89nay",
+    "name": "barlow_twins_vit_small_emnist",
+    "state": "finished"
+  },
+  "xw9o0um1": {
+    "dataset": "hasyv2",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.5530232191085815,
+    "id": "xw9o0um1",
+    "name": "simclr_vit_small_hasyv2",
+    "state": "finished"
+  },
+  "gtn003og": {
+    "dataset": "hasyv2",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.5133196711540222,
+    "id": "gtn003og",
+    "name": "barlow_twins_vit_small_hasyv2",
+    "state": "finished"
+  },
+  "kal2lx81": {
+    "dataset": "cifar100",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.27399998903274536,
+    "id": "kal2lx81",
+    "name": "mae_vit_small_cifar100",
+    "state": "failed"
+  },
+  "7styjvd5": {
+    "dataset": "cifar100",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.2946999967098236,
+    "id": "7styjvd5",
+    "name": "nnclr_vit_small_cifar100",
+    "state": "failed"
+  },
+  "mn4le6py": {
+    "dataset": "cifar100",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.1861000061035156,
+    "id": "mn4le6py",
+    "name": "mae_vit_small_cifar100",
+    "state": "finished"
+  },
+  "90s4435f": {
+    "dataset": "cifar100",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.3885999917984009,
+    "id": "90s4435f",
+    "name": "nnclr_vit_small_cifar100",
+    "state": "finished"
+  },
+  "shid5v7u": {
+    "dataset": "cifar100",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.08939999341964722,
+    "id": "shid5v7u",
+    "name": "simclr_vit_small_cifar100",
+    "state": "finished"
+  },
+  "bdj3lv1n": {
+    "dataset": "cifar100",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.4758000075817108,
+    "id": "bdj3lv1n",
+    "name": "simclr_vit_small_cifar100",
+    "state": "finished"
+  },
+  "gmgucrgv": {
+    "dataset": "country211",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.032322272658348083,
+    "id": "gmgucrgv",
+    "name": "mae_vit_small_country211",
+    "state": "finished"
+  },
+  "rs75zy0p": {
+    "dataset": "medmnist",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8401709198951721,
+    "id": "rs75zy0p",
+    "name": "mae_vit_small_medmnist",
+    "state": "finished"
+  },
+  "sbiseeqq": {
+    "dataset": "medmnist",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.894444465637207,
+    "id": "sbiseeqq",
+    "name": "simclr_vit_small_medmnist",
+    "state": "finished"
+  },
+  "b64ub339": {
+    "dataset": "notmnist",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8883000016212463,
+    "id": "b64ub339",
+    "name": "nnclr_vit_small_notmnist",
+    "state": "finished"
+  },
+  "6gnysk73": {
+    "dataset": "arabiccharacters",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8574404716491699,
+    "id": "6gnysk73",
+    "name": "simclr_vit_small_arabiccharacters",
+    "state": "finished"
+  },
+  "cf73jmn5": {
+    "dataset": "medmnist",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.9098290205001832,
+    "id": "cf73jmn5",
+    "name": "barlow_twins_vit_small_medmnist",
+    "state": "finished"
+  },
+  "y6n55ukd": {
+    "dataset": "fashionmnist",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7261999845504761,
+    "id": "y6n55ukd",
+    "name": "mae_vit_small_fashionmnist",
+    "state": "finished"
+  },
+  "fjt9yjky": {
+    "dataset": "hasyv2",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.1655449420213699,
+    "id": "fjt9yjky",
+    "name": "mae_vit_small_hasyv2",
+    "state": "finished"
+  },
+  "zhe0ke5i": {
+    "dataset": "hasyv2",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.5031423568725586,
+    "id": "zhe0ke5i",
+    "name": "nnclr_vit_small_hasyv2",
+    "state": "finished"
+  },
+  "lhvn6rxf": {
+    "dataset": "stl10",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.5451250076293945,
+    "id": "lhvn6rxf",
+    "name": "barlow_twins_vit_small_stl10",
+    "state": "finished"
+  },
+  "owefwl20": {
+    "dataset": "notmnist",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.8751999735832214,
+    "id": "owefwl20",
+    "name": "barlow_twins_vit_small_notmnist",
+    "state": "finished"
+  },
+  "ltrq7qii": {
+    "dataset": "imagenette",
+    "model": "mae",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.375060498714447,
+    "id": "ltrq7qii",
+    "name": "mae_vit_small_imagenette",
+    "state": "finished"
+  },
+  "w3bbzzqm": {
+    "dataset": "imagenette",
+    "model": "nnclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.620031476020813,
+    "id": "w3bbzzqm",
+    "name": "nnclr_vit_small_imagenette",
+    "state": "finished"
+  },
+  "h3vx141n": {
+    "dataset": "imagenette",
+    "model": "simclr",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.6849275827407837,
+    "id": "h3vx141n",
+    "name": "simclr_vit_small_imagenette",
+    "state": "finished"
+  },
+  "yjfw23g3": {
+    "dataset": "imagenette",
+    "model": "barlow_twins",
+    "backbone": "vit_small",
+    "lr": null,
+    "eval/linear_probe_top1_epoch": 0.7066565155982971,
+    "id": "yjfw23g3",
+    "name": "barlow_twins_vit_small_imagenette",
+    "state": "finished"
+  },
+  "iham6zyc": {
+    "dataset": "beans",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.7434477806091309,
+    "id": "iham6zyc",
+    "name": "lejepa_vit_small_beans",
+    "state": "finished"
+  },
+  "2v1n93wn": {
+    "dataset": "arabiccharacters",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.9184523820877076,
+    "id": "2v1n93wn",
+    "name": "lejepa_vit_small_arabiccharacters",
+    "state": "finished"
+  },
+  "7oqbgtf5": {
+    "dataset": "imagenette",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.7789285182952881,
+    "id": "7oqbgtf5",
+    "name": "lejepa_vit_small_imagenette",
+    "state": "finished"
+  },
+  "i4y0i57z": {
+    "dataset": "hasyv2",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.450712114572525,
+    "id": "i4y0i57z",
+    "name": "lejepa_vit_small_hasyv2",
+    "state": "failed"
+  },
+  "k73qwmhv": {
+    "dataset": "fgvcaircraft",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.04278966039419174,
+    "id": "k73qwmhv",
+    "name": "lejepa_vit_small_fgvcaircraft",
+    "state": "finished"
+  },
+  "6drj31lt": {
+    "dataset": "stl10",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.5956249833106995,
+    "id": "6drj31lt",
+    "name": "lejepa_vit_small_stl10",
+    "state": "finished"
+  },
+  "htr88g26": {
+    "dataset": "rockpaperscissor",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.5564516186714172,
+    "id": "htr88g26",
+    "name": "lejepa_vit_small_rockpaperscissor",
+    "state": "finished"
+  },
+  "zbwif1vl": {
+    "dataset": "medmnist",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.9256410002708436,
+    "id": "zbwif1vl",
+    "name": "lejepa_vit_small_medmnist",
+    "state": "finished"
+  },
+  "sjfux6uo": {
+    "dataset": "notmnist",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.8991000056266785,
+    "id": "sjfux6uo",
+    "name": "lejepa_vit_small_notmnist",
+    "state": "finished"
+  },
+  "4m24whax": {
+    "dataset": "fashionmnist",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.8588999509811401,
+    "id": "4m24whax",
+    "name": "lejepa_vit_small_fashionmnist",
+    "state": "finished"
+  },
+  "jpgk2naf": {
+    "dataset": "emnist",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.7516489028930664,
+    "id": "jpgk2naf",
+    "name": "lejepa_vit_small_emnist",
+    "state": "failed"
+  },
+  "iyamgc5g": {
+    "dataset": "country211",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.06696682423353195,
+    "id": "iyamgc5g",
+    "name": "lejepa_vit_small_country211",
+    "state": "finished"
+  },
+  "w8d7l20t": {
+    "dataset": "arabicdigits",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.9882999658584596,
+    "id": "w8d7l20t",
+    "name": "lejepa_vit_small_arabicdigits",
+    "state": "failed"
+  },
+  "vzqpsd99": {
+    "dataset": "cub200",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.128926619887352,
+    "id": "vzqpsd99",
+    "name": "lejepa_vit_small_cub200",
+    "state": "finished"
+  },
+  "88lkj3k4": {
+    "dataset": "flowers102",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.3698575496673584,
+    "id": "88lkj3k4",
+    "name": "lejepa_vit_small_flowers102",
+    "state": "finished"
+  },
+  "fwab3onb": {
+    "dataset": "food101",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.5057029724121094,
+    "id": "fwab3onb",
+    "name": "lejepa_vit_small_food101",
+    "state": "finished"
+  },
+  "mnrwcmwp": {
+    "dataset": "dtd",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.35531914234161377,
+    "id": "mnrwcmwp",
+    "name": "lejepa_vit_small_dtd",
+    "state": "finished"
+  },
+  "0s08cna6": {
+    "dataset": "svhn",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.6421437859535217,
+    "id": "0s08cna6",
+    "name": "lejepa_vit_small_svhn",
+    "state": "finished"
+  },
+  "oer1ur9l": {
+    "dataset": "cifar100",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.5756000280380249,
+    "id": "oer1ur9l",
+    "name": "lejepa_vit_small_cifar100",
+    "state": "finished"
+  },
+  "yj1lmsrh": {
+    "dataset": "cifar10",
+    "model": "lejepa",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.8896000385284424,
+    "id": "yj1lmsrh",
+    "name": "lejepa_vit_small_cifar10",
+    "state": "finished"
+  },
+  "i995iscy": {
+    "dataset": "cifar100",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.6096000075340271,
+    "id": "i995iscy",
+    "name": "dino_vit_small_cifar100",
+    "state": "failed"
+  },
+  "a7jxewpy": {
+    "dataset": "cifar10",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.8531999588012695,
+    "id": "a7jxewpy",
+    "name": "dino_vit_small_cifar10",
+    "state": "failed"
+  },
+  "ldadjqio": {
+    "dataset": "emnist",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.8436169624328613,
+    "id": "ldadjqio",
+    "name": "dino_vit_small_emnist",
+    "state": "finished"
+  },
+  "1nqj3j4b": {
+    "dataset": "arabiccharacters",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.04494047909975052,
+    "id": "1nqj3j4b",
+    "name": "dino_vit_small_arabiccharacters",
+    "state": "finished"
+  },
+  "rxnwxw4q": {
+    "dataset": "country211",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.0745023712515831,
+    "id": "rxnwxw4q",
+    "name": "dino_vit_small_country211",
+    "state": "finished"
+  },
+  "tfjappi6": {
+    "dataset": "fashionmnist",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.8771999478340149,
+    "id": "tfjappi6",
+    "name": "dino_vit_small_fashionmnist",
+    "state": "finished"
+  },
+  "v1fy2514": {
+    "dataset": "arabicdigits",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.989199995994568,
+    "id": "v1fy2514",
+    "name": "dino_vit_small_arabicdigits",
+    "state": "failed"
+  },
+  "dqu58l6h": {
+    "dataset": "beans",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.7198228240013123,
+    "id": "dqu58l6h",
+    "name": "dino_vit_small_beans",
+    "state": "finished"
+  },
+  "4rzrayzk": {
+    "dataset": "cub200",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.15577253699302673,
+    "id": "4rzrayzk",
+    "name": "dino_vit_small_cub200",
+    "state": "finished"
+  },
+  "ejpexd8p": {
+    "dataset": "dtd",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.21010637283325195,
+    "id": "ejpexd8p",
+    "name": "dino_vit_small_dtd",
+    "state": "finished"
+  },
+  "mfpgm7rb": {
+    "dataset": "fgvcaircraft",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.05305704474449158,
+    "id": "mfpgm7rb",
+    "name": "dino_vit_small_fgvcaircraft",
+    "state": "finished"
+  },
+  "yrk83kdm": {
+    "dataset": "flowers102",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.32239121198654175,
+    "id": "yrk83kdm",
+    "name": "dino_vit_small_flowers102",
+    "state": "finished"
+  },
+  "pi4gzhod": {
+    "dataset": "food101",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.5900989770889282,
+    "id": "pi4gzhod",
+    "name": "dino_vit_small_food101",
+    "state": "failed"
+  },
+  "ety1s5c5": {
+    "dataset": "hasyv2",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.6359425783157349,
+    "id": "ety1s5c5",
+    "name": "dino_vit_small_hasyv2",
+    "state": "failed"
+  },
+  "gd8l4a8m": {
+    "dataset": "imagenette",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.7405848503112793,
+    "id": "gd8l4a8m",
+    "name": "dino_vit_small_imagenette",
+    "state": "finished"
+  },
+  "9rxmj3gq": {
+    "dataset": "medmnist",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.9243589639663696,
+    "id": "9rxmj3gq",
+    "name": "dino_vit_small_medmnist",
+    "state": "finished"
+  },
+  "52vs1jrr": {
+    "dataset": "notmnist",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.9142000079154968,
+    "id": "52vs1jrr",
+    "name": "dino_vit_small_notmnist",
+    "state": "failed"
+  },
+  "ij6n4zoi": {
+    "dataset": "rockpaperscissor",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.4381720423698426,
+    "id": "ij6n4zoi",
+    "name": "dino_vit_small_rockpaperscissor",
+    "state": "finished"
+  },
+  "rcu6lr0e": {
+    "dataset": "stl10",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.5830000638961792,
+    "id": "rcu6lr0e",
+    "name": "dino_vit_small_stl10",
+    "state": "finished"
+  },
+  "ra7lmare": {
+    "dataset": "svhn",
+    "model": "dino",
+    "backbone": "vit_small",
+    "lr": 0.0005,
+    "eval/linear_probe_top1_epoch": 0.8543651103973389,
+    "id": "ra7lmare",
+    "name": "dino_vit_small_svhn",
+    "state": "failed"
+  }
+}

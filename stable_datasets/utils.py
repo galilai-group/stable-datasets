@@ -205,12 +205,20 @@ class BaseDatasetBuilder:
         split_names = list(assets.keys())
         ordered_urls = [assets[s] for s in split_names]
 
+        # Build URL -> checksum mapping from SOURCE["checksums"] if present
+        checksums_by_split = source.get("checksums") or {}
+        url_checksums = {}
+        for split_name in split_names:
+            cs = checksums_by_split.get(split_name) if checksums_by_split else None
+            if cs:
+                url_checksums[assets[split_name]] = cs
+
         # Deduplicate URLs to avoid redundant downloads for datasets where all splits share a single file.
         unique_urls = list(dict.fromkeys(ordered_urls))
         download_dir = getattr(self, "_raw_download_dir", None)
         if download_dir is None:
             download_dir = _default_dest_folder()
-        unique_paths = bulk_download(unique_urls, dest_folder=download_dir)
+        unique_paths = bulk_download(unique_urls, dest_folder=download_dir, checksums=url_checksums)
         url_to_path = dict(zip(unique_urls, unique_paths))
         local_paths = [url_to_path[u] for u in ordered_urls]
 
@@ -295,7 +303,7 @@ class BaseDatasetBuilder:
                 meta = validate_sharded_cache(shard_dir, features)
             else:
                 generator = instance._generate_examples(**sg.gen_kwargs)
-                meta = write_sharded_arrow_cache(generator, features, shard_dir)
+                meta = write_sharded_arrow_cache(generator, features, shard_dir, compression="zstd")
 
             splits_data[sg.name] = StableDataset(
                 features=features,
@@ -330,6 +338,7 @@ class BaseDatasetBuilder:
 def bulk_download(
     urls: Iterable[str],
     dest_folder: str | Path,
+    checksums: dict[str, str] | None = None,
 ) -> list[Path]:
     """
     Download multiple files concurrently and return their local paths.
@@ -337,11 +346,14 @@ def bulk_download(
     Args:
         urls: Iterable of URL strings to download.
         dest_folder: Destination folder for downloads.
+        checksums: Optional dict mapping URL -> checksum string (e.g.
+            ``"sha256:abcdef..."``).
 
     Returns:
         list[Path]: Local file paths in the same order as the input URLs.
     """
     urls = list(urls)
+    checksums = checksums or {}
     num_workers = min(len(urls), os.cpu_count() or 4, 8)
     if num_workers == 0:
         return []
@@ -377,6 +389,7 @@ def bulk_download(
                         False,  # disable per-file tqdm; Rich handles progress
                         _progress,
                         task_id,
+                        checksums.get(urls[i]),
                     )
                     futures.append((i, future))
 
@@ -410,7 +423,18 @@ def download(
     progress_bar: bool = True,
     _progress_dict=None,
     _task_id=None,
+    checksum: str | None = None,
 ) -> Path:
+    """Download a file to *dest_folder*, returning the local path.
+
+    Supports resumable downloads: if a ``.tmp`` file exists from a
+    previous interrupted attempt, an HTTP ``Range`` header is sent.
+    The server may respond with 206 (append) or 200 (start over).
+
+    *checksum*, when provided, is an ``"algorithm:hex"`` string (e.g.
+    ``"sha256:a3f8..."``).  The downloaded file is verified after
+    completion and deleted on mismatch.
+    """
     if dest_folder is None:
         dest_folder = _default_dest_folder()
     dest_folder = Path(dest_folder)
@@ -433,25 +457,45 @@ def download(
         try:
             with requests.Session() as session:
                 session.headers.update({"User-Agent": "stable-datasets"})
-                logging.info(f"Downloading: {url}")
+
+                # Resume from partial download if .tmp exists
+                existing_size = tmp.stat().st_size if tmp.exists() else 0
+                req_headers = {}
+                if existing_size > 0:
+                    req_headers["Range"] = f"bytes={existing_size}-"
+                    logging.info(f"Resuming download from byte {existing_size}: {url}")
+                else:
+                    logging.info(f"Downloading: {url}")
 
                 with session.get(
                     url,
                     stream=True,
                     allow_redirects=True,
-                    timeout=(10, 300),  # you can tune this
+                    timeout=(10, 300),
+                    headers=req_headers,
                 ) as response:
                     response.raise_for_status()
 
-                    total_size = int(response.headers.get("content-length", 0) or 0)
+                    if response.status_code == 206:
+                        # Server supports Range — append to existing file
+                        mode = "ab"
+                        remaining = int(response.headers.get("content-length", 0) or 0)
+                        total_size = existing_size + remaining
+                    else:
+                        # Full response (200) — start over
+                        mode = "wb"
+                        existing_size = 0
+                        total_size = int(response.headers.get("content-length", 0) or 0)
+
                     logging.info(f"Total size: {total_size} bytes")
 
-                    downloaded = 0
+                    downloaded = existing_size
                     with (
-                        open(tmp, "wb") as f,
+                        open(tmp, mode) as f,
                         tqdm(
                             desc=dest.name,
                             total=total_size or None,
+                            initial=existing_size,
                             unit="B",
                             unit_scale=True,
                             unit_divisor=1024,
@@ -471,21 +515,40 @@ def download(
                                     "total": total_size,
                                 }
 
-            # Validate *on disk*
+            # Validate size on disk
             if total_size and tmp.stat().st_size != total_size:
                 raise RuntimeError(f"Download incomplete for {url}: got {tmp.stat().st_size} of {total_size} bytes")
+
+            # Validate checksum if provided
+            if checksum:
+                algo, expected = checksum.split(":", 1)
+                h_check = hashlib.new(algo)
+                with open(tmp, "rb") as f:
+                    while True:
+                        block = f.read(65536)
+                        if not block:
+                            break
+                        h_check.update(block)
+                if h_check.hexdigest() != expected:
+                    tmp.unlink()
+                    raise ValueError(
+                        f"Checksum mismatch for {url}: "
+                        f"expected {expected}, got {h_check.hexdigest()}"
+                    )
 
             tmp.replace(dest)  # atomic rename
             logging.info(f"Download finished: {dest}")
             return dest
 
         except Exception as e:
-            # Clean up temp file on failure
-            try:
-                if tmp.exists():
-                    tmp.unlink()
-            except Exception:
-                pass
+            # Clean up temp file on failure (but keep it for resume if it's
+            # a connection error — only delete on checksum/validation failure)
+            if not isinstance(e, ValueError):
+                try:
+                    if tmp.exists():
+                        tmp.unlink()
+                except Exception:
+                    pass
             logging.error(f"Error downloading {url}: {e}")
             raise
         finally:

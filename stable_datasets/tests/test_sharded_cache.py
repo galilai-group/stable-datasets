@@ -394,3 +394,91 @@ class TestBuilderShardedIntegration:
         for f, mtime in mtimes.items():
             assert f.stat().st_mtime == mtime
         assert len(ds2) == 20
+
+
+# Phase 2: IPC Compression + Parallel Encoding
+
+
+class TestCompression:
+    def test_write_with_zstd_compression(self, tmp_path):
+        features = _simple_features()
+        cache_dir = tmp_path / "compressed_cache"
+        meta = write_sharded_arrow_cache(
+            _simple_gen(50), features, cache_dir,
+            batch_size=10, compression="zstd",
+        )
+        assert meta.compression == "zstd"
+        assert meta.num_rows == 50
+
+    def test_compressed_shard_readable_via_mmap(self, tmp_path):
+        features = _simple_features()
+        cache_dir = tmp_path / "comp_read"
+        meta = write_sharded_arrow_cache(
+            _simple_gen(20), features, cache_dir,
+            batch_size=10, compression="zstd",
+        )
+        # Read back through StableDataset (uses mmap)
+        info = DatasetInfo(features=features)
+        ds = StableDataset(
+            features=features, info=info,
+            shard_dir=cache_dir,
+            shard_paths=meta.shard_paths,
+            shard_row_counts=meta.shard_row_counts,
+            num_rows=meta.num_rows,
+        )
+        for i in range(20):
+            assert ds[i]["x"] == i
+
+    def test_backward_compat_reads_uncompressed(self, tmp_path):
+        features = _simple_features()
+        cache_dir = tmp_path / "uncompressed"
+        meta = write_sharded_arrow_cache(
+            _simple_gen(10), features, cache_dir, batch_size=10,
+        )
+        loaded = read_sharded_cache_meta(cache_dir)
+        assert loaded.compression is None
+        assert loaded.num_rows == 10
+
+    def test_metadata_includes_compression_key(self, tmp_path):
+        features = _simple_features()
+        cache_dir = tmp_path / "comp_meta"
+        write_sharded_arrow_cache(
+            _simple_gen(10), features, cache_dir,
+            batch_size=10, compression="zstd",
+        )
+        raw = json.loads((cache_dir / "_metadata.json").read_text())
+        assert raw["compression"] == "zstd"
+
+    def test_parallel_encode_matches_serial(self, tmp_path):
+        features = _simple_features()
+        # Serial
+        cache_serial = tmp_path / "serial"
+        meta_s = write_sharded_arrow_cache(
+            _simple_gen(30), features, cache_serial,
+            batch_size=10, num_encode_workers=0,
+        )
+        # Parallel
+        cache_parallel = tmp_path / "parallel"
+        meta_p = write_sharded_arrow_cache(
+            _simple_gen(30), features, cache_parallel,
+            batch_size=10, num_encode_workers=2,
+        )
+        assert meta_s.num_rows == meta_p.num_rows
+        # Verify same data
+        info = DatasetInfo(features=features)
+        ds_s = StableDataset(
+            features=features, info=info,
+            shard_dir=cache_serial,
+            shard_paths=meta_s.shard_paths,
+            shard_row_counts=meta_s.shard_row_counts,
+            num_rows=meta_s.num_rows,
+        )
+        ds_p = StableDataset(
+            features=features, info=info,
+            shard_dir=cache_parallel,
+            shard_paths=meta_p.shard_paths,
+            shard_row_counts=meta_p.shard_row_counts,
+            num_rows=meta_p.num_rows,
+        )
+        for i in range(30):
+            assert ds_s[i] == ds_p[i]

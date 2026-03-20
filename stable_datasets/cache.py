@@ -13,6 +13,7 @@ import json
 import os
 import shutil
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -121,6 +122,34 @@ _METADATA_FILE = "_metadata.json"
 DEFAULT_SHARD_SIZE_BYTES = 256 * 1024 * 1024
 
 
+def _encode_gen(generator, features, batch_size, num_workers):
+    """Wrap a generator with optional parallel encoding.
+
+    When *num_workers* <= 0, encodes serially (zero overhead).
+    When > 0, collects chunks of *batch_size* examples and encodes
+    them in parallel using a thread pool (PIL operations release the GIL).
+    """
+    if num_workers <= 0:
+        for key, example in generator:
+            yield key, encode_example(example, features)
+        return
+
+    encode_fn = lambda ex: encode_example(ex, features)
+    with ThreadPoolExecutor(max_workers=num_workers) as pool:
+        chunk = []
+        for key, example in generator:
+            chunk.append((key, example))
+            if len(chunk) >= batch_size:
+                encoded = list(pool.map(encode_fn, [ex for _, ex in chunk]))
+                for (k, _), enc in zip(chunk, encoded):
+                    yield k, enc
+                chunk = []
+        if chunk:
+            encoded = list(pool.map(encode_fn, [ex for _, ex in chunk]))
+            for (k, _), enc in zip(chunk, encoded):
+                yield k, enc
+
+
 def write_sharded_arrow_cache(
     generator,
     features: Features,
@@ -128,6 +157,8 @@ def write_sharded_arrow_cache(
     *,
     shard_size_bytes: int = DEFAULT_SHARD_SIZE_BYTES,
     batch_size: int = 1000,
+    compression: str | None = None,
+    num_encode_workers: int = 0,
 ) -> ShardedCacheMeta:
     """Consume a generator and write to a directory of Arrow IPC shards.
 
@@ -155,12 +186,22 @@ def write_sharded_arrow_cache(
     Writing is atomic: shards are first written to a temporary directory
     and renamed into place on success.
 
+    Parameters
+    ----------
+    compression : str or None
+        IPC buffer compression codec (e.g. ``"zstd"``, ``"lz4"``).
+        Decompression on read is automatic.
+    num_encode_workers : int
+        When > 0, encode examples in parallel using a thread pool.
+
     Returns a :class:`ShardedCacheMeta` describing the cache.
     """
     cache_dir = Path(cache_dir)
     cache_dir.parent.mkdir(parents=True, exist_ok=True)
     lock_path = cache_dir.with_suffix(".lock")
     schema = features.to_arrow_schema()
+
+    ipc_options = ipc.IpcWriteOptions(compression=compression) if compression else None
 
     # Work in a temp dir next to the final location; rename on success.
     tmp_dir = Path(tempfile.mkdtemp(dir=cache_dir.parent, prefix=f".{cache_dir.name}_tmp_"))
@@ -184,7 +225,10 @@ def write_sharded_arrow_cache(
         fname = _SHARD_NAME_FMT.format(shard_idx)
         shard_filenames.append(fname)
         sink = pa.OSFile(str(tmp_dir / fname), "wb")
-        writer = ipc.new_file(sink, schema)
+        if ipc_options:
+            writer = ipc.new_file(sink, schema, options=ipc_options)
+        else:
+            writer = ipc.new_file(sink, schema)
         shard_bytes = 0
         shard_rows = 0
 
@@ -222,10 +266,12 @@ def write_sharded_arrow_cache(
 
     total_count = 0
 
+    # Wrap generator with optional parallel encoding
+    encoded_gen = _encode_gen(generator, features, batch_size, num_encode_workers)
+
     try:
         with FileLock(str(lock_path)):
-            for _key, example in generator:
-                encoded = encode_example(example, features)
+            for _key, encoded in encoded_gen:
                 for col_name in features:
                     batch_rows[col_name].append(encoded.get(col_name))
                 total_count += 1
@@ -255,9 +301,11 @@ def write_sharded_arrow_cache(
                 "shard_filenames": shard_filenames,
                 "shard_size_target_bytes": shard_size_bytes,
             }
+            if compression:
+                meta["compression"] = compression
             (tmp_dir / _METADATA_FILE).write_text(json.dumps(meta, indent=2))
 
-            # Atomic publish: rename temp dir → final cache dir
+            # Atomic publish: rename temp dir -> final cache dir
             if cache_dir.exists():
                 shutil.rmtree(cache_dir)
             os.rename(str(tmp_dir), str(cache_dir))
@@ -276,6 +324,7 @@ def write_sharded_arrow_cache(
         shard_filenames=shard_filenames,
         shard_row_counts=shard_row_counts,
         schema_fingerprint=meta["schema_fingerprint"],
+        compression=compression,
     )
 
 
@@ -289,6 +338,7 @@ class ShardedCacheMeta:
         "shard_filenames",
         "shard_row_counts",
         "schema_fingerprint",
+        "compression",
     )
 
     def __init__(
@@ -299,6 +349,7 @@ class ShardedCacheMeta:
         shard_filenames: list[str],
         shard_row_counts: list[int],
         schema_fingerprint: str,
+        compression: str | None = None,
     ):
         self.cache_dir = Path(cache_dir)
         self.num_rows = num_rows
@@ -306,6 +357,7 @@ class ShardedCacheMeta:
         self.shard_filenames = shard_filenames
         self.shard_row_counts = shard_row_counts
         self.schema_fingerprint = schema_fingerprint
+        self.compression = compression
 
     @property
     def shard_paths(self) -> list[Path]:
@@ -356,6 +408,7 @@ def read_sharded_cache_meta(cache_dir: Path) -> ShardedCacheMeta:
         shard_filenames=shard_filenames,
         shard_row_counts=shard_row_counts,
         schema_fingerprint=raw.get("schema_fingerprint", ""),
+        compression=raw.get("compression"),
     )
 
 

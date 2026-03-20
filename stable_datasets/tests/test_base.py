@@ -108,7 +108,7 @@ def test_base_builder_passes_download_dir_to_bulk_download(tmp_path, monkeypatch
 
     seen = {}
 
-    def _fake_bulk_download(urls, dest_folder):
+    def _fake_bulk_download(urls, dest_folder, checksums=None):
         seen["dest_folder"] = str(dest_folder)
         # Return fake local paths; _generate_examples ignores data_path.
         return [tmp_path / f"fake_{i}.bin" for i in range(len(list(urls)))]
@@ -280,7 +280,7 @@ def test_base_builder_maps_val_to_validation(monkeypatch, tmp_path):
         def _generate_examples(self, data_path, split):
             yield 0, {"x": 0}
 
-    def _fake_bulk_download(urls, dest_folder):
+    def _fake_bulk_download(urls, dest_folder, checksums=None):
         return [tmp_path / "fake.bin" for _ in list(urls)]
 
     monkeypatch.setattr(utils, "bulk_download", _fake_bulk_download)
@@ -313,7 +313,7 @@ def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
 
     seen = {}
 
-    def _fake_bulk_download(urls, dest_folder):
+    def _fake_bulk_download(urls, dest_folder, checksums=None):
         urls = list(urls)
         seen["urls"] = urls
         return [tmp_path / f"fake_{i}.bin" for i in range(len(urls))]
@@ -392,3 +392,237 @@ def test_env_cache_dir_with_tilde_expansion(monkeypatch):
     monkeypatch.setenv(utils.CACHE_DIR_ENV_VAR, "~/my_datasets_cache")
     expected = Path.home() / "my_datasets_cache" / "downloads"
     assert utils._default_dest_folder() == expected
+
+
+# ── Phase 5: Download Robustness ─────────────────────────────────────────────
+
+
+import hashlib
+from unittest.mock import MagicMock, patch
+
+
+def test_download_resume_sends_range_header(tmp_path, monkeypatch):
+    """When a .tmp file exists, download should send a Range header."""
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    # Pre-create a partial .tmp file
+    url = "https://example.com/file.bin"
+    p = Path("file.bin")
+    h = hashlib.sha256(url.encode("utf-8")).hexdigest()[:10]
+    tmp_file = dest_folder / f"{p.stem}.{h}{p.suffix}.tmp"
+    tmp_file.write_bytes(b"partial")
+
+    seen_headers = {}
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": "100"}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([b"x" * 100])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        def __init__(self):
+            self.headers = {}
+
+        def update(self, d):
+            self.headers.update(d)
+
+        def get(self, url, stream=True, allow_redirects=True, timeout=None, headers=None):
+            seen_headers.update(headers or {})
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    FakeSession.headers = MagicMock()
+    FakeSession.headers.update = lambda d: None
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            try:
+                download(url, dest_folder=dest_folder, progress_bar=False)
+            except Exception:
+                pass  # We only care about the Range header
+
+    assert "Range" in seen_headers
+    assert seen_headers["Range"] == f"bytes={len(b'partial')}-"
+
+
+def test_download_resume_fallback_on_200(tmp_path, monkeypatch):
+    """When server returns 200 (ignoring Range), download starts over."""
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    url = "https://example.com/file2.bin"
+    p = Path("file2.bin")
+    h = hashlib.sha256(url.encode("utf-8")).hexdigest()[:10]
+    dest = dest_folder / f"{p.stem}.{h}{p.suffix}"
+    tmp_file = dest / ".." / f"{p.stem}.{h}{p.suffix}.tmp"
+    # Ensure no leftover dest
+    if dest.exists():
+        dest.unlink()
+
+    content = b"fullcontent"
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([content])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        headers = {}
+
+        def update(self, d):
+            pass
+
+        def get(self, url, **kwargs):
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    FakeSession.headers = MagicMock()
+    FakeSession.headers.update = lambda d: None
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            result = download(url, dest_folder=dest_folder, progress_bar=False)
+
+    # File should contain the full content (not appended)
+    assert result.read_bytes() == content
+
+
+def test_checksum_validation_passes(tmp_path):
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    content = b"hello world"
+    sha = hashlib.sha256(content).hexdigest()
+    checksum = f"sha256:{sha}"
+
+    url = "https://example.com/check.bin"
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([content])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        headers = {}
+
+        def update(self, d):
+            pass
+
+        def get(self, url, **kwargs):
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    FakeSession.headers = MagicMock()
+    FakeSession.headers.update = lambda d: None
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            result = download(url, dest_folder=dest_folder, progress_bar=False, checksum=checksum)
+
+    assert result.read_bytes() == content
+
+
+def test_checksum_mismatch_deletes_and_raises(tmp_path):
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    content = b"hello world"
+    wrong_checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+
+    url = "https://example.com/bad.bin"
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([content])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        headers = {}
+
+        def update(self, d):
+            pass
+
+        def get(self, url, **kwargs):
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    FakeSession.headers = MagicMock()
+    FakeSession.headers.update = lambda d: None
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            with pytest.raises(ValueError, match="Checksum mismatch"):
+                download(url, dest_folder=dest_folder, progress_bar=False, checksum=wrong_checksum)
