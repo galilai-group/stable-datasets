@@ -89,7 +89,8 @@ class StableIterableDataset(_IterableBase):
         else:
             my_shards = all_shards
 
-        effective_seed = self._seed + self._epoch
+        worker_id = worker_info.id if worker_info is not None else 0
+        effective_seed = self._seed + self._epoch * 1000 + worker_id
         rng = np.random.default_rng(effective_seed) if self._shuffle else None
 
         if self._shuffle and rng is not None:

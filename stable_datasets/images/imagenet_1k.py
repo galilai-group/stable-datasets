@@ -27,8 +27,8 @@ class _ImageNetArchiveMixin:
                 if image_file is None:
                     continue
 
-                image = PILImage.open(io.BytesIO(image_file.read())).convert("RGB")
-                yield f"{class_name}/{image_member.name}", {"image": image, "label": label}
+                image_bytes = image_file.read()
+                yield f"{class_name}/{image_member.name}", {"image": image_bytes, "label": label}
 
     def _iter_train_examples(self, archive_path: Path, class_limit: int | None):
         if self.streaming:

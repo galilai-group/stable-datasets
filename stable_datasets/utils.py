@@ -303,7 +303,10 @@ class BaseDatasetBuilder:
                 meta = validate_sharded_cache(shard_dir, features)
             else:
                 generator = instance._generate_examples(**sg.gen_kwargs)
-                meta = write_sharded_arrow_cache(generator, features, shard_dir, compression="zstd")
+                meta = write_sharded_arrow_cache(
+                    generator, features, shard_dir,
+                    compression="zstd", num_encode_workers=4,
+                )
 
             splits_data[sg.name] = StableDataset(
                 features=features,
