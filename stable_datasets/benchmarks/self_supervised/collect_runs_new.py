@@ -19,6 +19,7 @@ import argparse
 import hashlib
 import json
 import logging
+import math
 import time
 from datetime import datetime
 from pathlib import Path
@@ -49,6 +50,79 @@ _REQUIRED_ACCUM: dict[str, int] = {
     "lejepa": 1,
     "dino": 1,
 }
+
+# ---------------------------------------------------------------------------
+# Required max_epochs per (model, dataset).
+#
+# Every model has a base epoch count (its ImageNet value) and each dataset
+# belongs to a size/difficulty tier with an integer multiplier.  The tier
+# assignment is derived from dataset size — smaller or harder datasets need
+# proportionally more epochs to see enough samples.
+#
+#   Base epochs:
+#       barlow_twins / simclr / nnclr  =  50
+#       dino / lejepa                  =  62.5  (→ ceil when non-integer)
+#       mae                            = 100
+#
+#   Tier multipliers:
+#       1x  imagenet                          (largest)
+#       2x  food101, tinyimagenet             (large)
+#       3x  svhn, fashionmnist, emnist,       (medium, simple classes)
+#           kmnist, hasyv2, stl10
+#       4x  cifar10, cifar100, notmnist,      (medium, more classes or
+#           medmnist, country211               harder distribution)
+#       5x  arabiccharacters, arabicdigits    (small)
+#       6x  flowers102, cub200, dtd,          (small, fine-grained)
+#           rockpaperscissor
+#
+# For dino/lejepa the base is 62.5, so non-integer products are rounded up:
+#   62.5 × 1 → 63,  ×3 → 188,  ×5 → 313
+# ---------------------------------------------------------------------------
+
+_BASE_EPOCHS: dict[str, float] = {
+    "barlow_twins": 50,
+    "simclr": 50,
+    "nnclr": 50,
+    "dino": 62.5,
+    "lejepa": 62.5,
+    "mae": 100,
+}
+
+_DATASET_TIER: dict[str, int] = {
+    # Tier 1 — largest dataset
+    "imagenet": 1,
+    # Tier 2 — large
+    "food101": 2,
+    "tinyimagenet": 2,
+    "imagenette": 2,
+    # Tier 3 — medium, simple classes
+    "svhn": 3,
+    "fashionmnist": 3,
+    "emnist": 3,
+    "kmnist": 3,
+    "hasyv2": 3,
+    "stl10": 3,
+    # Tier 4 — medium, harder
+    "cifar10": 4,
+    "cifar100": 4,
+    "notmnist": 4,
+    "medmnist": 4,
+    "country211": 4,
+    # Tier 5 — small
+    "arabiccharacters": 5,
+    "arabicdigits": 5,
+    # Tier 6 — small, fine-grained
+    "flowers102": 6,
+    "cub200": 6,
+    "dtd": 6,
+    "rockpaperscissor": 6,
+}
+
+_REQUIRED_EPOCHS: dict[str, dict[str, int]] = {}
+for _model, _base in _BASE_EPOCHS.items():
+    _REQUIRED_EPOCHS[_model] = {
+        ds: math.ceil(_base * mult) for ds, mult in _DATASET_TIER.items()
+    }
 
 CACHE_DIR = Path(__file__).resolve().parent / ".result_cache"
 
@@ -122,6 +196,21 @@ def _collect_ssl(
         del cached_runs[rid]
     if evicted:
         log.info(f"Evicted {len(evicted)} cached runs failing LR filter")
+        _save_cache(cache_file, cached_runs)
+
+    # Evict cached runs that now fail the epoch filter
+    evicted_ep = [
+        rid
+        for rid, row in cached_runs.items()
+        if not row.get("_skip")
+        and row.get("model") in _REQUIRED_EPOCHS
+        and row.get("dataset", "").lower() in _REQUIRED_EPOCHS.get(row.get("model", ""), {})
+        and int(row.get("max_epochs", 0)) != _REQUIRED_EPOCHS[row["model"]][row["dataset"].lower()]
+    ]
+    for rid in evicted_ep:
+        del cached_runs[rid]
+    if evicted_ep:
+        log.info(f"Evicted {len(evicted_ep)} cached runs failing epoch filter")
         _save_cache(cache_file, cached_runs)
 
     # Server-side filter: only fetch vit_small backbone runs
@@ -216,6 +305,20 @@ def _collect_ssl(
         if skip:
             continue
 
+        # Filter by required max_epochs (model + dataset specific)
+        model_epochs = _REQUIRED_EPOCHS.get(model, {})
+        req_epochs = model_epochs.get(dataset.lower())
+        if req_epochs is not None:
+            run_epochs = config.get("max_epochs")
+            if run_epochs is None or int(run_epochs) != req_epochs:
+                log.debug(
+                    f"Skipping {run_id} ({model}/{dataset}): "
+                    f"max_epochs={run_epochs}, required={req_epochs}"
+                )
+                cached_runs[run_id] = {"_skip": True, "reason": "wrong_epochs"}
+                dirty = True
+                continue
+
         top1 = summary.get(SSL_METRIC)
         if top1 is None:
             log.debug(f"Skipping {run_id} ({model}/{dataset}): no {SSL_METRIC}")
@@ -228,6 +331,7 @@ def _collect_ssl(
             "model": model,
             "backbone": "vit_small",
             "lr": config.get("lr"),
+            "max_epochs": config.get("max_epochs"),
             "seed": config.get("seed"),
             "is_seed_run": is_seed_run,
             SSL_METRIC: float(top1),

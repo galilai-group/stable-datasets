@@ -24,62 +24,62 @@ params:
     batch_size: 256
     max_epochs: 100
     accumulate_grad_batches: 1
-  # CIFAR-scale (32x32)
+  # CIFAR-scale (32x32) — tier 4 (×4)
   cifar10:
     batch_size: 256
-    max_epochs: 100
+    max_epochs: 200
   cifar100:
     batch_size: 256
-    max_epochs: 100
+    max_epochs: 200
   svhn:
     batch_size: 256
-    max_epochs: 100
+    max_epochs: 150
   # Grayscale 28x28
   fashionmnist:
     batch_size: 256
-    max_epochs: 100
+    max_epochs: 150
   emnist:
     batch_size: 256
-    max_epochs: 100
+    max_epochs: 150
   kmnist:
     batch_size: 256
-    max_epochs: 100
+    max_epochs: 150
   notmnist:
     batch_size: 256
-    max_epochs: 150
+    max_epochs: 200
   medmnist:
     batch_size: 256
-    max_epochs: 100
-  # Other small datasets
+    max_epochs: 200
+  # Other small datasets — tier 3 (×3)
   hasyv2:
     batch_size: 256
-    max_epochs: 100
+    max_epochs: 150
   arabiccharacters:
     batch_size: 256
-    max_epochs: 40
+    max_epochs: 250
   arabicdigits:
     batch_size: 256
-    max_epochs: 40
-  # Larger resolution
+    max_epochs: 250
+  # Larger resolution — tier 3 (×3)
   stl10:
     batch_size: 256
-    max_epochs: 100
-  # Small fine-grained
+    max_epochs: 150
+  # Small fine-grained — tier 6 (×6)
   flowers102:
     batch_size: 256
-    max_epochs: 200
+    max_epochs: 300
   cub200:
     batch_size: 256
-    max_epochs: 200
+    max_epochs: 300
   dtd:
     batch_size: 256
-    max_epochs: 200
+    max_epochs: 300
   country211:
     batch_size: 256
-    max_epochs: 100
+    max_epochs: 200
   rockpaperscissor:
     batch_size: 256
-    max_epochs: 200
+    max_epochs: 300
   # Large datasets
   food101:
     batch_size: 256
