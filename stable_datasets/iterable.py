@@ -86,28 +86,26 @@ class StableIterableDataset(_IterableBase):
         all_shards = list(range(len(ds._shard_paths)))
         if worker_info is not None:
             my_shards = all_shards[worker_info.id :: worker_info.num_workers]
+            worker_id = worker_info.id
         else:
             my_shards = all_shards
+            worker_id = 0
 
-        effective_seed = self._seed + self._epoch
+        effective_seed = self._seed + self._epoch * 1000 + worker_id
         rng = np.random.default_rng(effective_seed) if self._shuffle else None
 
         if self._shuffle and rng is not None:
             rng.shuffle(my_shards)
 
-        from .arrow_dataset import _decode_row_from_table, _mmap_ipc
+        formatter = ds._formatter
 
         def _row_gen():
-            for shard_id in my_shards:
-                shard_table = _mmap_ipc(ds._shard_paths[shard_id])
-                for row_idx in range(shard_table.num_rows):
-                    yield _decode_row_from_table(
-                        shard_table,
-                        row_idx,
-                        ds._features,
-                        ds._format_type,
-                    )
-                del shard_table
+            for batch in ds._backend.iter_batches(shard_indices=my_shards):
+                batch_dict = batch.to_pydict()
+                n = batch.num_rows
+                for i in range(n):
+                    row = {k: v[i] for k, v in batch_dict.items()}
+                    yield formatter.format_row(row)
 
         if self._shuffle and self._buffer_size > 0:
             yield from self._buffered_shuffle(_row_gen(), rng)

@@ -289,14 +289,14 @@ class TestShardedDataset:
         with pytest.raises(IndexError):
             ds[10]
 
-    def test_getitem_loads_single_shard(self, tmp_path):
+    def test_getitem_lazy_loads_table(self, tmp_path):
         ds, meta = _make_sharded_ds(tmp_path, n=200, shard_size_bytes=128, batch_size=5)
         assert meta.num_shards >= 2
-        # Access first row (shard 0)
+        # Table not loaded at construction
+        assert ds._table is None
+        # Access first row triggers lazy table load
         ds[0]
-        assert 0 in ds._shard_lru
-        # Initially only shard 0 should be loaded
-        assert len(ds._shard_lru) == 1
+        assert ds._table is not None
 
     def test_iter_yields_all(self, tmp_path):
         ds, _ = _make_sharded_ds(tmp_path, n=30)
@@ -344,16 +344,12 @@ class TestShardedDataset:
         assert isinstance(ds2.features["label"], ClassLabel)
         assert ds2.features["label"].names == ["a", "b"]
 
-    def test_lru_eviction(self, tmp_path):
+    def test_concat_table_covers_all_shards(self, tmp_path):
         ds, meta = _make_sharded_ds(tmp_path, n=200, shard_size_bytes=128, batch_size=5)
-        assert meta.num_shards > 4  # Need more shards than LRU size
-        # Access a row in each shard
-        for i in range(meta.num_shards):
-            offset = sum(meta.shard_row_counts[:i])
-            if offset < 100:
-                ds[offset]
-        # LRU should have capped at max_open_shards (default 4)
-        assert len(ds._shard_lru) <= 4
+        assert meta.num_shards > 4
+        # After first access, concat table has all rows
+        ds[0]
+        assert ds._table.num_rows == 200
 
 
 # Builder integration tests

@@ -29,7 +29,7 @@ from .cache import (
     validate_sharded_cache,
     write_sharded_arrow_cache,
 )
-from .schema import BuilderConfig, Version
+from .schema import BuilderConfig, Image, Version
 from .splits import Split, SplitGenerator
 
 
@@ -303,7 +303,11 @@ class BaseDatasetBuilder:
                 meta = validate_sharded_cache(shard_dir, features)
             else:
                 generator = instance._generate_examples(**sg.gen_kwargs)
-                meta = write_sharded_arrow_cache(generator, features, shard_dir, compression="zstd")
+                has_images = any(isinstance(f, Image) for f in features.values())
+                compression = None if has_images else "zstd"
+                meta = write_sharded_arrow_cache(
+                    generator, features, shard_dir, compression=compression, num_encode_workers=4
+                )
 
             splits_data[sg.name] = StableDataset(
                 features=features,

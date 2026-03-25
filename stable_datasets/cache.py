@@ -161,6 +161,7 @@ def write_sharded_arrow_cache(
     batch_size: int = 1000,
     compression: str | None = None,
     num_encode_workers: int = 0,
+    single_file: bool = False,
 ) -> ShardedCacheMeta:
     """Consume a generator and write to a directory of Arrow IPC shards.
 
@@ -202,6 +203,9 @@ def write_sharded_arrow_cache(
     cache_dir.parent.mkdir(parents=True, exist_ok=True)
     lock_path = cache_dir.with_suffix(".lock")
     schema = features.to_arrow_schema()
+
+    if single_file:
+        shard_size_bytes = float("inf")
 
     ipc_options = ipc.IpcWriteOptions(compression=compression) if compression else None
 
