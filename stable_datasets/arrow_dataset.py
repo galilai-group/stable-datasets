@@ -109,6 +109,14 @@ class StableDataset:
         self._transform = _transform
         self._formatter = get_formatter(_format_type, features, decode_images=_decode_images)
 
+        # Precompute whether we have binary columns (Image/Array3D/Video).
+        # When present, __getitems__ avoids batched take() because Arrow
+        # physically copies variable-length binary data into new buffers,
+        # whereas per-row slice() is zero-copy.
+        self._has_binary_cols = any(
+            isinstance(f, (Image, Array3D, Video)) for f in features.values()
+        )
+
         # Cache row count so __len__ never triggers a full file read.
         if self._indices is not None:
             self._num_rows = len(self._indices)
@@ -242,9 +250,14 @@ class StableDataset:
     def __getitems__(self, indices: list[int]) -> list[dict]:
         """Batched sample loading. Called by PyTorch DataLoader automatically.
 
-        One Arrow ``take()`` call for the entire batch instead of N individual
-        ``get_row()`` calls.
+        For datasets with binary columns (Image, Array3D, Video), uses
+        per-row ``slice()`` which is zero-copy from mmap.  For purely
+        numeric/scalar datasets, uses batched ``take()`` to reduce Python
+        call overhead.
         """
+        if self._has_binary_cols:
+            return [self[i] for i in indices]
+
         idx_array = np.asarray(indices, dtype=np.int64)
         if self._indices is not None:
             idx_array = self._indices[idx_array]

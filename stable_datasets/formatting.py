@@ -14,6 +14,12 @@ from PIL import Image as PILImage
 from .schema import Array3D, Features, Image
 
 
+def _zip_cols_to_rows(cols: dict, n: int) -> list[dict]:
+    """Build list of row dicts from column-oriented dict."""
+    keys = list(cols.keys())
+    return [{k: cols[k][i] for k in keys} for i in range(n)]
+
+
 class Formatter:
     """Base formatter. Subclasses convert Arrow-native values to user-facing types."""
 
@@ -30,16 +36,11 @@ class Formatter:
     def format_batch(self, table) -> list[dict]:
         """Format a batch (from backend.take). Returns list of row dicts.
 
-        Default implementation calls ``to_pydict()`` then formats each row.
-        Subclasses can override for more efficient batch conversion.
+        Column-first: ``to_pydict()`` once, decode each column in bulk,
+        then zip into per-row dicts at the end.
         """
-        batch_dict = table.to_pydict()
-        n = table.num_rows
-        rows = []
-        for i in range(n):
-            row = {k: v[i] for k, v in batch_dict.items()}
-            rows.append(self.format_row(row))
-        return rows
+        cols = table.to_pydict()
+        return _zip_cols_to_rows(cols, table.num_rows)
 
 
 class PythonFormatter(Formatter):
@@ -61,6 +62,26 @@ class PythonFormatter(Formatter):
                 result[col] = np.frombuffer(val, dtype=feat.dtype).reshape(feat.shape)
         return result
 
+    def format_batch(self, table) -> list[dict]:
+        cols = table.to_pydict()
+        n = table.num_rows
+        if self.decode_images:
+            for col in self._image_cols:
+                decoded = [None] * n
+                for i, val in enumerate(cols[col]):
+                    if val is not None:
+                        img = PILImage.open(io.BytesIO(val))
+                        img.load()
+                        decoded[i] = img
+                cols[col] = decoded
+        for col in self._array3d_cols:
+            feat = self.features[col]
+            cols[col] = [
+                np.frombuffer(v, dtype=feat.dtype).reshape(feat.shape) if v is not None else None
+                for v in cols[col]
+            ]
+        return _zip_cols_to_rows(cols, n)
+
 
 class RawFormatter(Formatter):
     """Raw format: all values as-is from Arrow (bytes for images, bytes for Array3D)."""
@@ -70,6 +91,9 @@ class RawFormatter(Formatter):
 
     def format_row(self, row: dict) -> dict:
         return row
+
+    def format_batch(self, table) -> list[dict]:
+        return _zip_cols_to_rows(table.to_pydict(), table.num_rows)
 
 
 class TorchFormatter(Formatter):
@@ -104,6 +128,46 @@ class TorchFormatter(Formatter):
                 result[col_name] = value
         return result
 
+    def format_batch(self, table) -> list[dict]:
+        import torch
+
+        cols = table.to_pydict()
+        n = table.num_rows
+
+        for col in self._image_cols:
+            if self.decode_images:
+                decoded = [None] * n
+                for i, val in enumerate(cols[col]):
+                    if val is not None:
+                        img = PILImage.open(io.BytesIO(val))
+                        arr = np.array(img)
+                        if arr.ndim == 2:
+                            arr = arr[:, :, np.newaxis]
+                        arr = np.ascontiguousarray(arr.transpose(2, 0, 1))
+                        decoded[i] = torch.from_numpy(arr.astype(np.float32) / 255.0)
+                cols[col] = decoded
+            # decode_images=False: leave as raw bytes (already in cols)
+
+        for col in self._array3d_cols:
+            feat = self.features[col]
+            cols[col] = [
+                torch.from_numpy(
+                    np.frombuffer(v, dtype=feat.dtype).reshape(feat.shape).astype(np.float32)
+                ) if v is not None else None
+                for v in cols[col]
+            ]
+
+        # Scalar columns: convert numeric values to tensors
+        _skip = set(self._image_cols) | set(self._array3d_cols)
+        for col_name in cols:
+            if col_name in _skip:
+                continue
+            vals = cols[col_name]
+            if vals and isinstance(vals[0], (int, float)):
+                cols[col_name] = [torch.tensor(v) if v is not None else None for v in vals]
+
+        return _zip_cols_to_rows(cols, n)
+
 
 class NumpyFormatter(Formatter):
     """Numpy format: Image -> HWC numpy array, rest as-is."""
@@ -121,6 +185,23 @@ class NumpyFormatter(Formatter):
                 feat = self.features[col]
                 result[col] = np.frombuffer(val, dtype=feat.dtype).reshape(feat.shape)
         return result
+
+    def format_batch(self, table) -> list[dict]:
+        cols = table.to_pydict()
+        n = table.num_rows
+        if self.decode_images:
+            for col in self._image_cols:
+                cols[col] = [
+                    np.array(PILImage.open(io.BytesIO(v))) if v is not None else None
+                    for v in cols[col]
+                ]
+        for col in self._array3d_cols:
+            feat = self.features[col]
+            cols[col] = [
+                np.frombuffer(v, dtype=feat.dtype).reshape(feat.shape) if v is not None else None
+                for v in cols[col]
+            ]
+        return _zip_cols_to_rows(cols, n)
 
 
 def get_formatter(
