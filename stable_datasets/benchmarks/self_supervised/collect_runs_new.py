@@ -42,13 +42,9 @@ _REQUIRED_LR: dict[str, float] = {
     "lejepa": 5e-4,
     "dino": 5e-4,
 }
-_REQUIRED_BS: dict[str, int] = {
+_REQUIRED_EBS: dict[str, int] = {
     "lejepa": 256,
     "dino": 256,
-}
-_REQUIRED_ACCUM: dict[str, int] = {
-    "lejepa": 1,
-    "dino": 1,
 }
 
 # ---------------------------------------------------------------------------
@@ -263,11 +259,6 @@ def _collect_ssl(
             dirty = True
             continue
 
-        # If --tag is specified, enforce it for lejepa and dino runs
-        if require_tag and model in ("lejepa", "dino") and require_tag not in tags:
-            cached_runs[run_id] = {"_skip": True, "reason": f"missing_tag_{require_tag}"}
-            dirty = True
-            continue
 
         if dataset.lower() in SKIP_DATASETS:
             cached_runs[run_id] = {"_skip": True, "reason": "skip_dataset"}
@@ -295,13 +286,33 @@ def _collect_ssl(
         skip = False
         for cfg_key, req_dict, reason, is_int in [
             ("lr", _REQUIRED_LR, "wrong_lr", False),
-            ("batch_size", _REQUIRED_BS, "wrong_bs", True),
-            ("accumulate_grad_batches", _REQUIRED_ACCUM, "wrong_accum", True),
         ]:
             if not _check_required(cfg_key, req_dict, reason, is_int):
                 dirty = True
                 skip = True
                 break
+        if skip:
+            continue
+
+        # Check effective batch size (batch_size * accumulate_grad_batches).
+        # wandb logs the micro-batch size (already divided by accum), so we
+        # reconstruct the effective batch size for comparison.
+        if model in _REQUIRED_EBS:
+            bs = config.get("batch_size")
+            accum = config.get("accumulate_grad_batches", 1)
+            if bs is not None and accum is not None:
+                ebs = int(bs) * int(accum)
+            else:
+                ebs = None
+            req_ebs = _REQUIRED_EBS[model]
+            if ebs is None or ebs != req_ebs:
+                log.debug(
+                    f"Skipping {run_id} ({model}/{dataset}): "
+                    f"effective_batch_size={ebs} (bs={bs}, accum={accum}), required={req_ebs}"
+                )
+                cached_runs[run_id] = {"_skip": True, "reason": "wrong_ebs"}
+                dirty = True
+                skip = True
         if skip:
             continue
 

@@ -43,6 +43,7 @@ def main(kwargs, job_dir):
         nodes=1,  # Number of nodes
         timeout_min=timeout_min,  # Maximum duration in minutes
         slurm_partition=partition,  # Partition name
+        slurm_qos="cs-3090-gcondo",  # QOS for 3090-gcondo
         slurm_job_name=f"supervised_{model.split('/')[-1]}_{dataset}{f'_{config_name}' if config_name else ''}_seed{seed}",  # Job name
         slurm_mail_type="ALL",  # Email settings
         slurm_mail_user="sami_bou_ghanem@brown.edu",  # Email address
@@ -67,7 +68,8 @@ def main(kwargs, job_dir):
         f"--seed {seed} "
         f"--wandb_entity {wandb_entity} "
         f"--wandb_project {wandb_project} "
-        f"--results_file {results_file}"
+        f"--results_file {results_file} "
+        f"--force_rerun"
     )
     # Add config_name if provided
     if config_name is not None:
@@ -121,60 +123,73 @@ def job_completed(model, dataset, seed, results_file, hyperparams):
         return False
 
 
+ALL_DATASETS = [
+    "ArabicCharacters",
+    "ArabicDigits",
+    "Beans",
+    "CIFAR10",
+    "CIFAR100",
+    "Country211",
+    "CUB200",
+    "DTD",
+    "EMNIST",
+    "FashionMNIST",
+    "FGVCAircraft",
+    "Flowers102",
+    "Food101",
+    "HASYv2",
+    "Imagenette",
+    "MedMNIST",
+    "NotMNIST",
+    "RockPaperScissor",
+    "STL10",
+    "SVHN",
+]
+
+# Config names for datasets that require them
+DATASET_CONFIGS = {
+    "EMNIST": ["balanced"],
+    "MedMNIST": ["pneumoniamnist"],
+}
+
+DEFAULT_HYPERPARAMS = {
+    "image_size": 224,
+    "batch_size": 128,
+    "lr": 5e-4,
+    "weight_decay": 0.02,
+    "max_epochs": 100,
+}
+
+
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Submit supervised evaluation jobs")
+    parser.add_argument(
+        "--datasets",
+        type=str,
+        nargs="+",
+        default=None,
+        help="Datasets to submit (default: all). E.g. --datasets Country211 CUB200",
+    )
+    parser.add_argument(
+        "--force_rerun",
+        action="store_true",
+        help="Skip the local completion check and always submit",
+    )
+    args = parser.parse_args()
+
     # Create the directory where logs and results will be saved
     job_dir = Path("./submitit_supervised")
     job_dir.mkdir(parents=True, exist_ok=True)
 
-    # Models to evaluate
     model_list = [
         "WinKawaks/vit-small-patch16-224",
     ]
 
-    # Datasets to evaluate (matching class names in stable_datasets.images)
-    # These match the datasets used in results.tex (SSL benchmarks table)
-    dataset_list = [
-        "ArabicCharacters",
-        "ArabicDigits",
-        "Beans",
-        "CIFAR10",
-        "CIFAR100",
-        "Country211",
-        "CUB200",
-        "DTD",
-        "EMNIST",
-        "FashionMNIST",
-        "FGVCAircraft",
-        "Flowers102",
-        "Food101",
-        "HASYv2",
-        "Imagenette",
-        "MedMNIST",
-        "NotMNIST",
-        "RockPaperScissor",
-        "STL10",
-        "SVHN",
-    ]
+    dataset_list = args.datasets if args.datasets else ALL_DATASETS
 
-    # Config names for datasets that require them
-    dataset_configs = {
-        "EMNIST": ["balanced"],
-        "MedMNIST": ["pneumoniamnist"],
-    }
-
-    # Seeds for reproducibility
     seed_list = [42]
-
-    # Default hyperparameters
-    default_hyperparams = {
-        "image_size": 224,
-        "batch_size": 128,
-        "lr": 5e-4,
-        "weight_decay": 0.02,
-        "max_epochs": 100,
-    }
-
-    # Paths
     results_file = "./supervised_results.json"
 
     # Create results file if it doesn't exist
@@ -187,12 +202,11 @@ if __name__ == "__main__":
     # Calculate total jobs
     total_jobs = 0
     for dataset in dataset_list:
-        if dataset in dataset_configs:
-            total_jobs += len(model_list) * len(dataset_configs[dataset]) * len(seed_list)
+        if dataset in DATASET_CONFIGS:
+            total_jobs += len(model_list) * len(DATASET_CONFIGS[dataset]) * len(seed_list)
         else:
             total_jobs += len(model_list) * len(seed_list)
 
-    # Submit jobs
     print(f"{'=' * 60}")
     print("Submitting Supervised Learning Evaluation Jobs")
     print(f"{'=' * 60}")
@@ -208,24 +222,24 @@ if __name__ == "__main__":
     for seed in seed_list:
         for model in model_list:
             for dataset in dataset_list:
-                # Get configs for this dataset (empty list if no configs needed)
-                configs = dataset_configs.get(dataset, [None])
+                configs = DATASET_CONFIGS.get(dataset, [None])
 
                 for config_name in configs:
-                    # Build hyperparams including config_name
-                    hyperparams = {**default_hyperparams, "seed": seed}
+                    hyperparams = {**DEFAULT_HYPERPARAMS, "seed": seed}
                     if config_name is not None:
                         hyperparams["config_name"] = config_name
 
-                    # Check if job already completed
-                    if not job_completed(model, dataset, seed, results_file, hyperparams):
+                    should_submit = args.force_rerun or not job_completed(
+                        model, dataset, seed, results_file, hyperparams
+                    )
+                    if should_submit:
                         kwargs = {
                             "dataset": dataset,
                             "model": model,
                             "seed": seed,
                             "results_file": results_file,
                             "config_name": config_name,
-                            **default_hyperparams,
+                            **DEFAULT_HYPERPARAMS,
                         }
                         main(kwargs, job_dir)
                         submitted_count += 1
