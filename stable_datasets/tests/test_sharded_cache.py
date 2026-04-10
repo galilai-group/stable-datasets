@@ -113,7 +113,6 @@ class TestShardedWriter:
         ds = StableDataset(
             features=features,
             info=info,
-            shard_dir=cache_dir,
             shard_paths=meta.shard_paths,
             shard_row_counts=meta.shard_row_counts,
             num_rows=meta.num_rows,
@@ -260,7 +259,6 @@ def _make_sharded_ds(tmp_path, n=50, shard_size_bytes=512, batch_size=10):
     return StableDataset(
         features=features,
         info=info,
-        shard_dir=cache_dir,
         shard_paths=meta.shard_paths,
         shard_row_counts=meta.shard_row_counts,
         num_rows=meta.num_rows,
@@ -289,14 +287,17 @@ class TestShardedDataset:
         with pytest.raises(IndexError):
             ds[10]
 
-    def test_getitem_lazy_loads_table(self, tmp_path):
+    def test_getitem_does_not_force_full_table(self, tmp_path):
         ds, meta = _make_sharded_ds(tmp_path, n=200, shard_size_bytes=128, batch_size=5)
         assert meta.num_shards >= 2
         # Table not loaded at construction
-        assert ds._table is None
-        # Access first row triggers lazy table load
+        assert ds._backend._table is None
+        # Access first row routes through shard, does NOT force full concat
         ds[0]
-        assert ds._table is not None
+        assert ds._backend._table is None
+        # Only .table property forces full materialization
+        _ = ds.table
+        assert ds._backend._table is not None
 
     def test_iter_yields_all(self, tmp_path):
         ds, _ = _make_sharded_ds(tmp_path, n=30)
@@ -332,8 +333,8 @@ class TestShardedDataset:
     def test_pickle_roundtrip(self, tmp_path):
         ds, _ = _make_sharded_ds(tmp_path, n=20)
         ds2 = pickle.loads(pickle.dumps(ds))
-        assert ds2._table is None
-        assert ds2._shard_paths is not None
+        assert ds2._backend._table is None
+        assert ds2._backend._shard_paths is not None
         assert len(ds2) == 20
         for i in range(20):
             assert ds2[i]["x"] == i
@@ -347,9 +348,8 @@ class TestShardedDataset:
     def test_concat_table_covers_all_shards(self, tmp_path):
         ds, meta = _make_sharded_ds(tmp_path, n=200, shard_size_bytes=128, batch_size=5)
         assert meta.num_shards > 4
-        # After first access, concat table has all rows
-        ds[0]
-        assert ds._table.num_rows == 200
+        # Explicit .table forces full concat of all shards
+        assert ds.table.num_rows == 200
 
 
 # Builder integration tests
@@ -374,7 +374,7 @@ class TestBuilderShardedIntegration:
     def test_builder_creates_sharded_cache(self, tmp_path):
         ds = _TinyShardedBuilder(split="train", processed_cache_dir=str(tmp_path))
         assert isinstance(ds, StableDataset)
-        assert ds._is_shard_backed
+        assert ds._backend.is_file_backed
         assert len(ds) == 20
         for i in range(20):
             assert ds[i]["x"] == i
@@ -421,7 +421,6 @@ class TestCompression:
         ds = StableDataset(
             features=features,
             info=info,
-            shard_dir=cache_dir,
             shard_paths=meta.shard_paths,
             shard_row_counts=meta.shard_row_counts,
             num_rows=meta.num_rows,
@@ -481,7 +480,6 @@ class TestCompression:
         ds_s = StableDataset(
             features=features,
             info=info,
-            shard_dir=cache_serial,
             shard_paths=meta_s.shard_paths,
             shard_row_counts=meta_s.shard_row_counts,
             num_rows=meta_s.num_rows,
@@ -489,7 +487,6 @@ class TestCompression:
         ds_p = StableDataset(
             features=features,
             info=info,
-            shard_dir=cache_parallel,
             shard_paths=meta_p.shard_paths,
             shard_row_counts=meta_p.shard_row_counts,
             num_rows=meta_p.num_rows,

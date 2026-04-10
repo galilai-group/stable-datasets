@@ -24,6 +24,7 @@ from rich.progress import (
 from tqdm import tqdm
 
 from .arrow_dataset import StableDataset, StableDatasetDict
+from .backend import ArrowBackend
 from .cache import (
     cache_fingerprint,
     validate_sharded_cache,
@@ -283,40 +284,82 @@ class BaseDatasetBuilder:
             raise TypeError(f"{cls.__name__}._source() must return a mapping.")
         cls._validate_source(source)
 
-        # 4) Get split generators (downloads raw files)
-        split_generators = instance._split_generators()
-
-        # 5) For each split: check Arrow cache or generate + write
         features = instance._dataset_info.features
-        splits_data = {}
 
-        for sg in split_generators:
+        # 4) Try to load all splits from cache without downloading.
+        #    Derive split names from SOURCE["assets"] keys using the same
+        #    name_map that _split_generators() applies.
+        _name_map = {
+            "train": Split.TRAIN,
+            "test": Split.TEST,
+            "val": Split.VALIDATION,
+        }
+        asset_split_names = list(source["assets"].keys())
+        candidate_splits = [_name_map.get(s, s) for s in asset_split_names]
+
+        splits_data = {}
+        all_cached = bool(candidate_splits)  # empty assets → must call _split_generators
+        for split_name in candidate_splits:
             shard_dir_name = cache_fingerprint(
                 cls.__name__,
                 str(cls.VERSION),
                 instance.config.name,
-                sg.name,
+                split_name,
             )
             shard_dir = instance._processed_cache_dir / shard_dir_name
 
             if (shard_dir / "_metadata.json").exists():
                 meta = validate_sharded_cache(shard_dir, features)
-            else:
-                generator = instance._generate_examples(**sg.gen_kwargs)
-                has_images = any(isinstance(f, Image) for f in features.values())
-                compression = None if has_images else "zstd"
-                meta = write_sharded_arrow_cache(
-                    generator, features, shard_dir, compression=compression, num_encode_workers=4
+                backend = ArrowBackend(
+                    shard_paths=meta.shard_paths,
+                    shard_row_counts=meta.shard_row_counts,
+                    schema=features.to_arrow_schema(),
                 )
+                splits_data[split_name] = StableDataset(
+                    features=features,
+                    info=instance._dataset_info,
+                    backend=backend,
+                    num_rows=meta.num_rows,
+                )
+            else:
+                all_cached = False
+                break
 
-            splits_data[sg.name] = StableDataset(
-                features=features,
-                info=instance._dataset_info,
-                shard_dir=shard_dir,
-                shard_paths=meta.shard_paths,
-                shard_row_counts=meta.shard_row_counts,
-                num_rows=meta.num_rows,
-            )
+        # 5) Cache miss: download raw files and generate Arrow caches.
+        if not all_cached:
+            splits_data = {}
+            split_generators = instance._split_generators()
+
+            for sg in split_generators:
+                shard_dir_name = cache_fingerprint(
+                    cls.__name__,
+                    str(cls.VERSION),
+                    instance.config.name,
+                    sg.name,
+                )
+                shard_dir = instance._processed_cache_dir / shard_dir_name
+
+                if (shard_dir / "_metadata.json").exists():
+                    meta = validate_sharded_cache(shard_dir, features)
+                else:
+                    generator = instance._generate_examples(**sg.gen_kwargs)
+                    has_images = any(isinstance(f, Image) for f in features.values())
+                    compression = None if has_images else "zstd"
+                    meta = write_sharded_arrow_cache(
+                        generator, features, shard_dir, compression=compression, num_encode_workers=4
+                    )
+
+                backend = ArrowBackend(
+                    shard_paths=meta.shard_paths,
+                    shard_row_counts=meta.shard_row_counts,
+                    schema=features.to_arrow_schema(),
+                )
+                splits_data[sg.name] = StableDataset(
+                    features=features,
+                    info=instance._dataset_info,
+                    backend=backend,
+                    num_rows=meta.num_rows,
+                )
 
         # 6) Return single split or dict
         if split is not None:
@@ -542,9 +585,10 @@ def download(
             return dest
 
         except Exception as e:
-            # Clean up temp file on failure (but keep it for resume if it's
-            # a connection error — only delete on checksum/validation failure)
-            if not isinstance(e, ValueError):
+            # Keep .tmp for resumable errors (network, timeout, incomplete).
+            # Only delete on checksum/validation failure (ValueError) where
+            # the data is known to be corrupt and cannot be resumed.
+            if isinstance(e, ValueError):
                 try:
                     if tmp.exists():
                         tmp.unlink()

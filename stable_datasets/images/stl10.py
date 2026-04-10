@@ -31,7 +31,7 @@ class STL10(BaseDatasetBuilder):
             description="STL-10 dataset for unsupervised feature learning. Includes labeled and unlabeled images.",
             features=Features(
                 {
-                    "image": Image(),
+                    "image": Image(encode_format="JPEG"),
                     "label": ClassLabel(
                         names=["airplane", "bird", "car", "cat", "deer", "dog", "horse", "monkey", "ship", "truck"]
                     ),

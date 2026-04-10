@@ -66,8 +66,8 @@ class StableIterableDataset(_IterableBase):
     def __iter__(self):
         ds = self._dataset
 
-        # Non-shard-backed fallback
-        if not ds._is_shard_backed:
+        # Non-file-backed fallback
+        if not ds._backend.is_file_backed:
             for i in range(len(ds)):
                 row = ds[i]
                 if self._transform:
@@ -83,13 +83,21 @@ class StableIterableDataset(_IterableBase):
         except ImportError:
             worker_info = None
 
-        all_shards = list(range(len(ds._shard_paths)))
+        all_shards = list(range(ds._backend.num_shards))
+        num_workers = worker_info.num_workers if worker_info is not None else 1
         if worker_info is not None:
-            my_shards = all_shards[worker_info.id :: worker_info.num_workers]
+            my_shards = all_shards[worker_info.id :: num_workers]
             worker_id = worker_info.id
         else:
             my_shards = all_shards
             worker_id = 0
+
+        # When fewer shards than workers, fall back to row-level partitioning
+        # so all workers contribute. Each worker mmaps the same file (shared
+        # pages via OS page cache) but yields only its interleaved rows.
+        partition_rows = len(all_shards) < num_workers
+        if partition_rows:
+            my_shards = all_shards  # every worker reads the same shard(s)
 
         effective_seed = self._seed + self._epoch * 1000 + worker_id
         rng = np.random.default_rng(effective_seed) if self._shuffle else None
@@ -100,12 +108,23 @@ class StableIterableDataset(_IterableBase):
         formatter = ds._formatter
 
         def _row_gen():
-            for batch in ds._backend.iter_batches(shard_indices=my_shards):
-                batch_dict = batch.to_pydict()
-                n = batch.num_rows
-                for i in range(n):
-                    row = {k: v[i] for k, v in batch_dict.items()}
-                    yield formatter.format_row(row)
+            if partition_rows:
+                # Row-level partitioning: must check each row index
+                row_idx = 0
+                for batch in ds._backend.iter_batches(shard_indices=my_shards):
+                    batch_dict = batch.to_pydict()
+                    n = batch.num_rows
+                    for i in range(n):
+                        if row_idx % num_workers != worker_id:
+                            row_idx += 1
+                            continue
+                        row = {k: v[i] for k, v in batch_dict.items()}
+                        yield formatter.format_row(row)
+                        row_idx += 1
+            else:
+                # Shard-partitioned: use batch formatting for less overhead
+                for batch in ds._backend.iter_batches(shard_indices=my_shards):
+                    yield from formatter.format_batch(batch)
 
         if self._shuffle and self._buffer_size > 0:
             yield from self._buffered_shuffle(_row_gen(), rng)

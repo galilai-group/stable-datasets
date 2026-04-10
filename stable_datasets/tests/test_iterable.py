@@ -28,7 +28,6 @@ def _make_ds(tmp_path, n=20, shard_size_bytes=512, batch_size=5):
     return StableDataset(
         features=features,
         info=info,
-        shard_dir=cache_dir,
         shard_paths=meta.shard_paths,
         shard_row_counts=meta.shard_row_counts,
         num_rows=meta.num_rows,

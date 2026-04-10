@@ -31,12 +31,11 @@ def _make_sharded_cache(tmp_path, name="cache", n=10):
 
 
 def _make_ds(tmp_path, **kw):
-    """Shorthand: create a sharded cache and return a shard-backed StableDataset."""
+    """Shorthand: create a sharded cache and return a file-backed StableDataset."""
     meta, features, info = _make_sharded_cache(tmp_path, **kw)
     return StableDataset(
         features=features,
         info=info,
-        shard_dir=meta.cache_dir,
         shard_paths=meta.shard_paths,
         shard_row_counts=meta.shard_row_counts,
         num_rows=meta.num_rows,
@@ -64,9 +63,9 @@ class _TinyBuilder(BaseDatasetBuilder):
 class TestLazyMmap:
     def test_init_and_len_do_not_load_table(self, tmp_path):
         ds = _make_ds(tmp_path)
-        assert ds._table is None
+        assert ds._backend._table is None
         assert len(ds) == 10
-        assert ds._table is None
+        assert ds._backend._table is None
 
     def test_getitem_returns_correct_values(self, tmp_path):
         ds = _make_ds(tmp_path, n=5)
@@ -100,9 +99,9 @@ class TestPickle:
     def test_unpickled_dataset_is_lazy_and_reads_correctly(self, tmp_path):
         ds = _make_ds(tmp_path, n=5)
         ds2 = pickle.loads(pickle.dumps(ds))
-        assert ds2._table is None
+        assert ds2._backend._table is None
         assert len(ds2) == 5
-        assert ds2._table is None  # len uses cached num_rows
+        assert ds2._backend._table is None  # len uses cached num_rows
         for i in range(5):
             assert ds2[i]["x"] == i
 
@@ -130,7 +129,7 @@ class TestSliceAndSplit:
         sub = ds[2:5]
         assert isinstance(sub, StableDataset)
         assert sub._indices is not None
-        assert sub._table is None  # no materialization
+        assert sub._backend._table is None  # no materialization
         assert len(sub) == 3
         assert sub[0]["x"] == 2
 
@@ -168,8 +167,8 @@ class TestBuilderIntegration:
     def test_builder_produces_shard_backed_dataset(self, tmp_path):
         ds = _TinyBuilder(split="train", processed_cache_dir=str(tmp_path))
         assert isinstance(ds, StableDataset)
-        assert ds._is_shard_backed
-        assert ds._table is None
+        assert ds._backend.is_file_backed
+        assert ds._backend._table is None
         assert len(ds) == 5
         assert len(pickle.dumps(ds)) < 4096
 
@@ -209,8 +208,8 @@ class TestSelect:
         ds = _make_ds(tmp_path, n=10)
         splits = ds.train_test_split(test_size=0.3, seed=42)
         # Both splits should be indexed views, not materialized tables
-        assert splits["train"]._table is None
-        assert splits["test"]._table is None
+        assert splits["train"]._backend._table is None
+        assert splits["test"]._backend._table is None
         assert splits["train"]._indices is not None
         assert splits["test"]._indices is not None
         assert len(splits["train"]) + len(splits["test"]) == 10
@@ -244,7 +243,7 @@ class TestSelect:
         ds = _make_ds(tmp_path, n=10)
         sub = ds[2:5]
         assert sub._indices is not None
-        assert sub._table is None
+        assert sub._backend._table is None
         assert len(sub) == 3
         assert sub[0]["x"] == 2
 
@@ -274,7 +273,6 @@ def _make_image_cache(tmp_path, name="img_cache", n=5):
     return StableDataset(
         features=features,
         info=info,
-        shard_dir=meta.cache_dir,
         shard_paths=meta.shard_paths,
         shard_row_counts=meta.shard_row_counts,
         num_rows=meta.num_rows,
@@ -326,3 +324,198 @@ class TestFormatAndTransform:
         assert isinstance(row["image"], torch.Tensor)
         assert row["image"].shape == (3, 4, 4)  # CHW
         assert isinstance(row["label"], torch.Tensor)
+
+
+# ── Column mutations ────────────────────────────────────────────────────────
+
+
+class TestColumnMutations:
+    def test_remove_columns(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        ds2 = ds.remove_columns("label")
+        assert ds2.column_names == ["x"]
+        assert "label" not in ds2[0]
+
+    def test_remove_columns_list(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        ds2 = ds.remove_columns(["label"])
+        assert ds2.column_names == ["x"]
+
+    def test_rename_column(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        ds2 = ds.rename_column("label", "target")
+        assert ds2.column_names == ["x", "target"]
+        assert "target" in ds2[0]
+
+    def test_rename_columns(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        ds2 = ds.rename_columns({"x": "value", "label": "target"})
+        assert ds2.column_names == ["value", "target"]
+
+    def test_add_column(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        ds2 = ds.add_column("idx", list(range(5)))
+        assert "idx" in ds2.column_names
+        assert ds2[0]["idx"] == 0
+        assert ds2[4]["idx"] == 4
+
+    def test_mutations_dont_modify_original(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        ds.remove_columns("label")
+        assert ds.column_names == ["x", "label"]
+
+    def test_add_column_on_indexed_view(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        sub = ds.select([0, 2, 4])  # indexed view with 3 rows
+        ds2 = sub.add_column("idx", [10, 20, 30])
+        assert len(ds2) == 3
+        assert ds2[0]["idx"] == 10
+        assert ds2[2]["idx"] == 30
+
+    def test_add_column_on_train_test_split(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        splits = ds.train_test_split(test_size=0.3, seed=42)
+        train = splits["train"]
+        # This is the exact pattern that failed in supervised.py
+        train2 = train.add_column("sample_idx", list(range(len(train))))
+        assert len(train2) == len(train)
+        assert train2[0]["sample_idx"] == 0
+
+
+# ── Map and batched filter ──────────────────────────────────────────────────
+
+
+class TestMapAndFilter:
+    def test_map_row(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        mapped = ds.map(lambda row: {"x": row["x"] * 2, "label": row["label"]})
+        assert len(mapped) == 10
+        assert mapped[0]["x"] == 0
+        assert mapped[3]["x"] == 6
+
+    def test_map_batched(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        mapped = ds.map(
+            lambda batch: {"x": [v + 10 for v in batch["x"]], "label": batch["label"]},
+            batched=True,
+            batch_size=4,
+        )
+        assert len(mapped) == 10
+        assert mapped[0]["x"] == 10
+        assert mapped[9]["x"] == 19
+
+    def test_map_with_indices(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        mapped = ds.map(
+            lambda row, idx: {"x": row["x"], "label": row["label"], "idx": idx},
+            with_indices=True,
+        )
+        assert mapped[0]["idx"] == 0
+        assert mapped[4]["idx"] == 4
+
+    def test_map_remove_columns(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        mapped = ds.map(
+            lambda row: {"x": row["x"] * 2, "label": row["label"]},
+            remove_columns=["label"],
+        )
+        assert "label" not in mapped.column_names
+        assert mapped[0]["x"] == 0
+
+    def test_filter_batched(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        evens = ds.filter(
+            lambda batch: [v % 2 == 0 for v in batch["x"]],
+            batched=True,
+        )
+        assert len(evens) == 5
+        assert all(evens[i]["x"] % 2 == 0 for i in range(len(evens)))
+
+    def test_filter_batched_matches_row_filter(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        row_result = ds.filter(lambda row: row["x"] > 5)
+        batch_result = ds.filter(
+            lambda batch: [v > 5 for v in batch["x"]],
+            batched=True,
+            batch_size=3,
+        )
+        assert len(row_result) == len(batch_result)
+        for i in range(len(row_result)):
+            assert row_result[i]["x"] == batch_result[i]["x"]
+
+    def test_map_returns_file_backed(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        mapped = ds.map(lambda row: {"x": row["x"] * 2, "label": row["label"]})
+        assert mapped._backend.is_file_backed
+
+    def test_map_explicit_cache_dir(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        out_dir = tmp_path / "map_output"
+        mapped = ds.map(
+            lambda row: {"x": row["x"], "label": row["label"]},
+            cache_dir=out_dir,
+        )
+        assert (out_dir / "_metadata.json").exists()
+        assert len(mapped) == 5
+
+    def test_map_on_indexed_view(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        sub = ds.select([3, 1, 4])
+        mapped = sub.map(lambda row: {"x": row["x"] + 100, "label": row["label"]})
+        assert len(mapped) == 3
+        assert mapped[0]["x"] == 103
+        assert mapped[1]["x"] == 101
+        assert mapped[2]["x"] == 104
+
+    def test_map_batched_on_indexed_view(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        sub = ds.select([0, 2, 4, 6, 8])
+        mapped = sub.map(
+            lambda b: {"x": [v * 3 for v in b["x"]], "label": b["label"]},
+            batched=True,
+            batch_size=2,
+        )
+        assert len(mapped) == 5
+        assert mapped[0]["x"] == 0
+        assert mapped[2]["x"] == 12  # 4 * 3
+
+
+# ── Feature inference ───────────────────────────────────────────────────────
+
+
+class TestFeatureInference:
+    def test_add_column_infers_int(self, tmp_path):
+        ds = _make_ds(tmp_path, n=5)
+        ds2 = ds.add_column("idx", list(range(5)))
+        from stable_datasets.schema import Value
+        assert isinstance(ds2.features["idx"], Value)
+
+    def test_add_column_list_infers_sequence(self, tmp_path):
+        import pyarrow as pa
+        ds = _make_ds(tmp_path, n=3)
+        col = pa.array([[1, 2], [3, 4], [5, 6]])
+        ds2 = ds.add_column("emb", col)
+        from stable_datasets.schema import Sequence
+        assert isinstance(ds2.features["emb"], Sequence)
+
+    def test_infer_fails_on_struct(self):
+        import pyarrow as pa
+        from stable_datasets.arrow_dataset import _infer_feature
+        with pytest.raises(TypeError, match="Cannot infer"):
+            _infer_feature(pa.struct([pa.field("a", pa.int32())]))
+
+
+# ── Single file default ────────────────────────────────────────────────────
+
+
+class TestSingleFileDefault:
+    def test_new_cache_produces_single_shard(self, tmp_path):
+        ds = _make_ds(tmp_path, n=100)
+        assert ds._backend.num_shards == 1
+
+    def test_single_shard_getitem_does_not_materialize(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        assert ds._backend._table is None
+        ds[0]
+        # Single shard uses _get_shard_table, not .table
+        assert ds._backend._table is None

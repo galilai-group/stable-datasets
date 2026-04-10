@@ -4,6 +4,12 @@
 Runs each backend in a subprocess to get clean memory/timing measurements.
 Outputs terminal tables + LaTeX tables to profile_tables.tex (or --latex-output).
 
+NOTE on "prep time": This measures the time from import to having an iterable
+dataset, assuming raw data is already downloaded. It does NOT include download
+time. For HF this means parquet-to-Arrow conversion; for stable-datasets this
+means tar extraction + image encoding + Arrow shard writing. Download time is
+excluded because it depends on network conditions, not the library.
+
 Usage:
     python profile.py                          # all datasets, 5 runs
     python profile.py --datasets CIFAR10 Beans # specific datasets
@@ -23,7 +29,7 @@ IMAGENET_ROOT = os.environ.get("IMAGENET_ROOT", "/data/imagenet")
 
 # Datasets whose caches should be cleaned between backend runs to avoid
 # hitting quota.  ImageNet alone is ~150 GB per backend.
-LARGE_DATASETS = {"ImageNet-1K"}
+LARGE_DATASETS = set()  # disabled — scratch quota is sufficient
 
 # Dataset registry.  Each entry maps backend -> config.
 #   stable: (module_path, class_name) or None
@@ -194,7 +200,7 @@ def run_one(backend, cfg, args):
         tv_root = args.imagenet_root if tv_cfg[1] == "imagenet_dir" else os.path.join(args.cache_dir, "torchvision")
         cmd.extend([tv_root, tv_cfg[1]])
 
-    timeout = 7200 if "imagenet" in cls_name.lower() else 600
+    timeout = 36000 if "imagenet" in cls_name.lower() else 600
 
     # Set cache dirs so downloads land on scratch, not home
     env = os.environ.copy()
@@ -425,6 +431,10 @@ def main():
         "--latex-output", default="profile_tables.tex",
         help="LaTeX output path (default: profile_tables.tex)",
     )
+    parser.add_argument(
+        "--backends", nargs="+", default=None,
+        help=f"Backends to benchmark (default: all). Choices: {', '.join(BACKENDS)}",
+    )
     args = parser.parse_args()
 
     ds_names = args.datasets if args.datasets else list(DATASETS.keys())
@@ -449,7 +459,8 @@ def main():
         print(f"  {ds_name}")
         print(f"{'=' * 60}")
 
-        for backend in BACKENDS:
+        backends = args.backends if args.backends else BACKENDS
+        for backend in backends:
             label = BACKEND_LABELS[backend]
 
             if cfg.get(backend) is None and backend != "stable":

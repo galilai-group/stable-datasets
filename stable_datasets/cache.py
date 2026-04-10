@@ -29,14 +29,15 @@ from .schema import Array3D, ClassLabel, Features, Image, Sequence, Video
 # Encoding helpers
 
 
-def _encode_image(img) -> bytes | None:
+def _encode_image(img, encode_format: str = "PNG") -> bytes | None:
     """Encode an image to bytes, preserving the original format when possible.
 
     - Raw ``bytes`` pass through unchanged.
     - File paths are read as-is (JPEG stays JPEG, PNG stays PNG).
-    - PIL Images opened from a file retain their ``.format``; we re-encode in
-      the same format.  Programmatically-created images default to PNG.
-    - NumPy arrays are converted via PIL and saved as PNG.
+    - PIL Images opened from a file: read original bytes directly if the
+      source file still exists (skip decode + re-encode entirely).
+      Otherwise re-encode, preserving the source format.
+    - NumPy arrays are encoded using *encode_format* (``"PNG"`` or ``"JPEG"``).
     """
     if img is None:
         return None
@@ -46,9 +47,14 @@ def _encode_image(img) -> bytes | None:
         with open(img, "rb") as f:
             return f.read()
     if isinstance(img, PILImage.Image):
+        # Fast path: if the image came from a file and hasn't been modified,
+        # read the original bytes directly — skip decode + re-encode entirely.
+        src = getattr(img, "filename", None)
+        if src and Path(src).is_file():
+            with open(src, "rb") as f:
+                return f.read()
+        # Fallback: re-encode
         buf = io.BytesIO()
-        # Preserve source format when available (e.g. JPEG from Image.open).
-        # Fall back to PNG for images with alpha or no known source format.
         fmt = getattr(img, "format", None)
         if fmt is None or img.mode in ("RGBA", "LA", "PA", "P"):
             fmt = "PNG"
@@ -57,7 +63,7 @@ def _encode_image(img) -> bytes | None:
     if isinstance(img, np.ndarray):
         pil_img = PILImage.fromarray(img)
         buf = io.BytesIO()
-        pil_img.save(buf, format="PNG")
+        pil_img.save(buf, format=encode_format)
         return buf.getvalue()
     raise TypeError(f"Cannot encode image of type {type(img)}")
 
@@ -76,7 +82,7 @@ def encode_example(example: dict, features: Features) -> dict:
     for key, value in example.items():
         feat = features.get(key)
         if isinstance(feat, Image):
-            encoded[key] = _encode_image(value)
+            encoded[key] = _encode_image(value, encode_format=feat.encode_format)
         elif isinstance(feat, Array3D):
             encoded[key] = _encode_array3d(value, feat)
         elif isinstance(feat, ClassLabel):
@@ -118,8 +124,9 @@ _CACHE_FORMAT_VERSION = 1
 _SHARD_NAME_FMT = "shard-{:05d}.arrow"
 _METADATA_FILE = "_metadata.json"
 
-# Default shard target: 256 MiB
-DEFAULT_SHARD_SIZE_BYTES = 256 * 1024 * 1024
+# Default: single file per split (matches HuggingFace Datasets).
+# Override with shard_size_bytes= for multi-shard writes.
+DEFAULT_SHARD_SIZE_BYTES = float("inf")
 
 
 def _encode_gen(generator, features, batch_size, num_workers):
@@ -162,6 +169,7 @@ def write_sharded_arrow_cache(
     compression: str | None = None,
     num_encode_workers: int = 0,
     single_file: bool = False,
+    lineage: dict | None = None,
 ) -> ShardedCacheMeta:
     """Consume a generator and write to a directory of Arrow IPC shards.
 
@@ -305,10 +313,12 @@ def write_sharded_arrow_cache(
                 "num_shards": len(shard_filenames),
                 "shard_row_counts": shard_row_counts,
                 "shard_filenames": shard_filenames,
-                "shard_size_target_bytes": shard_size_bytes,
+                "shard_size_target_bytes": None if shard_size_bytes == float("inf") else shard_size_bytes,
             }
             if compression:
                 meta["compression"] = compression
+            if lineage:
+                meta["lineage"] = lineage
             (tmp_dir / _METADATA_FILE).write_text(json.dumps(meta, indent=2))
 
             # Atomic publish: rename temp dir -> final cache dir

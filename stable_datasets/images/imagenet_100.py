@@ -31,7 +31,7 @@ class ImageNet100(_ImageNetArchiveMixin, BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="ImageNet-100 subset generated from ImageNet-1K class archives.",
-            features=Features({"image": Image(), "label": ClassLabel(names=_default_class_names(100))}),
+            features=Features({"image": Image(encode_format="JPEG"), "label": ClassLabel(names=_default_class_names(100))}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

@@ -51,7 +51,7 @@ class Flowers102(BaseDatasetBuilder):
             description="Flowers102 dataset with 102 classes.",
             features=Features(
                 {
-                    "image": ImageFeature(),
+                    "image": ImageFeature(encode_format="JPEG"),
                     "label": ClassLabel(names=self._labels()),
                 }
             ),

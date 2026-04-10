@@ -6,11 +6,12 @@ with ``__len__``, ``__getitem__``, ``__getitems__``, ``__iter__``,
 
 Architecture: three layers with strict boundaries::
 
-    ArrowBackend   -> only touches Arrow, returns Arrow-native or minimal Python dicts
+    ArrowBackend   -> owns storage (mmap, shards, pickle), returns Arrow types
         |
     Formatter      -> converts Arrow output to user-requested format (PIL/torch/numpy/raw)
         |
     StableDataset  -> orchestrates backend + formatter + indices + transform
+                      knows nothing about files, shards, or mmap
 """
 
 from __future__ import annotations
@@ -37,23 +38,17 @@ from .schema import (
 
 
 class StableDataset:
-    """A single-split dataset backed by a directory of Arrow IPC shards.
+    """A single-split dataset backed by Arrow.
 
-    Three construction modes:
+    Users interact with rows, columns, and transforms — never with files or
+    shards.  All storage details are delegated to ``ArrowBackend``.
 
-    1. **Shard-backed** — ``StableDataset(features, info, shard_dir=...,
-       shard_paths=[...], shard_row_counts=[...])``.
-       Only the needed shard is memory-mapped; ``__iter__`` streams one shard
-       at a time.
+    Construction:
 
-    2. **In-memory** — ``StableDataset(features, info, table=table)``.
-       For small derived subsets (slices, splits).  Pickle serialises the full
-       table.
-
-    3. **Indexed view** — ``StableDataset(..., _indices=array)``.
-       A virtual view into a shard-backed or in-memory dataset.  All derived
-       datasets (shuffled, filtered, split) create an indices array sharing
-       the same underlying data.  Zero data copying.
+    1. **File-backed** (typical) — pass ``backend=ArrowBackend(shard_paths=...)``.
+    2. **In-memory** — pass ``backend=ArrowBackend(table=table)``.
+    3. **Indexed view** — pass ``_indices=array`` to create a virtual view
+       sharing the same backend.  Zero data copying.
     """
 
     def __init__(
@@ -61,44 +56,35 @@ class StableDataset:
         features: Features,
         info: DatasetInfo,
         *,
+        # Storage — pass exactly one of: backend, shard_paths, table
         backend: ArrowBackend | None = None,
-        table: pa.Table | None = None,
-        num_rows: int | None = None,
-        # Shard-backed construction
-        shard_dir: Path | str | None = None,
         shard_paths: list[Path] | None = None,
         shard_row_counts: list[int] | None = None,
+        table: pa.Table | None = None,
+        num_rows: int | None = None,
         # Index indirection
         _indices: np.ndarray | None = None,
         # Format control
         _format_type: str | None = None,
         _decode_images: bool = True,
         _transform: Callable | None = None,
-        # Legacy compat (ignored)
-        max_open_shards: int = 4,
     ):
         self._features = features
         self._info = info
 
-        # Shard metadata (kept for streaming path / pickle)
-        self._shard_dir = Path(shard_dir) if shard_dir is not None else None
-        self._shard_paths = [Path(p) for p in shard_paths] if shard_paths is not None else None
-        self._shard_row_counts = list(shard_row_counts) if shard_row_counts is not None else None
-
-        # Build or accept backend
-        arrow_schema = features.to_arrow_schema()
+        # Build backend from convenience args if not provided directly
         if backend is not None:
             self._backend = backend
         elif shard_paths is not None:
             self._backend = ArrowBackend(
                 shard_paths=shard_paths,
                 shard_row_counts=shard_row_counts,
-                schema=arrow_schema,
+                schema=features.to_arrow_schema(),
             )
         elif table is not None:
-            self._backend = ArrowBackend(table=table, schema=arrow_schema)
+            self._backend = ArrowBackend(table=table, schema=features.to_arrow_schema())
         else:
-            self._backend = ArrowBackend(shard_paths=[], shard_row_counts=[], schema=arrow_schema)
+            raise ValueError("Must provide one of: backend, shard_paths, table")
 
         # Index indirection
         self._indices = np.asarray(_indices, dtype=np.int64) if _indices is not None else None
@@ -110,79 +96,38 @@ class StableDataset:
         self._formatter = get_formatter(_format_type, features, decode_images=_decode_images)
 
         # Precompute whether we have binary columns (Image/Array3D/Video).
-        # When present, __getitems__ avoids batched take() because Arrow
-        # physically copies variable-length binary data into new buffers,
-        # whereas per-row slice() is zero-copy.
         self._has_binary_cols = any(
             isinstance(f, (Image, Array3D, Video)) for f in features.values()
         )
 
-        # Cache row count so __len__ never triggers a full file read.
+        # Cache row count
         if self._indices is not None:
             self._num_rows = len(self._indices)
         elif num_rows is not None:
             self._num_rows = num_rows
-        elif table is not None:
-            self._num_rows = table.num_rows
-        elif self._shard_row_counts is not None:
-            self._num_rows = sum(self._shard_row_counts)
         else:
-            self._num_rows = None
-
-    # -- Compatibility shims --------------------------------------------------
-
-    @property
-    def _table(self):
-        """Expose backend's table reference for test compatibility."""
-        return self._backend._table
-
-    @property
-    def _is_shard_backed(self) -> bool:
-        return self._shard_paths is not None
-
-    # -- Lazy table access ----------------------------------------------------
-
-    @property
-    def table(self) -> pa.Table:
-        """Return the underlying Arrow table, memory-mapping from disk if needed.
-
-        For shard-backed datasets this concatenates all shards — prefer
-        ``__getitem__`` or ``__iter__`` for large datasets.
-        """
-        tbl = self._backend.table
-        if self._num_rows is None:
-            self._num_rows = tbl.num_rows
-        return tbl
+            self._num_rows = self._backend.num_rows
 
     # -- Pickle / DataLoader compatibility ------------------------------------
 
     def __getstate__(self):
-        state = {
+        return {
             "features": self._features,
             "info": self._info,
+            "backend": self._backend,
             "num_rows": self._num_rows,
-            "shard_dir": self._shard_dir,
-            "shard_paths": self._shard_paths,
-            "shard_row_counts": self._shard_row_counts,
             "_indices": self._indices,
             "_format_type": self._format_type,
             "_decode_images": self._decode_images,
             "_transform": self._transform,
         }
-        # Only include the table for in-memory datasets (no shard backing).
-        if self._shard_paths is None:
-            state["table"] = self._backend._table
-        return state
 
     def __setstate__(self, state):
         self.__init__(
             features=state["features"],
             info=state["info"],
+            backend=state["backend"],
             num_rows=state["num_rows"],
-            table=state.get("table"),
-            shard_dir=state.get("shard_dir"),
-            shard_paths=state.get("shard_paths"),
-            shard_row_counts=state.get("shard_row_counts"),
             _indices=state.get("_indices"),
             _format_type=state.get("_format_type"),
             _decode_images=state.get("_decode_images", True),
@@ -201,13 +146,22 @@ class StableDataset:
 
     @property
     def column_names(self) -> list[str]:
-        """Return the list of column names."""
         return list(self._features.keys())
 
     @property
     def num_rows(self) -> int:
-        """Return the number of rows."""
         return len(self)
+
+    @property
+    def table(self) -> pa.Table:
+        """Materialize and return the full Arrow table.
+
+        For single-file datasets this is a cheap mmap. For multi-file
+        datasets this concatenates all files — prefer ``__getitem__``
+        or ``__iter__`` for row access. Use this for bulk operations
+        like ``to_tensordict()`` or column mutations.
+        """
+        return self._backend.table
 
     def __len__(self) -> int:
         if self._num_rows is not None:
@@ -233,27 +187,17 @@ class StableDataset:
             indices = np.arange(*idx.indices(len(self)), dtype=np.int64)
             if self._indices is not None:
                 indices = self._indices[indices]
-            if self._is_shard_backed or self._indices is not None:
-                return self._view_with_indices(indices)
-            # In-memory without indices: materialize the slice
-            sub = self._backend.take(indices.tolist())
-            return StableDataset(
-                features=self._features,
-                info=self._info,
-                table=sub,
-                _format_type=self._format_type,
-                _decode_images=self._decode_images,
-                _transform=self._transform,
-            )
+            return self._view_with_indices(indices)
         raise TypeError(f"Unsupported index type: {type(idx)}")
 
     def __getitems__(self, indices: list[int]) -> list[dict]:
-        """Batched sample loading. Called by PyTorch DataLoader automatically.
+        """Batched sample loading (called by PyTorch DataLoader).
 
-        For datasets with binary columns (Image, Array3D, Video), uses
-        per-row ``slice()`` which is zero-copy from mmap.  For purely
-        numeric/scalar datasets, uses batched ``take()`` to reduce Python
-        call overhead.
+        Policy (benchmarked on CIFAR-10 and 10k-row scalar datasets):
+        - Binary columns (Image/Array3D/Video): per-row slice() is ~2x
+          faster because take() copies variable-length binary data.
+        - Scalar-only columns: batched take() is ~10x faster because it
+          avoids per-row Python call overhead.
         """
         if self._has_binary_cols:
             return [self[i] for i in indices]
@@ -271,70 +215,92 @@ class StableDataset:
         return rows
 
     def __iter__(self):
-        """Iterate over all rows, yielding decoded dicts.
-
-        For shard-backed datasets without indices, reads one shard at a time
-        so peak memory is bounded to ~1 shard.
-        """
-        if self._is_shard_backed and self._indices is None:
-            for batch in self._backend.iter_batches():
-                batch_dict = batch.to_pydict()
-                n = batch.num_rows
-                for i in range(n):
-                    row = {k: v[i] for k, v in batch_dict.items()}
-                    row = self._formatter.format_row(row)
-                    if self._transform is not None:
-                        row = self._transform(row)
-                    yield row
+        """Iterate over all rows, yielding decoded dicts."""
+        if self._backend.is_file_backed and self._indices is None:
+            yield from self._iter_batches_formatted(self._backend.iter_batches())
         else:
             for i in range(len(self)):
                 yield self[i]
 
     def iter_epoch(self, *, shuffle_shards: bool = True, seed: int | None = None):
-        """Iterate over all rows with optional shard-level shuffling.
-
-        For indexed shard-backed datasets, groups rows by shard for I/O
-        locality. For non-sharded datasets, this is equivalent to
-        ``__iter__``.
-        """
+        """Iterate with optional shard-level shuffling."""
         if self._indices is not None:
-            # Indexed: iterate in virtual order via __getitem__
             for i in range(len(self)):
                 yield self[i]
-        elif self._is_shard_backed:
-            for batch in self._backend.iter_batches(shuffle=shuffle_shards, seed=seed):
-                batch_dict = batch.to_pydict()
-                n = batch.num_rows
-                for i in range(n):
-                    row = {k: v[i] for k, v in batch_dict.items()}
-                    row = self._formatter.format_row(row)
-                    if self._transform is not None:
-                        row = self._transform(row)
-                    yield row
+        elif self._backend.is_file_backed:
+            yield from self._iter_batches_formatted(
+                self._backend.iter_batches(shuffle=shuffle_shards, seed=seed)
+            )
         else:
             yield from self
+
+    def _iter_batches_formatted(self, batch_iter):
+        """Format Arrow batches in bulk and yield individual rows."""
+        for batch in batch_iter:
+            # Use batch formatting: one to_pydict() + column-wise decode
+            rows = self._formatter.format_batch(batch)
+            if self._transform is not None:
+                for row in rows:
+                    yield self._transform(row)
+            else:
+                yield from rows
 
     # -- Selection / shuffling / filtering ------------------------------------
 
     def select(self, indices) -> StableDataset:
-        """Return a view containing only the specified row indices.
-
-        For shard-backed datasets, creates a zero-copy indexed view.
-        Composes with existing ``_indices`` if present.
-        """
+        """Return a view containing only the specified row indices."""
         indices = np.asarray(indices, dtype=np.int64)
         if self._indices is not None:
             indices = self._indices[indices]
         return self._view_with_indices(indices)
 
     def shuffle(self, seed: int = 42) -> StableDataset:
-        """Return a shuffled view of this dataset."""
+        """Return a shuffled view."""
         perm = np.random.default_rng(seed).permutation(len(self))
         return self.select(perm)
 
-    def filter(self, fn: Callable[[dict], bool]) -> StableDataset:
-        """Return a view containing rows where ``fn(row)`` is True."""
-        matching = [i for i in range(len(self)) if fn(self[i])]
+    def filter(
+        self,
+        fn: Callable,
+        *,
+        batched: bool = False,
+        batch_size: int = 1000,
+    ) -> StableDataset:
+        """Return a view containing rows where ``fn`` returns True.
+
+        Non-batched (default): ``fn(row_dict) -> bool``, applied per row.
+        Batched: ``fn(dict_of_lists) -> list[bool]``, applied per batch
+        using sequential scan for better performance on large datasets.
+
+        Returns an indexed view — no data is materialized.
+        """
+        if not batched:
+            matching = [i for i in range(len(self)) if fn(self[i])]
+        elif self._backend.is_file_backed and self._indices is None:
+            # Sequential scan via iter_batches — avoids take() overhead
+            matching = []
+            row_offset = 0
+            for batch in self._backend.iter_batches():
+                batch_dict = batch.to_pydict()
+                mask = fn(batch_dict)
+                for i, keep in enumerate(mask):
+                    if keep:
+                        matching.append(row_offset + i)
+                row_offset += batch.num_rows
+        else:
+            # Indexed or in-memory: gather batches via take()
+            matching = []
+            for start in range(0, len(self), batch_size):
+                end = min(start + batch_size, len(self))
+                idx_array = np.arange(start, end, dtype=np.int64)
+                if self._indices is not None:
+                    idx_array = self._indices[idx_array]
+                batch_table = self._backend.take(idx_array)
+                batch_dict = batch_table.to_pydict()
+                mask = fn(batch_dict)
+                for i, keep in enumerate(mask):
+                    if keep:
+                        matching.append(start + i)
         return self.select(matching)
 
     def train_test_split(self, test_size: float = 0.1, seed: int = 42) -> dict[str, StableDataset]:
@@ -347,16 +313,192 @@ class StableDataset:
             "test": self.select(perm[split_idx:]),
         }
 
+    # -- Materializing transformations ----------------------------------------
+
+    def map(
+        self,
+        fn: Callable,
+        *,
+        batched: bool = False,
+        batch_size: int = 1000,
+        with_indices: bool = False,
+        remove_columns: list[str] | None = None,
+        features: Features | None = None,
+        cache_dir: Path | str | None = None,
+    ) -> StableDataset:
+        """Apply a function to every row/batch and return a new dataset.
+
+        This is a **materializing operation** — output is written
+        incrementally to Arrow IPC files via the sharded cache pipeline,
+        so memory usage stays bounded regardless of dataset size.
+        Use ``with_transform`` for lazy per-row transforms during iteration.
+
+        Non-batched: ``fn(row_dict) -> row_dict`` (or ``fn(row_dict, idx)``
+        if ``with_indices=True``).
+        Batched: ``fn(dict_of_lists) -> dict_of_lists`` (or
+        ``fn(dict_of_lists, list_of_indices)``).
+
+        Parameters
+        ----------
+        features : Features, optional
+            Output schema. If None, columns matching input features keep
+            their types; new columns are inferred from Arrow types.
+            Provide explicitly when the output schema is ambiguous.
+        cache_dir : path, optional
+            Where to write the output cache. If None, uses a temp directory.
+        """
+        from .cache import write_sharded_arrow_cache
+
+        remove_set = set(remove_columns) if remove_columns else set()
+
+        # Infer output features from a probe example if not provided
+        if features is None:
+            probe = self._backend.get_row(
+                int(self._indices[0]) if self._indices is not None else 0
+            )
+            if batched:
+                probe_batch = {k: [v] for k, v in probe.items()}
+                probe_out = fn(probe_batch, [0]) if with_indices else fn(probe_batch)
+                probe_row = {k: v[0] for k, v in probe_out.items()}
+            else:
+                probe_row = fn(probe, 0) if with_indices else fn(probe)
+
+            features = Features()
+            for col_name in probe_row:
+                if col_name in remove_set:
+                    continue
+                if col_name in self._features:
+                    features[col_name] = self._features[col_name]
+                else:
+                    # Infer from the probe value
+                    val = probe_row[col_name]
+                    if isinstance(val, int):
+                        features[col_name] = _infer_feature(pa.int64())
+                    elif isinstance(val, float):
+                        features[col_name] = _infer_feature(pa.float64())
+                    elif isinstance(val, str):
+                        features[col_name] = _infer_feature(pa.string())
+                    else:
+                        features[col_name] = _infer_feature(pa.binary())
+
+        # Build output generator that feeds write_sharded_arrow_cache
+        def _map_gen():
+            out_idx = 0
+            if not batched:
+                for i in range(len(self)):
+                    physical = int(self._indices[i]) if self._indices is not None else i
+                    row = self._backend.get_row(physical)
+                    out = fn(row, i) if with_indices else fn(row)
+                    if remove_set:
+                        out = {k: v for k, v in out.items() if k not in remove_set}
+                    yield out_idx, out
+                    out_idx += 1
+            else:
+                for start in range(0, len(self), batch_size):
+                    end = min(start + batch_size, len(self))
+                    idx_array = np.arange(start, end, dtype=np.int64)
+                    if self._indices is not None:
+                        idx_array = self._indices[idx_array]
+                    batch_table = self._backend.take(idx_array)
+                    batch_dict = batch_table.to_pydict()
+                    if with_indices:
+                        out = fn(batch_dict, list(range(start, end)))
+                    else:
+                        out = fn(batch_dict)
+                    if remove_set:
+                        out = {k: v for k, v in out.items() if k not in remove_set}
+                    # Expand batch output into individual rows
+                    n_out = len(next(iter(out.values())))
+                    for i in range(n_out):
+                        yield out_idx, {k: v[i] for k, v in out.items()}
+                        out_idx += 1
+
+        if cache_dir is None:
+            cache_dir = Path(tempfile.mkdtemp(prefix=".map_"))
+        else:
+            cache_dir = Path(cache_dir)
+
+        meta = write_sharded_arrow_cache(
+            _map_gen(), features, cache_dir, batch_size=batch_size,
+            lineage={
+                "operation": "map",
+                "batched": batched,
+                "with_indices": with_indices,
+                "remove_columns": remove_columns,
+                "source_num_rows": len(self),
+            },
+        )
+
+        return StableDataset(
+            features=features,
+            info=self._info,
+            shard_paths=meta.shard_paths,
+            shard_row_counts=meta.shard_row_counts,
+            num_rows=meta.num_rows,
+            _format_type=self._format_type,
+            _decode_images=self._decode_images,
+            _transform=self._transform,
+        )
+
+    # -- Column mutations -----------------------------------------------------
+
+    def _logical_table(self) -> pa.Table:
+        """Return the table reflecting the current logical view.
+
+        If this dataset has an indices mapping, materializes only the
+        selected rows. Column mutations must use this instead of
+        ``self.table`` to respect indexed views.
+        """
+        tbl = self.table
+        if self._indices is not None:
+            tbl = tbl.take(self._indices)
+        return tbl
+
+    def add_column(self, name: str, column) -> StableDataset:
+        """Return a new dataset with an additional column.
+
+        ``column`` can be a ``pa.Array``, a Python list, or a numpy array.
+        """
+        if not isinstance(column, pa.Array):
+            column = pa.array(column)
+        tbl = self._logical_table().append_column(name, column)
+        new_features = Features({**self._features, name: _infer_feature(column.type)})
+        return self._with_table(tbl, new_features)
+
+    def remove_columns(self, columns: list[str] | str) -> StableDataset:
+        """Return a new dataset without the specified columns."""
+        if isinstance(columns, str):
+            columns = [columns]
+        tbl = self._logical_table().drop_columns(columns)
+        new_features = Features({k: v for k, v in self._features.items() if k not in columns})
+        return self._with_table(tbl, new_features)
+
+    def rename_column(self, old_name: str, new_name: str) -> StableDataset:
+        """Return a new dataset with a column renamed."""
+        tbl = self._logical_table()
+        names = [new_name if n == old_name else n for n in tbl.column_names]
+        tbl = tbl.rename_columns(names)
+        new_features = Features(
+            {(new_name if k == old_name else k): v for k, v in self._features.items()}
+        )
+        return self._with_table(tbl, new_features)
+
+    def rename_columns(self, mapping: dict[str, str]) -> StableDataset:
+        """Return a new dataset with columns renamed per the mapping."""
+        tbl = self._logical_table()
+        names = [mapping.get(n, n) for n in tbl.column_names]
+        tbl = tbl.rename_columns(names)
+        new_features = Features(
+            {mapping.get(k, k): v for k, v in self._features.items()}
+        )
+        return self._with_table(tbl, new_features)
+
     # -- Format and transform pipeline ----------------------------------------
 
     def with_format(self, format_type: str | None) -> StableDataset:
         """Return a view with the specified output format.
 
-        Supported values:
-        - ``None`` (default): PIL Image, numpy Array3D, Python scalars
-        - ``"torch"``: Image -> CHW float tensor, scalars -> tensors
-        - ``"numpy"``: Image -> HWC numpy array
-        - ``"raw"``: Image -> bytes, Array3D -> bytes (skip PIL decode)
+        Supported: ``None`` (PIL/numpy/Python), ``"torch"``, ``"numpy"``, ``"raw"``.
         """
         return self._shallow_copy(_format_type=format_type)
 
@@ -365,11 +507,7 @@ class StableDataset:
         return self._shallow_copy(_transform=fn)
 
     def set_decode(self, decode: bool) -> StableDataset:
-        """Control whether Image columns are decoded or left as raw bytes.
-
-        When ``decode=False``, Image columns return raw bytes regardless of
-        ``format_type``. Useful for custom decode pipelines (torchvision, DALI).
-        """
+        """Control whether Image columns are decoded or left as raw bytes."""
         return self._shallow_copy(_decode_images=decode)
 
     def as_iterable(
@@ -411,20 +549,12 @@ class StableDataset:
         return TensorDict(td, batch_size=[len(self)])
 
     def flatten_indices(self, cache_dir: Path | None = None) -> StableDataset:
-        """Materialize an indexed view into a new contiguous Arrow file.
-
-        Writes the rows selected by ``_indices`` into a new Arrow IPC file in
-        physical order. Returns a new ``StableDataset`` backed by that file
-        with no indices mapping.
-
-        If ``_indices`` is None (already contiguous), returns self.
-        """
+        """Materialize an indexed view into a new contiguous Arrow file."""
         if self._indices is None:
             return self
 
         if cache_dir is None:
-            parent = self._shard_dir.parent if self._shard_dir else Path(tempfile.gettempdir())
-            cache_dir = Path(tempfile.mkdtemp(dir=parent, prefix=".flatten_"))
+            cache_dir = Path(tempfile.mkdtemp(prefix=".flatten_"))
         else:
             cache_dir = Path(cache_dir)
             cache_dir.mkdir(parents=True, exist_ok=True)
@@ -453,12 +583,15 @@ class StableDataset:
         }
         (cache_dir / "_metadata.json").write_text(json.dumps(meta, indent=2))
 
+        backend = ArrowBackend(
+            shard_paths=[out_path],
+            shard_row_counts=[materialized.num_rows],
+            schema=schema,
+        )
         return StableDataset(
             features=self._features,
             info=self._info,
-            shard_dir=cache_dir,
-            shard_paths=[out_path],
-            shard_row_counts=[materialized.num_rows],
+            backend=backend,
             num_rows=materialized.num_rows,
             _format_type=self._format_type,
             _decode_images=self._decode_images,
@@ -468,14 +601,11 @@ class StableDataset:
     # -- Internal helpers -----------------------------------------------------
 
     def _view_with_indices(self, indices: np.ndarray) -> StableDataset:
-        """Return a new StableDataset sharing the same backing data."""
+        """Return a new StableDataset sharing the same backend."""
         return StableDataset(
             features=self._features,
             info=self._info,
             backend=self._backend,
-            shard_dir=self._shard_dir,
-            shard_paths=self._shard_paths,
-            shard_row_counts=self._shard_row_counts,
             _indices=np.asarray(indices, dtype=np.int64),
             _format_type=self._format_type,
             _decode_images=self._decode_images,
@@ -488,9 +618,6 @@ class StableDataset:
             "features": self._features,
             "info": self._info,
             "backend": self._backend,
-            "shard_dir": self._shard_dir,
-            "shard_paths": self._shard_paths,
-            "shard_row_counts": self._shard_row_counts,
             "_indices": self._indices,
             "_format_type": self._format_type,
             "_decode_images": self._decode_images,
@@ -498,6 +625,65 @@ class StableDataset:
         }
         kw.update(overrides)
         return StableDataset(**kw)
+
+    def _with_table(self, table: pa.Table, features: Features | None = None) -> StableDataset:
+        """Return a new in-memory dataset from a modified table."""
+        return StableDataset(
+            features=features or self._features,
+            info=self._info,
+            backend=ArrowBackend(table=table, schema=(features or self._features).to_arrow_schema()),
+            _format_type=self._format_type,
+            _decode_images=self._decode_images,
+            _transform=self._transform,
+        )
+
+
+def _infer_feature(arrow_type: pa.DataType):
+    """Infer a Feature type from an Arrow data type.
+
+    Covers common scalar, integer, float, string, binary, boolean, and
+    list types. Raises ``TypeError`` for types that cannot be mapped
+    unambiguously — callers should provide explicit ``features=`` instead.
+    """
+    from .schema import Value
+
+    # Integer types
+    _INT_MAP = {
+        pa.int8(): "int8", pa.int16(): "int16", pa.int32(): "int32", pa.int64(): "int64",
+        pa.uint8(): "uint8", pa.uint16(): "uint16", pa.uint32(): "uint32", pa.uint64(): "uint64",
+    }
+    if arrow_type in _INT_MAP:
+        return Value(_INT_MAP[arrow_type])
+
+    # Float types
+    if pa.types.is_float16(arrow_type):
+        return Value("float16")
+    if pa.types.is_float32(arrow_type):
+        return Value("float32")
+    if pa.types.is_float64(arrow_type):
+        return Value("float64")
+
+    # Boolean
+    if pa.types.is_boolean(arrow_type):
+        return Value("bool")
+
+    # String
+    if pa.types.is_string(arrow_type) or pa.types.is_large_string(arrow_type):
+        return Value("string")
+
+    # Binary
+    if pa.types.is_binary(arrow_type) or pa.types.is_large_binary(arrow_type):
+        return Value("binary")
+
+    # List → Sequence
+    if pa.types.is_list(arrow_type) or pa.types.is_large_list(arrow_type):
+        inner = _infer_feature(arrow_type.value_type)
+        return Sequence(inner)
+
+    raise TypeError(
+        f"Cannot infer Feature type for Arrow type {arrow_type!r}. "
+        f"Provide explicit features= to map() or add_column()."
+    )
 
 
 class StableDatasetDict(dict):

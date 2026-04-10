@@ -83,7 +83,7 @@ class ImageNet1K(_ImageNetArchiveMixin, BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="ImageNet-1K training split in TAR format with optional streaming.",
-            features=Features({"image": Image(), "label": ClassLabel(names=_default_class_names(1000))}),
+            features=Features({"image": Image(encode_format="JPEG"), "label": ClassLabel(names=_default_class_names(1000))}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

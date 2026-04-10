@@ -45,7 +45,7 @@ class SVHN(BaseDatasetBuilder):
                            numbers in Google Street View images.""",
             features=Features(
                 {
-                    "image": ImageFeature(),
+                    "image": ImageFeature(encode_format="JPEG"),
                     "label": ClassLabel(names=[str(i) for i in range(10)]),
                 }
             ),

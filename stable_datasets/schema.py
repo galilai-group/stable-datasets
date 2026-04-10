@@ -109,13 +109,22 @@ class ClassLabel(FeatureType):
 
 
 class Image(FeatureType):
-    """Image feature. Stored as raw bytes (PNG-encoded) in Arrow."""
+    """Image feature. Stored as raw bytes in Arrow.
+
+    *encode_format* controls how numpy arrays are encoded at cache-write
+    time.  ``"PNG"`` (default) is lossless; ``"JPEG"`` is much faster and
+    smaller for photographic RGB content.  The format is a cache-time
+    concern — readers auto-detect from the bytes header.
+    """
+
+    def __init__(self, encode_format: str = "PNG"):
+        self.encode_format = encode_format
 
     def to_arrow_type(self) -> pa.DataType:
         return pa.binary()
 
     def __repr__(self) -> str:
-        return "Image()"
+        return f"Image(encode_format='{self.encode_format}')"
 
 
 class Video(FeatureType):

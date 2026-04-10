@@ -47,7 +47,7 @@ class Imagenette(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="Imagenette with train/validation splits.",
-            features=Features({"image": Image(), "label": ClassLabel(names=_IN10_CLASSES)}),
+            features=Features({"image": Image(encode_format="JPEG"), "label": ClassLabel(names=_IN10_CLASSES)}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],
