@@ -7,42 +7,42 @@ All datasets are resized to 224x224 with uniform augmentations and ViT backbones
 
 Usage:
     # Single run
-    python -m stable_datasets.benchmarks.self_supervised.main dataset=cifar10 model=simclr backbone=vit_small
+    python -m stable_datasets.benchmarks.run dataset=cifar10 model=simclr backbone=vit_small
 
     # Sweep all models on one dataset (local)
-    python -m stable_datasets.benchmarks.self_supervised.main --multirun \\
+    python -m stable_datasets.benchmarks.run --multirun \\
         dataset=cifar10 model=simclr,dino,mae,lejepa backbone=vit_small
 
     # Sweep across multiple datasets
-    python -m stable_datasets.benchmarks.self_supervised.main --multirun \\
+    python -m stable_datasets.benchmarks.run --multirun \\
         dataset=cifar10,stl10,flowers102 model=simclr,dino backbone=vit_small
 
     # Sweep (SLURM) — each combo becomes a separate job
-    python -m stable_datasets.benchmarks.self_supervised.main --multirun --config-name slurm \\
+    python -m stable_datasets.benchmarks.run --multirun --config-name slurm \\
         dataset=cifar10,stl10 model=simclr,dino,mae,lejepa backbone=vit_small
 
     # Override hyperparameters for a specific run
-    python -m stable_datasets.benchmarks.self_supervised.main dataset=cifar10 model=simclr backbone=vit_small \\
+    python -m stable_datasets.benchmarks.run dataset=cifar10 model=simclr backbone=vit_small \\
         model.vit_optimizer.lr=3e-4 training.max_epochs=200
 
     # Run on ALL datasets
-    python -m stable_datasets.benchmarks.self_supervised.main dataset=all model=simclr backbone=vit_small
+    python -m stable_datasets.benchmarks.run dataset=all model=simclr backbone=vit_small
 
     # LR sweep (useful for tuning)
-    python -m stable_datasets.benchmarks.self_supervised.main --multirun \\
+    python -m stable_datasets.benchmarks.run --multirun \\
         dataset=cifar10 model=simclr backbone=vit_small \\
         model.vit_optimizer.lr=1e-4,3e-4,1e-3
 
     # Parallel across local GPUs (round-robin assignment)
-    python -m stable_datasets.benchmarks.self_supervised.main --multirun --config-name local_parallel \\
+    python -m stable_datasets.benchmarks.run --multirun --config-name local_parallel \\
         dataset=cifar10,stl10,svhn,cifar100 model=simclr backbone=vit_small
 
     # Override GPU count for local parallel
-    NUM_GPUS=4 python -m stable_datasets.benchmarks.self_supervised.main --multirun --config-name local_parallel \\
+    NUM_GPUS=4 python -m stable_datasets.benchmarks.run --multirun --config-name local_parallel \\
         dataset=all model=lejepa backbone=vit_small
 
     # Smoke test — verify the pipeline (data, model, val/probes) works without a full run
-    python -m stable_datasets.benchmarks.self_supervised.main --multirun \\
+    python -m stable_datasets.benchmarks.run --multirun \\
         dataset=cifar10 model=simclr,mae,dino,lejepa backbone=vit_small smoke_test=true
 """
 
@@ -64,8 +64,8 @@ from omegaconf import DictConfig, open_dict
 
 import stable_datasets as sds
 
-from stable_datasets.benchmarks.self_supervised.dataset import create_dataset
-from stable_datasets.benchmarks.self_supervised.modules import build_module, create_eval_callbacks
+from stable_datasets.benchmarks.dataset import create_dataset, get_config
+from stable_datasets.benchmarks.models import build_module, create_eval_callbacks, get_transforms
 
 log = logging.getLogger(__name__)
 
@@ -91,7 +91,6 @@ def _parse_skip_datasets_from_argv() -> set[str]:
     for arg in sys.argv:
         if arg.startswith("skip_datasets="):
             val = arg.split("=", 1)[1]
-            # Handle both skip_datasets=[a,b] and skip_datasets=a,b
             val = val.strip("[]")
             if val:
                 return {s.strip().lower() for s in val.split(",")}
@@ -192,13 +191,9 @@ def main(cfg: DictConfig) -> None:
             "accumulate_grad_batches", "training.accumulate_grad_batches",
             cfg.training.get("accumulate_grad_batches", 1),
         )
-        # Divide batch_size by accumulate_grad_batches so the effective
-        # (gradient) batch size stays the same while the per-forward-pass
-        # batch fits in GPU memory.
         accum = cfg.training.accumulate_grad_batches
         if accum > 1:
             cfg.training.batch_size = cfg.training.batch_size // accum
-        # LR override stored for optim builder
         lr_override = ds_params.get("lr", default_params.get("lr", None))
         if lr_override is not None:
             cfg.model._lr_override = float(lr_override)
@@ -211,19 +206,17 @@ def main(cfg: DictConfig) -> None:
         f"| max_epochs={cfg.training.max_epochs}"
     )
 
-    # Load dataset with config-driven transforms
+    # Get dataset config and model-specific transforms
+    ds_config = get_config(cfg.dataset)
+    train_transform, val_transform, collate_fn = get_transforms(cfg.model.name, ds_config)
+
+    # Load dataset
     data, ds_config = create_dataset(
-        cfg.dataset, cfg.model.transforms, cfg.training,
+        cfg.dataset, train_transform, val_transform, collate_fn, cfg.training,
         data_dir=cfg.get("data_dir"),
-        cache_dir=cfg.get("cache_dir", None),
     )
 
     # Compute total optimizer steps explicitly for the LR scheduler.
-    # With manual optimization, batch_size is already divided by
-    # accumulate_grad_batches (for memory), and the Module's frequency
-    # mechanism steps the optimizer every `accum` batches. We must
-    # avoid relying on estimated_stepping_batches which can double-count
-    # the accumulation factor.
     num_batches = len(data.train)
     accum = cfg.training.accumulate_grad_batches
     total_steps = math.ceil(num_batches / accum) * cfg.training.max_epochs
