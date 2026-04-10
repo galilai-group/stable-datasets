@@ -212,3 +212,11 @@ logs/
 *.sh
 *.lock
 .DS_Store
+
+# Benchmark runs (outputs, wandb, environment dumps)
+benchmark-runs/
+environment*.json
+requirements_frozen*.txt
+
+# W&B result cache
+.result_cache/
