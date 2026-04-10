@@ -5,8 +5,8 @@ hyperparameters from conf/model/*.yaml, and produces a pivot table
 (dataset x method) with optional LaTeX export.
 
 Usage:
-    python -m stable_datasets.benchmarks.collect_results
-    python -m stable_datasets.benchmarks.collect_results --refresh --latex table.tex
+    python -m benchmarks.collect_results
+    python -m benchmarks.collect_results --refresh --latex table.tex
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import yaml
 from tqdm import tqdm
 
 import wandb
-from stable_datasets.benchmarks.dataset import DATASET_CONFIGS
+from benchmarks.dataset import DATASET_CONFIGS
 
 
 CONF_DIR = Path(__file__).resolve().parent / "conf" / "model"

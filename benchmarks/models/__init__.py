@@ -18,7 +18,7 @@ from lightning.pytorch.callbacks import LearningRateMonitor
 from stable_pretraining.data import transforms
 from torch import nn
 
-from stable_datasets.benchmarks.models.vit import create_vit
+from benchmarks.models.vit import create_vit
 
 
 log = logging.getLogger(__name__)
@@ -222,7 +222,7 @@ def collate_multicrop(batch):
 
 def _get_model_module(model_name: str):
     """Import and return the model module by name."""
-    from stable_datasets.benchmarks.models import barlow_twins, dino, lejepa, mae, nnclr, simclr, supervised
+    from benchmarks.models import barlow_twins, dino, lejepa, mae, nnclr, simclr, supervised
 
     _MODULES = {
         "simclr": simclr,

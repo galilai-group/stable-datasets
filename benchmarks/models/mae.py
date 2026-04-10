@@ -7,8 +7,8 @@ import logging
 import stable_pretraining as spt
 from stable_pretraining.data import transforms
 
-from stable_datasets.benchmarks.models import build_optim_config, collate_single, val_transform
-from stable_datasets.benchmarks.models.vit import create_vit
+from benchmarks.models import build_optim_config, collate_single, val_transform
+from benchmarks.models.vit import create_vit
 
 
 log = logging.getLogger(__name__)

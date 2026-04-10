@@ -27,7 +27,7 @@ import pandas as pd
 from scipy import stats
 
 
-CONF_DIR = Path(__file__).parent / "stable_datasets" / "benchmarks" / "conf" / "model"
+CONF_DIR = Path(__file__).parent / "benchmarks" / "conf" / "model"
 
 SSL_METHODS = ["dino", "lejepa", "mae", "nnclr", "simclr"]
 
