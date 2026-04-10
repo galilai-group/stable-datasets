@@ -39,9 +39,8 @@ version = {attr = "stable_datasets.__version__"}
 
 [project.optional-dependencies]
 
-<<<<<<< HEAD
 tensordict = ["tensordict"]
-=======
+
 # Benchmark dependencies (SSL evaluation suite)
 benchmarks = [
     "stable-pretraining @ git+https://github.com/sami-bg/stable-SSL.git@issue-knn-teardown-cpugpu",
@@ -50,9 +49,7 @@ benchmarks = [
     "hydra-joblib-launcher>=1.2",
     "omegaconf>=2.3",
     "tabulate",
-    "torchcodec"
 ]
->>>>>>> ssl-baselines
 
 # Development tools
 dev = [
