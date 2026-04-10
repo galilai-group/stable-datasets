@@ -19,11 +19,13 @@ from pathlib import Path
 
 import matplotlib
 
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy import stats
+
 
 CONF_DIR = Path(__file__).parent / "stable_datasets" / "benchmarks" / "conf" / "model"
 
@@ -31,32 +33,107 @@ SSL_METHODS = ["dino", "lejepa", "mae", "nnclr", "simclr"]
 
 # ── Dataset metadata ────────────────────────────────────────────────
 # Hardcoded for the 10 benchmark datasets present in SSL results.
-DATASET_META = pd.DataFrame([
-    {"dataset": "arabiccharacters", "num_classes": 28,  "train_size": 13440, "balanced": True,  "grayscale": True,  "fine_grained": False},
-    {"dataset": "arabicdigits",     "num_classes": 10,  "train_size": 60000, "balanced": True,  "grayscale": True,  "fine_grained": False},
-    {"dataset": "cifar10",          "num_classes": 10,  "train_size": 50000, "balanced": True,  "grayscale": False, "fine_grained": False},
-    {"dataset": "country211",       "num_classes": 211, "train_size": 31650, "balanced": True,  "grayscale": False, "fine_grained": True},
-    {"dataset": "cub200",           "num_classes": 200, "train_size": 5994,  "balanced": False, "grayscale": False, "fine_grained": True},
-    {"dataset": "dtd",              "num_classes": 47,  "train_size": 1880,  "balanced": True,  "grayscale": False, "fine_grained": True},
-    {"dataset": "flowers102",       "num_classes": 102, "train_size": 1020,  "balanced": False, "grayscale": False, "fine_grained": True},
-    {"dataset": "medmnist",         "num_classes": 2,   "train_size": 4708,  "balanced": False, "grayscale": True,  "fine_grained": False},
-    {"dataset": "notmnist",         "num_classes": 10,  "train_size": 60000, "balanced": True,  "grayscale": True,  "fine_grained": False},
-    {"dataset": "rockpaperscissor", "num_classes": 3,   "train_size": 2520,  "balanced": True,  "grayscale": False, "fine_grained": False},
-]).set_index("dataset")
+DATASET_META = pd.DataFrame(
+    [
+        {
+            "dataset": "arabiccharacters",
+            "num_classes": 28,
+            "train_size": 13440,
+            "balanced": True,
+            "grayscale": True,
+            "fine_grained": False,
+        },
+        {
+            "dataset": "arabicdigits",
+            "num_classes": 10,
+            "train_size": 60000,
+            "balanced": True,
+            "grayscale": True,
+            "fine_grained": False,
+        },
+        {
+            "dataset": "cifar10",
+            "num_classes": 10,
+            "train_size": 50000,
+            "balanced": True,
+            "grayscale": False,
+            "fine_grained": False,
+        },
+        {
+            "dataset": "country211",
+            "num_classes": 211,
+            "train_size": 31650,
+            "balanced": True,
+            "grayscale": False,
+            "fine_grained": True,
+        },
+        {
+            "dataset": "cub200",
+            "num_classes": 200,
+            "train_size": 5994,
+            "balanced": False,
+            "grayscale": False,
+            "fine_grained": True,
+        },
+        {
+            "dataset": "dtd",
+            "num_classes": 47,
+            "train_size": 1880,
+            "balanced": True,
+            "grayscale": False,
+            "fine_grained": True,
+        },
+        {
+            "dataset": "flowers102",
+            "num_classes": 102,
+            "train_size": 1020,
+            "balanced": False,
+            "grayscale": False,
+            "fine_grained": True,
+        },
+        {
+            "dataset": "medmnist",
+            "num_classes": 2,
+            "train_size": 4708,
+            "balanced": False,
+            "grayscale": True,
+            "fine_grained": False,
+        },
+        {
+            "dataset": "notmnist",
+            "num_classes": 10,
+            "train_size": 60000,
+            "balanced": True,
+            "grayscale": True,
+            "fine_grained": False,
+        },
+        {
+            "dataset": "rockpaperscissor",
+            "num_classes": 3,
+            "train_size": 2520,
+            "balanced": True,
+            "grayscale": False,
+            "fine_grained": False,
+        },
+    ]
+).set_index("dataset")
 
 
 # =====================================================================
 # Section 1: Load & Assemble
 # =====================================================================
 
+
 def load_ssl_results() -> pd.DataFrame:
     """Load SSL linear probe results, keeping best run per (model, dataset)."""
     df = pd.read_csv("offline_probe_results.csv")
     # Keep best top-1 per (model, dataset) in case of duplicate runs
     best = df.loc[df.groupby(["model", "dataset"])["eval/top1"].idxmax()]
-    return best[["model", "dataset", "backbone", "eval/top1"]].rename(
-        columns={"eval/top1": "accuracy", "model": "method"}
-    ).reset_index(drop=True)
+    return (
+        best[["model", "dataset", "backbone", "eval/top1"]]
+        .rename(columns={"eval/top1": "accuracy", "model": "method"})
+        .reset_index(drop=True)
+    )
 
 
 def load_supervised_results() -> pd.DataFrame:
@@ -69,20 +146,19 @@ def load_supervised_results() -> pd.DataFrame:
         for ds_name, ds_info in datasets.items():
             for entry in ds_info["entries"]:
                 config = entry["hyperparams"].get("config_name")
-                rows.append({
-                    "backbone": model_name,
-                    "dataset": ds_name,
-                    "config_name": config,
-                    "accuracy": entry["test_accuracy"],
-                    "sup_epochs": entry["hyperparams"].get("max_epochs", 100),
-                })
+                rows.append(
+                    {
+                        "backbone": model_name,
+                        "dataset": ds_name,
+                        "config_name": config,
+                        "accuracy": entry["test_accuracy"],
+                        "sup_epochs": entry["hyperparams"].get("max_epochs", 100),
+                    }
+                )
 
     df = pd.DataFrame(rows)
     # For medmnist, SSL uses pneumoniamnist; for emnist, skip (not in SSL)
-    df = df[
-        (df["config_name"].isna())
-        | (df["config_name"] == "pneumoniamnist")
-    ].copy()
+    df = df[(df["config_name"].isna()) | (df["config_name"] == "pneumoniamnist")].copy()
     # Drop emnist — not in SSL benchmark datasets
     df = df[df["dataset"] != "emnist"]
     return df
@@ -134,15 +210,14 @@ def load_pretrain_epochs() -> pd.DataFrame:
 # Section 2: Full Results Tables
 # =====================================================================
 
+
 def print_ssl_table(ssl_df: pd.DataFrame) -> None:
     """Print all SSL results per method per dataset."""
     print("\n" + "=" * 90)
     print("SECTION 2a: ALL SSL LINEAR PROBE RESULTS (best run per method×dataset)")
     print("=" * 90)
 
-    pivot = ssl_df.pivot_table(
-        index="dataset", columns="method", values="accuracy", aggfunc="max"
-    )
+    pivot = ssl_df.pivot_table(index="dataset", columns="method", values="accuracy", aggfunc="max")
     # Add best column
     pivot["BEST"] = pivot.max(axis=1)
     pivot["best_method"] = pivot.drop(columns="BEST").idxmax(axis=1)
@@ -160,9 +235,7 @@ def print_supervised_table(sup_df: pd.DataFrame) -> None:
     print("SECTION 2b: ALL SUPERVISED RESULTS (per backbone×dataset)")
     print("=" * 90)
 
-    pivot = sup_df.pivot_table(
-        index="dataset", columns="backbone", values="accuracy", aggfunc="max"
-    )
+    pivot = sup_df.pivot_table(index="dataset", columns="backbone", values="accuracy", aggfunc="max")
     fmt = pivot.map(lambda x: f"{x * 100:.1f}" if pd.notna(x) else "---")
     print(fmt.to_string())
     print()
@@ -175,7 +248,9 @@ def print_comparison_table(ssl_df: pd.DataFrame, sup_df: pd.DataFrame) -> None:
     print("=" * 90)
 
     ssl_best = ssl_df.groupby("dataset")["accuracy"].max().rename("ssl_best")
-    ssl_method = ssl_df.loc[ssl_df.groupby("dataset")["accuracy"].idxmax()].set_index("dataset")["method"].rename("ssl_method")
+    ssl_method = (
+        ssl_df.loc[ssl_df.groupby("dataset")["accuracy"].idxmax()].set_index("dataset")["method"].rename("ssl_method")
+    )
 
     sup_backbones = sorted(sup_df["backbone"].unique())
     header_parts = [f"{'Dataset':20s}", f"{'SSL Best':>9s}", f"{'Method':>8s}"]
@@ -206,6 +281,7 @@ def print_comparison_table(ssl_df: pd.DataFrame, sup_df: pd.DataFrame) -> None:
 # Section 3: Dataset Metadata
 # =====================================================================
 
+
 def print_metadata() -> None:
     print("\n" + "=" * 90)
     print("SECTION 3: DATASET METADATA")
@@ -221,6 +297,7 @@ def print_metadata() -> None:
 # =====================================================================
 # Section 4: Confounds Display
 # =====================================================================
+
 
 def print_confounds(ssl_df: pd.DataFrame, sup_df: pd.DataFrame, epochs_df: pd.DataFrame) -> None:
     print("\n" + "=" * 90)
@@ -264,13 +341,16 @@ def print_confounds(ssl_df: pd.DataFrame, sup_df: pd.DataFrame, epochs_df: pd.Da
             sup_ep = "---"
             note = "NO SUPERVISED BASELINE"
 
-        print(f"{ds:20s}  {method:>8s}  {backbone:>10s}  {str(pt_epochs):>9s}  {train_size:>8d}  {pt_compute:>10s}  {sup_bbs:>22s}  {sup_ep:>10s}  {note}")
+        print(
+            f"{ds:20s}  {method:>8s}  {backbone:>10s}  {str(pt_epochs):>9s}  {train_size:>8d}  {pt_compute:>10s}  {sup_bbs:>22s}  {sup_ep:>10s}  {note}"
+        )
     print()
 
 
 # =====================================================================
 # Section 5: Gap Analysis
 # =====================================================================
+
 
 def gap_analysis(ssl_df: pd.DataFrame, sup_df: pd.DataFrame):
     """Compute gap for each supervised backbone, run regressions."""
@@ -287,8 +367,11 @@ def gap_analysis(ssl_df: pd.DataFrame, sup_df: pd.DataFrame):
     meta["log_train_size"] = np.log10(meta["train_size"])
 
     numeric_features = [
-        "num_classes", "train_size", "samples_per_class",
-        "log_num_classes", "log_train_size",
+        "num_classes",
+        "train_size",
+        "samples_per_class",
+        "log_num_classes",
+        "log_train_size",
     ]
     bool_features = ["balanced", "grayscale", "fine_grained"]
     all_features = numeric_features + bool_features
@@ -317,10 +400,10 @@ def gap_analysis(ssl_df: pd.DataFrame, sup_df: pd.DataFrame):
         # Print gap values
         print(f"\n  {'Dataset':20s}  {'SSL':>8s}  {bb_short:>8s}  {'Gap':>8s}")
         for ds in common:
-            print(f"  {ds:20s}  {ssl_best[ds]*100:7.1f}%  {sup_bb[ds]*100:7.1f}%  {gap[ds]*100:+7.1f}%")
+            print(f"  {ds:20s}  {ssl_best[ds] * 100:7.1f}%  {sup_bb[ds] * 100:7.1f}%  {gap[ds] * 100:+7.1f}%")
 
         # Univariate correlations
-        print(f"\n  --- Univariate correlations (Pearson r, p-value, R^2) ---")
+        print("\n  --- Univariate correlations (Pearson r, p-value, R^2) ---")
         print(f"  {'Feature':30s}  {'r':>8s}  {'p':>8s}  {'R2':>8s}")
         y = df["gap"].values
         n = len(y)
@@ -332,12 +415,12 @@ def gap_analysis(ssl_df: pd.DataFrame, sup_df: pd.DataFrame):
                 print(f"  {feat:30s}  {'no var':>8s}")
                 continue
             r, p = stats.pearsonr(x, y)
-            r2 = r ** 2
+            r2 = r**2
             print(f"  {feat:30s}  {r:8.4f}  {p:8.4f}  {r2:8.4f}")
             univar_results.append((feat, r, p, r2))
 
         # Best 1-feature OLS
-        print(f"\n  --- Best single-feature OLS models ---")
+        print("\n  --- Best single-feature OLS models ---")
         single_models = []
         for feat in all_features:
             x = df[feat].astype(float).values
@@ -370,7 +453,7 @@ def gap_analysis(ssl_df: pd.DataFrame, sup_df: pd.DataFrame):
 
         # Best 2-feature OLS (exhaustive)
         if n >= 4:
-            print(f"\n  --- Best 2-feature OLS models (top 10) ---")
+            print("\n  --- Best 2-feature OLS models (top 10) ---")
             pair_models = []
             for f1, f2 in combinations(all_features, 2):
                 x1 = df[f1].astype(float).values
@@ -406,7 +489,7 @@ def gap_analysis(ssl_df: pd.DataFrame, sup_df: pd.DataFrame):
             print(f"  {'Features':50s}  {'R2':>8s}  {'LOO-CV R2':>10s}")
             for f1, f2, r2, r2_loo in pair_models[:10]:
                 marker = " **" if r2 >= 0.9 else ""
-                print(f"  ({f1}, {f2}){'':>{48-len(f1)-len(f2)-4}s}  {r2:8.4f}  {r2_loo:10.4f}{marker}")
+                print(f"  ({f1}, {f2}){'':>{48 - len(f1) - len(f2) - 4}s}  {r2:8.4f}  {r2_loo:10.4f}{marker}")
         else:
             print(f"\n  (Only {n} datasets — skipping 2-feature models)")
 
@@ -423,6 +506,7 @@ def gap_analysis(ssl_df: pd.DataFrame, sup_df: pd.DataFrame):
 # =====================================================================
 # Section 6: Scatter Plots
 # =====================================================================
+
 
 def make_scatter_plots(results_by_backbone: dict, output_dir: str) -> None:
     os.makedirs(output_dir, exist_ok=True)
@@ -450,14 +534,12 @@ def make_scatter_plots(results_by_backbone: dict, output_dir: str) -> None:
             x = df[feat].astype(float)
             ax.scatter(x, gap * 100, s=60, edgecolors="k", linewidths=0.5, zorder=3)
             for ds in df.index:
-                ax.annotate(ds, (x[ds], gap[ds] * 100), fontsize=7,
-                            textcoords="offset points", xytext=(4, 4))
+                ax.annotate(ds, (x[ds], gap[ds] * 100), fontsize=7, textcoords="offset points", xytext=(4, 4))
 
             # Trend line
             slope, intercept, r, p, _ = stats.linregress(x, gap * 100)
             x_line = np.linspace(x.min(), x.max(), 100)
-            ax.plot(x_line, slope * x_line + intercept, "r--", alpha=0.7,
-                    label=f"R²={r**2:.3f}, p={p:.3f}")
+            ax.plot(x_line, slope * x_line + intercept, "r--", alpha=0.7, label=f"R²={r**2:.3f}, p={p:.3f}")
             ax.axhline(0, color="gray", linewidth=0.5, linestyle=":")
 
             ax.set_xlabel(feat)
@@ -478,6 +560,7 @@ def make_scatter_plots(results_by_backbone: dict, output_dir: str) -> None:
 # Main
 # =====================================================================
 
+
 def main():
     parser = argparse.ArgumentParser(description="SSL vs Supervised gap analysis")
     parser.add_argument("--output-dir", default="figures/", help="Directory for scatter plots")
@@ -492,8 +575,12 @@ def main():
     sup_df = load_supervised_results()
     epochs_df = load_pretrain_epochs()
 
-    print(f"\nLoaded {len(ssl_df)} SSL results ({ssl_df['method'].nunique()} methods, {ssl_df['dataset'].nunique()} datasets)")
-    print(f"Loaded {len(sup_df)} supervised results ({sup_df['backbone'].nunique()} backbones, {sup_df['dataset'].nunique()} datasets)")
+    print(
+        f"\nLoaded {len(ssl_df)} SSL results ({ssl_df['method'].nunique()} methods, {ssl_df['dataset'].nunique()} datasets)"
+    )
+    print(
+        f"Loaded {len(sup_df)} supervised results ({sup_df['backbone'].nunique()} backbones, {sup_df['dataset'].nunique()} datasets)"
+    )
     print(f"Loaded {len(epochs_df)} epoch configs ({epochs_df['method'].nunique()} methods)")
 
     # Section 2: Tables
@@ -518,11 +605,11 @@ def main():
     print("SUMMARY")
     print("=" * 90)
     print(f"""
-SSL methods: {', '.join(SSL_METHODS)} (all ViT-small, linear probe)
-Supervised backbones: {', '.join(sorted(sup_df['backbone'].unique()))}
-  (trained from scratch, {int(sup_df['sup_epochs'].iloc[0])} epochs)
+SSL methods: {", ".join(SSL_METHODS)} (all ViT-small, linear probe)
+Supervised backbones: {", ".join(sorted(sup_df["backbone"].unique()))}
+  (trained from scratch, {int(sup_df["sup_epochs"].iloc[0])} epochs)
 
-SSL pretraining epochs vary by method and dataset ({epochs_df['pretrain_epochs'].min()}-{epochs_df['pretrain_epochs'].max()}).
+SSL pretraining epochs vary by method and dataset ({epochs_df["pretrain_epochs"].min()}-{epochs_df["pretrain_epochs"].max()}).
 Supervised always uses 100 epochs from random init.
 
 Key confounds to consider:

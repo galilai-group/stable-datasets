@@ -41,8 +41,11 @@ version = {attr = "stable_datasets.__version__"}
 
 tensordict = ["tensordict"]
 
-# Benchmark dependencies (SSL evaluation suite)
+# Benchmark dependencies (profiling + SSL evaluation suite)
 benchmarks = [
+    "psutil",
+    "datasets",
+    "torchvision",
     "stable-pretraining @ git+https://github.com/sami-bg/stable-SSL.git@issue-knn-teardown-cpugpu",
     "hydra-core>=1.3",
     "hydra-submitit-launcher>=1.2",

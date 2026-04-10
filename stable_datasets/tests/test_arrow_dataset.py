@@ -488,19 +488,24 @@ class TestFeatureInference:
         ds = _make_ds(tmp_path, n=5)
         ds2 = ds.add_column("idx", list(range(5)))
         from stable_datasets.schema import Value
+
         assert isinstance(ds2.features["idx"], Value)
 
     def test_add_column_list_infers_sequence(self, tmp_path):
         import pyarrow as pa
+
         ds = _make_ds(tmp_path, n=3)
         col = pa.array([[1, 2], [3, 4], [5, 6]])
         ds2 = ds.add_column("emb", col)
         from stable_datasets.schema import Sequence
+
         assert isinstance(ds2.features["emb"], Sequence)
 
     def test_infer_fails_on_struct(self):
         import pyarrow as pa
+
         from stable_datasets.arrow_dataset import _infer_feature
+
         with pytest.raises(TypeError, match="Cannot infer"):
             _infer_feature(pa.struct([pa.field("a", pa.int32())]))
 

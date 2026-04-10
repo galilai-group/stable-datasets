@@ -96,9 +96,7 @@ class StableDataset:
         self._formatter = get_formatter(_format_type, features, decode_images=_decode_images)
 
         # Precompute whether we have binary columns (Image/Array3D/Video).
-        self._has_binary_cols = any(
-            isinstance(f, (Image, Array3D, Video)) for f in features.values()
-        )
+        self._has_binary_cols = any(isinstance(f, (Image, Array3D, Video)) for f in features.values())
 
         # Cache row count
         if self._indices is not None:
@@ -228,9 +226,7 @@ class StableDataset:
             for i in range(len(self)):
                 yield self[i]
         elif self._backend.is_file_backed:
-            yield from self._iter_batches_formatted(
-                self._backend.iter_batches(shuffle=shuffle_shards, seed=seed)
-            )
+            yield from self._iter_batches_formatted(self._backend.iter_batches(shuffle=shuffle_shards, seed=seed))
         else:
             yield from self
 
@@ -353,9 +349,7 @@ class StableDataset:
 
         # Infer output features from a probe example if not provided
         if features is None:
-            probe = self._backend.get_row(
-                int(self._indices[0]) if self._indices is not None else 0
-            )
+            probe = self._backend.get_row(int(self._indices[0]) if self._indices is not None else 0)
             if batched:
                 probe_batch = {k: [v] for k, v in probe.items()}
                 probe_out = fn(probe_batch, [0]) if with_indices else fn(probe_batch)
@@ -419,7 +413,10 @@ class StableDataset:
             cache_dir = Path(cache_dir)
 
         meta = write_sharded_arrow_cache(
-            _map_gen(), features, cache_dir, batch_size=batch_size,
+            _map_gen(),
+            features,
+            cache_dir,
+            batch_size=batch_size,
             lineage={
                 "operation": "map",
                 "batched": batched,
@@ -478,9 +475,7 @@ class StableDataset:
         tbl = self._logical_table()
         names = [new_name if n == old_name else n for n in tbl.column_names]
         tbl = tbl.rename_columns(names)
-        new_features = Features(
-            {(new_name if k == old_name else k): v for k, v in self._features.items()}
-        )
+        new_features = Features({(new_name if k == old_name else k): v for k, v in self._features.items()})
         return self._with_table(tbl, new_features)
 
     def rename_columns(self, mapping: dict[str, str]) -> StableDataset:
@@ -488,9 +483,7 @@ class StableDataset:
         tbl = self._logical_table()
         names = [mapping.get(n, n) for n in tbl.column_names]
         tbl = tbl.rename_columns(names)
-        new_features = Features(
-            {mapping.get(k, k): v for k, v in self._features.items()}
-        )
+        new_features = Features({mapping.get(k, k): v for k, v in self._features.items()})
         return self._with_table(tbl, new_features)
 
     # -- Format and transform pipeline ----------------------------------------
@@ -649,8 +642,14 @@ def _infer_feature(arrow_type: pa.DataType):
 
     # Integer types
     _INT_MAP = {
-        pa.int8(): "int8", pa.int16(): "int16", pa.int32(): "int32", pa.int64(): "int64",
-        pa.uint8(): "uint8", pa.uint16(): "uint16", pa.uint32(): "uint32", pa.uint64(): "uint64",
+        pa.int8(): "int8",
+        pa.int16(): "int16",
+        pa.int32(): "int32",
+        pa.int64(): "int64",
+        pa.uint8(): "uint8",
+        pa.uint16(): "uint16",
+        pa.uint32(): "uint32",
+        pa.uint64(): "uint64",
     }
     if arrow_type in _INT_MAP:
         return Value(_INT_MAP[arrow_type])

@@ -31,50 +31,51 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+
 # ---------------------------------------------------------------------------
 # Short display labels for LaTeX (keep ≤ 12 chars so they fit under the image)
 # ---------------------------------------------------------------------------
 DATASET_LABELS: dict[str, str] = {
     "ArabicCharacters": "Ar.~Chars.",
-    "ArabicDigits":     "Ar.~Digits",
-    "AWA2":             "AwA2",
-    "Beans":            "Beans",
-    "Cars196":          "Cars196",
-    "Cars3D":           "Cars3D",
-    "CIFAR10":          "CIFAR-10",
-    "CIFAR10C":         "CIFAR-10-C",
-    "CIFAR100":         "CIFAR-100",
-    "CIFAR100C":        "CIFAR-100-C",
-    "CLEVRER":          "CLEVRER",
-    "Country211":       "Country211",
-    "CUB200":           "CUB-200",
-    "DSprites":         "dSprites",
-    "DSpritesColor":    "dSpr.-Color",
-    "DSpritesNoise":    "dSpr.-Noise",
-    "DSpritesScream":   "dSpr.-Scream",
-    "DTD":              "DTD",
-    "EMNIST":           "EMNIST",
-    "FacePointing":     "FacePointing",
-    "FashionMNIST":     "F-MNIST",
-    "FGVCAircraft":     "Aircraft",
-    "Flowers102":       "Flowers102",
-    "Food101":          "Food101",
-    "Galaxy10Decal":    "Galaxy10",
-    "HASYv2":           "HASYv2",
-    "KMNIST":           "K-MNIST",
-    "Linnaeus5":        "Linnaeus5",
-    "MedMNIST":         "MedMNIST",
-    "NotMNIST":         "notMNIST",
+    "ArabicDigits": "Ar.~Digits",
+    "AWA2": "AwA2",
+    "Beans": "Beans",
+    "Cars196": "Cars196",
+    "Cars3D": "Cars3D",
+    "CIFAR10": "CIFAR-10",
+    "CIFAR10C": "CIFAR-10-C",
+    "CIFAR100": "CIFAR-100",
+    "CIFAR100C": "CIFAR-100-C",
+    "CLEVRER": "CLEVRER",
+    "Country211": "Country211",
+    "CUB200": "CUB-200",
+    "DSprites": "dSprites",
+    "DSpritesColor": "dSpr.-Color",
+    "DSpritesNoise": "dSpr.-Noise",
+    "DSpritesScream": "dSpr.-Scream",
+    "DTD": "DTD",
+    "EMNIST": "EMNIST",
+    "FacePointing": "FacePointing",
+    "FashionMNIST": "F-MNIST",
+    "FGVCAircraft": "Aircraft",
+    "Flowers102": "Flowers102",
+    "Food101": "Food101",
+    "Galaxy10Decal": "Galaxy10",
+    "HASYv2": "HASYv2",
+    "KMNIST": "K-MNIST",
+    "Linnaeus5": "Linnaeus5",
+    "MedMNIST": "MedMNIST",
+    "NotMNIST": "notMNIST",
     "RockPaperScissor": "Rock-Paper-Sc.",
-    "Shapes3D":         "Shapes3D",
-    "SmallNORB":        "SmallNORB",
-    "STL10":            "STL-10",
-    "SVHN":             "SVHN",
-    "ImageNet1K":       "ImageNet-1K",
-    "ImageNet100":      "ImageNet-100",
-    "ImageNet10":       "ImageNet-10",
-    "TinyImagenet":     "TinyImgNet",
-    "TinyImagenetC":    "TinyImgNet-C",
+    "Shapes3D": "Shapes3D",
+    "SmallNORB": "SmallNORB",
+    "STL10": "STL-10",
+    "SVHN": "SVHN",
+    "ImageNet1K": "ImageNet-1K",
+    "ImageNet100": "ImageNet-100",
+    "ImageNet10": "ImageNet-10",
+    "TinyImagenet": "TinyImgNet",
+    "TinyImagenetC": "TinyImgNet-C",
 }
 
 # ---------------------------------------------------------------------------
@@ -82,22 +83,51 @@ DATASET_LABELS: dict[str, str] = {
 # ---------------------------------------------------------------------------
 DATASET_ORDER: list[str] = [
     # Standard RGB benchmarks
-    "CIFAR10", "CIFAR100", "CIFAR10C", "CIFAR100C",
-    "STL10", "SVHN", "TinyImagenet", "TinyImagenetC",
-    "ImageNet1K", "ImageNet100", "ImageNet10",
+    "CIFAR10",
+    "CIFAR100",
+    "CIFAR10C",
+    "CIFAR100C",
+    "STL10",
+    "SVHN",
+    "TinyImagenet",
+    "TinyImagenetC",
+    "ImageNet1K",
+    "ImageNet100",
+    "ImageNet10",
     # Natural images: scenes / plants / food / textures
-    "Food101", "Flowers102", "Beans", "DTD",
-    "Linnaeus5", "Country211", "Galaxy10Decal", "RockPaperScissor",
+    "Food101",
+    "Flowers102",
+    "Beans",
+    "DTD",
+    "Linnaeus5",
+    "Country211",
+    "Galaxy10Decal",
+    "RockPaperScissor",
     # Fine-grained recognition
-    "CUB200", "Cars196", "FGVCAircraft", "AWA2",
+    "CUB200",
+    "Cars196",
+    "FGVCAircraft",
+    "AWA2",
     # Synthetic / disentangled representations
-    "DSprites", "DSpritesColor", "DSpritesNoise", "DSpritesScream",
-    "Cars3D", "Shapes3D",
+    "DSprites",
+    "DSpritesColor",
+    "DSpritesNoise",
+    "DSpritesScream",
+    "Cars3D",
+    "Shapes3D",
     # Grayscale / character images
-    "FashionMNIST", "KMNIST", "EMNIST", "NotMNIST",
-    "ArabicCharacters", "ArabicDigits", "HASYv2", "SmallNORB",
+    "FashionMNIST",
+    "KMNIST",
+    "EMNIST",
+    "NotMNIST",
+    "ArabicCharacters",
+    "ArabicDigits",
+    "HASYv2",
+    "SmallNORB",
     # Specialised
-    "FacePointing", "MedMNIST", "CLEVRER",
+    "FacePointing",
+    "MedMNIST",
+    "CLEVRER",
 ]
 
 # ---------------------------------------------------------------------------
@@ -105,69 +135,69 @@ DATASET_ORDER: list[str] = [
 # ---------------------------------------------------------------------------
 DATASET_MODALITY: dict[str, str] = {
     # Natural colour images
-    "AWA2":             "image_rgb",
-    "Beans":            "image_rgb",
-    "Cars196":          "image_rgb",
-    "Cars3D":           "image_rgb",
-    "CIFAR10":          "image_rgb",
-    "CIFAR10C":         "image_rgb",
-    "CIFAR100":         "image_rgb",
-    "CIFAR100C":        "image_rgb",
-    "Country211":       "image_rgb",
-    "CUB200":           "image_rgb",
-    "DTD":              "image_rgb",
-    "DSpritesColor":    "image_rgb",
-    "DSpritesNoise":    "image_rgb",
-    "DSpritesScream":   "image_rgb",
-    "FacePointing":     "image_rgb",
-    "FGVCAircraft":     "image_rgb",
-    "Flowers102":       "image_rgb",
-    "Food101":          "image_rgb",
-    "Galaxy10Decal":    "image_rgb",
-    "ImageNet1K":       "image_rgb",
-    "ImageNet100":      "image_rgb",
-    "ImageNet10":       "image_rgb",
-    "Linnaeus5":        "image_rgb",
+    "AWA2": "image_rgb",
+    "Beans": "image_rgb",
+    "Cars196": "image_rgb",
+    "Cars3D": "image_rgb",
+    "CIFAR10": "image_rgb",
+    "CIFAR10C": "image_rgb",
+    "CIFAR100": "image_rgb",
+    "CIFAR100C": "image_rgb",
+    "Country211": "image_rgb",
+    "CUB200": "image_rgb",
+    "DTD": "image_rgb",
+    "DSpritesColor": "image_rgb",
+    "DSpritesNoise": "image_rgb",
+    "DSpritesScream": "image_rgb",
+    "FacePointing": "image_rgb",
+    "FGVCAircraft": "image_rgb",
+    "Flowers102": "image_rgb",
+    "Food101": "image_rgb",
+    "Galaxy10Decal": "image_rgb",
+    "ImageNet1K": "image_rgb",
+    "ImageNet100": "image_rgb",
+    "ImageNet10": "image_rgb",
+    "Linnaeus5": "image_rgb",
     "RockPaperScissor": "image_rgb",
-    "Shapes3D":         "image_rgb",
-    "STL10":            "image_rgb",
-    "SVHN":             "image_rgb",
-    "TinyImagenet":     "image_rgb",
-    "TinyImagenetC":    "image_rgb",
+    "Shapes3D": "image_rgb",
+    "STL10": "image_rgb",
+    "SVHN": "image_rgb",
+    "TinyImagenet": "image_rgb",
+    "TinyImagenetC": "image_rgb",
     # Grayscale images
     "ArabicCharacters": "image_gray",
-    "ArabicDigits":     "image_gray",
-    "EMNIST":           "image_gray",
-    "FashionMNIST":     "image_gray",
-    "HASYv2":           "image_gray",
-    "KMNIST":           "image_gray",
-    "NotMNIST":         "image_gray",
+    "ArabicDigits": "image_gray",
+    "EMNIST": "image_gray",
+    "FashionMNIST": "image_gray",
+    "HASYv2": "image_gray",
+    "KMNIST": "image_gray",
+    "NotMNIST": "image_gray",
     # SmallNORB: stereo pair → uses left_image / right_image keys
-    "SmallNORB":        "image_stereo",
+    "SmallNORB": "image_stereo",
     # Binary synthetic (dSprites white shapes on black)
-    "DSprites":         "image_binary",
+    "DSprites": "image_binary",
     # Medical images (may be volumetric)
-    "MedMNIST":         "image_medical",
+    "MedMNIST": "image_medical",
     # Video
-    "CLEVRER":          "video",
+    "CLEVRER": "video",
 }
 
 # Extra constructor kwargs for datasets that require a config name
 DATASET_KWARGS: dict[str, dict] = {
-    "EMNIST":     {"config_name": "balanced"},
+    "EMNIST": {"config_name": "balanced"},
     "ImageNet1K": {"streaming": True},
-    "ImageNet100":{"streaming": True},
+    "ImageNet100": {"streaming": True},
     "ImageNet10": {"streaming": True},
-    "MedMNIST":   {"config_name": "pathmnist"},  # 2-D, colourful path-histology
+    "MedMNIST": {"config_name": "pathmnist"},  # 2-D, colourful path-histology
 }
 
 # HuggingFace Hub fallbacks for datasets that are too large or fail to download.
 # Maps dataset name -> (hub_id, image_key) for streaming a single sample.
 HF_STREAMING_FALLBACKS: dict[str, tuple[str, str]] = {
-    "ImageNet1K":   ("ILSVRC/imagenet-1k", "image"),
-    "ImageNet100":  ("clane9/imagenet-100", "image"),
-    "KMNIST":       ("tanganke/kmnist", "image"),
-    "Shapes3D":     ("eurecom-ds/shapes3d", "image"),
+    "ImageNet1K": ("ILSVRC/imagenet-1k", "image"),
+    "ImageNet100": ("clane9/imagenet-100", "image"),
+    "KMNIST": ("tanganke/kmnist", "image"),
+    "Shapes3D": ("eurecom-ds/shapes3d", "image"),
     "TinyImagenet": ("Maysee/tiny-imagenet", "image"),
 }
 
@@ -177,6 +207,7 @@ PREFER_STREAMING: set[str] = {"ImageNet1K", "ImageNet100"}
 # ---------------------------------------------------------------------------
 # Modality render functions  (sample dict → PIL.Image)
 # ---------------------------------------------------------------------------
+
 
 def _to_pil(img) -> Image.Image:
     """Convert a HuggingFace image field (PIL or numpy array) to PIL."""
@@ -255,26 +286,29 @@ def render_video(sample: dict) -> Image.Image:
 
 
 MODALITY_RENDERERS: dict[str, callable] = {
-    "image_rgb":     render_image_rgb,
-    "image_gray":    render_image_gray,
-    "image_stereo":  render_image_stereo,
-    "image_binary":  render_image_binary,
+    "image_rgb": render_image_rgb,
+    "image_gray": render_image_gray,
+    "image_stereo": render_image_stereo,
+    "image_binary": render_image_binary,
     "image_medical": render_image_medical,
-    "video":         render_video,
+    "video": render_video,
 }
 
 # ---------------------------------------------------------------------------
 # Standardisation: resize + white-pad to a square canvas
 # ---------------------------------------------------------------------------
 
+
 def standardize(img: Image.Image, size: int = 224) -> Image.Image:
     """Resize *img* to *size* × *size*, scaling up small images with LANCZOS."""
     img = img.convert("RGB")
     return img.resize((size, size), Image.LANCZOS)
 
+
 # ---------------------------------------------------------------------------
 # Per-dataset loading + rendering
 # ---------------------------------------------------------------------------
+
 
 def _try_streaming_fallback(
     dataset_name: str,
@@ -290,6 +324,7 @@ def _try_streaming_fallback(
     hub_id, image_key = fallback
     try:
         import datasets
+
         print(f"(streaming from {hub_id}) ", end="", flush=True)
         ds = datasets.load_dataset(hub_id, split="train", streaming=True)
         # Skip to sample_idx by consuming the iterator
@@ -301,6 +336,7 @@ def _try_streaming_fallback(
         print(f"  [STREAM-FAIL] {dataset_name}: {type(exc).__name__}: {exc}", file=sys.stderr)
         if verbose:
             import traceback
+
             traceback.print_exc()
         return None
 
@@ -357,7 +393,7 @@ def load_and_render(
 
     try:
         # Streaming datasets are iterable-only (no len / __getitem__)
-        if hasattr(ds, '__getitem__') and hasattr(ds, '__len__'):
+        if hasattr(ds, "__getitem__") and hasattr(ds, "__len__"):
             idx = sample_idx % len(ds)
             sample = ds[idx]
         else:
@@ -367,6 +403,7 @@ def load_and_render(
         print(f"  [FAIL] {dataset_name}: {type(exc).__name__}: {exc}", file=sys.stderr)
         if verbose:
             import traceback
+
             traceback.print_exc()
         # Try streaming fallback on render failure too
         result = _try_streaming_fallback(dataset_name, sample_idx, renderer, verbose)
@@ -374,9 +411,11 @@ def load_and_render(
             return result
         return None
 
+
 # ---------------------------------------------------------------------------
 # LaTeX generation
 # ---------------------------------------------------------------------------
+
 
 def generate_latex(
     rendered: dict[str, str],
@@ -398,9 +437,7 @@ def generate_latex(
     img_width = f"{0.92 / ncols:.4f}\\textwidth"
 
     # Split into rows of ncols
-    rows: list[list[str]] = [
-        available[i : i + ncols] for i in range(0, len(available), ncols)
-    ]
+    rows: list[list[str]] = [available[i : i + ncols] for i in range(0, len(available), ncols)]
 
     lines = [
         "% ─────────────────────────────────────────────────────────────────────",
@@ -420,21 +457,15 @@ def generate_latex(
 
     for row in rows:
         # ---- image row ----
-        img_cells = [
-            f"\\includegraphics[width={img_width}]{{{image_dir_name}/{name}.png}}"
-            for name in row
-        ]
+        img_cells = [f"\\includegraphics[width={img_width}]{{{image_dir_name}/{name}.png}}" for name in row]
         lines.append("    " + " &\n    ".join(img_cells) + " \\\\[-2pt]")
 
         # ---- label row ----
-        lbl_cells = [
-            f"\\tiny {DATASET_LABELS.get(name, name)}"
-            for name in row
-        ]
+        lbl_cells = [f"\\tiny {DATASET_LABELS.get(name, name)}" for name in row]
         lines.append("    " + " &\n    ".join(lbl_cells) + " \\\\[4pt]")
 
     lines += [
-        f"  \\end{{tabular}}",
+        "  \\end{tabular}",
         "  \\caption{%",
         "    One sample per dataset in the \\textsc{Stable-Datasets} benchmark suite.",
         "    Datasets span natural images, fine-grained recognition, synthetic",
@@ -445,9 +476,11 @@ def generate_latex(
 
     return "\n".join(lines)
 
+
 # ---------------------------------------------------------------------------
 # CLI entry-point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -455,23 +488,31 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "--output-dir", default="dataset_samples",
+        "--output-dir",
+        default="dataset_samples",
         help="Directory for PNG images and the .tex file (default: dataset_samples/).",
     )
     parser.add_argument(
-        "--ncols", type=int, default=0,
+        "--ncols",
+        type=int,
+        default=0,
         help="Number of image columns in the LaTeX grid (default: auto = ceil(sqrt(n)) for a square grid).",
     )
     parser.add_argument(
-        "--sample-idx", type=int, default=24,
+        "--sample-idx",
+        type=int,
+        default=24,
         help="Sample index to draw from each dataset (default: 42).",
     )
     parser.add_argument(
-        "--img-size", type=int, default=224,
+        "--img-size",
+        type=int,
+        default=224,
         help="Side length in pixels for each saved PNG (default: 224).",
     )
     parser.add_argument(
-        "--verbose", action="store_true",
+        "--verbose",
+        action="store_true",
         help="Print full tracebacks for failed datasets.",
     )
     args = parser.parse_args()
@@ -484,9 +525,7 @@ def main() -> None:
 
     for i, dataset_name in enumerate(DATASET_ORDER, 1):
         print(f"[{i:2d}/{n_total}] {dataset_name} ... ", end="", flush=True)
-        raw_img = load_and_render(
-            dataset_name, sample_idx=args.sample_idx, verbose=args.verbose
-        )
+        raw_img = load_and_render(dataset_name, sample_idx=args.sample_idx, verbose=args.verbose)
         if raw_img is None:
             print("skipped")
             continue
@@ -499,8 +538,7 @@ def main() -> None:
 
     if not rendered:
         print(
-            "\nNo datasets could be rendered. "
-            "Make sure the datasets are downloaded and cached.",
+            "\nNo datasets could be rendered. Make sure the datasets are downloaded and cached.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -523,7 +561,7 @@ def main() -> None:
     print()
     print("To use in Overleaf:")
     print(f"  1. Upload the '{args.output_dir}/' directory.")
-    print(f"  2. Add \\usepackage{{graphicx}} to your preamble.")
+    print("  2. Add \\usepackage{graphicx} to your preamble.")
     print(f"  3. \\input{{{args.output_dir}/magazine_figure.tex}}")
 
 

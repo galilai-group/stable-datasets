@@ -4,14 +4,12 @@
 Runs each backend in a subprocess to avoid module-swap issues.
 """
 
-import gc
 import json
 import os
 import statistics
 import subprocess
 import sys
-import time
-import warnings
+
 
 PYARROW_WORKTREE = os.path.join(os.path.dirname(__file__), ".claude", "worktrees", "pyarrow-migration")
 TORCHVISION_ROOT = os.path.expanduser("~/.cache/torchvision")
@@ -77,7 +75,7 @@ NUM_RUNS = 5
 
 # ── Subprocess worker script ────────────────────────────────────────────────
 
-WORKER_SCRIPT = r'''
+WORKER_SCRIPT = r"""
 import gc, json, os, sys, time, warnings
 warnings.filterwarnings("ignore")
 import torch
@@ -147,13 +145,22 @@ try:
 
 except Exception as e:
     print(json.dumps({"error": str(e)}))
-'''
+"""
 
 
 def run_one(backend, module_path, cls_name, cfg):
     """Run a single benchmark in a subprocess. Returns {"prep", "read", "n"} or {"error"}."""
-    cmd = [sys.executable, "-c", WORKER_SCRIPT, backend, module_path, cls_name,
-           SPLIT, str(BATCH_SIZE), str(NUM_WORKERS)]
+    cmd = [
+        sys.executable,
+        "-c",
+        WORKER_SCRIPT,
+        backend,
+        module_path,
+        cls_name,
+        SPLIT,
+        str(BATCH_SIZE),
+        str(NUM_WORKERS),
+    ]
 
     if backend == "pyarrow":
         cmd.append(PYARROW_WORKTREE)
@@ -186,20 +193,30 @@ def fmt(values):
         return "--"
     med = statistics.median(values)
     lo, hi = min(values), max(values)
+
     def _t(s):
-        return f"{s*1000:.0f}ms" if s < 1.0 else f"{s:.2f}s"
+        return f"{s * 1000:.0f}ms" if s < 1.0 else f"{s:.2f}s"
+
     return f"{_t(med)} ({_t(lo)}-{_t(hi)})"
 
 
 def main():
     import argparse
+
     global IMAGENET_ROOT, BATCH_SIZE, NUM_WORKERS, NUM_RUNS, SPLIT
 
     parser = argparse.ArgumentParser(description="Comprehensive dataloading benchmark")
-    parser.add_argument("--datasets", nargs="+", default=None,
-                        help=f"Datasets to benchmark (default: all). Choices: {', '.join(DATASETS)}")
-    parser.add_argument("--imagenet-root", default=IMAGENET_ROOT,
-                        help=f"Root directory for ImageNet (default: {IMAGENET_ROOT} or $IMAGENET_ROOT)")
+    parser.add_argument(
+        "--datasets",
+        nargs="+",
+        default=None,
+        help=f"Datasets to benchmark (default: all). Choices: {', '.join(DATASETS)}",
+    )
+    parser.add_argument(
+        "--imagenet-root",
+        default=IMAGENET_ROOT,
+        help=f"Root directory for ImageNet (default: {IMAGENET_ROOT} or $IMAGENET_ROOT)",
+    )
     parser.add_argument("--batch-size", type=int, default=BATCH_SIZE)
     parser.add_argument("--num-workers", type=int, default=NUM_WORKERS)
     parser.add_argument("--num-runs", type=int, default=NUM_RUNS)
@@ -218,8 +235,9 @@ def main():
         print(f"Unknown datasets: {invalid}. Available: {list(DATASETS.keys())}")
         sys.exit(1)
 
-    print(f"Comprehensive benchmark: {NUM_RUNS} runs, batch_size={BATCH_SIZE}, "
-          f"num_workers={NUM_WORKERS}, split={SPLIT}")
+    print(
+        f"Comprehensive benchmark: {NUM_RUNS} runs, batch_size={BATCH_SIZE}, num_workers={NUM_WORKERS}, split={SPLIT}"
+    )
     print(f"Datasets: {ds_names}")
     if "ImageNet-1K" in ds_names:
         print(f"ImageNet root: {IMAGENET_ROOT}")
@@ -265,12 +283,15 @@ def main():
             for run in range(NUM_RUNS):
                 r = run_one(backend, module_path, cls_name, cfg)
                 if "error" in r:
-                    print(f"  [{label}] run {run+1}/{NUM_RUNS}: ERROR - {r['error'][:100]}", flush=True)
+                    print(f"  [{label}] run {run + 1}/{NUM_RUNS}: ERROR - {r['error'][:100]}", flush=True)
                     break
                 preps.append(r["prep"])
                 reads.append(r["read"])
-                print(f"  [{label}] run {run+1}/{NUM_RUNS}: "
-                      f"prep={r['prep']*1000:.0f}ms read={r['read']:.2f}s ({r['n']} samples)", flush=True)
+                print(
+                    f"  [{label}] run {run + 1}/{NUM_RUNS}: "
+                    f"prep={r['prep'] * 1000:.0f}ms read={r['read']:.2f}s ({r['n']} samples)",
+                    flush=True,
+                )
 
             if preps:
                 results[ds_name][backend] = {"prep": preps, "read": reads}
