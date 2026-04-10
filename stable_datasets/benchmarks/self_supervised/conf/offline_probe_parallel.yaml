@@ -1,0 +1,9 @@
+defaults:
+  - offline_probe
+  - override hydra/launcher: joblib
+
+distribute_gpus: true
+
+hydra:
+  launcher:
+    n_jobs: ${oc.env:NUM_GPUS,2}
