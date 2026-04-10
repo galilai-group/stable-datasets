@@ -6,7 +6,7 @@ import stable_pretraining as spt
 from stable_pretraining import forward
 from stable_pretraining.data import transforms
 
-from stable_datasets.benchmarks.models import (
+from benchmarks.models import (
     build_optim_config,
     collate_multiview,
     create_backbone,

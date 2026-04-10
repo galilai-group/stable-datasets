@@ -9,7 +9,7 @@ from stable_pretraining.data import transforms
 from stable_pretraining.forward import _get_views_by_prefix
 from torch import nn
 
-from stable_datasets.benchmarks.models import (
+from benchmarks.models import (
     build_optim_config,
     collate_multicrop,
     get_embedding_dim,

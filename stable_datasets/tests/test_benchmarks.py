@@ -3,8 +3,8 @@
 import pytest
 import torch
 
-from stable_datasets.benchmarks.dataset import DATASET_CONFIGS, DatasetConfig, get_config
-from stable_datasets.benchmarks.models import (
+from benchmarks.dataset import DATASET_CONFIGS, DatasetConfig, get_config
+from benchmarks.models import (
     build_module,
     collate_multicrop,
     collate_multiview,

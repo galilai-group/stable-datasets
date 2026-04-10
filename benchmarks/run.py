@@ -20,8 +20,8 @@ from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig, open_dict
 
 import wandb
-from stable_datasets.benchmarks.dataset import create_dataset, get_config
-from stable_datasets.benchmarks.models import build_module, create_eval_callbacks, get_transforms
+from benchmarks.dataset import create_dataset, get_config
+from benchmarks.models import build_module, create_eval_callbacks, get_transforms
 
 
 log = logging.getLogger(__name__)
@@ -215,7 +215,7 @@ def main(cfg: DictConfig) -> None:
 def _expand_dataset_all():
     import sys
 
-    from stable_datasets.benchmarks.dataset import DATASET_CONFIGS
+    from benchmarks.dataset import DATASET_CONFIGS
 
     for i, arg in enumerate(sys.argv):
         if arg.startswith("dataset=") and arg.split("=", 1)[1].lower() == "all":

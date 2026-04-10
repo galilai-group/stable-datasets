@@ -5,7 +5,7 @@ from __future__ import annotations
 import stable_pretraining as spt
 from torch import nn
 
-from stable_datasets.benchmarks.models import (
+from benchmarks.models import (
     build_optim_config,
     collate_single,
     create_backbone,

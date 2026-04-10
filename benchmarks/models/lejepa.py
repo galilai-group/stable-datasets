@@ -11,7 +11,7 @@ from stable_pretraining.data import transforms
 from torch import distributed as dist
 from torch import nn
 
-from stable_datasets.benchmarks.models import (
+from benchmarks.models import (
     build_optim_config,
     collate_multiview,
     create_backbone,
