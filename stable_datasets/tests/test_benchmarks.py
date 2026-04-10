@@ -17,6 +17,7 @@ from stable_datasets.benchmarks.models import (
     val_transform,
 )
 
+
 # A minimal ds_config for testing (no real data needed)
 DUMMY_CONFIG = DatasetConfig(
     name="test",
@@ -38,6 +39,7 @@ DUMMY_GRAY = DatasetConfig(
 
 
 # Dataset config
+
 
 class TestDatasetConfig:
     def test_get_config_known(self):
@@ -70,6 +72,7 @@ class TestDatasetConfig:
 
 # Backbone and projector
 
+
 class TestBackboneAndProjector:
     def test_create_backbone_vit_small(self):
         class FakeBackboneCfg:
@@ -99,10 +102,12 @@ class TestBackboneAndProjector:
 
 # Transforms
 
+
 class TestTransforms:
     def test_val_transform_output_shape(self):
         t = val_transform(DUMMY_CONFIG)
         from PIL import Image
+
         img = Image.new("RGB", (32, 32), color=(128, 128, 128))
         sample = t({"image": img, "label": 0})
         assert sample["image"].shape == (3, 224, 224)
@@ -111,6 +116,7 @@ class TestTransforms:
     def test_ssl_augmentation_rgb(self):
         t = ssl_augmentation(DUMMY_CONFIG, (224, 224), (0.08, 1.0))
         from PIL import Image
+
         img = Image.new("RGB", (32, 32))
         sample = t({"image": img, "label": 5})
         assert sample["image"].shape == (3, 224, 224)
@@ -119,14 +125,24 @@ class TestTransforms:
         # Should not raise even though input is grayscale
         t = ssl_augmentation(DUMMY_GRAY, (224, 224), (0.08, 1.0))
         from PIL import Image
+
         img = Image.new("L", (32, 32))
         sample = t({"image": img, "label": 0})
         # RGB() converts to 3 channels
         assert sample["image"].shape[0] == 3
 
-    @pytest.mark.parametrize("model_name", [
-        "simclr", "dino", "mae", "lejepa", "nnclr", "barlow_twins", "supervised",
-    ])
+    @pytest.mark.parametrize(
+        "model_name",
+        [
+            "simclr",
+            "dino",
+            "mae",
+            "lejepa",
+            "nnclr",
+            "barlow_twins",
+            "supervised",
+        ],
+    )
     def test_get_transforms_returns_triple(self, model_name):
         train_t, val_t, collate_fn = get_transforms(model_name, DUMMY_CONFIG)
         assert callable(train_t)
@@ -136,12 +152,15 @@ class TestTransforms:
 
 # Collation
 
+
 def _make_single_sample():
     return {"image": torch.randn(3, 224, 224), "label": 0}
+
 
 def _make_multiview_sample(n_views=2):
     views = [{"image": torch.randn(3, 224, 224), "label": 0} for _ in range(n_views)]
     return {"views": views}
+
 
 def _make_multicrop_sample():
     return {
@@ -174,17 +193,31 @@ class TestCollation:
 
 # Smoke test: full pipeline with tiny config
 
+
 class TestSmoke:
-    @pytest.mark.parametrize("model_name", [
-        "simclr", "mae", "lejepa", "nnclr", "barlow_twins", "supervised",
-    ])
+    @pytest.mark.parametrize(
+        "model_name",
+        [
+            "simclr",
+            "mae",
+            "lejepa",
+            "nnclr",
+            "barlow_twins",
+            "supervised",
+        ],
+    )
     def test_build_module(self, model_name):
         """Build each model and verify it produces a module with correct embed_dim."""
         from omegaconf import OmegaConf
 
-        backbone_cfg = OmegaConf.create({
-            "name": "vit_small", "type": "vit", "size": "small", "patch_size": 16,
-        })
+        backbone_cfg = OmegaConf.create(
+            {
+                "name": "vit_small",
+                "type": "vit",
+                "size": "small",
+                "patch_size": 16,
+            }
+        )
 
         # Minimal model configs per model
         model_cfgs = {
@@ -233,10 +266,12 @@ class TestSmoke:
             },
         }
 
-        cfg = OmegaConf.create({
-            "model": model_cfgs[model_name],
-            "backbone": backbone_cfg,
-        })
+        cfg = OmegaConf.create(
+            {
+                "model": model_cfgs[model_name],
+                "backbone": backbone_cfg,
+            }
+        )
 
         module, embed_dim = build_module(cfg, DUMMY_CONFIG)
         assert embed_dim == 384  # vit_small

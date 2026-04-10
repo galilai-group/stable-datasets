@@ -8,13 +8,14 @@ Arrow-native types or plain Python dicts (via ``to_pydict()``).
 from __future__ import annotations
 
 import bisect
-from collections import defaultdict, deque
+from collections import deque
 from collections.abc import Iterator
 from pathlib import Path
 
 import numpy as np
 import pyarrow as pa
 import pyarrow.ipc as ipc
+
 
 _MAX_OPEN_SHARDS = 512
 
@@ -180,8 +181,7 @@ class ArrowBackend:
         Python-managed memory for multi-shard datasets.
         """
         if self._shard_paths is None:
-            for batch in self.table.to_batches():
-                yield batch
+            yield from self.table.to_batches()
             return
 
         if shard_indices is None:
@@ -194,8 +194,7 @@ class ArrowBackend:
 
         for shard_id in shard_indices:
             shard_table = self._mmap_ipc(self._shard_paths[shard_id])
-            for batch in shard_table.to_batches():
-                yield batch
+            yield from shard_table.to_batches()
             del shard_table
 
     @property

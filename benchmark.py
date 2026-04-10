@@ -23,6 +23,7 @@ import statistics
 import subprocess
 import sys
 
+
 DEFAULT_CACHE_DIR = "/users/sboughan/scratch/.stable-datasets"
 TORCHVISION_ROOT = os.path.expanduser("~/.cache/torchvision")
 IMAGENET_ROOT = os.environ.get("IMAGENET_ROOT", "/data/imagenet")
@@ -98,7 +99,7 @@ LATEX_HEADERS = {
 # -- Subprocess worker script ------------------------------------------------
 # This runs in a fresh process so each backend gets clean imports and memory.
 
-WORKER_SCRIPT = r'''
+WORKER_SCRIPT = r"""
 import gc, json, os, resource, sys, time, warnings
 warnings.filterwarnings("ignore")
 
@@ -173,7 +174,7 @@ try:
 
 except Exception as e:
     print(json.dumps({"error": str(e)}))
-'''
+"""
 
 
 def run_one(backend, cfg, args):
@@ -186,9 +187,15 @@ def run_one(backend, cfg, args):
         cls_name = cfg["tv"][0]
 
     cmd = [
-        sys.executable, "-c", WORKER_SCRIPT,
-        backend, mod_path, cls_name,
-        args.split, str(args.batch_size), str(args.num_workers),
+        sys.executable,
+        "-c",
+        WORKER_SCRIPT,
+        backend,
+        mod_path,
+        cls_name,
+        args.split,
+        str(args.batch_size),
+        str(args.num_workers),
         str(args.num_epochs),
     ]
 
@@ -210,8 +217,11 @@ def run_one(backend, cfg, args):
 
     try:
         result = subprocess.run(
-            cmd, capture_output=True, text=True,
-            timeout=timeout, env=env,
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
         )
     except subprocess.TimeoutExpired:
         return {"error": f"timeout ({timeout}s)"}
@@ -237,9 +247,9 @@ def cleanup_cache(backend, args):
         return  # torchvision uses pre-extracted data, nothing to clean
 
     if os.path.exists(target):
-        size_gb = sum(
-            f.stat().st_size for f in __import__("pathlib").Path(target).rglob("*") if f.is_file()
-        ) / (1024 ** 3)
+        size_gb = sum(f.stat().st_size for f in __import__("pathlib").Path(target).rglob("*") if f.is_file()) / (
+            1024**3
+        )
         print(f"  [cleanup] removing {target} ({size_gb:.1f} GB)", flush=True)
         shutil.rmtree(target, ignore_errors=True)
 
@@ -288,9 +298,7 @@ def fmt_rss(bytes_val):
 
 def write_latex(results, ds_names, args, path):
     """Write three LaTeX tables (prep, read, total) matching the paper format."""
-    backends = [b for b in BACKENDS if any(
-        results.get(ds, {}).get(b) is not None for ds in ds_names
-    )]
+    backends = [b for b in BACKENDS if any(results.get(ds, {}).get(b) is not None for ds in ds_names)]
 
     def _col_header():
         return " & ".join(LATEX_HEADERS[b] for b in backends)
@@ -414,25 +422,32 @@ def main():
 
     parser = argparse.ArgumentParser(description="Dataset loading benchmark")
     parser.add_argument(
-        "--datasets", nargs="+", default=None,
+        "--datasets",
+        nargs="+",
+        default=None,
         help=f"Datasets to benchmark (default: all). Choices: {', '.join(DATASETS)}",
     )
-    parser.add_argument("--cache-dir", default=DEFAULT_CACHE_DIR,
-                        help="Base cache directory for downloads and processed data")
+    parser.add_argument(
+        "--cache-dir", default=DEFAULT_CACHE_DIR, help="Base cache directory for downloads and processed data"
+    )
     parser.add_argument("--imagenet-root", default=IMAGENET_ROOT)
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--num-workers", type=int, default=4)
-    parser.add_argument("--num-epochs", type=int, default=10,
-                        help="Epochs per subprocess run for read-time mean +/- std")
+    parser.add_argument(
+        "--num-epochs", type=int, default=10, help="Epochs per subprocess run for read-time mean +/- std"
+    )
     parser.add_argument("--num-runs", type=int, default=5)
     parser.add_argument("--split", default="train")
     parser.add_argument("-o", "--output", default=None, help="Save raw results to JSON")
     parser.add_argument(
-        "--latex-output", default="profile_tables.tex",
+        "--latex-output",
+        default="profile_tables.tex",
         help="LaTeX output path (default: profile_tables.tex)",
     )
     parser.add_argument(
-        "--backends", nargs="+", default=None,
+        "--backends",
+        nargs="+",
+        default=None,
         help=f"Backends to benchmark (default: all). Choices: {', '.join(BACKENDS)}",
     )
     args = parser.parse_args()
@@ -478,8 +493,7 @@ def main():
                 r = run_one(backend, cfg, args)
                 if "error" in r:
                     print(
-                        f"  [{label}] run {run_idx + 1}/{args.num_runs}: "
-                        f"ERROR - {r['error'][:100]}",
+                        f"  [{label}] run {run_idx + 1}/{args.num_runs}: ERROR - {r['error'][:100]}",
                         flush=True,
                     )
                     break
@@ -529,9 +543,7 @@ def main():
     col_w = 28
 
     # Prep: median (min-max)
-    header = f"{'Dataset':<14} " + " ".join(
-        f"{BACKEND_LABELS[b]:>{col_w}}" for b in BACKENDS
-    )
+    header = f"{'Dataset':<14} " + " ".join(f"{BACKEND_LABELS[b]:>{col_w}}" for b in BACKENDS)
     sep = "-" * len(header)
     print(f"\nPreparation Time (median, {args.num_runs} runs)")
     print(sep)

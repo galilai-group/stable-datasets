@@ -2,8 +2,6 @@ import io
 import tarfile
 from pathlib import Path
 
-from PIL import Image as PILImage
-
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, download
@@ -83,7 +81,9 @@ class ImageNet1K(_ImageNetArchiveMixin, BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="ImageNet-1K training split in TAR format with optional streaming.",
-            features=Features({"image": Image(encode_format="JPEG"), "label": ClassLabel(names=_default_class_names(1000))}),
+            features=Features(
+                {"image": Image(encode_format="JPEG"), "label": ClassLabel(names=_default_class_names(1000))}
+            ),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

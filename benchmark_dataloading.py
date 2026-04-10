@@ -69,10 +69,12 @@ import sys
 import time
 import warnings
 
+
 warnings.filterwarnings("ignore")
 
 import torch
 from torch.utils.data import DataLoader
+
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -169,12 +171,14 @@ BACKEND_LABELS = {
 
 # ── Collate function (module-level for pickling with num_workers > 0) ────────
 
+
 def _list_collate(batch):
     """Return batch as a list; avoids tensor-stacking issues with variable-size images."""
     return batch
 
 
 # ── Loaders ──────────────────────────────────────────────────────────────────
+
 
 def load_stable(module_path, cls_name, split):
     """Load a stable-datasets dataset (current branch, HF-backed)."""
@@ -241,6 +245,7 @@ def load_torchvision(cls_name, split_style, split, download=False):
 
 # ── Timing helpers ───────────────────────────────────────────────────────────
 
+
 def time_preparation(load_fn):
     """Time dataset preparation (construction from cache). Returns (dataset, seconds)."""
     gc.collect()
@@ -284,6 +289,7 @@ def _format_time(seconds):
 
 # ── Per-backend benchmark ────────────────────────────────────────────────────
 
+
 def _make_result(prep=None, read=None, length=None, error=None):
     return {"prep": prep, "read": read, "len": length, "error": error}
 
@@ -319,7 +325,9 @@ def benchmark_dataset(name, cfg, split, batch_size, num_workers, download_only=F
         results["stable"] = _bench_one(
             f"[{name}] stable-datasets",
             lambda: load_stable(stable_cfg[0], stable_cfg[1], split),
-            batch_size, num_workers, download_only,
+            batch_size,
+            num_workers,
+            download_only,
         )
     gc.collect()
 
@@ -330,7 +338,9 @@ def benchmark_dataset(name, cfg, split, batch_size, num_workers, download_only=F
         results["pyarrow"] = _bench_one(
             f"[{name}] stable-pyarrow",
             lambda: load_pyarrow(stable_cfg[0], stable_cfg[1], split),
-            batch_size, num_workers, download_only,
+            batch_size,
+            num_workers,
+            download_only,
         )
     else:
         results["pyarrow"] = _make_result(error="n/a")
@@ -344,7 +354,9 @@ def benchmark_dataset(name, cfg, split, batch_size, num_workers, download_only=F
         results["hf"] = _bench_one(
             f"[{name}] HF Datasets",
             lambda: load_hf(hf_cfg[0], hf_cfg[1], split),
-            batch_size, num_workers, download_only,
+            batch_size,
+            num_workers,
+            download_only,
         )
     gc.collect()
 
@@ -356,7 +368,9 @@ def benchmark_dataset(name, cfg, split, batch_size, num_workers, download_only=F
         results["tv"] = _bench_one(
             f"[{name}] Torchvision",
             lambda: load_torchvision(tv_cfg[0], tv_cfg[1], split, download=download_only),
-            batch_size, num_workers, download_only,
+            batch_size,
+            num_workers,
+            download_only,
         )
     gc.collect()
 
@@ -364,6 +378,7 @@ def benchmark_dataset(name, cfg, split, batch_size, num_workers, download_only=F
 
 
 # ── Output ───────────────────────────────────────────────────────────────────
+
 
 def print_table(all_results, metric, title):
     """Print a formatted comparison table for a given metric ('prep' or 'read')."""
@@ -417,9 +432,7 @@ def print_table(all_results, metric, title):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Benchmark stable-datasets vs HF Datasets vs Torchvision"
-    )
+    parser = argparse.ArgumentParser(description="Benchmark stable-datasets vs HF Datasets vs Torchvision")
     parser.add_argument(
         "--datasets",
         nargs="+",

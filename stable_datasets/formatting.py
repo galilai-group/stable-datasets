@@ -77,8 +77,7 @@ class PythonFormatter(Formatter):
         for col in self._array3d_cols:
             feat = self.features[col]
             cols[col] = [
-                np.frombuffer(v, dtype=feat.dtype).reshape(feat.shape) if v is not None else None
-                for v in cols[col]
+                np.frombuffer(v, dtype=feat.dtype).reshape(feat.shape) if v is not None else None for v in cols[col]
             ]
         return _zip_cols_to_rows(cols, n)
 
@@ -151,9 +150,9 @@ class TorchFormatter(Formatter):
         for col in self._array3d_cols:
             feat = self.features[col]
             cols[col] = [
-                torch.from_numpy(
-                    np.frombuffer(v, dtype=feat.dtype).reshape(feat.shape).astype(np.float32)
-                ) if v is not None else None
+                torch.from_numpy(np.frombuffer(v, dtype=feat.dtype).reshape(feat.shape).astype(np.float32))
+                if v is not None
+                else None
                 for v in cols[col]
             ]
 
@@ -191,15 +190,11 @@ class NumpyFormatter(Formatter):
         n = table.num_rows
         if self.decode_images:
             for col in self._image_cols:
-                cols[col] = [
-                    np.array(PILImage.open(io.BytesIO(v))) if v is not None else None
-                    for v in cols[col]
-                ]
+                cols[col] = [np.array(PILImage.open(io.BytesIO(v))) if v is not None else None for v in cols[col]]
         for col in self._array3d_cols:
             feat = self.features[col]
             cols[col] = [
-                np.frombuffer(v, dtype=feat.dtype).reshape(feat.shape) if v is not None else None
-                for v in cols[col]
+                np.frombuffer(v, dtype=feat.dtype).reshape(feat.shape) if v is not None else None for v in cols[col]
             ]
         return _zip_cols_to_rows(cols, n)
 
