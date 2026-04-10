@@ -553,10 +553,12 @@ def main(args):
     # Create run name from model and dataset
     run_name = f"{model_name}-{args.dataset.lower()}"
 
+    tags = [t.strip() for t in args.wandb_tags.split(",")] if args.wandb_tags else None
     logger = WandbLogger(
         entity=args.wandb_entity,
         project=args.wandb_project,
         name=run_name,
+        tags=tags,
     )
 
     # Configure WandB to use epoch as x-axis
@@ -787,6 +789,12 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="Config name for datasets with multiple configurations (e.g., 'balanced' for EMNIST, 'pathmnist' for MedMNIST). Required for EMNIST and MedMNIST.",
+    )
+    parser.add_argument(
+        "--wandb_tags",
+        type=str,
+        default=None,
+        help="Comma-separated wandb tags (e.g., 'pyarrow,v2')",
     )
 
     args = parser.parse_args()

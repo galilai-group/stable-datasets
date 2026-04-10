@@ -24,6 +24,7 @@ def main(kwargs, job_dir):
     max_epochs = kwargs.get("max_epochs", 100)
     wandb_entity = kwargs.get("wandb_entity", "samibg")
     wandb_project = kwargs.get("wandb_project", "finalized-stable-datasets")
+    wandb_tags = kwargs.get("wandb_tags", None)
     config_name = kwargs.get("config_name", None)
 
     # Set up the executor folder to include the job ID placeholder
@@ -73,6 +74,9 @@ def main(kwargs, job_dir):
         f"--results_file {results_file} "
         f"--force_rerun"
     )
+    # Add wandb tags if provided
+    if wandb_tags is not None:
+        command += f" --wandb_tags {wandb_tags}"
     # Add config_name if provided
     if config_name is not None:
         command += f" --config_name {config_name}"
@@ -179,6 +183,12 @@ if __name__ == "__main__":
         action="store_true",
         help="Skip the local completion check and always submit",
     )
+    parser.add_argument(
+        "--wandb_tags",
+        type=str,
+        default=None,
+        help="Comma-separated wandb tags (e.g., 'pyarrow')",
+    )
     args = parser.parse_args()
 
     # Create the directory where logs and results will be saved
@@ -241,6 +251,7 @@ if __name__ == "__main__":
                             "seed": seed,
                             "results_file": results_file,
                             "config_name": config_name,
+                            "wandb_tags": args.wandb_tags,
                             **DEFAULT_HYPERPARAMS,
                         }
                         main(kwargs, job_dir)
