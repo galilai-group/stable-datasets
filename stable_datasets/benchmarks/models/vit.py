@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from typing import Tuple, Union
 
-import timm
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -294,53 +293,4 @@ def create_vit(
         patch_size=patch_size,
         in_chans=in_chans,
         **config,
-    )
-
-
-def create_vit_base(
-    patch_size: int = 16,
-    img_size: Union[int, Tuple[int, int]] = 224,
-    pretrained: bool = False,
-    in_chans: int = 3,
-) -> nn.Module:
-    """Create a ViT-Base model.
-
-    Uses timm for standard square configurations when pretrained weights are available,
-    otherwise falls back to custom implementation for arbitrary/rectangular sizes.
-
-    Args:
-        patch_size: Size of image patches
-        img_size: Input image size (int for square, tuple for rectangular)
-        pretrained: Whether to load pretrained weights (only for standard sizes)
-        in_chans: Number of input channels
-
-    Returns:
-        A ViT-Base model configured for the given patch size and image size
-    """
-    # Standard timm configurations that have pretrained weights (square only)
-    timm_configs = {
-        (16, 224): "vit_base_patch16_224",
-        (16, 384): "vit_base_patch16_384",
-        (32, 224): "vit_base_patch32_224",
-        (32, 384): "vit_base_patch32_384",
-        (14, 224): "vit_base_patch14_224",
-    }
-
-    # Only use timm for square images with standard configurations
-    if isinstance(img_size, int):
-        key = (patch_size, img_size)
-        if key in timm_configs and (pretrained or in_chans == 3):
-            return timm.create_model(
-                timm_configs[key],
-                pretrained=pretrained,
-                num_classes=0,
-                in_chans=in_chans,
-            )
-
-    # Custom implementation for non-standard/rectangular configurations
-    return create_vit(
-        size="base",
-        img_size=img_size,
-        patch_size=patch_size,
-        in_chans=in_chans,
     )
