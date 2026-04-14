@@ -40,11 +40,6 @@ DATASETS = {
         "hf": ("tanganke/stl10", None),
         "tv": ("STL10", "split_arg"),
     },
-    "Beans": {
-        "stable": ("stable_datasets.images.beans", "Beans"),
-        "hf": ("beans", None),
-        "tv": None,
-    },
     "Flowers102": {
         "stable": ("stable_datasets.images.flowers102", "Flowers102"),
         "hf": ("nelorth/oxford-flowers", None),

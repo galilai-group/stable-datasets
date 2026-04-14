@@ -1,17 +1,20 @@
-"""PyArrow-backed dataset with optional TensorDict conversion.
+"""Map-style dataset built on a pluggable storage backend.
 
-Provides ``StableDataset`` (single split) and ``StableDatasetDict`` (multi-split)
-with ``__len__``, ``__getitem__``, ``__getitems__``, ``__iter__``,
-``.features``, and ``.train_test_split()`` for downstream benchmarks.
+Provides :class:`StableDataset` (single split) and
+:class:`StableDatasetDict` (multi-split), exposing ``__len__``,
+``__getitem__``, ``__getitems__``, ``__iter__``, ``.features``, and
+``.train_test_split()``.
 
 Architecture: three layers with strict boundaries::
 
-    ArrowBackend   -> owns storage (mmap, shards, pickle), returns Arrow types
+    StorageBackend  -> row access, iteration, pickling (returns Arrow types)
         |
-    Formatter      -> converts Arrow output to user-requested format (PIL/torch/numpy/raw)
+    Formatter       -> Arrow -> user type (PIL / torch / numpy / raw)
         |
-    StableDataset  -> orchestrates backend + formatter + indices + transform
-                      knows nothing about files, shards, or mmap
+    StableDataset   -> orchestrates backend + formatter + indices + transform
+
+:class:`StableDataset` depends only on the :class:`StorageBackend`
+protocol, never on a concrete implementation or on-disk layout.
 """
 
 from __future__ import annotations
@@ -25,6 +28,7 @@ import pyarrow as pa
 import pyarrow.ipc as ipc
 
 from .backend import ArrowBackend
+from .storage import StorageBackend
 from .cache import _CACHE_FORMAT_VERSION, _features_fingerprint
 from .formatting import get_formatter
 from .schema import (
@@ -57,7 +61,7 @@ class StableDataset:
         info: DatasetInfo,
         *,
         # Storage — pass exactly one of: backend, shard_paths, table
-        backend: ArrowBackend | None = None,
+        backend: StorageBackend | None = None,
         shard_paths: list[Path] | None = None,
         shard_row_counts: list[int] | None = None,
         table: pa.Table | None = None,
@@ -73,6 +77,7 @@ class StableDataset:
         self._info = info
 
         # Build backend from convenience args if not provided directly
+        self._backend: StorageBackend
         if backend is not None:
             self._backend = backend
         elif shard_paths is not None:

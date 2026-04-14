@@ -35,10 +35,6 @@ DATASETS = {
         "stable": ("stable_datasets.images.stl10", "STL10"),
         "hf": ("tanganke/stl10", None),
     },
-    "Beans": {
-        "stable": ("stable_datasets.images.beans", "Beans"),
-        "hf": ("beans", None),
-    },
     "Flowers102": {
         "stable": ("stable_datasets.images.flowers102", "Flowers102"),
         "hf": ("nelorth/oxford-flowers", None),

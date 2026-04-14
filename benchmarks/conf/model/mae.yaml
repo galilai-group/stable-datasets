@@ -15,7 +15,7 @@ decoder:
 params:
   default:
     batch_size: 256
-    max_epochs: 200
+    max_epochs: 100
     accumulate_grad_batches: 1
   # CIFAR-scale (32x32)
   cifar10:
@@ -80,9 +80,9 @@ params:
   tinyimagenet:
     batch_size: 256
     max_epochs: 200
-  imagenet:
+  imagenette:
     batch_size: 256
-    max_epochs: 100
+    max_epochs: 300
 
 vit_optimizer:
   type: AdamW

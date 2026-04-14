@@ -1,7 +1,9 @@
-"""Formatter classes for converting Arrow-native values to user-facing types.
+"""Formatters that convert Arrow-native values to user-facing types.
 
-Three-layer separation: ArrowBackend -> Formatter -> StableDataset.
-The backend never imports PIL or torch. The formatter never touches Arrow files.
+Middle layer of the three-layer split
+(:class:`StorageBackend` -> :class:`Formatter` -> :class:`StableDataset`).
+Formatters consume Arrow values and emit PIL images, numpy arrays, torch
+tensors, or raw Python, never touching files or storage themselves.
 """
 
 from __future__ import annotations

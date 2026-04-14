@@ -19,7 +19,7 @@ loss:
 params:
   default:
     batch_size: 256
-    max_epochs: 125
+    max_epochs: 63
   # CIFAR-scale (32x32)
   cifar10:
     batch_size: 256
@@ -83,9 +83,10 @@ params:
   tinyimagenet:
     batch_size: 256
     max_epochs: 125
-  imagenet:
+  imagenette:
     batch_size: 256
-    max_epochs: 63
+    accumulate_grad_batches: 8
+    max_epochs: 188
 
 vit_optimizer:
   type: AdamW
