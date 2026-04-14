@@ -3,7 +3,7 @@ name: supervised
 params:
   default:
     batch_size: 128
-    max_epochs: 100
+    max_epochs: 50
     accumulate_grad_batches: 1
   # CIFAR-scale (32x32) — tier 4 (×4)
   cifar10:
@@ -68,9 +68,9 @@ params:
   tinyimagenet:
     batch_size: 128
     max_epochs: 100
-  imagenet:
+  imagenette:
     batch_size: 128
-    max_epochs: 50
+    max_epochs: 150
 
 vit_optimizer:
   type: AdamW

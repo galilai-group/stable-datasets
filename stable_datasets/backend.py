@@ -1,8 +1,10 @@
-"""Arrow-native storage layer.
+"""Arrow IPC implementation of :class:`StorageBackend`.
 
-Owns mmap lifetime, table access, and pickle/unpickle. Knows nothing about
-PIL, torch, or numpy beyond what Arrow itself uses. All public methods return
-Arrow-native types or plain Python dicts (via ``to_pydict()``).
+:class:`ArrowBackend` owns mmap lifetime, shard routing, and
+pickle/unpickle for Arrow IPC shard files. Returns Arrow-native types
+(:class:`pa.Table`, :class:`pa.RecordBatch`) and plain Python dicts;
+carries no dependency on PIL, torch, or numpy beyond what Arrow itself
+requires. Decoding to user-facing types is the formatter's job.
 """
 
 from __future__ import annotations
@@ -73,6 +75,14 @@ class ArrowBackend:
     @property
     def is_file_backed(self) -> bool:
         return self._shard_paths is not None
+
+    @property
+    def schema(self) -> pa.Schema:
+        if self._schema is not None:
+            return self._schema
+        if self._table is not None:
+            return self._table.schema
+        return self.table.schema
 
     @property
     def table(self) -> pa.Table:

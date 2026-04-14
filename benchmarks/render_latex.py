@@ -1,12 +1,12 @@
-"""Collect benchmark results from W&B into summary tables.
+"""Render benchmark results from W&B into a LaTeX summary table.
 
 Fetches runs from a W&B project, validates them against the expected
-hyperparameters from conf/model/*.yaml, and produces a pivot table
-(dataset x method) with optional LaTeX export.
+hyperparameters from conf/model/*.yaml, produces a pivot table
+(dataset x method), and writes it as a LaTeX table to
+``benchmarks/results/benchmark_table.tex``.
 
 Usage:
-    python -m benchmarks.collect_results
-    python -m benchmarks.collect_results --refresh --latex table.tex
+    python -m benchmarks.render_latex
 """
 
 from __future__ import annotations
@@ -280,13 +280,18 @@ def format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) -> 
 # CLI
 
 
+RESULTS_DIR = Path(__file__).resolve().parent / "results"
+DEFAULT_LATEX_PATH = RESULTS_DIR / "benchmark_table.tex"
+DEFAULT_CSV_PATH = RESULTS_DIR / "benchmark_results.csv"
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Collect benchmark results from W&B")
+    parser = argparse.ArgumentParser(description="Render benchmark results from W&B to LaTeX")
     parser.add_argument("--entity", default="samibg")
     parser.add_argument("--project", default="finalized-stable-datasets")
-    parser.add_argument("--output", default="results.csv", help="Output CSV path")
-    parser.add_argument("--latex", default=None, help="Output LaTeX path (.tex)")
     args = parser.parse_args()
+
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     expected_params = _load_expected_params()
     df = collect_runs(args.entity, args.project, expected_params)
@@ -302,13 +307,11 @@ def main():
     print("\n=== Linear Probe Top-1 (dataset x method) ===")
     print((table * 100).round(1).to_markdown())
 
-    if args.output:
-        df.to_csv(args.output, index=False)
-        print(f"\nSaved to {args.output}")
+    df.to_csv(DEFAULT_CSV_PATH, index=False)
+    print(f"\nSaved CSV to {DEFAULT_CSV_PATH}")
 
-    if args.latex:
-        Path(args.latex).write_text(format_latex(table, std_table))
-        print(f"LaTeX table saved to {args.latex}")
+    DEFAULT_LATEX_PATH.write_text(format_latex(table, std_table))
+    print(f"LaTeX table saved to {DEFAULT_LATEX_PATH}")
 
 
 if __name__ == "__main__":
