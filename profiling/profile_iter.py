@@ -232,7 +232,10 @@ def main():
 
     # Append to consolidated history file unless suppressed.
     if args.history and not args.no_history:
-        from stable_datasets.tools.consolidate_profile_results import (
+        # consolidate_profile_results lives next to this script; when
+        # profile_iter.py is invoked as `python profiling/profile_iter.py`,
+        # sys.path[0] is ``profiling/`` and the import resolves directly.
+        from consolidate_profile_results import (
             append_run,
             load_history,
             save_history,

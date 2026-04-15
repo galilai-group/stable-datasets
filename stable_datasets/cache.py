@@ -378,11 +378,6 @@ def write_lance_cache(
     :class:`pa.RecordBatchReader`, so the native Lance write path is
     used end-to-end.
 
-    This is the production Phase-C writer. For converting an existing
-    on-disk Arrow cache to Lance (e.g. for profiling a backend change
-    without re-running the builder from scratch), see
-    ``stable_datasets/tools/arrow_to_lance.py``.
-
     Writing is atomic: Lance writes to a temporary directory next to
     ``cache_dir`` and the directory is renamed on success. The
     completed cache directory contains:
