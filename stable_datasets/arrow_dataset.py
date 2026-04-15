@@ -196,13 +196,18 @@ class StableDataset:
     def __getitems__(self, indices: list[int]) -> list[dict]:
         """Batched sample loading (called by PyTorch DataLoader).
 
-        Policy (benchmarked on CIFAR-10 and 10k-row scalar datasets):
-        - Binary columns (Image/Array3D/Video): per-row slice() is ~2x
-          faster because take() copies variable-length binary data.
-        - Scalar-only columns: batched take() is ~10x faster because it
-          avoids per-row Python call overhead.
+        Policy is backend-sensitive. ArrowBackend's ``slice(i, 1)`` on
+        an mmap'd table is zero-copy and unbeatable per-row, while its
+        ``take`` rebuilds chunk offsets -- so for binary columns the
+        per-row loop wins. LanceBackend inverts this: every call
+        crosses the Python<->Rust async boundary at fixed cost, so the
+        batched ``take`` path amortizes it and the per-row loop is
+        catastrophic. Backends advertise their preference via
+        ``prefer_batched_take``; when absent it defaults to False
+        (Arrow's shape).
         """
-        if self._has_binary_cols:
+        prefer_batched = getattr(self._backend, "prefer_batched_take", False)
+        if self._has_binary_cols and not prefer_batched:
             return [self[i] for i in indices]
 
         idx_array = np.asarray(indices, dtype=np.int64)

@@ -69,7 +69,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     # Grayscale datasets (1-channel)
     "emnist": _gray("emnist", "EMNIST", 47, mean=[0.1751], std=[0.3332]),
     "fashionmnist": _gray("fashionmnist", "FashionMNIST", 10, mean=[0.2860], std=[0.3530]),
-    "hasyv2": _gray("hasyv2", "HASYv2", 369, mean=[0.4526], std=[0.2194]),
     "kmnist": _gray("kmnist", "KMNIST", 10, mean=[0.1918], std=[0.3483]),
     "medmnist": _gray("medmnist", "MedMNIST", 2, mean=[0.4823], std=[0.2363]),
     "notmnist": _gray("notmnist", "NotMNIST", 10, mean=[0.4178], std=[0.4532]),
@@ -126,20 +125,23 @@ def create_dataset(
 ) -> tuple[spt.data.DataModule, DatasetConfig]:
     """Load a dataset and wrap it as a DataModule.
 
-    Transforms and collation are provided by the caller (typically from
-    the model's ``create_transforms`` function).
+    ``collate_fn`` is used for the train loader. The val loader always
+    uses ``collate_single`` because validation samples are single-view
+    regardless of the training multi-view configuration.
 
     Args:
         name: Dataset name (case-insensitive).
         train_transform: Transform applied to each training sample.
         val_transform: Transform applied to each validation sample.
-        collate_fn: Collation function for the DataLoader.
+        collate_fn: Collation function for the *train* DataLoader.
         training_cfg: OmegaConf node with batch_size and num_workers.
         data_dir: Root directory for HF downloads/cache.
 
     Returns:
         Tuple of (DataModule, DatasetConfig).
     """
+    from benchmarks.models import collate_single
+
     name_lower = name.lower()
     ds_config = get_config(name_lower)
 
@@ -192,7 +194,7 @@ def create_dataset(
         num_workers=num_workers,
         shuffle=False,
         drop_last=False,
-        collate_fn=collate_fn,
+        collate_fn=collate_single,
         multiprocessing_context=mp_ctx,
         prefetch_factor=prefetch_factor,
     )

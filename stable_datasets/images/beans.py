@@ -1,7 +1,5 @@
 import zipfile
 
-from PIL import Image as PILImage
-
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
@@ -48,9 +46,9 @@ class Beans(BaseDatasetBuilder):
     def _generate_examples(self, data_path, split):
         with zipfile.ZipFile(data_path, "r") as archive:
             for file_name in archive.namelist():
-                if file_name.endswith(".jpg"):
-                    with archive.open(file_name) as file:
-                        image_data = PILImage.open(file)
-                        label_name = file_name.split("/")[1]
-                        label = self.info.features["label"].str2int(label_name)
-                        yield file_name, {"image": image_data, "label": label}
+                if not file_name.endswith(".jpg"):
+                    continue
+                image_bytes = archive.read(file_name)
+                label_name = file_name.split("/")[1]
+                label = self.info.features["label"].str2int(label_name)
+                yield file_name, {"image": image_bytes, "label": label}
