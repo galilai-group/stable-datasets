@@ -49,30 +49,16 @@ try:
             ds = ds.set_decode(False)
 
     elif backend == "stable_lance":
-        # Load the dataset the usual way so the Arrow cache is
-        # populated and we get the right Features/DatasetInfo. Then
-        # convert the cache to Lance (idempotent) and swap the
-        # backend in place. The rest of the DataLoader path is
-        # unchanged -- this isolates the variable to storage format.
+        # Exercise the Phase C Lance writer path via the public
+        # runtime-override kwarg. First run on each dataset pays a
+        # cache miss through write_lance_cache; subsequent runs hit
+        # the Lance cache via BaseDatasetBuilder's normal cache-hit
+        # branch. Arrow and Lance caches coexist at distinct paths
+        # because cache_fingerprint hashes the format.
         import importlib
-        from pathlib import Path
-
-        from stable_datasets.lance_backend import LanceBackend
-        from stable_datasets.tools.arrow_to_lance import arrow_to_lance
 
         mod = importlib.import_module(mod_path)
-        ds = getattr(mod, cls_name)(split=split)
-
-        arrow_cache_dir = Path(ds._backend._shard_paths[0]).parent
-        lance_root = Path(
-            os.environ.get("STABLE_DATASETS_LANCE_CACHE", "/users/sboughan/scratch/lance_cache")
-        )
-        lance_dir = lance_root / arrow_cache_dir.name
-        if not lance_dir.exists():
-            lance_dir.parent.mkdir(parents=True, exist_ok=True)
-            arrow_to_lance(arrow_cache_dir, lance_dir)
-
-        ds._backend = LanceBackend(uri=lance_dir)
+        ds = getattr(mod, cls_name)(split=split, storage_format="lance")
         if not decode_on:
             ds = ds.set_decode(False)
 

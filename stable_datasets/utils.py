@@ -79,13 +79,29 @@ class BaseDatasetBuilder:
     BUILDER_CONFIGS: list = []
     DEFAULT_CONFIG_NAME: str | None = None
 
-    # Storage backend for the processed cache. "arrow" (default) writes
-    # sharded Arrow IPC files via write_sharded_arrow_cache and reads
-    # through :class:`ArrowBackend`. "lance" writes a native Lance
-    # dataset via write_lance_cache and reads through
-    # :class:`LanceBackend`. Per-dataset opt-in; the default preserves
-    # existing behavior and does not retroactively invalidate on-disk
-    # Arrow caches (the cache_fingerprint for "arrow" is unchanged).
+    # Class-level default storage backend for the processed cache.
+    # "arrow" (library default) writes sharded Arrow IPC files via
+    # write_sharded_arrow_cache and reads through :class:`ArrowBackend`.
+    # "lance" writes a native Lance dataset via write_lance_cache and
+    # reads through :class:`LanceBackend`.
+    #
+    # End users can also override this per-call at load time by
+    # passing ``storage_format="arrow"`` or ``storage_format="lance"``
+    # to the builder constructor, e.g. ``CIFAR10(split="train",
+    # storage_format="lance")``. Arrow and Lance caches coexist at
+    # distinct paths because ``cache_fingerprint`` hashes the format,
+    # so flipping the format at load time does not invalidate or
+    # clobber the other cache.
+    #
+    # Decision guide (from our profiling on ImageNet-1K and the small
+    # image datasets): keep "arrow" for datasets under ~100 GB on
+    # 256 GB training nodes -- Arrow's mmap is unbeatable when the
+    # dataset fits warm in the page cache. Use "lance" for datasets
+    # that will thrash the page cache (above ~300 GB, or any size on
+    # sub-128 GB nodes), and for cheap-decode workloads (tensors,
+    # audio, embeddings) where decode does not mask the storage-layer
+    # difference. See benchmarks/results/lance_investigation_table.tex
+    # for the supporting measurements.
     STORAGE_FORMAT: str = "arrow"
 
     @staticmethod
@@ -252,24 +268,50 @@ class BaseDatasetBuilder:
         """Yield (key, example_dict) pairs. Must be overridden."""
         raise NotImplementedError
 
-    def __new__(cls, *args, split=None, processed_cache_dir=None, download_dir=None, **kwargs):
+    def __new__(
+        cls,
+        *args,
+        split=None,
+        processed_cache_dir=None,
+        download_dir=None,
+        storage_format=None,
+        **kwargs,
+    ):
         """
         Automatically download, prepare, and return the dataset for the specified split.
 
         Args:
             split: Dataset split to load (e.g., "train", "test", "validation"). If None,
                 loads all available splits and returns a StableDatasetDict.
-            processed_cache_dir: Cache directory for processed datasets (Arrow cache). If None,
+            processed_cache_dir: Cache directory for processed datasets. If None,
                 defaults to ~/.stable_datasets/processed/.
             download_dir: Directory for raw downloads (ZIP/NPZ/etc). If None, defaults to
                 ~/.stable_datasets/downloads/.
+            storage_format: Load-time override for the storage backend, either
+                ``"arrow"`` or ``"lance"``. When None (default), falls back to
+                the builder class's ``STORAGE_FORMAT`` attribute, which itself
+                defaults to ``"arrow"``. Arrow and Lance caches coexist at
+                distinct directories (``cache_fingerprint`` hashes the
+                format), so switching at load time does not invalidate or
+                clobber the other cache; the first load in a new format
+                pays a cache-miss build, subsequent loads hit instantly.
+                Note this is distinct from :meth:`StableDataset.with_format`,
+                which controls the output type (torch / numpy / raw) of
+                decoded rows.
             **kwargs: Additional arguments passed to the dataset builder (e.g. config_name).
 
         Returns:
             Union[StableDataset, StableDatasetDict]: The loaded dataset (single split)
                 or a StableDatasetDict (all splits).
         """
+        if storage_format is not None and storage_format not in ("arrow", "lance"):
+            raise ValueError(
+                f"storage_format must be 'arrow' or 'lance', got {storage_format!r}"
+            )
+
         instance = object.__new__(cls)
+        effective_format = storage_format if storage_format is not None else cls.STORAGE_FORMAT
+        instance._effective_storage_format = effective_format
 
         # 1) Decide cache locations
         if processed_cache_dir is None:
@@ -310,19 +352,19 @@ class BaseDatasetBuilder:
                 str(cls.VERSION),
                 instance.config.name,
                 split_name,
-                storage_format=cls.STORAGE_FORMAT,
+                storage_format=effective_format,
             )
             shard_dir = instance._processed_cache_dir / shard_dir_name
 
             if (shard_dir / "_metadata.json").exists():
                 on_disk_format = detect_cache_format(shard_dir)
-                if on_disk_format != cls.STORAGE_FORMAT:
+                if on_disk_format != effective_format:
                     # Different format lives at a different fingerprint;
                     # if we got here the hash collided, which would be a
                     # cache-fingerprint bug. Treat as a cache miss.
                     all_cached = False
                     break
-                if cls.STORAGE_FORMAT == "lance":
+                if effective_format == "lance":
                     lance_meta = read_lance_cache_meta(shard_dir)
                     backend = LanceBackend(uri=shard_dir)
                     # num_rows must be passed from metadata -- reading
@@ -353,7 +395,7 @@ class BaseDatasetBuilder:
                 break
 
         # 5) Cache miss: download raw files and generate caches.
-        #    Writer and backend are chosen by cls.STORAGE_FORMAT.
+        #    Writer and backend are chosen by effective_format.
         if not all_cached:
             splits_data = {}
             split_generators = instance._split_generators()
@@ -364,11 +406,11 @@ class BaseDatasetBuilder:
                     str(cls.VERSION),
                     instance.config.name,
                     sg.name,
-                    storage_format=cls.STORAGE_FORMAT,
+                    storage_format=effective_format,
                 )
                 shard_dir = instance._processed_cache_dir / shard_dir_name
 
-                if cls.STORAGE_FORMAT == "lance":
+                if effective_format == "lance":
                     if (shard_dir / "_metadata.json").exists():
                         lance_meta = read_lance_cache_meta(shard_dir)
                     else:
