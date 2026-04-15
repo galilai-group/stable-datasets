@@ -25,9 +25,13 @@ from tqdm import tqdm
 
 from .arrow_dataset import StableDataset, StableDatasetDict
 from .backend import ArrowBackend
+from .lance_backend import LanceBackend
 from .cache import (
     cache_fingerprint,
+    detect_cache_format,
+    read_lance_cache_meta,
     validate_sharded_cache,
+    write_lance_cache,
     write_sharded_arrow_cache,
 )
 from .schema import BuilderConfig, Image, Version
@@ -74,6 +78,15 @@ class BaseDatasetBuilder:
     # Optional: multi-variant datasets define BUILDER_CONFIGS and optionally DEFAULT_CONFIG_NAME.
     BUILDER_CONFIGS: list = []
     DEFAULT_CONFIG_NAME: str | None = None
+
+    # Storage backend for the processed cache. "arrow" (default) writes
+    # sharded Arrow IPC files via write_sharded_arrow_cache and reads
+    # through :class:`ArrowBackend`. "lance" writes a native Lance
+    # dataset via write_lance_cache and reads through
+    # :class:`LanceBackend`. Per-dataset opt-in; the default preserves
+    # existing behavior and does not retroactively invalidate on-disk
+    # Arrow caches (the cache_fingerprint for "arrow" is unchanged).
+    STORAGE_FORMAT: str = "arrow"
 
     @staticmethod
     def _freeze(obj):
@@ -297,27 +310,50 @@ class BaseDatasetBuilder:
                 str(cls.VERSION),
                 instance.config.name,
                 split_name,
+                storage_format=cls.STORAGE_FORMAT,
             )
             shard_dir = instance._processed_cache_dir / shard_dir_name
 
             if (shard_dir / "_metadata.json").exists():
-                meta = validate_sharded_cache(shard_dir, features)
-                backend = ArrowBackend(
-                    shard_paths=meta.shard_paths,
-                    shard_row_counts=meta.shard_row_counts,
-                    schema=features.to_arrow_schema(),
-                )
-                splits_data[split_name] = StableDataset(
-                    features=features,
-                    info=instance._dataset_info,
-                    backend=backend,
-                    num_rows=meta.num_rows,
-                )
+                on_disk_format = detect_cache_format(shard_dir)
+                if on_disk_format != cls.STORAGE_FORMAT:
+                    # Different format lives at a different fingerprint;
+                    # if we got here the hash collided, which would be a
+                    # cache-fingerprint bug. Treat as a cache miss.
+                    all_cached = False
+                    break
+                if cls.STORAGE_FORMAT == "lance":
+                    lance_meta = read_lance_cache_meta(shard_dir)
+                    backend = LanceBackend(uri=shard_dir)
+                    # num_rows must be passed from metadata -- reading
+                    # it through the backend would open Lance in the
+                    # main process and segfault DataLoader workers on
+                    # fork. See LanceBackend fork-safety contract.
+                    splits_data[split_name] = StableDataset(
+                        features=features,
+                        info=instance._dataset_info,
+                        backend=backend,
+                        num_rows=lance_meta.num_rows,
+                    )
+                else:
+                    meta = validate_sharded_cache(shard_dir, features)
+                    backend = ArrowBackend(
+                        shard_paths=meta.shard_paths,
+                        shard_row_counts=meta.shard_row_counts,
+                        schema=features.to_arrow_schema(),
+                    )
+                    splits_data[split_name] = StableDataset(
+                        features=features,
+                        info=instance._dataset_info,
+                        backend=backend,
+                        num_rows=meta.num_rows,
+                    )
             else:
                 all_cached = False
                 break
 
-        # 5) Cache miss: download raw files and generate Arrow caches.
+        # 5) Cache miss: download raw files and generate caches.
+        #    Writer and backend are chosen by cls.STORAGE_FORMAT.
         if not all_cached:
             splits_data = {}
             split_generators = instance._split_generators()
@@ -328,30 +364,46 @@ class BaseDatasetBuilder:
                     str(cls.VERSION),
                     instance.config.name,
                     sg.name,
+                    storage_format=cls.STORAGE_FORMAT,
                 )
                 shard_dir = instance._processed_cache_dir / shard_dir_name
 
-                if (shard_dir / "_metadata.json").exists():
-                    meta = validate_sharded_cache(shard_dir, features)
-                else:
-                    generator = instance._generate_examples(**sg.gen_kwargs)
-                    has_images = any(isinstance(f, Image) for f in features.values())
-                    compression = None if has_images else "zstd"
-                    meta = write_sharded_arrow_cache(
-                        generator, features, shard_dir, compression=compression, num_encode_workers=4
+                if cls.STORAGE_FORMAT == "lance":
+                    if (shard_dir / "_metadata.json").exists():
+                        lance_meta = read_lance_cache_meta(shard_dir)
+                    else:
+                        generator = instance._generate_examples(**sg.gen_kwargs)
+                        lance_meta = write_lance_cache(
+                            generator, features, shard_dir, num_encode_workers=4
+                        )
+                    backend = LanceBackend(uri=shard_dir)
+                    splits_data[sg.name] = StableDataset(
+                        features=features,
+                        info=instance._dataset_info,
+                        backend=backend,
+                        num_rows=lance_meta.num_rows,
                     )
-
-                backend = ArrowBackend(
-                    shard_paths=meta.shard_paths,
-                    shard_row_counts=meta.shard_row_counts,
-                    schema=features.to_arrow_schema(),
-                )
-                splits_data[sg.name] = StableDataset(
-                    features=features,
-                    info=instance._dataset_info,
-                    backend=backend,
-                    num_rows=meta.num_rows,
-                )
+                else:
+                    if (shard_dir / "_metadata.json").exists():
+                        meta = validate_sharded_cache(shard_dir, features)
+                    else:
+                        generator = instance._generate_examples(**sg.gen_kwargs)
+                        has_images = any(isinstance(f, Image) for f in features.values())
+                        compression = None if has_images else "zstd"
+                        meta = write_sharded_arrow_cache(
+                            generator, features, shard_dir, compression=compression, num_encode_workers=4
+                        )
+                    backend = ArrowBackend(
+                        shard_paths=meta.shard_paths,
+                        shard_row_counts=meta.shard_row_counts,
+                        schema=features.to_arrow_schema(),
+                    )
+                    splits_data[sg.name] = StableDataset(
+                        features=features,
+                        info=instance._dataset_info,
+                        backend=backend,
+                        num_rows=meta.num_rows,
+                    )
 
         # 6) Return single split or dict
         if split is not None:

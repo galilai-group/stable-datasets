@@ -110,9 +110,24 @@ def _features_fingerprint(features: Features) -> str:
     return hashlib.sha256(repr(features).encode()).hexdigest()[:16]
 
 
-def cache_fingerprint(cls_name: str, version: str, config_name: str, split: str) -> str:
-    """Deterministic cache directory name for a dataset variant + split."""
+def cache_fingerprint(
+    cls_name: str,
+    version: str,
+    config_name: str,
+    split: str,
+    storage_format: str = "arrow",
+) -> str:
+    """Deterministic cache directory name for a dataset variant + split.
+
+    ``storage_format`` is included in the hash for non-Arrow formats so
+    Arrow and Lance caches for the same dataset coexist at different
+    paths rather than colliding. For ``storage_format="arrow"`` (the
+    default) we preserve the pre-Lance hash format so existing on-disk
+    Arrow caches are not retroactively invalidated.
+    """
     key = f"{cls_name}:{version}:{config_name}:{split}"
+    if storage_format != "arrow":
+        key = f"{key}:{storage_format}"
     digest = hashlib.sha256(key.encode()).hexdigest()[:16]
     return f"{cls_name.lower()}_{config_name}_{split}_{digest}"
 
@@ -341,6 +356,167 @@ def write_sharded_arrow_cache(
         shard_row_counts=shard_row_counts,
         schema_fingerprint=meta["schema_fingerprint"],
         compression=compression,
+    )
+
+
+def write_lance_cache(
+    generator,
+    features: Features,
+    cache_dir: Path,
+    *,
+    batch_size: int = 1000,
+    num_encode_workers: int = 0,
+    lineage: dict | None = None,
+) -> LanceCacheMeta:
+    """Consume a generator and write directly to a Lance dataset.
+
+    Mirrors :func:`write_sharded_arrow_cache` in shape (same generator
+    contract, same features, same encode pipeline, same atomic-publish
+    semantics) but writes a Lance dataset via ``lance.write_dataset``
+    instead of Arrow IPC shards. No intermediate Arrow IPC file is
+    produced -- the encoded rows stream into Lance via a
+    :class:`pa.RecordBatchReader`, so the native Lance write path is
+    used end-to-end.
+
+    This is the production Phase-C writer. For converting an existing
+    on-disk Arrow cache to Lance (e.g. for profiling a backend change
+    without re-running the builder from scratch), see
+    ``stable_datasets/tools/arrow_to_lance.py``.
+
+    Writing is atomic: Lance writes to a temporary directory next to
+    ``cache_dir`` and the directory is renamed on success. The
+    completed cache directory contains:
+
+    * Lance dataset files (``_versions/``, ``data/``, manifest)
+    * ``_metadata.json`` -- row count, format marker, schema fingerprint
+
+    Parameters
+    ----------
+    batch_size : int
+        Rows per ``pa.RecordBatch`` flushed to the Lance writer. Larger
+        batches reduce per-call overhead; smaller batches reduce peak
+        memory during writing.
+    num_encode_workers : int
+        When > 0, encode examples in parallel using a thread pool
+        (same contract as the Arrow writer).
+    lineage : dict, optional
+        Optional provenance blob written into ``_metadata.json``.
+    """
+    import lance
+
+    cache_dir = Path(cache_dir)
+    cache_dir.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = cache_dir.with_suffix(".lock")
+    schema = features.to_arrow_schema()
+
+    tmp_dir = Path(tempfile.mkdtemp(dir=cache_dir.parent, prefix=f".{cache_dir.name}_tmp_"))
+
+    # Bookkeeping kept out of the generator so we can read it after the
+    # stream is consumed by lance.write_dataset.
+    counter = {"rows": 0}
+
+    encoded_gen = _encode_gen(generator, features, batch_size, num_encode_workers)
+
+    def batch_stream():
+        batch_rows: dict[str, list] = {name: [] for name in features}
+        for _key, encoded in encoded_gen:
+            for col_name in features:
+                batch_rows[col_name].append(encoded.get(col_name))
+            counter["rows"] += 1
+            if counter["rows"] % batch_size == 0:
+                arrays = [
+                    pa.array(batch_rows[name], type=features[name].to_arrow_type())
+                    for name in features
+                ]
+                yield pa.record_batch(arrays, schema=schema)
+                for col in batch_rows:
+                    batch_rows[col] = []
+        if batch_rows[next(iter(batch_rows))]:
+            arrays = [
+                pa.array(batch_rows[name], type=features[name].to_arrow_type())
+                for name in features
+            ]
+            yield pa.record_batch(arrays, schema=schema)
+
+    try:
+        with FileLock(str(lock_path)):
+            rbr = pa.RecordBatchReader.from_batches(schema, batch_stream())
+            lance.write_dataset(rbr, str(tmp_dir))
+
+            meta = {
+                "cache_format_version": _CACHE_FORMAT_VERSION,
+                "format": "lance",
+                "schema_fingerprint": _features_fingerprint(features),
+                "num_rows": counter["rows"],
+            }
+            if lineage:
+                meta["lineage"] = lineage
+            (tmp_dir / _METADATA_FILE).write_text(json.dumps(meta, indent=2))
+
+            # Atomic publish. Lance dataset files are internally
+            # self-contained (paths are relative to the dataset root),
+            # so a rename is safe.
+            if cache_dir.exists():
+                shutil.rmtree(cache_dir)
+            os.rename(str(tmp_dir), str(cache_dir))
+    except BaseException:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        raise
+
+    logging.info(f"Cached {counter['rows']} examples in Lance format to {cache_dir}")
+
+    return LanceCacheMeta(
+        cache_dir=cache_dir,
+        num_rows=counter["rows"],
+        schema_fingerprint=meta["schema_fingerprint"],
+    )
+
+
+class LanceCacheMeta:
+    """Lightweight descriptor for a Lance-format cache on disk."""
+
+    __slots__ = ("cache_dir", "num_rows", "schema_fingerprint")
+
+    def __init__(self, cache_dir: Path, num_rows: int, schema_fingerprint: str):
+        self.cache_dir = Path(cache_dir)
+        self.num_rows = num_rows
+        self.schema_fingerprint = schema_fingerprint
+
+
+def detect_cache_format(cache_dir: Path) -> str:
+    """Return ``"arrow"`` or ``"lance"`` based on the cache's metadata.
+
+    Caches written before Phase C do not carry a ``"format"`` field in
+    their ``_metadata.json``; those default to ``"arrow"``.
+    """
+    meta_path = Path(cache_dir) / _METADATA_FILE
+    if not meta_path.exists():
+        raise FileNotFoundError(f"No metadata file at {meta_path}")
+    raw = json.loads(meta_path.read_text())
+    return raw.get("format", "arrow")
+
+
+def read_lance_cache_meta(cache_dir: Path) -> LanceCacheMeta:
+    """Read metadata from a Lance-format cache directory.
+
+    Returns a :class:`LanceCacheMeta` with the cached row count and
+    schema fingerprint populated from ``_metadata.json``. Deliberately
+    does NOT open the underlying Lance dataset: that would initialize
+    Lance's tokio runtime in the caller's process, which is a
+    DataLoader-fork footgun. Row count comes from the metadata file,
+    not from ``ds.count_rows()``.
+    """
+    cache_dir = Path(cache_dir)
+    meta_path = cache_dir / _METADATA_FILE
+    if not meta_path.exists():
+        raise FileNotFoundError(f"No metadata file at {meta_path}")
+    raw = json.loads(meta_path.read_text())
+    if raw.get("format") != "lance":
+        raise ValueError(f"Not a Lance cache: {cache_dir} (format={raw.get('format')!r})")
+    return LanceCacheMeta(
+        cache_dir=cache_dir,
+        num_rows=raw["num_rows"],
+        schema_fingerprint=raw.get("schema_fingerprint", ""),
     )
 
 

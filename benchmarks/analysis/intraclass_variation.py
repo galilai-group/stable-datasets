@@ -36,6 +36,14 @@ OUT_DIR = REPO / "benchmarks" / "results"
 SCORES_CSV = OUT_DIR / "intraclass_variation.csv"
 GAP_CSV = OUT_DIR / "ssl_supervised_gap.csv"
 
+# Match benchmarks/conf/config.yaml so we reuse the existing scratch cache
+# instead of re-downloading multi-GB tarballs into $HOME.
+DATA_ROOT = Path("/oscar/home/sboughan/scratch/.stable-datasets")
+DATA_KWARGS = dict(
+    download_dir=str(DATA_ROOT / "downloads"),
+    processed_cache_dir=str(DATA_ROOT / "processed"),
+)
+
 MODEL_NAME = "vit_small_patch14_dinov2"
 N_PER_CLASS = 32
 BATCH_SIZE = 64
@@ -152,7 +160,7 @@ def process_one(name: str, model, transform, device, seed: int) -> dict | None:
     cls_name, kwargs = DATASETS[name]
     cls = getattr(sds.images, cls_name)
     print(f"[{name}] loading…", flush=True)
-    ds = cls(split="train", **kwargs)
+    ds = cls(split="train", **DATA_KWARGS, **kwargs)
     labels = get_labels(ds)
     sampled = sample_indices_by_class(labels, N_PER_CLASS, seed)
     n_sampled = sum(len(v) for v in sampled.values())
