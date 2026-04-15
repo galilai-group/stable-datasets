@@ -1,9 +1,8 @@
-"""Render benchmark results from W&B into a LaTeX summary table.
+"""Render benchmark results from W&B into LaTeX summary tables.
 
 Fetches runs from a W&B project, validates them against the expected
-hyperparameters from conf/model/*.yaml, produces a pivot table
-(dataset x method), and writes it as a LaTeX table to
-``benchmarks/results/benchmark_table.tex``.
+hyperparameters from conf/model/*.yaml, and writes one table per
+evaluation metric (linear probe + kNN) to ``benchmarks/results/``.
 
 Usage:
     python -m benchmarks.render_latex
@@ -26,7 +25,11 @@ from benchmarks.dataset import DATASET_CONFIGS
 
 CONF_DIR = Path(__file__).resolve().parent / "conf" / "model"
 
-METRIC = "eval/linear_probe_top1_epoch"
+# Evaluation metrics: (short_name, wandb_summary_key).
+METRICS: dict[str, str] = {
+    "probe": "eval/linear_probe_top1_epoch",
+    "knn": "eval/knn_probe_top1",
+}
 
 # Datasets included in the reported benchmark suite. Any run whose
 # dataset (from config or parsed from run name) is not in this set is
@@ -183,11 +186,13 @@ def collect_runs(
 ) -> pd.DataFrame:
     """Fetch runs from W&B and filter against expected hyperparameters.
 
-    Only includes finished runs with the target metric in their summary.
-    Older runs sometimes have empty W&B configs — in that case we parse
-    the model and dataset from the run name.
+    Only includes finished runs. Older runs sometimes have empty W&B
+    configs — in that case we parse the model and dataset from the run
+    name. All metrics in :data:`METRICS` are fetched per run; rows that
+    have none of them are skipped.
 
-    Per (model, dataset) we keep the highest linear-probe top-1 value.
+    Returns one row per run with one column per metric short-name in
+    :data:`METRICS`.
     """
     api = wandb.Api(timeout=60)
     filters = {"config.backbone": backbone}
@@ -231,8 +236,12 @@ def collect_runs(
             skipped_bad_params += 1
             continue
 
-        top1 = summary.get(METRIC)
-        if top1 is None:
+        metric_values: dict[str, float] = {}
+        for short, wandb_key in METRICS.items():
+            val = summary.get(wandb_key)
+            if val is not None:
+                metric_values[short] = float(val)
+        if not metric_values:
             skipped_no_metric += 1
             continue
 
@@ -242,7 +251,7 @@ def collect_runs(
                 "dataset": dataset,
                 "seed": config.get("seed"),
                 "is_seed_run": "seed" in set(_retry(lambda: run.tags or [])),
-                METRIC: float(top1),
+                **metric_values,
             }
         )
 
@@ -269,25 +278,30 @@ def collect_runs(
 # Pivot table
 
 
-def pivot_table(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame | None]:
-    """Pivot into {dataset x method} table.
+def pivot_table(df: pd.DataFrame, metric: str) -> tuple[pd.DataFrame, pd.DataFrame | None]:
+    """Pivot into {dataset x method} table for a given metric column.
 
     For seed runs: uses mean across seeds.
     For non-seed runs: uses the best run per (dataset, method).
     Returns (table, std_table).  std_table is None if no seed runs exist.
     """
+    if metric not in df.columns:
+        return pd.DataFrame(), None
+    df = df.dropna(subset=[metric])
+    if df.empty:
+        return pd.DataFrame(), None
+
     is_seed = df["is_seed_run"].fillna(False).astype(bool)
     primary = (
-        df[~is_seed].sort_values(METRIC, ascending=False).drop_duplicates(subset=["dataset", "model"], keep="first")
+        df[~is_seed].sort_values(metric, ascending=False).drop_duplicates(subset=["dataset", "model"], keep="first")
     )
-    table = primary.pivot_table(index="dataset", columns="model", values=METRIC, aggfunc="max")
+    table = primary.pivot_table(index="dataset", columns="model", values=metric, aggfunc="max")
 
     std_table = None
     seed_df = df[is_seed]
     if not seed_df.empty:
-        seed_mean = seed_df.pivot_table(index="dataset", columns="model", values=METRIC, aggfunc="mean")
-        std_table = seed_df.pivot_table(index="dataset", columns="model", values=METRIC, aggfunc="std")
-        # Overlay seed means where available
+        seed_mean = seed_df.pivot_table(index="dataset", columns="model", values=metric, aggfunc="mean")
+        std_table = seed_df.pivot_table(index="dataset", columns="model", values=metric, aggfunc="std")
         for col in seed_mean.columns:
             mask = seed_mean[col].notna()
             if col in table.columns:
@@ -311,25 +325,50 @@ def pivot_table(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame | None]:
 # LaTeX formatting
 
 
-def format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) -> str:
-    """Format pivot table as a booktabs LaTeX table (percentages)."""
+def format_latex(
+    table: pd.DataFrame,
+    std_table: pd.DataFrame | None = None,
+    *,
+    secondary: pd.DataFrame | None = None,
+    secondary_std: pd.DataFrame | None = None,
+) -> str:
+    """Format pivot table as a booktabs LaTeX table (percentages).
+
+    If *secondary* is provided, cells render as ``primary / secondary``
+    so a single table carries both metrics at once (e.g. probe/knn).
+    The ``std`` tables are only used when the corresponding primary /
+    secondary table is present.
+    """
     pct = table * 100
     pct_std = std_table * 100 if std_table is not None else None
+    pct2 = secondary * 100 if secondary is not None else None
+    pct2_std = secondary_std * 100 if secondary_std is not None else None
 
     method_cols = [c for c in pct.columns if c != "Average"]
     datasets = [idx for idx in pct.index if idx != "Average"]
 
-    def _fmt(val, std_val=None):
+    def _fmt_one(val, std_val=None):
         if pd.isna(val):
             return "---"
         if std_val is not None and not pd.isna(std_val):
             return f"{val:.1f} {{\\scriptsize $\\pm$ {std_val:.1f}}}"
         return f"{val:.1f}"
 
-    def _std(ds, col):
-        if pct_std is None or ds not in pct_std.index or col not in pct_std.columns:
+    def _std_at(tbl, ds, col):
+        if tbl is None or ds not in tbl.index or col not in tbl.columns:
             return None
-        return pct_std.loc[ds, col]
+        return tbl.loc[ds, col]
+
+    def _cell(ds, col):
+        primary = _fmt_one(pct.loc[ds, col], _std_at(pct_std, ds, col))
+        if pct2 is None:
+            return primary
+        if ds in pct2.index and col in pct2.columns:
+            sec_val = pct2.loc[ds, col]
+        else:
+            sec_val = float("nan")
+        secondary_s = _fmt_one(sec_val, _std_at(pct2_std, ds, col))
+        return f"{primary} / {secondary_s}"
 
     n_cols = len(method_cols) + 1  # +1 for Average
     lines = [
@@ -342,15 +381,15 @@ def format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) -> 
     for ds in datasets:
         cells = [_display_name(ds)]
         for col in method_cols:
-            cells.append(_fmt(pct.loc[ds, col], _std(ds, col)))
-        cells.append(_fmt(pct.loc[ds, "Average"], _std(ds, "Average")))
+            cells.append(_cell(ds, col))
+        cells.append(_cell(ds, "Average"))
         lines.append(" & ".join(cells) + " \\\\")
 
     lines.append("\\midrule")
     cells = ["\\textbf{Average}"]
     for col in method_cols:
-        cells.append(_fmt(pct.loc["Average", col], _std("Average", col)))
-    cells.append(_fmt(pct.loc["Average", "Average"], _std("Average", "Average")))
+        cells.append(_cell("Average", col))
+    cells.append(_cell("Average", "Average"))
     lines.append(" & ".join(cells) + " \\\\")
 
     lines.extend(["\\bottomrule", "\\end{tabular}"])
@@ -361,14 +400,25 @@ def format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) -> 
 
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
-DEFAULT_LATEX_PATH = RESULTS_DIR / "benchmark_table.tex"
 DEFAULT_CSV_PATH = RESULTS_DIR / "benchmark_results.csv"
+
+METRIC_TITLES: dict[str, str] = {
+    "probe": "Linear Probe Top-1",
+    "knn": "kNN Top-1",
+}
 
 
 def main():
     parser = argparse.ArgumentParser(description="Render benchmark results from W&B to LaTeX")
     parser.add_argument("--entity", default="samibg")
     parser.add_argument("--project", default="finalized-stable-datasets")
+    parser.add_argument(
+        "--split-evals",
+        action="store_true",
+        help="Emit one LaTeX table per metric "
+        "(benchmark_table_probe.tex, benchmark_table_knn.tex) instead of a "
+        "single combined table with 'probe / knn' cells.",
+    )
     args = parser.parse_args()
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -380,18 +430,51 @@ def main():
         print("No runs found.")
         return
 
-    print(f"\n=== Results ({len(df)} runs) ===")
-    print(df[["model", "dataset", METRIC]].to_string(index=False))
+    # Pivot each metric (may yield empty frames for missing metrics).
+    pivots: dict[str, tuple[pd.DataFrame, pd.DataFrame | None]] = {
+        short: pivot_table(df, short) for short in METRICS
+    }
 
-    table, std_table = pivot_table(df)
-    print("\n=== Linear Probe Top-1 (dataset x method) ===")
-    print((table * 100).round(1).to_markdown())
+    summary_cols = ["model", "dataset"] + [m for m in METRICS if m in df.columns]
+    print(f"\n=== Results ({len(df)} runs) ===")
+    print(df[summary_cols].to_string(index=False))
+
+    for short, (tbl, _std) in pivots.items():
+        if tbl.empty:
+            continue
+        print(f"\n=== {METRIC_TITLES.get(short, short)} (dataset x method) ===")
+        print((tbl * 100).round(1).to_markdown())
 
     df.to_csv(DEFAULT_CSV_PATH, index=False)
     print(f"\nSaved CSV to {DEFAULT_CSV_PATH}")
 
-    DEFAULT_LATEX_PATH.write_text(format_latex(table, std_table))
-    print(f"LaTeX table saved to {DEFAULT_LATEX_PATH}")
+    if args.split_evals:
+        for short, (tbl, std) in pivots.items():
+            if tbl.empty:
+                continue
+            out_path = RESULTS_DIR / f"benchmark_table_{short}.tex"
+            out_path.write_text(format_latex(tbl, std))
+            print(f"LaTeX table saved to {out_path}")
+    else:
+        # Combined: primary = probe (if present), secondary = knn.
+        probe_tbl, probe_std = pivots.get("probe", (pd.DataFrame(), None))
+        knn_tbl, knn_std = pivots.get("knn", (pd.DataFrame(), None))
+        if probe_tbl.empty and not knn_tbl.empty:
+            # Fall back to knn-only when probe is missing.
+            primary, primary_std = knn_tbl, knn_std
+            secondary, secondary_std = None, None
+        else:
+            primary, primary_std = probe_tbl, probe_std
+            secondary = knn_tbl if not knn_tbl.empty else None
+            secondary_std = knn_std if not knn_tbl.empty else None
+        if primary.empty:
+            print("No metric data to render.")
+            return
+        out_path = RESULTS_DIR / "benchmark_table.tex"
+        out_path.write_text(
+            format_latex(primary, primary_std, secondary=secondary, secondary_std=secondary_std)
+        )
+        print(f"LaTeX table saved to {out_path} (cells show probe / knn)")
 
 
 if __name__ == "__main__":

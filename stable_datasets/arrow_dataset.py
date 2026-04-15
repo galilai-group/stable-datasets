@@ -616,11 +616,23 @@ class StableDataset:
         )
 
     def _shallow_copy(self, **overrides) -> StableDataset:
-        """Return a shallow copy with optional attribute overrides."""
+        """Return a shallow copy with optional attribute overrides.
+
+        ``num_rows`` is forwarded from the current instance rather than
+        recomputed. This is both a perf win (no backend round-trip for
+        an already-known value) and a correctness fix for backends
+        whose ``num_rows`` property has side effects -- e.g.
+        :class:`LanceBackend` opens the underlying dataset lazily on
+        first access, which initializes Lance's Rust tokio runtime. If
+        that init happens in the main process and DataLoader then
+        forks workers, the child processes inherit stale tokio state
+        and segfault on their first Lance call.
+        """
         kw = {
             "features": self._features,
             "info": self._info,
             "backend": self._backend,
+            "num_rows": self._num_rows,
             "_indices": self._indices,
             "_format_type": self._format_type,
             "_decode_images": self._decode_images,

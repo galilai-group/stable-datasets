@@ -64,6 +64,20 @@ class LanceBackend:
         self._cached_num_shards: int | None = None
 
     # -- Lazy open ------------------------------------------------------------
+    #
+    # Fork-safety contract: opening the Lance dataset initializes Lance's
+    # Rust tokio runtime, which includes a worker thread pool. ``fork()``
+    # does not duplicate threads -- only the main thread survives in the
+    # child. A child process that inherits an already-initialized tokio
+    # state but only has one thread will segfault on its first Lance
+    # call. Therefore ``_dataset`` should NOT be touched in the main
+    # process before a DataLoader fork. Every public accessor that
+    # triggers it (``num_rows``, ``num_shards``, ``schema``, ``table``,
+    # ``take``, etc.) is a potential footgun when called pre-fork.
+    #
+    # Callers that need metadata pre-fork should cache it at construction
+    # time and pass it explicitly. ``StableDataset._shallow_copy`` is
+    # fixed to forward ``num_rows`` for this reason.
 
     @property
     def _dataset(self):
