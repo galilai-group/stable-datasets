@@ -105,6 +105,17 @@ def main():
         help="Enable DataLoader shuffle=True. Routes indices through backend.take "
         "with random-order batches -- the map-style training workload.",
     )
+    parser.add_argument(
+        "--history",
+        default="benchmarks/results/profile_iter_history.json",
+        help="Consolidated history file to append this run to. "
+        "Set to '' or pass --no-history to suppress.",
+    )
+    parser.add_argument(
+        "--no-history",
+        action="store_true",
+        help="Do not append to the consolidated history file.",
+    )
     parser.add_argument("-o", "--output", default=None, help="Save raw results to JSON")
     args = parser.parse_args()
 
@@ -218,6 +229,40 @@ def main():
         with open(args.output, "w") as f:
             json.dump(results, f, indent=2)
         print(f"Results saved to {args.output}")
+
+    # Append to consolidated history file unless suppressed.
+    if args.history and not args.no_history:
+        from stable_datasets.tools.consolidate_profile_results import (
+            append_run,
+            load_history,
+            save_history,
+        )
+
+        slurm_mem_mb = os.environ.get("SLURM_MEM_PER_NODE")
+        config = {
+            "num_epochs": args.num_epochs,
+            "num_workers": args.num_workers,
+            "num_runs": args.num_runs,
+            "shuffle": args.shuffle,
+            "decode": os.environ.get("STABLE_DATASETS_DECODE", "1") == "1",
+        }
+        if slurm_mem_mb:
+            config["mem_gb"] = int(slurm_mem_mb) // 1024
+
+        history_path = Path(args.history)
+        history = load_history(history_path)
+        appended = append_run(
+            history,
+            slurm_job_id=os.environ.get("SLURM_JOB_ID", "local"),
+            config=config,
+            results=results,
+        )
+        if appended:
+            save_history(history_path, history)
+            print(f"Appended to history at {history_path} "
+                  f"(now {len(history['runs'])} runs)")
+        else:
+            print(f"Skipped history append (duplicate slurm_job_id)")
 
     # Terminal summary
     col_w = 28

@@ -213,3 +213,60 @@ class TestProtocol:
         ds = make_ds(n=23, batch_size=7)
         total = sum(b.num_rows for b in ds._backend.iter_batches())
         assert total == 23
+
+
+# ── Shallow-copy + fork-safety regression ────────────────────────────────────
+#
+# Regression test for the segfault we hit on set_decode(False) + multi-worker
+# DataLoader with LanceBackend. Root cause: ``_shallow_copy`` did not forward
+# ``num_rows``, so the new :class:`StableDataset.__init__` computed it by
+# calling ``self._backend.num_rows``. For :class:`LanceBackend` that opens
+# the underlying Lance dataset in the main process, initializing Lance's
+# Rust tokio runtime. If DataLoader then forks workers, the children
+# inherit stale tokio state and segfault on their first Lance call.
+#
+# We can't easily assert absence-of-segfault in a unit test, but we can
+# assert the *root cause*: ``_shallow_copy`` must not trigger a backend
+# access for ``num_rows``, and for Lance specifically the underlying
+# dataset handle must remain unopened.
+
+
+class TestShallowCopyForkSafety:
+    def test_set_decode_preserves_num_rows_without_backend_access(self, make_ds):
+        ds = make_ds(n=13)
+        # Original dataset knows its row count.
+        assert ds._num_rows == 13
+        ds2 = ds.set_decode(False)
+        # The shallow copy should inherit the cached count, not recompute.
+        assert ds2._num_rows == 13
+        assert ds2._decode_images is False
+        assert ds2._backend is ds._backend  # same backend object
+
+    def test_set_decode_does_not_open_lance_dataset(self, make_ds):
+        # Only meaningful for Lance -- Arrow's num_rows is free. Skip
+        # gracefully on the arrow parameterization.
+        ds = make_ds(n=13)
+        backend = ds._backend
+        if not hasattr(backend, "_ds"):
+            pytest.skip("only meaningful for LanceBackend")
+        # At this point the Lance dataset should not yet be open
+        # (``make_ds`` caches ``num_rows`` in ``StableDataset.__init__``
+        # from ``meta.num_rows`` without touching the backend).
+        assert backend._ds is None, "LanceBackend was opened before shallow-copy test ran"
+        _ = ds.set_decode(False)
+        # The shallow-copy call must not have opened the dataset either.
+        assert backend._ds is None, (
+            "set_decode() opened the Lance dataset in the main process; "
+            "DataLoader fork would now segfault worker children"
+        )
+
+    def test_with_format_and_with_transform_also_fork_safe(self, make_ds):
+        # Every API that uses _shallow_copy inherits the same contract.
+        ds = make_ds(n=13)
+        backend = ds._backend
+        if not hasattr(backend, "_ds"):
+            pytest.skip("only meaningful for LanceBackend")
+        assert backend._ds is None
+        _ = ds.with_format(None)
+        _ = ds.with_transform(lambda x: x)
+        assert backend._ds is None

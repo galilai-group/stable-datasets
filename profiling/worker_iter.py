@@ -38,11 +38,15 @@ extra = sys.argv[8:]
 try:
     gc.collect()
 
+    decode_on = os.environ.get("STABLE_DATASETS_DECODE", "1") == "1"
+
     if backend == "stable":
         import importlib
 
         mod = importlib.import_module(mod_path)
         ds = getattr(mod, cls_name)(split=split)
+        if not decode_on:
+            ds = ds.set_decode(False)
 
     elif backend == "stable_lance":
         # Load the dataset the usual way so the Arrow cache is
@@ -69,6 +73,8 @@ try:
             arrow_to_lance(arrow_cache_dir, lance_dir)
 
         ds._backend = LanceBackend(uri=lance_dir)
+        if not decode_on:
+            ds = ds.set_decode(False)
 
     elif backend == "hf":
         import datasets as hf_datasets
