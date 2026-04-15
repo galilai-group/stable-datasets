@@ -28,6 +28,31 @@ CONF_DIR = Path(__file__).resolve().parent / "conf" / "model"
 
 METRIC = "eval/linear_probe_top1_epoch"
 
+# Datasets included in the reported benchmark suite. Any run whose
+# dataset (from config or parsed from run name) is not in this set is
+# silently skipped. Add or remove entries here to change the suite.
+INCLUDED_DATASETS: set[str] = {
+    "arabiccharacters",
+    "arabicdigits",
+    "beans",
+    "cifar10",
+    "cifar100",
+    "country211",
+    "cub200",
+    "dtd",
+    "emnist",
+    "fashionmnist",
+    "fgvcaircraft",
+    "flowers102",
+    "food101",
+    "imagenette",
+    "medmnist",
+    "notmnist",
+    "rockpaperscissor",
+    "stl10",
+    "svhn",
+}
+
 MODEL_DISPLAY_NAMES: dict[str, str] = {
     "simclr": "SimCLR",
     "dino": "DINO",
@@ -100,29 +125,51 @@ def _retry(fn, max_retries=5):
 
 
 def _matches_expected(config: dict, expected: dict) -> bool:
-    """Check if a run's W&B config matches expected hyperparams."""
-    # max_epochs must match exactly
+    """Check if a run's W&B config matches expected hyperparams.
+
+    Missing fields pass through instead of rejecting — older runs often
+    have empty configs on W&B but we still want to count them.
+    """
+    if not config:
+        return True
+
     if "max_epochs" in expected:
         run_epochs = config.get("max_epochs")
-        if run_epochs is None or int(run_epochs) != expected["max_epochs"]:
+        if run_epochs is not None and int(run_epochs) != expected["max_epochs"]:
             return False
 
-    # LR must match (within tolerance)
     if "lr" in expected:
         run_lr = config.get("lr")
-        if run_lr is None or abs(float(run_lr) - expected["lr"]) > 1e-8:
+        if run_lr is not None and abs(float(run_lr) - expected["lr"]) > 1e-8:
             return False
 
-    # Effective batch size must match
     if "effective_batch_size" in expected:
         bs = config.get("batch_size")
-        accum = config.get("accumulate_grad_batches", 1)
         if bs is not None:
+            accum = config.get("accumulate_grad_batches", 1)
             ebs = int(bs) * int(accum)
             if ebs != expected["effective_batch_size"]:
                 return False
 
     return True
+
+
+_KNOWN_MODELS = {"simclr", "dino", "mae", "lejepa", "nnclr", "barlow_twins", "supervised"}
+
+
+def _parse_name(name: str, backbone: str = "vit_small") -> tuple[str | None, str | None]:
+    """Parse ``'{model}_{backbone}_{dataset}'`` from a W&B run name.
+
+    Handles multi-word model names (e.g., 'barlow_twins'). Returns
+    ``(model, dataset)`` or ``(None, None)`` on failure.
+    """
+    tag = f"_{backbone}_"
+    if tag not in name:
+        return None, None
+    model_part, _, dataset_part = name.partition(tag)
+    if model_part not in _KNOWN_MODELS:
+        return None, None
+    return model_part, dataset_part.lower()
 
 
 # Collection
@@ -136,8 +183,11 @@ def collect_runs(
 ) -> pd.DataFrame:
     """Fetch runs from W&B and filter against expected hyperparameters.
 
-    Only includes terminal runs (finished/failed/crashed) with the target
-    metric in their summary.
+    Only includes finished runs with the target metric in their summary.
+    Older runs sometimes have empty W&B configs — in that case we parse
+    the model and dataset from the run name.
+
+    Per (model, dataset) we keep the highest linear-probe top-1 value.
     """
     api = wandb.Api(timeout=60)
     filters = {"config.backbone": backbone}
@@ -145,27 +195,45 @@ def collect_runs(
     print(f"Found {len(runs)} {backbone} runs in {entity}/{project}")
 
     rows = []
+    skipped_no_metric = 0
+    skipped_bad_params = 0
+    skipped_unparseable = 0
+    skipped_excluded: dict[str, int] = {}
     for run in tqdm(runs, desc="Scanning runs"):
         state = _retry(lambda: run.state)
-        if state not in ("finished", "failed", "crashed"):
+        if state != "finished":
             continue
 
         config = _retry(lambda: run.config)
         summary = _retry(lambda: run.summary)
 
-        model = config.get("model", "")
-        dataset = config.get("dataset", "").lower()
+        model = config.get("model") or ""
+        dataset = (config.get("dataset") or "").lower()
+
+        # Fall back to parsing the run name when config is empty
         if not model or not dataset:
+            name_model, name_ds = _parse_name(run.name, backbone)
+            if name_model:
+                model = model or name_model
+                dataset = dataset or name_ds
+
+        if not model or not dataset:
+            skipped_unparseable += 1
             continue
 
-        # Validate against expected hyperparams from YAML configs
+        if dataset not in INCLUDED_DATASETS:
+            skipped_excluded[dataset] = skipped_excluded.get(dataset, 0) + 1
+            continue
+
         model_params = expected_params.get(model, {})
         ds_params = model_params.get(dataset)
         if ds_params is not None and not _matches_expected(config, ds_params):
+            skipped_bad_params += 1
             continue
 
         top1 = summary.get(METRIC)
         if top1 is None:
+            skipped_no_metric += 1
             continue
 
         rows.append(
@@ -178,12 +246,24 @@ def collect_runs(
             }
         )
 
+    print(
+        f"Kept {len(rows)} runs | "
+        f"skipped: unparseable={skipped_unparseable}, "
+        f"bad_params={skipped_bad_params}, "
+        f"no_metric={skipped_no_metric}"
+    )
+    if skipped_excluded:
+        excluded_summary = ", ".join(
+            f"{d}={n}" for d, n in sorted(skipped_excluded.items(), key=lambda x: -x[1])
+        )
+        print(
+            f"WARNING: skipped {sum(skipped_excluded.values())} runs whose dataset is "
+            f"not in INCLUDED_DATASETS: {excluded_summary}"
+        )
     if not rows:
         return pd.DataFrame()
 
-    df = pd.DataFrame(rows)
-    print(f"Collected {len(df)} valid runs")
-    return df
+    return pd.DataFrame(rows)
 
 
 # Pivot table

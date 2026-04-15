@@ -45,6 +45,11 @@ DATASETS = {
         "hf": ("nelorth/oxford-flowers", None),
         "tv": ("Flowers102", "split_arg"),
     },
+    "Imagenette": {
+        "stable": ("stable_datasets.images.imagenette", "Imagenette"),
+        "hf": None,
+        "tv": None,
+    },
     "ImageNet-1K": {
         "stable": ("stable_datasets.images.imagenet_1k", "ImageNet1K"),
         "hf": ("ILSVRC/imagenet-1k", None),
@@ -52,9 +57,10 @@ DATASETS = {
     },
 }
 
-BACKENDS = ("stable", "hf", "tv")
+BACKENDS = ("stable", "stable_lance", "hf", "tv")
 BACKEND_LABELS = {
     "stable": "stable-datasets",
+    "stable_lance": "stable-datasets (Lance)",
     "hf": "HF Datasets",
     "tv": "Torchvision",
 }
@@ -93,6 +99,12 @@ def main():
     parser.add_argument("--num-epochs", type=int, default=5)
     parser.add_argument("--num-runs", type=int, default=1)
     parser.add_argument("--split", default="train")
+    parser.add_argument(
+        "--shuffle",
+        action="store_true",
+        help="Enable DataLoader shuffle=True. Routes indices through backend.take "
+        "with random-order batches -- the map-style training workload.",
+    )
     parser.add_argument("-o", "--output", default=None, help="Save raw results to JSON")
     args = parser.parse_args()
 
@@ -116,7 +128,11 @@ def main():
         for backend in backends:
             label = BACKEND_LABELS.get(backend, backend)
 
-            if cfg.get(backend) is None:
+            # "stable_lance" rides on the "stable" config: same
+            # builder module and class, different backend installed
+            # post-hoc by worker_iter.py.
+            cfg_key = "stable" if backend == "stable_lance" else backend
+            if cfg.get(cfg_key) is None:
                 results[ds_name][backend] = None
                 print(f"  [{label}] n/a", flush=True)
                 continue
@@ -144,6 +160,8 @@ def main():
             env["STABLE_DATASETS_CACHE_DIR"] = args.cache_dir
             env["HF_HOME"] = os.path.join(args.cache_dir, "huggingface")
             env["TV_DOWNLOAD"] = "1"
+            if args.shuffle:
+                env["STABLE_DATASETS_SHUFFLE"] = "1"
 
             timeout = 36000 if "imagenet" in ds_name.lower() else 3600
 

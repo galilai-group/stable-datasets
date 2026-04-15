@@ -50,9 +50,6 @@ params:
     batch_size: 256
     max_epochs: 250
   # Other small datasets
-  hasyv2:
-    batch_size: 256
-    max_epochs: 188
   arabiccharacters:
     batch_size: 256
     max_epochs: 313

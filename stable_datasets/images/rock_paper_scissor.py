@@ -1,8 +1,4 @@
-import os
 import zipfile
-from pathlib import Path
-
-from PIL import Image as PILImage
 
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
@@ -45,20 +41,16 @@ class RockPaperScissor(BaseDatasetBuilder):
         )
 
     def _generate_examples(self, data_path, split):
-        """Generate examples from the extracted zip archive."""
-        # Extract the zip file to a directory
-        extract_dir = Path(data_path).parent / f"rock_paper_scissor_{split}"
-        if not extract_dir.exists():
-            with zipfile.ZipFile(data_path, "r") as zip_file:
-                zip_file.extractall(extract_dir)
-
-        # Walk through the extracted directory
-        for root, _, files in os.walk(extract_dir):
-            for file_name in files:
-                if file_name.endswith(".png"):
-                    label = os.path.basename(root)  # Folder name as label
-                    file_path = os.path.join(root, file_name)
-                    # Open image and ensure it is RGB
-                    with open(file_path, "rb") as img_file:
-                        image = PILImage.open(img_file).convert("RGB")
-                        yield file_path, {"image": image, "label": label}
+        """Yield examples by streaming PNGs directly from the zip archive."""
+        with zipfile.ZipFile(data_path, "r") as archive:
+            for name in archive.namelist():
+                if not name.endswith(".png"):
+                    continue
+                # Label is the second-to-last path component
+                # (e.g. 'rps/rock/rock01-000.png' -> 'rock').
+                parts = name.rstrip("/").split("/")
+                if len(parts) < 2:
+                    continue
+                label_name = parts[-2]
+                image_bytes = archive.read(name)
+                yield name, {"image": image_bytes, "label": label_name}

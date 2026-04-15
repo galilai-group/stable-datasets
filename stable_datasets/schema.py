@@ -115,13 +115,18 @@ class Image(FeatureType):
     time.  ``"PNG"`` (default) is lossless; ``"JPEG"`` is much faster and
     smaller for photographic RGB content.  The format is a cache-time
     concern — readers auto-detect from the bytes header.
+
+    Uses ``large_binary`` (i64 offsets) rather than ``binary`` (i32) so
+    that the column's cumulative bytes can exceed 2GB without overflowing
+    PyArrow's compute kernels — an issue for any image dataset of
+    ImageNet-1k scale.
     """
 
     def __init__(self, encode_format: str = "PNG"):
         self.encode_format = encode_format
 
     def to_arrow_type(self) -> pa.DataType:
-        return pa.binary()
+        return pa.large_binary()
 
     def __repr__(self) -> str:
         return f"Image(encode_format='{self.encode_format}')"
@@ -155,14 +160,18 @@ class Sequence(FeatureType):
 
 
 class Array3D(FeatureType):
-    """Fixed-shape 3D array (e.g. 3D medical volumes). Stored as flat bytes."""
+    """Fixed-shape 3D array (e.g. 3D medical volumes). Stored as flat bytes.
+
+    Uses ``large_binary`` for the same reason as :class:`Image` — large
+    volumes cumulatively exceed the i32 offset limit.
+    """
 
     def __init__(self, shape: tuple, dtype: str = "uint8"):
         self.shape = shape
         self.dtype = dtype
 
     def to_arrow_type(self) -> pa.DataType:
-        return pa.binary()
+        return pa.large_binary()
 
     def __repr__(self) -> str:
         return f"Array3D(shape={self.shape}, dtype='{self.dtype}')"

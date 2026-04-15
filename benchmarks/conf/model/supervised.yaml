@@ -32,9 +32,6 @@ params:
     batch_size: 128
     max_epochs: 200
   # Other small datasets — tier 3 (×3)
-  hasyv2:
-    batch_size: 128
-    max_epochs: 150
   arabiccharacters:
     batch_size: 128
     max_epochs: 250

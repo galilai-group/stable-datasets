@@ -253,4 +253,30 @@ class ArrowBackend:
     def _mmap_ipc(path: Path) -> pa.Table:
         mmap = pa.memory_map(str(path), "r")
         reader = ipc.open_file(mmap)
-        return reader.read_all()
+        table = reader.read_all()
+        return _upgrade_binary_columns(table)
+
+
+def _upgrade_binary_columns(table: pa.Table) -> pa.Table:
+    """Cast any ``binary`` columns to ``large_binary`` at open time.
+
+    PyArrow's compute kernels (notably ``take``) fail with an i32 offset
+    overflow on a ``binary`` column whose cumulative bytes exceed 2GB,
+    regardless of how many rows are selected. Any ImageNet-scale image
+    cache written before the ``Image`` feature was upgraded to
+    ``large_binary`` is vulnerable. Casting at open time rebuilds the
+    offset buffers (one-time ~10MB per million rows) while the values
+    buffer is shared, so the runtime cost is negligible and existing
+    on-disk caches need no rewrite.
+    """
+    needs_cast = [
+        f for f in table.schema
+        if pa.types.is_binary(f.type) and not pa.types.is_large_binary(f.type)
+    ]
+    if not needs_cast:
+        return table
+    new_schema = pa.schema([
+        pa.field(f.name, pa.large_binary()) if f in needs_cast else f
+        for f in table.schema
+    ])
+    return table.cast(new_schema)
