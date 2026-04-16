@@ -69,6 +69,10 @@ try:
         config_name = extra[1] if len(extra) > 1 and extra[1] != "None" else None
         kw = {"name": config_name} if config_name else {}
         ds = hf_datasets.load_dataset(hub_path, split=split, **kw)
+        if not decode_on:
+            for col, feat in ds.features.items():
+                if isinstance(feat, hf_datasets.Image):
+                    ds = ds.cast_column(col, hf_datasets.Image(decode=False))
 
     elif backend == "tv":
         import torchvision.datasets as tv_datasets

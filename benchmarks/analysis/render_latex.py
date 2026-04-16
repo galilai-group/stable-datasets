@@ -212,6 +212,107 @@ def write_dataset_table(df: pd.DataFrame) -> None:
     (OUT_DIR / "paper_table_dataset.tex").write_text("\n".join(lines) + "\n")
 
 
+METADATA_CSV = OUT_DIR / "dataset_metadata.csv"
+
+# All candidate predictors of ssl_advantage, grouped and labelled for the
+# big "predictor ranking" table. Each entry is (column_name, display_label,
+# source_csv, category).
+PREDICTORS: list[tuple[str, str, str, str]] = [
+    # --- dataset metadata (counting / image-level) ---
+    ("train_size",       r"Training-set size",                "metadata",  "Dataset metadata"),
+    ("num_classes",      r"Number of classes $K$",            "gap",       "Dataset metadata"),
+    ("images_per_class", r"Images per class",                 "gap",       "Dataset metadata"),
+    ("class_balance",    r"Class balance (norm.\ entropy)",   "metadata",  "Dataset metadata"),
+    ("mean_pixels",      r"Mean resolution ($H \times W$)",   "metadata",  "Dataset metadata"),
+    ("mean_channels",    r"Mean channels",                    "metadata",  "Dataset metadata"),
+    # --- hand-coded binary flags ---
+    ("natural",          r"Natural images (binary)",          "gap",       "Hand-coded"),
+    ("fine_grained",     r"Fine-grained (binary)",            "gap",       "Hand-coded"),
+    ("grayscale",        r"Grayscale (binary)",               "gap",       "Hand-coded"),
+    ("centered",         r"Centered / clean bg.\ (binary)",   "gap",       "Hand-coded"),
+    # --- supervised performance ---
+    ("supervised_ceiling", r"Supervised top-1 (ceiling)",     "gap",       "Supervised performance"),
+    # --- measured intra-class variation ---
+    ("v_dinov2",         r"Intra-class var.\ (DINOv2)",       "joined",    r"Intra-class variation"),
+    ("v_in21k",          r"Intra-class var.\ (IN-21k sup.)",  "joined",    r"Intra-class variation"),
+    ("v_clip",           r"Intra-class var.\ (CLIP)",         "joined",    r"Intra-class variation"),
+]
+
+
+def write_predictor_table(df_joined: pd.DataFrame) -> None:
+    """Big table: every candidate predictor vs ssl_advantage."""
+    gap = pd.read_csv(GAP_CSV)
+    meta = pd.read_csv(METADATA_CSV) if METADATA_CSV.exists() else pd.DataFrame()
+
+    # Build a single wide frame with all columns we need
+    wide = df_joined.copy()
+    for col in ["num_classes", "train_size", "natural", "fine_grained",
+                "grayscale", "centered", "images_per_class",
+                "supervised_ceiling"]:
+        if col not in wide.columns and col in gap.columns:
+            wide = wide.merge(gap[["dataset", col]], on="dataset", how="left")
+    if not meta.empty:
+        for col in ["class_balance", "mean_pixels", "mean_channels"]:
+            if col not in wide.columns and col in meta.columns:
+                wide = wide.merge(meta[["dataset", col]], on="dataset", how="left")
+
+    lines = [
+        r"% Comprehensive predictor ranking: Spearman ρ of each candidate",
+        r"% feature against ssl_advantage (n = 19 datasets).",
+        r"\begin{tabular}{llrr}",
+        r"\toprule",
+        r"Category & Predictor & Spearman $\rho$ & $p$ \\",
+        r"\midrule",
+    ]
+
+    prev_cat = None
+    rows_data = []
+    for col, label, source, cat in PREDICTORS:
+        if col not in wide.columns:
+            continue
+        vals = wide[col].dropna()
+        if len(vals) < 5:
+            continue
+        idx = vals.index
+        rho, p = stats.spearmanr(wide.loc[idx, col], wide.loc[idx, "ssl_advantage"])
+        rows_data.append((cat, label, float(rho), float(p)))
+
+    # Sort by |ρ| descending within each category
+    for cat, label, rho, p in rows_data:
+        if cat != prev_cat:
+            if prev_cat is not None:
+                lines.append(r"\addlinespace")
+            prev_cat = cat
+        sig = ""
+        if p < 0.01:
+            sig = r"$^{**}$"
+        elif p < 0.05:
+            sig = r"$^{*}$"
+        rho_str = f"{rho:+.3f}"
+        # Bold the intra-class variation rows (the winners)
+        if "Intra-class" in cat:
+            rho_str = r"\textbf{" + rho_str + r"}"
+        lines.append(
+            f"{cat} & {label} & {rho_str}{sig} & {p:.4f} \\\\"
+        )
+        # Don't repeat the category in subsequent rows
+        cat = ""
+
+    lines += [
+        r"\bottomrule",
+        r"\multicolumn{4}{l}{\footnotesize $^{*}\,p < 0.05$, $^{**}\,p < 0.01$.}",
+        r"\end{tabular}",
+    ]
+    out_path = OUT_DIR / "paper_table_predictors.tex"
+    out_path.write_text("\n".join(lines) + "\n")
+
+    # Also print to stdout
+    print("\n=== predictor ranking (Spearman ρ vs ssl_advantage) ===")
+    for cat, label, rho, p in sorted(rows_data, key=lambda x: -abs(x[2])):
+        sig = "**" if p < 0.01 else ("*" if p < 0.05 else "")
+        print(f"  {rho:+.3f} {sig:3s}  {label}")
+
+
 def main() -> None:
     df = build_joined()
     summary = compute_summary(df)
@@ -226,6 +327,7 @@ def main() -> None:
     write_sensitivity_table(summary)
     write_cross_encoder_table(cross)
     write_dataset_table(df)
+    write_predictor_table(df)
     print("\nwrote:")
     for name in [
         "paper_fig_scatter_three_encoders.pdf",
@@ -233,6 +335,7 @@ def main() -> None:
         "paper_table_sensitivity.tex",
         "paper_table_cross_encoder_rho.tex",
         "paper_table_dataset.tex",
+        "paper_table_predictors.tex",
     ]:
         print(f"  {OUT_DIR / name}")
 

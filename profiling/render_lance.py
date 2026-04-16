@@ -195,7 +195,7 @@ def render_table(history: dict) -> str:
 def main() -> int:
     if not HISTORY_FILE.exists():
         print(f"Missing: {HISTORY_FILE}")
-        print("Run profile_iter.py or consolidate_profile_results.py first.")
+        print("Run profile_iter.py or experiment_manager.py first.")
         return 1
 
     with HISTORY_FILE.open() as f:

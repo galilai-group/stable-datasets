@@ -232,14 +232,9 @@ def main():
 
     # Append to consolidated history file unless suppressed.
     if args.history and not args.no_history:
-        # consolidate_profile_results lives next to this script; when
-        # profile_iter.py is invoked as `python profiling/profile_iter.py`,
-        # sys.path[0] is ``profiling/`` and the import resolves directly.
-        from consolidate_profile_results import (
-            append_run,
-            load_history,
-            save_history,
-        )
+        from experiment_manager import ExperimentManager
+
+        mgr = ExperimentManager(args.history)
 
         slurm_mem_mb = os.environ.get("SLURM_MEM_PER_NODE")
         config = {
@@ -252,18 +247,14 @@ def main():
         if slurm_mem_mb:
             config["mem_gb"] = int(slurm_mem_mb) // 1024
 
-        history_path = Path(args.history)
-        history = load_history(history_path)
-        appended = append_run(
-            history,
+        appended = mgr.append(
             slurm_job_id=os.environ.get("SLURM_JOB_ID", "local"),
             config=config,
             results=results,
         )
         if appended:
-            save_history(history_path, history)
-            print(f"Appended to history at {history_path} "
-                  f"(now {len(history['runs'])} runs)")
+            print(f"Appended to history at {mgr.path} "
+                  f"(now {len(mgr.runs)} runs)")
         else:
             print(f"Skipped history append (duplicate slurm_job_id)")
 
