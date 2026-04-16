@@ -33,7 +33,6 @@ import stable_datasets as sds
 
 REPO = Path(__file__).resolve().parents[2]
 OUT_DIR = REPO / "benchmarks" / "results"
-SCORES_CSV = OUT_DIR / "intraclass_variation.csv"
 GAP_CSV = OUT_DIR / "ssl_supervised_gap.csv"
 
 # Match benchmarks/conf/config.yaml so we reuse the existing scratch cache
@@ -44,9 +43,24 @@ DATA_KWARGS = dict(
     processed_cache_dir=str(DATA_ROOT / "processed"),
 )
 
-MODEL_NAME = "vit_small_patch14_dinov2"
+# Encoder registry. Each entry maps a short tag (used in output filenames
+# and CLI) to a timm model id. The tag gets embedded in all per-encoder
+# artifacts so runs don't clobber each other.
+#
+# - dinov2 : augmentation-invariance objective (DINO+iBOT); same family as
+#            most of the benchmark SSL methods. Primary run.
+# - in21k  : supervised cross-entropy on ImageNet-21k labels. Different
+#            objective family; sensitivity-analysis baseline.
+# - clip   : image-text contrastive on 400M web pairs. Third objective,
+#            different data, different scale.
+ENCODERS: dict[str, str] = {
+    "dinov2": "vit_small_patch14_dinov2",
+    "in21k": "vit_small_patch16_224.augreg_in21k",
+    "clip":   "vit_large_patch14_clip_224.openai",
+}
+
 N_PER_CLASS = 32
-BATCH_SIZE = 64
+BATCH_SIZE = 32  # conservative; ViT-L CLIP at 224 still fits comfortably
 
 DATASETS: dict[str, tuple[str, dict]] = {
     "arabiccharacters": ("ArabicCharacters", {}),
@@ -71,8 +85,9 @@ DATASETS: dict[str, tuple[str, dict]] = {
 }
 
 
-def build_model(device: torch.device) -> torch.nn.Module:
-    model = timm.create_model(MODEL_NAME, pretrained=True, num_classes=0)
+def build_model(encoder: str, device: torch.device) -> torch.nn.Module:
+    model_name = ENCODERS[encoder]
+    model = timm.create_model(model_name, pretrained=True, num_classes=0)
     model.eval().to(device)
     return model
 
@@ -150,9 +165,14 @@ def intraclass_variation(embs: torch.Tensor, cls: np.ndarray) -> float:
     return float(np.mean(scores))
 
 
-def load_existing() -> pd.DataFrame:
-    if SCORES_CSV.exists():
-        return pd.read_csv(SCORES_CSV)
+def scores_csv_path(encoder: str) -> Path:
+    return OUT_DIR / f"intraclass_variation_{encoder}.csv"
+
+
+def load_existing(encoder: str) -> pd.DataFrame:
+    path = scores_csv_path(encoder)
+    if path.exists():
+        return pd.read_csv(path)
     return pd.DataFrame(columns=["dataset", "intraclass_variation", "n_sampled", "n_classes"])
 
 
@@ -171,7 +191,7 @@ def process_one(name: str, model, transform, device, seed: int) -> dict | None:
     return dict(dataset=name, intraclass_variation=score, n_sampled=n_sampled, n_classes=len(sampled))
 
 
-def analyze_and_plot(scores: pd.DataFrame) -> None:
+def analyze_and_plot(scores: pd.DataFrame, encoder: str) -> None:
     if not GAP_CSV.exists():
         print(f"(no {GAP_CSV.name} yet; skipping join/plot)")
         return
@@ -181,7 +201,7 @@ def analyze_and_plot(scores: pd.DataFrame) -> None:
         print("(no overlap between scores and gap CSV yet)")
         return
     df = df.sort_values("intraclass_variation").reset_index(drop=True)
-    df.to_csv(OUT_DIR / "intraclass_variation_joined.csv", index=False)
+    df.to_csv(OUT_DIR / f"intraclass_variation_{encoder}_joined.csv", index=False)
 
     if len(df) < 3:
         print(f"(only {len(df)} datasets scored so far; skipping correlation/plot)")
@@ -189,7 +209,8 @@ def analyze_and_plot(scores: pd.DataFrame) -> None:
 
     rho, p = stats.spearmanr(df["intraclass_variation"], df["ssl_advantage"])
     r_pearson, p_pearson = stats.pearsonr(df["intraclass_variation"], df["ssl_advantage"])
-    print(f"\nn = {len(df)}")
+    print(f"\nencoder = {encoder}  ({ENCODERS[encoder]})")
+    print(f"n = {len(df)}")
     print(f"Spearman ρ(intraclass, ssl_advantage) = {rho:.3f}  (p = {p:.4f})")
     print(f"Pearson  r(intraclass, ssl_advantage) = {r_pearson:.3f}  (p = {p_pearson:.4f})")
 
@@ -206,16 +227,17 @@ def analyze_and_plot(scores: pd.DataFrame) -> None:
     coef = np.polyfit(x, y, 1)
     xs = np.linspace(x.min(), x.max(), 50)
     ax.plot(xs, np.polyval(coef, xs), color="gray", lw=1)
-    ax.set_xlabel(f"intra-class variation (mean 1 − cos_sim, DINOv2)  ρ={rho:.2f}")
+    ax.set_xlabel(f"intra-class variation (mean 1 − cos_sim, {encoder})  ρ={rho:.2f}")
     ax.set_ylabel("best SSL − best supervised")
-    ax.set_title("SSL advantage vs measured intra-class variation")
+    ax.set_title(f"SSL advantage vs intra-class variation — encoder: {encoder}")
     fig.tight_layout()
-    fig.savefig(OUT_DIR / "intraclass_variation_scatter.png", dpi=150)
+    fig.savefig(OUT_DIR / f"intraclass_variation_{encoder}_scatter.png", dpi=150)
     plt.close(fig)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--encoder", type=str, default="dinov2", choices=sorted(ENCODERS.keys()))
     parser.add_argument("--dataset", type=str, default=None, help="run only this dataset")
     parser.add_argument("--overwrite", action="store_true", help="recompute even if already in CSV")
     parser.add_argument("--seed", type=int, default=0)
@@ -223,7 +245,9 @@ def main() -> None:
     args = parser.parse_args()
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    existing = load_existing()
+    encoder = args.encoder
+    print(f"encoder = {encoder}  ({ENCODERS[encoder]})")
+    existing = load_existing(encoder)
     done = set(existing.dataset) if not args.overwrite else set()
 
     if not args.analyze_only:
@@ -234,17 +258,18 @@ def main() -> None:
         else:
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             print(f"device = {device}")
-            model = build_model(device)
+            model = build_model(encoder, device)
             transform = build_transform(model)
             rows = existing.to_dict("records")
+            csv_path = scores_csv_path(encoder)
             for name in todo:
                 row = process_one(name, model, transform, device, args.seed)
                 if row is not None:
                     rows = [r for r in rows if r["dataset"] != name] + [row]
-                    pd.DataFrame(rows).to_csv(SCORES_CSV, index=False)
+                    pd.DataFrame(rows).to_csv(csv_path, index=False)
 
-    scores = load_existing()
-    analyze_and_plot(scores)
+    scores = load_existing(encoder)
+    analyze_and_plot(scores, encoder)
 
 
 if __name__ == "__main__":
