@@ -181,14 +181,17 @@ class EvaluateCallback(Callback):
                 logging.warning("No prediction files found for evaluation.")
                 return
 
-            # Load into a single datasets.Dataset via Arrow backend
+            # Load into a single pyarrow.Table via memory mapping
             # This is extremely memory efficient as it mmaps the files
-            ds = Dataset.from_file(str(rank_files[0]))
-            if len(rank_files) > 1:
-                from datasets import concatenate_datasets
-
-                others = [Dataset.from_file(str(f)) for f in rank_files[1:]]
-                ds = concatenate_datasets([ds] + others)
+            tables = []
+            for f in rank_files:
+                with pa.memory_map(str(f), 'r') as source:
+                    tables.append(pa.ipc.open_file(source).read_all())
+            
+            if len(tables) > 1:
+                ds = pa.concat_tables(tables)
+            else:
+                ds = tables[0]
 
             # Load the evaluate metric
             if self.metric is None:
@@ -196,7 +199,9 @@ class EvaluateCallback(Callback):
 
             # Compute the metric
             results = self.metric.compute(
-                predictions=ds["predictions"], references=ds["references"], **self.metric_kwargs
+                predictions=ds.column("predictions").to_numpy(),
+                references=ds.column("references").to_numpy(),
+                **self.metric_kwargs
             )
 
             # Log to Lightning
