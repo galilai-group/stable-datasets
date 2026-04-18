@@ -28,7 +28,7 @@ import pyarrow as pa
 import pyarrow.ipc as ipc
 
 from .arrow_backend import ArrowBackend
-from .storage import StorageBackend
+from .backend_protocol import StorageBackend
 from .cache import _CACHE_FORMAT_VERSION, _features_fingerprint
 from .formatting import get_formatter
 from .schema import (
