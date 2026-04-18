@@ -23,8 +23,8 @@ from rich.progress import (
 )
 from tqdm import tqdm
 
-from .arrow_dataset import StableDataset, StableDatasetDict
-from .backend import ArrowBackend
+from .dataset import StableDataset, StableDatasetDict
+from .arrow_backend import ArrowBackend
 from .lance_backend import LanceBackend
 from .cache import (
     cache_fingerprint,

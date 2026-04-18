@@ -57,11 +57,25 @@ class LanceBackend:
     #: Lance per-row.
     prefer_batched_take: bool = True
 
-    def __init__(self, *, uri: str | Path):
+    def __init__(self, *, uri: str | Path, batch_readahead: int = 8):
+        """
+        Parameters
+        ----------
+        uri : str or Path
+            Path to the Lance dataset directory.
+        batch_readahead : int, default 8
+            Number of RecordBatches Lance reads ahead in the scanner
+            when ``iter_batches`` is called. Matches Lance's own
+            ``lance.torch.data.LanceDataset`` example which uses
+            ``batch_readahead=8``. Higher values increase memory use
+            during iteration but improve throughput on high-latency
+            storage. Ignored by ``take``/``get_row``/``slice``.
+        """
         self._uri = Path(uri)
         self._ds = None  # opened lazily so DataLoader workers re-open after fork
         self._cached_num_rows: int | None = None
         self._cached_num_shards: int | None = None
+        self._batch_readahead = int(batch_readahead)
 
     # -- Lazy open ------------------------------------------------------------
     #
@@ -166,7 +180,7 @@ class LanceBackend:
             fragments = [fragments[i] for i in order]
 
         for frag in fragments:
-            yield from frag.to_batches()
+            yield from frag.to_batches(batch_readahead=self._batch_readahead)
 
     # -- Pickle / DataLoader compatibility ------------------------------------
     # Lance datasets reopen in constant time from a URI, so worker state
@@ -177,6 +191,7 @@ class LanceBackend:
             "uri": str(self._uri),
             "num_rows": self._cached_num_rows,
             "num_shards": self._cached_num_shards,
+            "batch_readahead": self._batch_readahead,
         }
 
     def __setstate__(self, state: dict) -> None:
@@ -184,3 +199,4 @@ class LanceBackend:
         self._ds = None
         self._cached_num_rows = state.get("num_rows")
         self._cached_num_shards = state.get("num_shards")
+        self._batch_readahead = state.get("batch_readahead", 8)

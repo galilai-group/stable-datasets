@@ -106,6 +106,35 @@ def main():
         "with random-order batches -- the map-style training workload.",
     )
     parser.add_argument(
+        "--iterable",
+        action="store_true",
+        help="Wrap the dataset in StableIterableDataset (streaming path, "
+        "uses backend.iter_batches). For HF, uses its native to_iterable_dataset. "
+        "Mutually exclusive with --sampler.",
+    )
+    parser.add_argument(
+        "--sampler",
+        default=None,
+        choices=(None, "shard_shuffle"),
+        help="Optional backend-aware sampler. 'shard_shuffle' uses "
+        "stable_datasets.samplers.ShardShuffleSampler with within_shard='random'. "
+        "Mutually exclusive with --shuffle and --iterable.",
+    )
+    parser.add_argument(
+        "--persistent-workers",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="DataLoader persistent_workers (default True, matching production "
+        "training pipelines). --no-persistent-workers to disable.",
+    )
+    parser.add_argument(
+        "--multiprocessing-context",
+        default="spawn",
+        choices=("fork", "spawn", "forkserver"),
+        help="DataLoader multiprocessing_context. Lance recommends 'spawn' "
+        "(default) because its Rust tokio runtime is not fork-safe.",
+    )
+    parser.add_argument(
         "--history",
         default="benchmarks/results/profile_iter_history.json",
         help="Consolidated history file to append this run to. "
@@ -173,6 +202,12 @@ def main():
             env["TV_DOWNLOAD"] = "1"
             if args.shuffle:
                 env["STABLE_DATASETS_SHUFFLE"] = "1"
+            if args.iterable:
+                env["STABLE_DATASETS_ITERABLE"] = "1"
+            if args.sampler:
+                env["STABLE_DATASETS_SAMPLER"] = args.sampler
+            env["STABLE_DATASETS_PERSISTENT_WORKERS"] = "1" if args.persistent_workers else "0"
+            env["STABLE_DATASETS_MP_CONTEXT"] = args.multiprocessing_context
 
             timeout = 36000 if "imagenet" in ds_name.lower() else 3600
 
@@ -241,7 +276,12 @@ def main():
             "num_epochs": args.num_epochs,
             "num_workers": args.num_workers,
             "num_runs": args.num_runs,
+            "batch_size": args.batch_size,
             "shuffle": args.shuffle,
+            "iterable": args.iterable,
+            "sampler": args.sampler,
+            "persistent_workers": args.persistent_workers,
+            "multiprocessing_context": args.multiprocessing_context,
             "decode": os.environ.get("STABLE_DATASETS_DECODE", "1") == "1",
         }
         if slurm_mem_mb:

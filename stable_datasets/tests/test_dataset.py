@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from PIL import Image as PILImage
 
-from stable_datasets.arrow_dataset import StableDataset
+from stable_datasets.dataset import StableDataset
 from stable_datasets.cache import write_sharded_arrow_cache
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Value, Version
 from stable_datasets.splits import Split, SplitGenerator
@@ -504,7 +504,7 @@ class TestFeatureInference:
     def test_infer_fails_on_struct(self):
         import pyarrow as pa
 
-        from stable_datasets.arrow_dataset import _infer_feature
+        from stable_datasets.dataset import _infer_feature
 
         with pytest.raises(TypeError, match="Cannot infer"):
             _infer_feature(pa.struct([pa.field("a", pa.int32())]))

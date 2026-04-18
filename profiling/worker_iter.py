@@ -73,6 +73,13 @@ try:
             for col, feat in ds.features.items():
                 if isinstance(feat, hf_datasets.Image):
                     ds = ds.cast_column(col, hf_datasets.Image(decode=False))
+        # HF iterable path: convert to IterableDataset so the comparison
+        # against our StableIterableDataset is apples-to-apples (both
+        # streaming, both with in-dataset buffered shuffle).
+        if os.environ.get("STABLE_DATASETS_ITERABLE", "0") == "1":
+            ds = ds.to_iterable_dataset(num_shards=max(1, num_workers))
+            if os.environ.get("STABLE_DATASETS_SHUFFLE", "0") == "1":
+                ds = ds.shuffle(seed=0, buffer_size=10_000)
 
     elif backend == "tv":
         import torchvision.datasets as tv_datasets
@@ -92,13 +99,46 @@ try:
     n = len(ds)
 
     shuffle = os.environ.get("STABLE_DATASETS_SHUFFLE", "0") == "1"
-    loader = DataLoader(
-        ds,
+    iterable = os.environ.get("STABLE_DATASETS_ITERABLE", "0") == "1"
+    sampler_kind = os.environ.get("STABLE_DATASETS_SAMPLER", "")
+    persistent = os.environ.get("STABLE_DATASETS_PERSISTENT_WORKERS", "1") == "1"
+    mp_ctx = os.environ.get("STABLE_DATASETS_MP_CONTEXT", "spawn")
+
+    # Map-style vs iterable-style. For iterable we wrap the StableDataset
+    # in StableIterableDataset (streaming via backend.iter_batches) and
+    # turn off DataLoader-side shuffle (shuffle is the dataset's
+    # responsibility via buffered reservoir shuffle). HF datasets stay
+    # on their native map-style path for iterable too; we only restructure
+    # for our own backends.
+    if iterable and backend.startswith("stable"):
+        from stable_datasets.iterable import StableIterableDataset
+
+        ds = StableIterableDataset(ds, shuffle=shuffle, seed=0, buffer_size=10_000)
+        shuffle = False  # DataLoader can't shuffle an IterableDataset
+
+    # Build the optional backend-aware sampler.
+    sampler = None
+    if sampler_kind:
+        if iterable:
+            raise ValueError("--sampler is not supported on iterable-style datasets")
+        if backend.startswith("stable"):
+            sampler = ds.make_sampler(sampler_kind, seed=0, within_shard="random")
+            shuffle = False  # sampler is mutually exclusive with shuffle=True
+
+    loader_kwargs = dict(
         batch_size=batch_size,
         num_workers=num_workers,
-        shuffle=shuffle,
         collate_fn=_list_collate,
     )
+    if num_workers > 0:
+        loader_kwargs["persistent_workers"] = persistent
+        loader_kwargs["multiprocessing_context"] = mp_ctx
+    if sampler is not None:
+        loader_kwargs["sampler"] = sampler
+    else:
+        loader_kwargs["shuffle"] = shuffle
+
+    loader = DataLoader(ds, **loader_kwargs)
 
     epoch_times = []
     for epoch in range(num_epochs):

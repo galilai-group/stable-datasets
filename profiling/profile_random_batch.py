@@ -28,7 +28,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.ipc as ipc
 
-from stable_datasets.backend import ArrowBackend, _upgrade_binary_columns
+from stable_datasets.arrow_backend import ArrowBackend, _upgrade_binary_columns
 from stable_datasets.lance_backend import LanceBackend
 
 
