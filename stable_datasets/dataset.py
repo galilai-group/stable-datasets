@@ -27,7 +27,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.ipc as ipc
 
-from .backend import ArrowBackend
+from .arrow_backend import ArrowBackend
 from .storage import StorageBackend
 from .cache import _CACHE_FORMAT_VERSION, _features_fingerprint
 from .formatting import get_formatter
@@ -512,6 +512,34 @@ class StableDataset:
     def set_decode(self, decode: bool) -> StableDataset:
         """Control whether Image columns are decoded or left as raw bytes."""
         return self._shallow_copy(_decode_images=decode)
+
+    def make_sampler(self, kind: str = "shard_shuffle", **kwargs):
+        """Return a backend-aware ``torch.utils.data.Sampler`` for this dataset.
+
+        Convenience wrapper around the classes in
+        :mod:`stable_datasets.samplers`. Use as::
+
+            sampler = ds.make_sampler("shard_shuffle", seed=42)
+            loader = DataLoader(ds, batch_size=128, sampler=sampler, ...)
+
+        ``DataLoader(ds, shuffle=True)`` (full-random via
+        :class:`~torch.utils.data.RandomSampler`) continues to work
+        unchanged; this is strictly opt-in for users who want an
+        iteration order matched to the backend's I/O layout.
+
+        Parameters
+        ----------
+        kind : str, default ``"shard_shuffle"``
+            Currently the only supported kind.
+        **kwargs :
+            Forwarded to the underlying sampler class (e.g.
+            ``seed``, ``within_shard``).
+        """
+        from stable_datasets.samplers import ShardShuffleSampler
+
+        if kind == "shard_shuffle":
+            return ShardShuffleSampler(self, **kwargs)
+        raise ValueError(f"Unknown sampler kind: {kind!r}")
 
     def as_iterable(
         self,

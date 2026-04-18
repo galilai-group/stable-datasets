@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from PIL import Image as PILImage
 
-from stable_datasets.arrow_dataset import StableDataset
+from stable_datasets.dataset import StableDataset
 from stable_datasets.cache import (
     _encode_image,
     read_shard,

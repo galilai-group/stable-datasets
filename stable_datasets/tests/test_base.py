@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from stable_datasets import utils
-from stable_datasets.arrow_dataset import StableDataset, StableDatasetDict
+from stable_datasets.dataset import StableDataset, StableDatasetDict
 from stable_datasets.schema import DatasetInfo, Features, Value, Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
