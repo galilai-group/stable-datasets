@@ -180,7 +180,7 @@ class TestPickle:
 
 class TestProtocol:
     def test_backend_satisfies_protocol(self, make_ds):
-        from stable_datasets.storage import StorageBackend
+        from stable_datasets.backend_protocol import StorageBackend
 
         ds = make_ds(n=5)
         assert isinstance(ds._backend, StorageBackend)
