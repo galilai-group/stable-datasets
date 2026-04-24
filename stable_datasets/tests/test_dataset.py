@@ -325,6 +325,25 @@ class TestFormatAndTransform:
         assert row["image"].shape == (3, 4, 4)  # CHW
         assert isinstance(row["label"], torch.Tensor)
 
+    def test_image_getitems_preserves_order_and_decodes(self, tmp_path):
+        ds = _make_image_cache(tmp_path)
+        rows = ds.__getitems__([4, 1, 4, 0])
+        assert [row["label"] for row in rows] == [4, 1, 4, 0]
+        assert all(hasattr(row["image"], "size") for row in rows)
+
+    def test_getitems_respects_index_indirection(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10).select([7, 2, 7, 0, 5])
+        rows = ds.__getitems__([3, 0, 2, 4])
+        assert [row["x"] for row in rows] == [0, 7, 7, 5]
+
+    def test_with_format_torch_getitems_shape_compatible(self, tmp_path):
+        torch = pytest.importorskip("torch")
+        ds = _make_image_cache(tmp_path).with_format("torch")
+        rows = ds.__getitems__([3, 1])
+        assert len(rows) == 2
+        assert all(isinstance(row["image"], torch.Tensor) for row in rows)
+        assert [tuple(row["image"].shape) for row in rows] == [(3, 4, 4), (3, 4, 4)]
+
 
 # ── Column mutations ────────────────────────────────────────────────────────
 
