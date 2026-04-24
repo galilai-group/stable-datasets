@@ -208,6 +208,23 @@ class TestProtocol:
         assert sub.num_rows == 3
         assert sub.column("x").to_pylist() == [1, 4, 7]
 
+    def test_take_single_shard_preserves_order_and_duplicates(self, make_ds):
+        ds = make_ds(n=8, batch_size=16)
+        sub = ds._backend.take([6, 2, 6, 1])
+        assert sub.column("x").to_pylist() == [6, 2, 6, 1]
+
+    def test_take_multi_shard_preserves_order_and_duplicates(self, make_ds):
+        ds = make_ds(n=12, batch_size=4)
+        sub = ds._backend.take([8, 1, 8, 5, 0, 11])
+        assert sub.column("x").to_pylist() == [8, 1, 8, 5, 0, 11]
+
+    def test_take_contiguous_matches_slice(self, make_ds):
+        ds = make_ds(n=12, batch_size=4)
+        taken = ds._backend.take([4, 5, 6])
+        sliced = ds._backend.slice(4, 3)
+        assert taken.column("x").to_pylist() == sliced.column("x").to_pylist()
+        assert taken.column("label").to_pylist() == sliced.column("label").to_pylist()
+
     def test_slice(self, make_ds):
         ds = make_ds(n=20)
         sub = ds._backend.slice(5, 3)
