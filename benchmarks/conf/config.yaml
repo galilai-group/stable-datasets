@@ -11,7 +11,8 @@ smoke_test: false  # run 3 train + 3 val batches for 1 epoch to verify the pipel
 
 checkpoint:
   dir: /oscar/home/sboughan/scratch/.stable-datasets/.pretrain_checkpoints
-  every_n_epochs: 50
+  every_n_epochs: 10
+  train_time_interval_hours: 2  # wall-clock save to survive SLURM timeouts
   save_last: true
   monitor: "eval/linear_probe_top1"
   mode: "max"

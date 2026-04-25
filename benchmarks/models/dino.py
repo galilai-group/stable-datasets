@@ -184,8 +184,12 @@ def forward(self, batch, stage):
             self._dino_accum_center = None
 
     out["embedding"] = teacher_cls_features.detach()
-    out["loss"] = loss
-    self.log(f"{stage}/loss", out["loss"], on_step=True, on_epoch=True, sync_dist=True)
+    # spt's manual_backward does not divide by accumulate_grad_batches, so the
+    # accumulated gradient at the optimizer step is accum× the single-batch
+    # mean-gradient — effective LR scales with accum. Divide here so bs=B/accum=K
+    # is equivalent to bs=K*B/accum=1 as expected.
+    out["loss"] = loss / accum
+    self.log(f"{stage}/loss", loss, on_step=True, on_epoch=True, sync_dist=True)
     return out
 
 

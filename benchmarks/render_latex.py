@@ -325,24 +325,10 @@ def pivot_table(df: pd.DataFrame, metric: str) -> tuple[pd.DataFrame, pd.DataFra
 # LaTeX formatting
 
 
-def format_latex(
-    table: pd.DataFrame,
-    std_table: pd.DataFrame | None = None,
-    *,
-    secondary: pd.DataFrame | None = None,
-    secondary_std: pd.DataFrame | None = None,
-) -> str:
-    """Format pivot table as a booktabs LaTeX table (percentages).
-
-    If *secondary* is provided, cells render as ``primary / secondary``
-    so a single table carries both metrics at once (e.g. probe/knn).
-    The ``std`` tables are only used when the corresponding primary /
-    secondary table is present.
-    """
+def format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) -> str:
+    """Format pivot table as a booktabs LaTeX table (percentages)."""
     pct = table * 100
     pct_std = std_table * 100 if std_table is not None else None
-    pct2 = secondary * 100 if secondary is not None else None
-    pct2_std = secondary_std * 100 if secondary_std is not None else None
 
     method_cols = [c for c in pct.columns if c != "Average"]
     datasets = [idx for idx in pct.index if idx != "Average"]
@@ -360,15 +346,7 @@ def format_latex(
         return tbl.loc[ds, col]
 
     def _cell(ds, col):
-        primary = _fmt_one(pct.loc[ds, col], _std_at(pct_std, ds, col))
-        if pct2 is None:
-            return primary
-        if ds in pct2.index and col in pct2.columns:
-            sec_val = pct2.loc[ds, col]
-        else:
-            sec_val = float("nan")
-        secondary_s = _fmt_one(sec_val, _std_at(pct2_std, ds, col))
-        return f"{primary} / {secondary_s}"
+        return _fmt_one(pct.loc[ds, col], _std_at(pct_std, ds, col))
 
     n_cols = len(method_cols) + 1  # +1 for Average
     lines = [
@@ -412,13 +390,6 @@ def main():
     parser = argparse.ArgumentParser(description="Render benchmark results from W&B to LaTeX")
     parser.add_argument("--entity", default="samibg")
     parser.add_argument("--project", default="finalized-stable-datasets")
-    parser.add_argument(
-        "--split-evals",
-        action="store_true",
-        help="Emit one LaTeX table per metric "
-        "(benchmark_table_probe.tex, benchmark_table_knn.tex) instead of a "
-        "single combined table with 'probe / knn' cells.",
-    )
     args = parser.parse_args()
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -448,33 +419,12 @@ def main():
     df.to_csv(DEFAULT_CSV_PATH, index=False)
     print(f"\nSaved CSV to {DEFAULT_CSV_PATH}")
 
-    if args.split_evals:
-        for short, (tbl, std) in pivots.items():
-            if tbl.empty:
-                continue
-            out_path = RESULTS_DIR / f"benchmark_table_{short}.tex"
-            out_path.write_text(format_latex(tbl, std))
-            print(f"LaTeX table saved to {out_path}")
-    else:
-        # Combined: primary = probe (if present), secondary = knn.
-        probe_tbl, probe_std = pivots.get("probe", (pd.DataFrame(), None))
-        knn_tbl, knn_std = pivots.get("knn", (pd.DataFrame(), None))
-        if probe_tbl.empty and not knn_tbl.empty:
-            # Fall back to knn-only when probe is missing.
-            primary, primary_std = knn_tbl, knn_std
-            secondary, secondary_std = None, None
-        else:
-            primary, primary_std = probe_tbl, probe_std
-            secondary = knn_tbl if not knn_tbl.empty else None
-            secondary_std = knn_std if not knn_tbl.empty else None
-        if primary.empty:
-            print("No metric data to render.")
-            return
-        out_path = RESULTS_DIR / "benchmark_table.tex"
-        out_path.write_text(
-            format_latex(primary, primary_std, secondary=secondary, secondary_std=secondary_std)
-        )
-        print(f"LaTeX table saved to {out_path} (cells show probe / knn)")
+    for short, (tbl, std) in pivots.items():
+        if tbl.empty:
+            continue
+        out_path = RESULTS_DIR / f"benchmark_table_{short}.tex"
+        out_path.write_text(format_latex(tbl, std))
+        print(f"LaTeX table saved to {out_path}")
 
 
 if __name__ == "__main__":
