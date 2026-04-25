@@ -229,16 +229,11 @@ profiling/slurm/**/*.err
 benchmark_*.out
 benchmark_*.err
 
-benchmarks/results/*.bak-*.csv
-
-benchmarks/results/representation_score_shards/
-benchmarks/results/representation_score_train_shards/
-benchmarks/results/metadata_shards/
 
 .codex
 .git.broken.bak
 
-benchmarks/results/
+benchmarks/results/**
 
 benchmarks/analysis/*.sbatch
 benchmarks/analysis/*.csv
