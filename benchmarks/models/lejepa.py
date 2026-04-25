@@ -1,6 +1,17 @@
-"""LeJEPA: multi-view invariance + SIGReg regularization (4 views).
+"""LeJEPA: multi-view invariance + Epps-Pulley SIGReg (canonical).
 
-Includes the EppsPulley + SlicingUnivariateTest loss components.
+Thin wrapper around :class:`benchmarks.models._lejepa_canonical.LeJEPA`
+(vendored from upstream stable-pretraining). This module contributes:
+
+* DINO-style multi-crop: 2 global views (full ``ds_config.image_size``) +
+  6 local views (half resolution) — matching the canonical LeJEPA recipe.
+* A backbone pooler that adapts ``spt.backbone.vit_hf`` (HF-style output
+  with ``.last_hidden_state``) into the ``(B, embed_dim)`` tensor the
+  canonical ``LeJEPA.forward`` expects, and enables
+  ``interpolate_pos_encoding`` so local views work with pretrained-shape
+  position embeddings.
+* A forward function that unpacks ``global_*`` / ``local_*`` named views
+  from ``collate_multicrop`` batches and delegates to ``LeJEPA.forward``.
 """
 
 from __future__ import annotations
@@ -8,179 +19,121 @@ from __future__ import annotations
 import stable_pretraining as spt
 import torch
 from stable_pretraining.data import transforms
-from torch import distributed as dist
+from stable_pretraining.forward import _get_views_by_prefix
 from torch import nn
 
 from benchmarks.models import (
     build_optim_config,
-    collate_multiview,
-    create_backbone,
-    create_projector,
+    collate_multicrop,
     get_embedding_dim,
-    ssl_augmentation,
     val_transform,
 )
+from benchmarks.models._lejepa_canonical import LeJEPA
 
 
-NUM_VIEWS = 4
+NUM_GLOBAL = 2
+NUM_LOCAL = 6
+
+
+# Transforms
+
+
+def _photometric(ds_config) -> list:
+    ops = [transforms.RandomHorizontalFlip(p=0.5)]
+    if ds_config.channels != 1:
+        ops.extend(
+            [
+                transforms.ColorJitter(
+                    brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1, p=0.8
+                ),
+                transforms.RandomGrayscale(p=0.2),
+            ]
+        )
+    ops.append(transforms.GaussianBlur(kernel_size=23, sigma=(0.1, 2.0), p=0.5))
+    if ds_config.channels != 1:
+        ops.append(transforms.RandomSolarize(threshold=128, p=0.2))
+    return ops
+
+
+def _crop_transform(ds_config, size, scale):
+    return transforms.Compose(
+        transforms.RGB(),
+        transforms.RandomResizedCrop(size, scale=scale),
+        *_photometric(ds_config),
+        transforms.ToImage(mean=ds_config.mean, std=ds_config.std),
+    )
 
 
 def create_transforms(ds_config):
-    """Returns (train_transform, val_transform, collate_fn)."""
     h, w = ds_config.image_size
-    view = ssl_augmentation(ds_config, (h, w), crop_scale=(0.08, 1.0))
-    train = transforms.MultiViewTransform([view] * NUM_VIEWS)
-    return train, val_transform(ds_config), collate_multiview
+    local_size = (max(h // 2, 32), max(w // 2, 32))
+
+    global_aug = _crop_transform(ds_config, (h, w), scale=(0.3, 1.0))
+    local_aug = _crop_transform(ds_config, local_size, scale=(0.05, 0.3))
+
+    transform_dict = {
+        **{f"global_{i + 1}": global_aug for i in range(NUM_GLOBAL)},
+        **{f"local_{i + 1}": local_aug for i in range(NUM_LOCAL)},
+    }
+    train = transforms.MultiViewTransform(transform_dict)
+    return train, val_transform(ds_config), collate_multicrop
 
 
-# LeJEPA Loss (EppsPulley + SlicingUnivariateTest)
+# Backbone adapter: HF ViT → (B, embed_dim) with interpolated pos-encoding
 
 
-def _is_dist_avail_and_initialized():
-    return dist.is_available() and dist.is_initialized()
+class _CLSPooledViT(nn.Module):
+    """Wrap ``spt.backbone.vit_hf`` to return CLS-pooled ``(B, embed_dim)``.
 
-
-def _all_reduce(x, op="AVG"):
-    if dist.is_available() and dist.is_initialized():
-        from torch.distributed._functional_collectives import all_reduce as functional_all_reduce
-
-        return functional_all_reduce(x, op.lower(), dist.group.WORLD)
-    return x
-
-
-class EppsPulley(nn.Module):
-    """Fast Epps-Pulley two-sample test statistic via characteristic function integration.
-
-    Args:
-        t_max: Maximum integration point.
-        n_points: Number of integration points (must be odd).
+    Always passes ``interpolate_pos_encoding=True`` so local (smaller) crops
+    reuse the same pos-embed interpolated to their patch grid.
     """
 
-    def __init__(self, t_max: float = 3, n_points: int = 17):
+    def __init__(self, backbone: nn.Module):
         super().__init__()
-        assert n_points % 2 == 1
-        self.n_points = n_points
+        self.bb = backbone
 
-        t = torch.linspace(0, t_max, n_points, dtype=torch.float32)
-        self.register_buffer("t", t)
-        dt = t_max / (n_points - 1)
-        weights = torch.full((n_points,), 2 * dt, dtype=torch.float32)
-        weights[[0, -1]] = dt
-        self.register_buffer("phi", self.t.square().mul_(0.5).neg_().exp_())
-        self.register_buffer("weights", weights * self.phi)
-
-    @property
-    def world_size(self):
-        if _is_dist_avail_and_initialized():
-            return dist.get_world_size()
-        return 1
-
-    def forward(self, x):
-        N = x.size(-2)
-        x_t = x.unsqueeze(-1) * self.t
-        cos_vals = torch.cos(x_t)
-        sin_vals = torch.sin(x_t)
-
-        cos_mean = cos_vals.mean(-3)
-        sin_mean = sin_vals.mean(-3)
-
-        cos_mean = _all_reduce(cos_mean)
-        sin_mean = _all_reduce(sin_mean)
-
-        err = (cos_mean - self.phi).square() + sin_mean.square()
-        return (err @ self.weights) * N * self.world_size
-
-
-class SlicingUnivariateTest(nn.Module):
-    """Multivariate normality test via random 1D projections.
-
-    Args:
-        univariate_test: A univariate test module (e.g., EppsPulley).
-        num_slices: Number of random 1D projections.
-        reduction: Aggregation method: 'mean', 'sum', or None.
-    """
-
-    def __init__(
-        self,
-        univariate_test: nn.Module,
-        num_slices: int,
-        reduction: str = "mean",
-    ):
-        super().__init__()
-        self.reduction = reduction
-        self.num_slices = num_slices
-        self.univariate_test = univariate_test
-        self.register_buffer("global_step", torch.zeros((), dtype=torch.long))
-        self._generator = None
-        self._generator_device = None
-
-    def _get_generator(self, device, seed):
-        if self._generator is None or self._generator_device != device:
-            self._generator = torch.Generator(device=device)
-            self._generator_device = device
-        self._generator.manual_seed(seed)
-        return self._generator
-
-    def forward(self, x):
-        with torch.no_grad():
-            global_step_sync = _all_reduce(self.global_step.clone(), op="MAX")
-            seed = global_step_sync.item()
-            g = self._get_generator(x.device, seed)
-            proj_shape = (x.size(-1), self.num_slices)
-            A = torch.randn(proj_shape, device=x.device, generator=g)
-            A /= A.norm(p=2, dim=0)
-            self.global_step.add_(1)
-
-        stats = self.univariate_test(x @ A)
-        if self.reduction == "mean":
-            return stats.mean()
-        elif self.reduction == "sum":
-            return stats.sum()
-        return stats
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = self.bb(x, interpolate_pos_encoding=True)
+        if hasattr(out, "last_hidden_state"):
+            return out.last_hidden_state[:, 0, :]
+        if out.dim() == 3:
+            return out[:, 0, :]
+        return out
 
 
 # Forward
 
 
 def forward(self, batch, stage):
-    """LeJEPA forward: multi-view invariance + SIGReg regularization."""
     out = {}
-    views = batch.get("views")
+    global_views, local_views, all_views = _get_views_by_prefix(
+        batch, global_prefix="global", local_prefix="local"
+    )
 
-    if views is not None:
-        V, N = len(views), views[0]["image"].size(0)
-        all_images = torch.cat([v["image"] for v in views], dim=0)
-        all_emb = self.backbone(all_images)
-        out["embedding"] = all_emb[:N]
-
-        if "label" in views[0]:
-            out["label"] = views[0]["label"]
-
-        if self.training:
-            all_proj = self.projector(all_emb)
-            proj_stacked = all_proj.reshape(V, N, -1)
-            view_mean = proj_stacked.mean(0)
-            inv_loss = (view_mean - proj_stacked).square().mean()
-
-            if isinstance(self.sigreg_loss, SlicingUnivariateTest) and isinstance(
-                self.sigreg_loss.univariate_test, EppsPulley
-            ):
-                sigreg_loss = self.sigreg_loss(proj_stacked)
-            else:
-                sigreg_loss = self.sigreg_loss(proj_stacked.reshape(-1, proj_stacked.size(-1)))
-
-            lamb = getattr(self, "lamb", 0.02)
-            lejepa_loss = sigreg_loss * lamb + inv_loss * (1 - lamb)
-            out["loss"] = lejepa_loss
-
-            self.log(f"{stage}/sigreg", sigreg_loss, on_step=True, on_epoch=True, sync_dist=True)
-            self.log(f"{stage}/inv", inv_loss, on_step=True, on_epoch=True, sync_dist=True)
-            self.log(f"{stage}/loss", lejepa_loss, on_step=True, on_epoch=True, sync_dist=True)
-    else:
-        out["embedding"] = self.backbone(batch["image"])
+    if all_views is None:
+        # Eval path: single-view batch from val loader.
+        output = self.model(images=batch["image"])
+        out["embedding"] = output.embedding
         if "label" in batch:
             out["label"] = batch["label"]
+        return out
 
+    # Training path: multi-view.
+    if "label" in all_views[0]:
+        out["label"] = torch.cat([v["label"] for v in global_views], dim=0)
+
+    global_imgs = [v["image"] for v in global_views]
+    local_imgs = [v["image"] for v in local_views]
+
+    output = self.model(global_views=global_imgs, local_views=local_imgs)
+
+    out["loss"] = output.loss
+    out["embedding"] = output.embedding
+
+    self.log(f"{stage}/sigreg", output.sigreg_loss, on_step=True, on_epoch=True, sync_dist=True)
+    self.log(f"{stage}/inv", output.inv_loss, on_step=True, on_epoch=True, sync_dist=True)
+    self.log(f"{stage}/loss", output.loss, on_step=True, on_epoch=True, sync_dist=True)
     return out
 
 
@@ -188,20 +141,27 @@ def forward(self, batch, stage):
 
 
 def build(cfg, ds_config) -> tuple[spt.Module, int]:
-    backbone = create_backbone(cfg.backbone, ds_config)
-    embed_dim = get_embedding_dim(backbone)
-    projector = create_projector(embed_dim, cfg.model.projector.hidden_dim, cfg.model.projector.output_dim)
-    univariate_test = EppsPulley(t_max=cfg.model.loss.t_max, n_points=cfg.model.loss.n_points)
-    sigreg_loss = SlicingUnivariateTest(
-        univariate_test=univariate_test,
-        num_slices=cfg.model.loss.num_slices,
-        reduction="mean",
+    h = ds_config.image_size[0]
+    hf_backbone = spt.backbone.vit_hf(
+        size=cfg.backbone.size,
+        patch_size=cfg.backbone.patch_size,
+        image_size=h,
+        pretrained=False,
     )
-    module = spt.Module(
+    embed_dim = get_embedding_dim(hf_backbone)
+    backbone = _CLSPooledViT(hf_backbone)
+
+    model = LeJEPA(
         backbone=backbone,
-        projector=projector,
-        sigreg_loss=sigreg_loss,
+        embed_dim=embed_dim,
+        n_slices=cfg.model.loss.num_slices,
+        t_max=cfg.model.loss.t_max,
+        n_points=cfg.model.loss.n_points,
         lamb=cfg.model.loss.lamb,
+    )
+
+    module = spt.Module(
+        model=model,
         forward=forward,
         optim=build_optim_config(cfg.model, cfg.backbone),
     )

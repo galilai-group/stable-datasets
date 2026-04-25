@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import math
 import os
+from datetime import timedelta
 
 import hydra
 import lightning as pl
@@ -165,18 +166,17 @@ def main(cfg: DictConfig) -> None:
     # Callbacks
     callbacks = create_eval_callbacks(module, ds_config, embed_dim)
     ckpt_cfg = cfg.checkpoint
-    callbacks.append(
-        ModelCheckpoint(
-            dirpath=os.path.join(ckpt_cfg.dir, f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}"),
-            filename="{epoch}-{step}",
-            every_n_epochs=ckpt_cfg.every_n_epochs,
-            save_last=ckpt_cfg.save_last,
-            monitor=ckpt_cfg.monitor,
-            mode=ckpt_cfg.mode,
-            save_top_k=ckpt_cfg.save_top_k,
-            save_weights_only=True,
-        )
+    ckpt_kwargs = dict(
+        dirpath=os.path.join(ckpt_cfg.dir, f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}"),
+        filename="{epoch}-{step}",
+        every_n_epochs=ckpt_cfg.every_n_epochs,
+        save_last=ckpt_cfg.save_last,
+        monitor=ckpt_cfg.monitor,
+        mode=ckpt_cfg.mode,
+        save_top_k=ckpt_cfg.save_top_k,
+        save_weights_only=True,
     )
+    callbacks.append(ModelCheckpoint(**ckpt_kwargs))
 
     # Logger
     smoke_test = cfg.get("smoke_test", False)

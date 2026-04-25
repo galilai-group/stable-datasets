@@ -18,6 +18,8 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.ipc as ipc
 
+from ._indexed_arrow_table import IndexedArrowTable
+
 
 _MAX_OPEN_SHARDS = 512
 
@@ -36,6 +38,11 @@ class ArrowBackend:
     all storage concerns here.
     """
 
+    # Arrow now prefers batched gather for DataLoader __getitems__ as well.
+    # We avoid ``pa.Table.take`` on binary-heavy random access and instead
+    # rebuild the requested batch from record-batch slices.
+    prefer_batched_take: bool = True
+
     def __init__(
         self,
         *,
@@ -51,7 +58,7 @@ class ArrowBackend:
 
         # Shard-level lazy mmap and cumulative offsets for row routing
         if self._shard_paths is not None and self._shard_row_counts is not None:
-            self._shard_tables: list[pa.Table | None] = [None] * len(self._shard_paths)
+            self._shard_tables: list[IndexedArrowTable | None] = [None] * len(self._shard_paths)
             self._cumulative = [0]
             for c in self._shard_row_counts:
                 self._cumulative.append(self._cumulative[-1] + c)
@@ -60,6 +67,7 @@ class ArrowBackend:
             self._shard_tables = []
             self._cumulative = None
             self._open_order = deque()
+        self._indexed_table: IndexedArrowTable | None = IndexedArrowTable(table) if table is not None else None
 
     # -- Public query API (StableDataset calls these) -------------------------
 
@@ -98,9 +106,9 @@ class ArrowBackend:
             if self._shard_paths is not None:
                 if self._shard_paths:
                     if len(self._shard_paths) == 1:
-                        self._table = self._mmap_ipc(self._shard_paths[0])
+                        self._table = self._mmap_ipc(self._shard_paths[0], upgrade_binary=True)
                     else:
-                        tables = [self._mmap_ipc(p) for p in self._shard_paths]
+                        tables = [self._mmap_ipc(p, upgrade_binary=True) for p in self._shard_paths]
                         self._table = pa.concat_tables(tables)
                 else:
                     if self._schema is not None:
@@ -118,54 +126,54 @@ class ArrowBackend:
         """Single row access. Uses slice() which avoids copying binary data."""
         if self._shard_paths is not None and self._cumulative is not None:
             if len(self._shard_paths) == 1:
-                tbl = self._get_shard_table(0)
+                tbl = self._get_shard_table(0).table
                 row_slice = tbl.slice(idx, 1).to_pydict()
                 return {k: v[0] for k, v in row_slice.items()}
             shard_id, local = self._locate_row(idx)
-            tbl = self._get_shard_table(shard_id)
+            tbl = self._get_shard_table(shard_id).table
             row_slice = tbl.slice(local, 1).to_pydict()
             return {k: v[0] for k, v in row_slice.items()}
         row_slice = self.table.slice(idx, 1).to_pydict()
         return {k: v[0] for k, v in row_slice.items()}
 
     def take(self, indices: np.ndarray | list[int]) -> pa.Table:
-        """Batched row access.
+        """Batched row access without using ``pa.Table.take``."""
+        index_array = np.asarray(indices, dtype=np.int64)
+        if index_array.size == 0:
+            return self._empty_table()
 
-        For multi-shard datasets, groups indices by shard and does one
-        ``tbl.take()`` per shard (not per row), then reorders to match
-        the requested index order.
-        """
         if self._shard_paths is not None and self._cumulative is not None:
             if len(self._shard_paths) == 1:
                 tbl = self._get_shard_table(0)
-                return tbl.take(indices)
+                return self._take_from_indexed(tbl, index_array)
             # Group indices by shard: {shard_id: (output_positions, local_indices)}
             shard_groups: dict[int, tuple[list[int], list[int]]] = {}
-            for out_pos, idx in enumerate(indices):
+            for out_pos, idx in enumerate(index_array.tolist()):
                 shard_id, local = self._locate_row(int(idx))
                 if shard_id not in shard_groups:
                     shard_groups[shard_id] = ([], [])
                 shard_groups[shard_id][0].append(out_pos)
                 shard_groups[shard_id][1].append(local)
 
-            # One batched take() per shard, then concat + reorder
+            # One batched gather per shard, then concat + reorder.
             parts = []
             reorder = []
             offset = 0
             for shard_id, (out_positions, local_indices) in shard_groups.items():
                 tbl = self._get_shard_table(shard_id)
-                part = tbl.take(local_indices)
+                part = self._take_from_indexed(tbl, np.asarray(local_indices, dtype=np.int64))
                 parts.append(part)
                 for i, out_pos in enumerate(out_positions):
                     reorder.append((out_pos, offset + i))
                 offset += len(out_positions)
 
             combined = pa.concat_tables(parts)
-            # Reorder to match the originally requested index order
-            reorder.sort()  # sort by out_pos
+            reorder.sort()
             final_order = [src for _, src in reorder]
-            return combined.take(final_order)
-        return self.table.take(indices)
+            if final_order == list(range(len(final_order))):
+                return combined
+            return IndexedArrowTable(combined).fast_gather(final_order)
+        return self._take_from_indexed(self._get_indexed_table(), index_array)
 
     def slice(self, start: int, length: int) -> pa.Table:
         """Contiguous range access.
@@ -176,8 +184,8 @@ class ArrowBackend:
         if self._shard_paths is not None and self._cumulative is not None:
             if len(self._shard_paths) == 1:
                 tbl = self._get_shard_table(0)
-                return tbl.slice(start, length)
-        return self.table.slice(start, length)
+                return tbl.fast_slice(start, length)
+        return self._get_indexed_table().fast_slice(start, length)
 
     def iter_batches(
         self,
@@ -203,7 +211,7 @@ class ArrowBackend:
             rng.shuffle(shard_indices)
 
         for shard_id in shard_indices:
-            shard_table = self._mmap_ipc(self._shard_paths[shard_id])
+            shard_table = self._mmap_ipc(self._shard_paths[shard_id], upgrade_binary=False)
             yield from shard_table.to_batches()
             del shard_table
 
@@ -235,14 +243,30 @@ class ArrowBackend:
 
     # -- Internal helpers -----------------------------------------------------
 
-    def _get_shard_table(self, shard_id: int) -> pa.Table:
+    def _get_shard_table(self, shard_id: int) -> IndexedArrowTable:
         if self._shard_tables[shard_id] is None:
             while len(self._open_order) >= _MAX_OPEN_SHARDS:
                 old = self._open_order.popleft()
                 self._shard_tables[old] = None
-            self._shard_tables[shard_id] = self._mmap_ipc(self._shard_paths[shard_id])
+            table = self._mmap_ipc(self._shard_paths[shard_id], upgrade_binary=False)
+            self._shard_tables[shard_id] = IndexedArrowTable(table)
             self._open_order.append(shard_id)
         return self._shard_tables[shard_id]
+
+    def _get_indexed_table(self) -> IndexedArrowTable:
+        if self._indexed_table is None:
+            self._indexed_table = IndexedArrowTable(self.table)
+        return self._indexed_table
+
+    def _take_from_indexed(self, indexed_table: IndexedArrowTable, indices: np.ndarray) -> pa.Table:
+        contiguous = _as_contiguous_slice(indices)
+        if contiguous is not None:
+            start, length = contiguous
+            return indexed_table.fast_slice(start, length)
+        return indexed_table.fast_gather(indices)
+
+    def _empty_table(self) -> pa.Table:
+        return pa.Table.from_batches([], schema=self.schema)
 
     def _locate_row(self, idx: int) -> tuple[int, int]:
         shard_id = bisect.bisect_right(self._cumulative, idx) - 1
@@ -250,11 +274,23 @@ class ArrowBackend:
         return shard_id, local
 
     @staticmethod
-    def _mmap_ipc(path: Path) -> pa.Table:
+    def _mmap_ipc(path: Path, *, upgrade_binary: bool) -> pa.Table:
         mmap = pa.memory_map(str(path), "r")
         reader = ipc.open_file(mmap)
         table = reader.read_all()
-        return _upgrade_binary_columns(table)
+        if upgrade_binary:
+            return _upgrade_binary_columns(table)
+        return table
+
+
+def _as_contiguous_slice(indices: np.ndarray) -> tuple[int, int] | None:
+    if indices.size == 0:
+        return None
+    if indices.size == 1:
+        return int(indices[0]), 1
+    if np.all(np.diff(indices) == 1):
+        return int(indices[0]), int(indices.size)
+    return None
 
 
 def _upgrade_binary_columns(table: pa.Table) -> pa.Table:

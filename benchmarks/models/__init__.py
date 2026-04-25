@@ -15,6 +15,8 @@ import stable_pretraining as spt
 import torch
 import torchmetrics
 from lightning.pytorch.callbacks import LearningRateMonitor
+from stable_pretraining.callbacks.lidar import LiDAR
+from stable_pretraining.callbacks.rankme import RankMe
 from stable_pretraining.data import transforms
 from torch import nn
 
@@ -137,6 +139,29 @@ def create_eval_callbacks(module: spt.Module, ds_config, embed_dim: int) -> list
             k=10,
         )
         callbacks.append(knn_probe)
+
+    # Representation-geometry monitors. RankMe is label-free; LiDAR uses
+    # sequential surrogate classes from the queue (paper-native mode).
+    callbacks.append(
+        RankMe(
+            name="rankme",
+            target="embedding",
+            queue_length=2048,
+            target_shape=embed_dim,
+        )
+    )
+    if num_classes > 0:
+        lidar_n_classes = min(100, num_classes)
+        callbacks.append(
+            LiDAR(
+                name="lidar",
+                target="embedding",
+                queue_length=max(2048, lidar_n_classes * 10),
+                target_shape=embed_dim,
+                n_classes=lidar_n_classes,
+                samples_per_class=10,
+            )
+        )
 
     callbacks.append(LearningRateMonitor(logging_interval="step"))
     return callbacks

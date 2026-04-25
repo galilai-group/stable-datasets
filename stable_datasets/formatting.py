@@ -22,6 +22,11 @@ def _zip_cols_to_rows(cols: dict, n: int) -> list[dict]:
     return [{k: cols[k][i] for k in keys} for i in range(n)]
 
 
+def _extract_columns(table) -> dict:
+    """Extract Python column lists one column at a time."""
+    return {name: table.column(name).to_pylist() for name in table.column_names}
+
+
 class Formatter:
     """Base formatter. Subclasses convert Arrow-native values to user-facing types."""
 
@@ -38,10 +43,10 @@ class Formatter:
     def format_batch(self, table) -> list[dict]:
         """Format a batch (from backend.take). Returns list of row dicts.
 
-        Column-first: ``to_pydict()`` once, decode each column in bulk,
+        Column-first: extract columns once, decode each column in bulk,
         then zip into per-row dicts at the end.
         """
-        cols = table.to_pydict()
+        cols = _extract_columns(table)
         return _zip_cols_to_rows(cols, table.num_rows)
 
 
@@ -65,7 +70,7 @@ class PythonFormatter(Formatter):
         return result
 
     def format_batch(self, table) -> list[dict]:
-        cols = table.to_pydict()
+        cols = _extract_columns(table)
         n = table.num_rows
         if self.decode_images:
             for col in self._image_cols:
@@ -94,7 +99,7 @@ class RawFormatter(Formatter):
         return row
 
     def format_batch(self, table) -> list[dict]:
-        return _zip_cols_to_rows(table.to_pydict(), table.num_rows)
+        return _zip_cols_to_rows(_extract_columns(table), table.num_rows)
 
 
 class TorchFormatter(Formatter):
@@ -132,7 +137,7 @@ class TorchFormatter(Formatter):
     def format_batch(self, table) -> list[dict]:
         import torch
 
-        cols = table.to_pydict()
+        cols = _extract_columns(table)
         n = table.num_rows
 
         for col in self._image_cols:
@@ -188,7 +193,7 @@ class NumpyFormatter(Formatter):
         return result
 
     def format_batch(self, table) -> list[dict]:
-        cols = table.to_pydict()
+        cols = _extract_columns(table)
         n = table.num_rows
         if self.decode_images:
             for col in self._image_cols:
