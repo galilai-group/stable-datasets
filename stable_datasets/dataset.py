@@ -27,8 +27,8 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.ipc as ipc
 
-from .arrow_backend import ArrowBackend
-from .backend_protocol import StorageBackend
+from .backends.arrow_shards import ArrowBackend
+from .backends.protocol import StorageBackend
 from .cache import _CACHE_FORMAT_VERSION, _features_fingerprint
 from .formatting import get_formatter
 from .schema import (
@@ -72,6 +72,7 @@ class StableDataset:
         _format_type: str | None = None,
         _decode_images: bool = True,
         _transform: Callable | None = None,
+        _cache_dir: Path | None = None,
     ):
         self._features = features
         self._info = info
@@ -98,7 +99,13 @@ class StableDataset:
         self._format_type = _format_type
         self._decode_images = _decode_images
         self._transform = _transform
-        self._formatter = get_formatter(_format_type, features, decode_images=_decode_images)
+        self._cache_dir = Path(_cache_dir) if _cache_dir is not None else self._infer_cache_dir()
+        self._formatter = get_formatter(
+            _format_type,
+            features,
+            decode_images=_decode_images,
+            cache_dir=self._cache_dir,
+        )
 
         # Precompute whether we have binary columns (Image/Array3D/Video).
         self._has_binary_cols = any(isinstance(f, (Image, Array3D, Video)) for f in features.values())
@@ -123,6 +130,7 @@ class StableDataset:
             "_format_type": self._format_type,
             "_decode_images": self._decode_images,
             "_transform": self._transform,
+            "_cache_dir": self._cache_dir,
         }
 
     def __setstate__(self, state):
@@ -135,6 +143,7 @@ class StableDataset:
             _format_type=state.get("_format_type"),
             _decode_images=state.get("_decode_images", True),
             _transform=state.get("_transform"),
+            _cache_dir=state.get("_cache_dir"),
         )
 
     # -- Public API -----------------------------------------------------------
@@ -445,6 +454,7 @@ class StableDataset:
             _format_type=self._format_type,
             _decode_images=self._decode_images,
             _transform=self._transform,
+            _cache_dir=self._cache_dir,
         )
 
     # -- Column mutations -----------------------------------------------------
@@ -606,6 +616,7 @@ class StableDataset:
 
         meta = {
             "cache_format_version": _CACHE_FORMAT_VERSION,
+            "layout": "arrow-shards",
             "schema_fingerprint": _features_fingerprint(self._features),
             "num_rows": materialized.num_rows,
             "num_shards": 1,
@@ -627,6 +638,7 @@ class StableDataset:
             _format_type=self._format_type,
             _decode_images=self._decode_images,
             _transform=self._transform,
+            _cache_dir=self._cache_dir,
         )
 
     # -- Internal helpers -----------------------------------------------------
@@ -641,6 +653,7 @@ class StableDataset:
             _format_type=self._format_type,
             _decode_images=self._decode_images,
             _transform=self._transform,
+            _cache_dir=self._cache_dir,
         )
 
     def _shallow_copy(self, **overrides) -> StableDataset:
@@ -665,6 +678,7 @@ class StableDataset:
             "_format_type": self._format_type,
             "_decode_images": self._decode_images,
             "_transform": self._transform,
+            "_cache_dir": self._cache_dir,
         }
         kw.update(overrides)
         return StableDataset(**kw)
@@ -678,7 +692,14 @@ class StableDataset:
             _format_type=self._format_type,
             _decode_images=self._decode_images,
             _transform=self._transform,
+            _cache_dir=self._cache_dir,
         )
+
+    def _infer_cache_dir(self) -> Path | None:
+        cache_dir = getattr(self._backend, "cache_dir", None)
+        if cache_dir is not None:
+            return Path(cache_dir)
+        return None
 
 
 def _infer_feature(arrow_type: pa.DataType):

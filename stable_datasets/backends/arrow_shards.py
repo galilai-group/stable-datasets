@@ -85,6 +85,12 @@ class ArrowBackend:
         return self._shard_paths is not None
 
     @property
+    def cache_dir(self) -> Path | None:
+        if self._shard_paths:
+            return self._shard_paths[0].parent
+        return None
+
+    @property
     def schema(self) -> pa.Schema:
         if self._schema is not None:
             return self._schema

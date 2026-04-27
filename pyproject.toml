@@ -41,6 +41,8 @@ version = {attr = "stable_datasets.__version__"}
 
 tensordict = ["tensordict"]
 
+video = ["torchcodec"]
+
 # Benchmark dependencies (profiling + SSL evaluation suite)
 benchmarks = [
     "psutil",
