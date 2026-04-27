@@ -69,12 +69,26 @@ def _resolve_params(cfg: DictConfig) -> None:
         if lr_override is not None:
             cfg.model._lr_override = float(lr_override)
 
+        # Per-dataset model-level overrides (DINO centering/teacher EMA + SK flag).
+        # Raised momenta or SK help stabilize centering on small-batch/few-class
+        # datasets.
+        for key, caster in (
+            ("center_momentum", float),
+            ("momentum_teacher", float),
+            ("sinkhorn_knopp", bool),
+        ):
+            if key in cli_overrides or f"model.{key}" in cli_overrides:
+                continue
+            override = ds_params.get(key, default_params.get(key, None))
+            if override is not None:
+                cfg.model[key] = caster(override)
+
 
 # W&B logger
 
 
 def _create_wandb_logger(cfg: DictConfig, seed: int | None) -> WandbLogger:
-    run_name = f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}"
+    run_name = f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}"
     if seed is not None:
         run_name += f"_seed{seed}"
 
@@ -95,7 +109,7 @@ def _create_wandb_logger(cfg: DictConfig, seed: int | None) -> WandbLogger:
         tags=tags or None,
         config={
             "model": cfg.model.name,
-            "backbone": cfg.backbone.name,
+            "backbone": cfg.backbone,
             "dataset": cfg.dataset,
             "lr": cfg.model.vit_optimizer.lr if hasattr(cfg.model, "vit_optimizer") else cfg.model.optimizer.lr,
             "batch_size": cfg.training.batch_size,
@@ -137,14 +151,19 @@ def main(cfg: DictConfig) -> None:
     _resolve_params(cfg)
 
     log.info(
-        f"{cfg.model.name} | {cfg.backbone.name} | {cfg.dataset} | "
+        f"{cfg.model.name} | {cfg.backbone} | {cfg.dataset} | "
         f"bs={cfg.training.batch_size} | accum={cfg.training.accumulate_grad_batches} | "
         f"epochs={cfg.training.max_epochs}"
     )
 
     # Data
     ds_config = get_config(cfg.dataset)
-    train_transform, val_transform, collate_fn = get_transforms(cfg.model.name, ds_config)
+    if ds_config.modality != "image":
+        raise ValueError(
+            f"Dataset '{cfg.dataset}' is registered as modality={ds_config.modality!r}, "
+            "but the current benchmark runner only has image model/backbone support."
+        )
+    train_transform, val_transform, collate_fn = get_transforms(cfg.model.name, ds_config, cfg.model)
     data, ds_config = create_dataset(
         cfg.dataset,
         train_transform,
@@ -167,7 +186,7 @@ def main(cfg: DictConfig) -> None:
     callbacks = create_eval_callbacks(module, ds_config, embed_dim)
     ckpt_cfg = cfg.checkpoint
     ckpt_kwargs = dict(
-        dirpath=os.path.join(ckpt_cfg.dir, f"{cfg.model.name}_{cfg.backbone.name}_{cfg.dataset}"),
+        dirpath=os.path.join(ckpt_cfg.dir, f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}"),
         filename="{epoch}-{step}",
         every_n_epochs=ckpt_cfg.every_n_epochs,
         save_last=ckpt_cfg.save_last,
@@ -215,11 +234,11 @@ def main(cfg: DictConfig) -> None:
 def _expand_dataset_all():
     import sys
 
-    from benchmarks.dataset import DATASET_CONFIGS
+    from benchmarks.dataset import get_image_dataset_names
 
     for i, arg in enumerate(sys.argv):
         if arg.startswith("dataset=") and arg.split("=", 1)[1].lower() == "all":
-            sys.argv[i] = f"dataset={','.join(sorted(DATASET_CONFIGS))}"
+            sys.argv[i] = f"dataset={','.join(get_image_dataset_names(include_results_only=True))}"
             if "--multirun" not in sys.argv and "-m" not in sys.argv:
                 sys.argv.append("--multirun")
             break

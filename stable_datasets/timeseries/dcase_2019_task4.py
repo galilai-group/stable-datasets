@@ -8,6 +8,15 @@ from tqdm import tqdm
 
 from ..utils import download_dataset
 
+"""
+TODO(builder-migration):
+- Preserve this as structured sound-event metadata, not forced single-label
+  clip classification.
+- The synthetic task-4 annotations are event-table style labels tied to each
+  clip, so the builder should yield waveform plus structured annotation fields.
+- Keep the task semantics faithful to polyphonic event detection.
+"""
+
 
 _urls = {"https://zenodo.org/record/2583796/files/Synthetic_dataset.zip?download=1": "Synthetic_dataset.zip"}
 

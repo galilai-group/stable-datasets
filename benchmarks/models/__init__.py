@@ -10,6 +10,7 @@ Shared helpers live here.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 
 import stable_pretraining as spt
 import torch
@@ -43,15 +44,49 @@ def get_embedding_dim(backbone: nn.Module) -> int:
     return DEFAULT_EMBED_DIM
 
 
+def _cfg_value(cfg, key, default=None):
+    """Read a config/object attribute without assuming a concrete config type."""
+    if isinstance(cfg, Mapping):
+        return cfg.get(key, default)
+    return getattr(cfg, key, default)
+
+
+def resolve_backbone_name(backbone_cfg, ds_config=None) -> str:
+    """Resolve a backbone config/object into a concrete timm model name."""
+    if isinstance(backbone_cfg, str):
+        return backbone_cfg
+
+    name = _cfg_value(backbone_cfg, "name")
+    if isinstance(name, str):
+        if "_patch" in name:
+            return name
+        patch_size = _cfg_value(backbone_cfg, "patch_size")
+        image_size = None
+        if ds_config is not None:
+            image_size = ds_config.image_size[0]
+        if patch_size is not None and image_size is not None:
+            return f"{name}_patch{patch_size}_{image_size}"
+        return name
+
+    backbone_type = _cfg_value(backbone_cfg, "type")
+    size = _cfg_value(backbone_cfg, "size")
+    patch_size = _cfg_value(backbone_cfg, "patch_size")
+    if backbone_type == "vit" and size and patch_size:
+        image_size = 224 if ds_config is None else ds_config.image_size[0]
+        return f"vit_{size}_patch{patch_size}_{image_size}"
+
+    raise TypeError(f"Unsupported backbone config: {backbone_cfg!r}")
+
+
 def create_backbone(backbone_cfg, ds_config) -> nn.Module:
-    """Create a ViT backbone that outputs flat embeddings (CLS token)."""
-    if backbone_cfg.type == "vit":
-        return create_vit(
-            size=backbone_cfg.size,
-            img_size=ds_config.image_size,
-            patch_size=backbone_cfg.patch_size,
-        )
-    raise ValueError(f"Unknown backbone type: {backbone_cfg.type}. Only 'vit' is supported.")
+    """Create a backbone from either a timm model name or a structured config.
+
+    Always builds a 3-channel patch embed: the SSL transform pipeline starts
+    with ``transforms.RGB()`` which upcasts grayscale source images to 3
+    channels before they reach the model.
+    """
+    name = resolve_backbone_name(backbone_cfg, ds_config)
+    return create_vit(name, img_size=ds_config.image_size, in_chans=3)
 
 
 # Projector
@@ -73,7 +108,7 @@ def create_projector(embed_dim: int, hidden_dim: int, output_dim: int) -> nn.Mod
 # Optimizer config
 
 
-def build_optim_config(model_cfg, backbone_cfg) -> dict:
+def build_optim_config(model_cfg) -> dict:
     """Build optimizer config dict from model config."""
     if hasattr(model_cfg, "vit_optimizer"):
         opt_cfg = model_cfg.vit_optimizer
@@ -185,15 +220,18 @@ def ssl_augmentation(
     crop_size: tuple[int, int],
     crop_scale: tuple[float, float],
     blur_p: float = 0.5,
+    solarize_p: float = 0.0,
+    interpolation: transforms.InterpolationMode = transforms.InterpolationMode.BILINEAR,
 ) -> transforms.Compose:
-    """Standard SSL augmentation pipeline (crop → flip → color → blur → normalize).
+    """Standard SSL augmentation pipeline (crop → flip → color → blur → solarize → normalize).
 
-    Shared by multiview and multicrop models.  Only the crop params and blur
-    probability differ between them.
+    Shared by multiview and multicrop models.  Only the crop params, blur
+    probability, solarization probability, and resize interpolation differ
+    between them. Solarize is gated to RGB inputs.
     """
     ops = [
         transforms.RGB(),
-        transforms.RandomResizedCrop(crop_size, scale=crop_scale),
+        transforms.RandomResizedCrop(crop_size, scale=crop_scale, interpolation=interpolation),
         transforms.RandomHorizontalFlip(p=0.5),
     ]
     if ds_config.channels != 1:
@@ -204,6 +242,8 @@ def ssl_augmentation(
             ]
         )
     ops.append(transforms.GaussianBlur(kernel_size=23, sigma=(0.1, 2.0), p=blur_p))
+    if solarize_p > 0.0 and ds_config.channels != 1:
+        ops.append(transforms.RandomSolarize(threshold=128, p=solarize_p))
     ops.append(transforms.ToImage(mean=ds_config.mean, std=ds_config.std))
     return transforms.Compose(*ops)
 
@@ -272,10 +312,12 @@ def build_module(cfg, ds_config) -> tuple[spt.Module, int]:
     return _get_model_module(cfg.model.name).build(cfg, ds_config)
 
 
-def get_transforms(model_name: str, ds_config):
+def get_transforms(model_name: str, ds_config, model_cfg=None):
     """Get (train_transform, val_transform, collate_fn) for a model.
 
-    Each model defines its own ``create_transforms(ds_config)`` that returns
-    the appropriate transforms and collation function.
+    Each model defines its own ``create_transforms(ds_config, model_cfg=None)``
+    that returns the appropriate transforms and collation function. ``model_cfg``
+    is the per-model OmegaConf node (``cfg.model``) — models that need to read
+    transform-specific knobs (e.g. DINO's ``num_global``/``num_local``) consume it.
     """
-    return _get_model_module(model_name).create_transforms(ds_config)
+    return _get_model_module(model_name).create_transforms(ds_config, model_cfg)

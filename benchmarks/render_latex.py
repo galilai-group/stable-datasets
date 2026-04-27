@@ -20,7 +20,11 @@ import yaml
 from tqdm import tqdm
 
 import wandb
-from benchmarks.dataset import DATASET_CONFIGS
+from benchmarks.dataset import (
+    DATASET_CONFIGS,
+    INCLUDED_IMAGE_DATASETS,
+    INCLUDED_TIMESERIES_DATASETS,
+)
 
 
 CONF_DIR = Path(__file__).resolve().parent / "conf" / "model"
@@ -31,30 +35,13 @@ METRICS: dict[str, str] = {
     "knn": "eval/knn_probe_top1",
 }
 
-# Datasets included in the reported benchmark suite. Any run whose
-# dataset (from config or parsed from run name) is not in this set is
-# silently skipped. Add or remove entries here to change the suite.
-INCLUDED_DATASETS: set[str] = {
-    "arabiccharacters",
-    "arabicdigits",
-    "beans",
-    "cifar10",
-    "cifar100",
-    "country211",
-    "cub200",
-    "dtd",
-    "emnist",
-    "fashionmnist",
-    "fgvcaircraft",
-    "flowers102",
-    "food101",
-    "imagenette",
-    "medmnist",
-    "notmnist",
-    "rockpaperscissor",
-    "stl10",
-    "svhn",
-}
+# Datasets included in the reported benchmark suite, split by modality so the
+# LaTeX output can render image and timeseries datasets in separate sections.
+SECTIONS: list[tuple[str, set[str]]] = [
+    ("Image datasets", set(INCLUDED_IMAGE_DATASETS)),
+    ("Timeseries datasets", set(INCLUDED_TIMESERIES_DATASETS)),
+]
+INCLUDED_DATASETS: set[str] = set().union(*[s for _, s in SECTIONS])
 
 MODEL_DISPLAY_NAMES: dict[str, str] = {
     "simclr": "SimCLR",
@@ -325,13 +312,26 @@ def pivot_table(df: pd.DataFrame, metric: str) -> tuple[pd.DataFrame, pd.DataFra
 # LaTeX formatting
 
 
-def format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) -> str:
-    """Format pivot table as a booktabs LaTeX table (percentages)."""
+def format_latex(
+    table: pd.DataFrame,
+    std_table: pd.DataFrame | None = None,
+    sections: list[tuple[str, set[str]]] | None = None,
+) -> str:
+    """Format pivot table as a booktabs LaTeX table (percentages).
+
+    When ``sections`` is supplied, datasets are grouped into labeled
+    blocks (e.g. "Image datasets", "Timeseries datasets"), each with its
+    own intra-section average row. The trailing global Average row from
+    :func:`pivot_table` is dropped.
+    """
     pct = table * 100
     pct_std = std_table * 100 if std_table is not None else None
 
     method_cols = [c for c in pct.columns if c != "Average"]
-    datasets = [idx for idx in pct.index if idx != "Average"]
+    all_ds = [idx for idx in pct.index if idx != "Average"]
+
+    if sections is None:
+        sections = [("", set(all_ds))]
 
     def _fmt_one(val, std_val=None):
         if pd.isna(val):
@@ -349,26 +349,41 @@ def format_latex(table: pd.DataFrame, std_table: pd.DataFrame | None = None) -> 
         return _fmt_one(pct.loc[ds, col], _std_at(pct_std, ds, col))
 
     n_cols = len(method_cols) + 1  # +1 for Average
+
     lines = [
         f"\\begin{{tabular}}{{l {'c ' * n_cols}}}",
         "\\toprule",
-        "\\textbf{Dataset} & " + " & ".join(_display_name(m) for m in method_cols) + " & \\textbf{Avg.} \\\\",
-        "\\midrule",
+        "\\textbf{Dataset} & "
+        + " & ".join(_display_name(m) for m in method_cols)
+        + " & \\textbf{Avg.} \\\\",
     ]
 
-    for ds in datasets:
-        cells = [_display_name(ds)]
-        for col in method_cols:
-            cells.append(_cell(ds, col))
-        cells.append(_cell(ds, "Average"))
-        lines.append(" & ".join(cells) + " \\\\")
+    n_total_cols = n_cols + 1  # leading dataset col + method cols + Avg
+    for i, (label, keys) in enumerate(sections):
+        section_ds = [ds for ds in all_ds if ds in keys]
+        if not section_ds:
+            continue
+        lines.append("\\midrule")
+        if label:
+            lines.append(
+                f"\\multicolumn{{{n_total_cols}}}{{l}}{{\\textit{{{label}}}}} \\\\"
+            )
+            lines.append("\\midrule")
+        for ds in section_ds:
+            cells = [_display_name(ds)]
+            for col in method_cols:
+                cells.append(_cell(ds, col))
+            cells.append(_cell(ds, "Average"))
+            lines.append(" & ".join(cells) + " \\\\")
 
-    lines.append("\\midrule")
-    cells = ["\\textbf{Average}"]
-    for col in method_cols:
-        cells.append(_cell("Average", col))
-    cells.append(_cell("Average", "Average"))
-    lines.append(" & ".join(cells) + " \\\\")
+        # Per-section averages
+        lines.append("\\midrule")
+        cells = [f"\\textbf{{{label} avg.}}" if label else "\\textbf{Average}"]
+        sub_pct = pct.loc[section_ds]
+        for col in method_cols:
+            cells.append(_fmt_one(sub_pct[col].mean()))
+        cells.append(_fmt_one(sub_pct["Average"].mean()))
+        lines.append(" & ".join(cells) + " \\\\")
 
     lines.extend(["\\bottomrule", "\\end{tabular}"])
     return "\n".join(lines) + "\n"
@@ -423,7 +438,7 @@ def main():
         if tbl.empty:
             continue
         out_path = RESULTS_DIR / f"benchmark_table_{short}.tex"
-        out_path.write_text(format_latex(tbl, std))
+        out_path.write_text(format_latex(tbl, std, sections=SECTIONS))
         print(f"LaTeX table saved to {out_path}")
 
 

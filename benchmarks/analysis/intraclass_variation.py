@@ -29,7 +29,7 @@ import torch.nn.functional as F
 from PIL import Image
 from scipy import stats
 
-import stable_datasets as sds
+from benchmarks.dataset import DATASET_CONFIGS, INCLUDED_IMAGE_DATASETS, DatasetConfig, _get_dataset_class
 
 REPO = Path(__file__).resolve().parents[2]
 OUT_DIR = REPO / "benchmarks" / "results"
@@ -62,26 +62,10 @@ ENCODERS: dict[str, str] = {
 N_PER_CLASS = 32
 BATCH_SIZE = 32  # conservative; ViT-L CLIP at 224 still fits comfortably
 
-DATASETS: dict[str, tuple[str, dict]] = {
-    "arabiccharacters": ("ArabicCharacters", {}),
-    "arabicdigits":     ("ArabicDigits", {}),
-    "beans":            ("Beans", {}),
-    "cifar10":          ("CIFAR10", {}),
-    "cifar100":         ("CIFAR100", {}),
-    "country211":       ("Country211", {}),
-    "cub200":           ("CUB200", {}),
-    "dtd":              ("DTD", {}),
-    "emnist":           ("EMNIST", {"config_name": "balanced"}),
-    "fashionmnist":     ("FashionMNIST", {}),
-    "fgvcaircraft":     ("FGVCAircraft", {}),
-    "flowers102":       ("Flowers102", {}),
-    "food101":          ("Food101", {}),
-    "imagenette":       ("Imagenette", {}),
-    "medmnist":         ("MedMNIST", {"config_name": "pneumoniamnist"}),
-    "notmnist":         ("NotMNIST", {}),
-    "rockpaperscissor": ("RockPaperScissor", {}),
-    "stl10":            ("STL10", {}),
-    "svhn":             ("SVHN", {}),
+DATASETS: dict[str, DatasetConfig] = {
+    name: cfg
+    for name, cfg in DATASET_CONFIGS.items()
+    if name in INCLUDED_IMAGE_DATASETS
 }
 
 
@@ -177,10 +161,10 @@ def load_existing(encoder: str) -> pd.DataFrame:
 
 
 def process_one(name: str, model, transform, device, seed: int) -> dict | None:
-    cls_name, kwargs = DATASETS[name]
-    cls = getattr(sds.images, cls_name)
+    cfg = DATASETS[name]
+    cls = _get_dataset_class(cfg)
     print(f"[{name}] loading…", flush=True)
-    ds = cls(split="train", **DATA_KWARGS, **kwargs)
+    ds = cls(split="train", **DATA_KWARGS, **cfg.builder_kwargs)
     labels = get_labels(ds)
     sampled = sample_indices_by_class(labels, N_PER_CLASS, seed)
     n_sampled = sum(len(v) for v in sampled.values())

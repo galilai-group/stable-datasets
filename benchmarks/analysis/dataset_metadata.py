@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-import stable_datasets as sds
+from benchmarks.dataset import DATASET_CONFIGS, INCLUDED_IMAGE_DATASETS, DatasetConfig, _get_dataset_class
 
 REPO = Path(__file__).resolve().parents[2]
 OUT_DIR = REPO / "benchmarks" / "results"
@@ -39,26 +39,10 @@ DATA_KWARGS = dict(
     processed_cache_dir=str(DATA_ROOT / "processed"),
 )
 
-DATASETS: dict[str, tuple[str, dict]] = {
-    "arabiccharacters": ("ArabicCharacters", {}),
-    "arabicdigits":     ("ArabicDigits", {}),
-    "beans":            ("Beans", {}),
-    "cifar10":          ("CIFAR10", {}),
-    "cifar100":         ("CIFAR100", {}),
-    "country211":       ("Country211", {}),
-    "cub200":           ("CUB200", {}),
-    "dtd":              ("DTD", {}),
-    "emnist":           ("EMNIST", {"config_name": "balanced"}),
-    "fashionmnist":     ("FashionMNIST", {}),
-    "fgvcaircraft":     ("FGVCAircraft", {}),
-    "flowers102":       ("Flowers102", {}),
-    "food101":          ("Food101", {}),
-    "imagenette":       ("Imagenette", {}),
-    "medmnist":         ("MedMNIST", {"config_name": "pneumoniamnist"}),
-    "notmnist":         ("NotMNIST", {}),
-    "rockpaperscissor": ("RockPaperScissor", {}),
-    "stl10":            ("STL10", {}),
-    "svhn":             ("SVHN", {}),
+DATASETS: dict[str, DatasetConfig] = {
+    name: cfg
+    for name, cfg in DATASET_CONFIGS.items()
+    if name in INCLUDED_IMAGE_DATASETS
 }
 
 N_RESOLUTION_SAMPLES = 16
@@ -97,10 +81,10 @@ def sample_resolution(ds, n: int, seed: int = 0) -> tuple[float, float, float]:
     return float(np.mean(hs)), float(np.mean(ws)), float(np.mean(cs))
 
 
-def one_dataset(name: str, cls_name: str, kwargs: dict) -> dict:
+def one_dataset(name: str, cfg: DatasetConfig) -> dict:
     print(f"[{name}] loading…", flush=True)
-    cls = getattr(sds.images, cls_name)
-    ds = cls(split="train", **DATA_KWARGS, **kwargs)
+    cls = _get_dataset_class(cfg)
+    ds = cls(split="train", **DATA_KWARGS, **cfg.builder_kwargs)
     labels = get_labels(ds)
 
     counts = np.bincount(labels.astype(int))
@@ -205,8 +189,8 @@ def main() -> None:
     else:
         targets = DATASETS
 
-    for name, (cls_name, kwargs) in targets.items():
-        row = one_dataset(name, cls_name, kwargs)
+    for name, cfg in targets.items():
+        row = one_dataset(name, cfg)
         shard = shard_dir / f"{name}.csv"
         pd.DataFrame([row]).to_csv(shard, index=False)
         print(f"  wrote {shard}")

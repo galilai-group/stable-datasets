@@ -3,7 +3,7 @@ import tarfile
 
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version, DownloadInfo, DatasetSource
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -24,18 +24,20 @@ class CIFAR10(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
-    SOURCE = {
-        "homepage": "https://www.cs.toronto.edu/~kriz/cifar.html",
-        "assets": {
-            "train": "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz",
-            "test": "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz",
+    SOURCE = DatasetSource(
+        homepage= "https://www.cs.toronto.edu/~kriz/cifar.html",
+        assets= {
+            "train": DownloadInfo(url="https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"),
+
+            "test": DownloadInfo(url="https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"),
+
         },
-        "citation": """@article{krizhevsky2009learning,
+        citation= """@article{krizhevsky2009learning,
                          title={Learning multiple layers of features from tiny images},
                          author={Krizhevsky, Alex and Hinton, Geoffrey and others},
                          year={2009},
                          publisher={Toronto, ON, Canada}}""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

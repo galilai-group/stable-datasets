@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version, DownloadInfo, DatasetSource
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, download
 
@@ -11,18 +11,19 @@ class ImageNet100(_ImageNetArchiveMixin, BaseDatasetBuilder):
     """ImageNet-100 built by taking the first 100 class TARs from ImageNet-1K train archive."""
 
     VERSION = Version("2.0.0")
-    SOURCE = {
-        "homepage": "https://www.image-net.org/challenges/LSVRC/2012/",
-        "assets": {
-            "train": "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar",
+    SOURCE = DatasetSource(
+        homepage= "https://www.image-net.org/challenges/LSVRC/2012/",
+        assets= {
+            "train": DownloadInfo(url="https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar"),
+
         },
-        "citation": """@article{deng2009imagenet,
+        citation= """@article{deng2009imagenet,
         title={ImageNet: A large-scale hierarchical image database},
         author={Deng, Jia and others},
         journal={CVPR},
         year={2009}
     }""",
-    }
+    )
 
     def __init__(self, streaming: bool = True, **kwargs):
         self.streaming = streaming

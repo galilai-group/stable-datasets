@@ -11,6 +11,7 @@ from torch import nn
 
 from benchmarks.models import (
     build_optim_config,
+    create_backbone,
     collate_multicrop,
     get_embedding_dim,
     ssl_augmentation,
@@ -18,22 +19,41 @@ from benchmarks.models import (
 )
 
 
-NUM_GLOBAL = 2
-NUM_LOCAL = 6
+def create_transforms(ds_config, model_cfg=None):
+    """Returns (train_transform, val_transform, collate_fn).
 
-
-def create_transforms(ds_config):
-    """Returns (train_transform, val_transform, collate_fn)."""
+    Builds DINO's asymmetric multi-crop:
+      - global_1: blur p=1.0, no solarize
+      - global_2: blur p=0.1, solarize p=0.2
+      - local_*:  smaller crop, blur p=0.5
+    All resizes use BICUBIC to match the canonical DINO recipe.
+    Crop counts are read from ``model_cfg.transforms.{num_global,num_local}``.
+    """
     h, w = ds_config.image_size
-    global_aug = ssl_augmentation(ds_config, (h, w), crop_scale=(0.4, 1.0), blur_p=1.0)
+
+    tcfg = getattr(model_cfg, "transforms", None) if model_cfg is not None else None
+    num_global = int(getattr(tcfg, "num_global", 2)) if tcfg is not None else 2
+    num_local = int(getattr(tcfg, "num_local", 6)) if tcfg is not None else 6
+
+    bicubic = transforms.InterpolationMode.BICUBIC
+    global_aug_1 = ssl_augmentation(
+        ds_config, (h, w), crop_scale=(0.4, 1.0), blur_p=1.0, solarize_p=0.0, interpolation=bicubic
+    )
+    global_aug_2 = ssl_augmentation(
+        ds_config, (h, w), crop_scale=(0.4, 1.0), blur_p=0.1, solarize_p=0.2, interpolation=bicubic
+    )
+    globals_ = [global_aug_1, global_aug_2]
 
     transform_dict = {}
-    for i in range(NUM_GLOBAL):
-        transform_dict[f"global_{i + 1}"] = global_aug
+    for i in range(num_global):
+        # If num_global > 2 (non-canonical), cycle through the asymmetric pair.
+        transform_dict[f"global_{i + 1}"] = globals_[i % 2]
 
     local_size = (max(h // 2, 32), max(w // 2, 32))
-    local_aug = ssl_augmentation(ds_config, local_size, crop_scale=(0.05, 0.4), blur_p=0.5)
-    for i in range(NUM_LOCAL):
+    local_aug = ssl_augmentation(
+        ds_config, local_size, crop_scale=(0.05, 0.4), blur_p=0.5, interpolation=bicubic
+    )
+    for i in range(num_local):
         transform_dict[f"local_{i + 1}"] = local_aug
 
     train = transforms.MultiViewTransform(transform_dict)
@@ -137,51 +157,66 @@ def forward(self, batch, stage):
     else:
         temperature_teacher = getattr(self, "temperature_teacher", 0.07)
 
-    # --- Accumulation-aware centering ---
     accum = getattr(self.trainer, "accumulate_grad_batches_", getattr(self.trainer, "accumulate_grad_batches", 1))
     accum = max(int(accum), 1)
 
-    if not hasattr(self, "_dino_accum_count"):
-        self._dino_accum_count = 0
-        self._dino_accum_center = None
-
-    if self._dino_accum_count == 0:
-        self.dino_loss.apply_center_update()
-
-    center = self.dino_loss.center
-    if center is not None:
-        teacher_probs = F.softmax((teacher_logits - center) / temperature_teacher, dim=-1)
+    if getattr(self, "use_sinkhorn_knopp", False):
+        # Sinkhorn-Knopp: optimal-transport target with uniform prototype mass.
+        # Batch-size-invariant — no centering EMA, no accumulation bookkeeping.
+        world_size = (
+            torch.distributed.get_world_size()
+            if torch.distributed.is_available() and torch.distributed.is_initialized()
+            else 1
+        )
+        n_views = teacher_logits.shape[0]
+        num_samples = n_views * batch_size * world_size
+        teacher_probs = self.dino_loss.sinkhorn_knopp_teacher(
+            teacher_logits, teacher_temp=temperature_teacher, num_samples=num_samples
+        )
+        loss = self.dino_loss(student_logits, teacher_probs)
     else:
-        teacher_probs = F.softmax(teacher_logits / temperature_teacher, dim=-1)
-
-    loss = self.dino_loss(student_logits, teacher_probs)
-
-    with torch.no_grad():
-        micro_center = torch.sum(teacher_logits.mean(1), dim=0, keepdim=True)
-        n_views = len(teacher_logits)
-
-        if self._dino_accum_center is None:
-            self._dino_accum_center = micro_center.clone()
-            self._dino_accum_n_views = n_views
-        else:
-            self._dino_accum_center += micro_center
-
-        self._dino_accum_count += 1
-
-        if self._dino_accum_count >= accum:
-            self.dino_loss.updated = False
-            self.dino_loss.len_teacher_output = n_views
-            self.dino_loss.async_batch_center = self._dino_accum_center / accum
-
-            if torch.distributed.is_available() and torch.distributed.is_initialized():
-                self.dino_loss.reduce_handle = torch.distributed.all_reduce(
-                    self.dino_loss.async_batch_center, async_op=True
-                )
-            else:
-                self.dino_loss.reduce_handle = None
-
+        # --- Accumulation-aware centering ---
+        if not hasattr(self, "_dino_accum_count"):
             self._dino_accum_count = 0
             self._dino_accum_center = None
+
+        if self._dino_accum_count == 0:
+            self.dino_loss.apply_center_update()
+
+        center = self.dino_loss.center
+        if center is not None:
+            teacher_probs = F.softmax((teacher_logits - center) / temperature_teacher, dim=-1)
+        else:
+            teacher_probs = F.softmax(teacher_logits / temperature_teacher, dim=-1)
+
+        loss = self.dino_loss(student_logits, teacher_probs)
+
+        with torch.no_grad():
+            micro_center = torch.sum(teacher_logits.mean(1), dim=0, keepdim=True)
+            n_views = len(teacher_logits)
+
+            if self._dino_accum_center is None:
+                self._dino_accum_center = micro_center.clone()
+                self._dino_accum_n_views = n_views
+            else:
+                self._dino_accum_center += micro_center
+
+            self._dino_accum_count += 1
+
+            if self._dino_accum_count >= accum:
+                self.dino_loss.updated = False
+                self.dino_loss.len_teacher_output = n_views
+                self.dino_loss.async_batch_center = self._dino_accum_center / accum
+
+                if torch.distributed.is_available() and torch.distributed.is_initialized():
+                    self.dino_loss.reduce_handle = torch.distributed.all_reduce(
+                        self.dino_loss.async_batch_center, async_op=True
+                    )
+                else:
+                    self.dino_loss.reduce_handle = None
+
+                self._dino_accum_count = 0
+                self._dino_accum_center = None
 
     out["embedding"] = teacher_cls_features.detach()
     # spt's manual_backward does not divide by accumulate_grad_batches, so the
@@ -198,12 +233,7 @@ def forward(self, batch, stage):
 
 def build(cfg, ds_config) -> tuple[spt.Module, int]:
     h = ds_config.image_size[0]
-    backbone = spt.backbone.vit_hf(
-        size=cfg.backbone.size,
-        patch_size=cfg.backbone.patch_size,
-        image_size=h,
-        pretrained=False,
-    )
+    backbone = create_backbone(cfg.backbone, ds_config)
     embed_dim = get_embedding_dim(backbone)
     backbone_wrapper = spt.backbone.TeacherStudentWrapper(
         student=backbone, base_ema_coefficient=cfg.model.momentum_teacher
@@ -224,7 +254,7 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
 
     dino_loss = spt.losses.DINOv1Loss(
         temperature_student=cfg.model.loss.temperature_student,
-        center_momentum=0.9,
+        center_momentum=cfg.model.get("center_momentum", 0.9),
     )
 
     module = spt.Module(
@@ -234,7 +264,8 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         temperature_teacher=cfg.model.loss.temperature_teacher,
         warmup_temperature_teacher=cfg.model.loss.warmup_temperature_teacher,
         warmup_epochs_temperature_teacher=cfg.model.loss.warmup_epochs_temperature_teacher,
+        use_sinkhorn_knopp=bool(cfg.model.get("sinkhorn_knopp", False)),
         forward=forward,
-        optim=build_optim_config(cfg.model, cfg.backbone),
+        optim=build_optim_config(cfg.model),
     )
     return module, embed_dim

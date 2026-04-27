@@ -38,40 +38,68 @@ ds_torch = ds.with_format("torch")
 Each dataset is a Hugging Face `datasets.GeneratorBasedBuilder` subclass that follows a simple convention:
 
 - **Define `VERSION`**: bump when your builder output changes.
-- **Define `SOURCE`** (or override `_source()`): provides at least `{"homepage": "...", "citation": "...", "assets": {"train": "...", "test": "...", ...}}`.
-- **Implement `_info()`**: defines features/metadata.
-- **Implement `_generate_examples(self, data_path, split)`**: yields `(key, example_dict)`; `data_path` is the downloaded artifact for that split.
+- **Define `SOURCE`** (or override `_source()`): use `DatasetSource(...)` with a homepage, citation, and `assets` mapping of split/asset names to `DownloadInfo(...)`.
+- **Implement `_info()`**: define the dataset schema and metadata.
+- **Implement `_generate_examples(...)`**: yield `(key, example_dict)` pairs. The values in `example_dict` must match the schema from `_info()`.
+- **Keep examples faithful to the raw dataset**: not every dataset needs a single `label` column. Structured metadata, multilabel targets, and modality-specific fields are fine.
 
 Minimal skeleton:
 
 ```python
-import datasets
-
+from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Value, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class MyDataset(BaseDatasetBuilder):
-    VERSION = datasets.Version("1.0.0")
-    SOURCE = {
-        "homepage": "https://example.com",
-        "citation": "TBD",
-        "assets": {
-            "train": "https://example.com/train.zip",
-            "test": "https://example.com/test.zip",
+    VERSION = Version("1.0.0")
+    SOURCE = DatasetSource(
+        homepage="https://example.com",
+        citation="TBD",
+        assets={
+            "train": DownloadInfo(url="https://example.com/train.zip"),
+            "test": DownloadInfo(url="https://example.com/test.zip"),
         },
-    }
+    )
 
     def _info(self):
-        return datasets.DatasetInfo(
-            features=datasets.Features({"x": datasets.Value("int32")}),
+        return DatasetInfo(
+            features=Features({"x": Value("int32")}),
             supervised_keys=("x",),
-            homepage=self.SOURCE.get("homepage"),
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
     def _generate_examples(self, data_path, split):
         # read from data_path (zip/npz/etc), then yield examples
         yield "0", {"x": 0}
 ```
+
+### Onboarding a new dataset
+
+When adding a new dataset, the main contract to uphold is:
+
+- `_info()` and `_generate_examples(...)` must agree exactly on field names and types.
+- `SOURCE` should be the single source of truth for provenance and downloads.
+- If the dataset has multiple downloadable assets, use named assets and override `_split_generators()` when needed.
+- If the dataset has official folds or nonstandard task structure, preserve that structure in the builder rather than inventing a random train/test split.
+- If the dataset is not naturally single-label classification, it is still fine to yield richer dictionaries instead of forcing a `label` field.
+
+In practice, a good onboarding checklist is:
+
+1. Pick the right module under `stable_datasets/images/` or `stable_datasets/timeseries/`.
+2. Add a `BaseDatasetBuilder` subclass with `VERSION`, `SOURCE`, `_info()`, and `_generate_examples(...)`.
+3. Use `DatasetSource` and `DownloadInfo` for all raw assets. `DownloadInfo` can include fallback URLs.
+4. Make the yielded examples faithful to the raw data, but normalized enough to be consistent:
+   - image datasets usually yield `{"image": ..., "label": ...}`
+   - timeseries/audio datasets usually yield `{"series": ...}` plus labels and metadata when available
+5. Export the builder from the relevant `__init__.py`.
+6. Add at least a small metadata or smoke test for the new builder.
+
+Good examples to copy from:
+
+- Image classification: [stable_datasets/images/cifar10.py](stable_datasets/images/cifar10.py)
+- Timeseries classification: [stable_datasets/timeseries/audiomnist.py](stable_datasets/timeseries/audiomnist.py)
+- Structured timeseries dataset without a single label: [stable_datasets/timeseries/groove_MIDI.py](stable_datasets/timeseries/groove_MIDI.py)
 
 ### Custom cache locations
 

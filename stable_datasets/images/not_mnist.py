@@ -3,7 +3,7 @@ import struct
 
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version, DownloadInfo, DatasetSource
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
 
@@ -14,21 +14,25 @@ class NotMNIST(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
-    SOURCE = {
-        "homepage": "https://yaroslavvb.blogspot.com/2011/09/notmnist-dataset.html",
-        "assets": {
-            "train_images": "https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-images-idx3-ubyte.gz",
-            "train_labels": "https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-labels-idx1-ubyte.gz",
-            "test_images": "https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-images-idx3-ubyte.gz",
-            "test_labels": "https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-labels-idx1-ubyte.gz",
+    SOURCE = DatasetSource(
+        homepage= "https://yaroslavvb.blogspot.com/2011/09/notmnist-dataset.html",
+        assets= {
+            "train_images": DownloadInfo(url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-images-idx3-ubyte.gz"),
+
+            "train_labels": DownloadInfo(url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-labels-idx1-ubyte.gz"),
+
+            "test_images": DownloadInfo(url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-images-idx3-ubyte.gz"),
+
+            "test_labels": DownloadInfo(url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-labels-idx1-ubyte.gz"),
+
         },
-        "citation": """@misc{bulatov2011notmnist,
+        citation= """@misc{bulatov2011notmnist,
                           author={Yaroslav Bulatov},
                           title={notMNIST dataset},
                           year={2011},
                           url={http://yaroslavvb.blogspot.com/2011/09/notmnist-dataset.html}
                         }""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(
@@ -50,28 +54,28 @@ class NotMNIST(BaseDatasetBuilder):
         assets = source["assets"]
 
         # Get all URLs and download them
-        urls = list(assets.values())
+        asset_keys = list(assets.keys())
         download_dir = getattr(self, "_raw_download_dir", None)
         if download_dir is None:
             download_dir = _default_dest_folder()
 
-        downloaded_paths = bulk_download(urls, dest_folder=download_dir)
-        url_to_path = dict(zip(urls, downloaded_paths))
+        downloaded_paths = bulk_download([assets[key] for key in asset_keys], dest_folder=download_dir)
+        path_by_key = dict(zip(asset_keys, downloaded_paths))
 
         return [
             SplitGenerator(
                 name=Split.TRAIN,
                 gen_kwargs={
-                    "images_path": url_to_path[assets["train_images"]],
-                    "labels_path": url_to_path[assets["train_labels"]],
+                    "images_path": path_by_key["train_images"],
+                    "labels_path": path_by_key["train_labels"],
                     "split": "train",
                 },
             ),
             SplitGenerator(
                 name=Split.TEST,
                 gen_kwargs={
-                    "images_path": url_to_path[assets["test_images"]],
-                    "labels_path": url_to_path[assets["test_labels"]],
+                    "images_path": path_by_key["test_images"],
+                    "labels_path": path_by_key["test_labels"],
                     "split": "test",
                 },
             ),

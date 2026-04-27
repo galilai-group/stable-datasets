@@ -17,6 +17,8 @@ loss:
   warmup_epochs_temperature_teacher: 301
 
 momentum_teacher: 0.996
+center_momentum: 0.9  # DINO centering EMA; raise on small-batch/few-class datasets
+sinkhorn_knopp: false  # use Sinkhorn-Knopp instead of subtractive centering (batch-size-invariant; DINOv2-style)
 
 
 params:
@@ -49,13 +51,18 @@ params:
   medmnist:
     batch_size: 256
     max_epochs: 250
-  # Other small datasets
+  # Other small datasets — switch to Sinkhorn-Knopp centering. Subtractive
+  # centering collapses on these because they have <30 classes and run at
+  # bs=32/step (accum=8), causing high per-batch class collision and noisy
+  # centers; SK is batch-size-invariant and avoids the failure mode.
   arabiccharacters:
     batch_size: 256
     max_epochs: 313
+    sinkhorn_knopp: true
   arabicdigits:
     batch_size: 256
     max_epochs: 313
+    sinkhorn_knopp: true
   # Larger resolution
   stl10:
     batch_size: 256
@@ -87,6 +94,78 @@ params:
     batch_size: 256
     accumulate_grad_batches: 8
     max_epochs: 188
+
+  # ----- new datasets (auto-inserted, paper tier rule) -----
+  # 1× ImageNet base
+  imagenet100:
+    batch_size: 256
+    max_epochs: 63
+  # Medium-simple — ×3
+  emnist_byclass:
+    batch_size: 256
+    max_epochs: 189
+  emnist_bymerge:
+    batch_size: 256
+    max_epochs: 189
+  emnist_digits:
+    batch_size: 256
+    max_epochs: 189
+  emnist_letters:
+    batch_size: 256
+    max_epochs: 189
+  emnist_mnist:
+    batch_size: 256
+    max_epochs: 189
+  hasyv2:
+    batch_size: 256
+    max_epochs: 189
+  # Medium-hard — ×4
+  awa2:
+    batch_size: 256
+    max_epochs: 252
+  galaxy10:
+    batch_size: 256
+    max_epochs: 252
+  bloodmnist:
+    batch_size: 256
+    max_epochs: 252
+  breastmnist:
+    batch_size: 256
+    max_epochs: 252
+  dermamnist:
+    batch_size: 256
+    max_epochs: 252
+  octmnist:
+    batch_size: 256
+    max_epochs: 252
+  organamnist:
+    batch_size: 256
+    max_epochs: 252
+  organcmnist:
+    batch_size: 256
+    max_epochs: 252
+  organsmnist:
+    batch_size: 256
+    max_epochs: 252
+  pathmnist:
+    batch_size: 256
+    max_epochs: 252
+  retinamnist:
+    batch_size: 256
+    max_epochs: 252
+  tissuemnist:
+    batch_size: 256
+    max_epochs: 252
+  # Fine-grained — ×6
+  cars196:
+    batch_size: 256
+    max_epochs: 378
+  fgvcaircraft_family:
+    batch_size: 256
+    max_epochs: 378
+  fgvcaircraft_manufacturer:
+    batch_size: 256
+    max_epochs: 378
 
 vit_optimizer:
   type: AdamW

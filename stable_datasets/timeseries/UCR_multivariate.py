@@ -8,6 +8,16 @@ from tqdm import tqdm
 
 from ..utils import download_dataset
 
+"""
+TODO(builder-migration):
+- This is an archive family, not one dataset.
+- The right builder contract is probably one builder class with one
+  `config_name` per UEA/UCR multivariate subdataset, each with its own
+  train/test files and schema.
+- Avoid a monolithic "load the entire archive into one dict" interface once
+  migrated.
+"""
+
 
 def load(path=None, num_workers=16):
     """See http://www.timeseriesclassification.com/dataset.php

@@ -5,8 +5,8 @@ from stable_datasets.images import AWA2
 
 
 def test_awa2_dataset():
-    # AWA2(split="test") automatically downloads and loads the dataset
-    awa2 = AWA2(split="test")
+    # AWA2 is provided as one archive; the builder exposes it as a train split.
+    awa2 = AWA2(split="train")
 
     # Test 1: Check that the dataset is not empty
     assert len(awa2) > 0, "Expected non-empty dataset."

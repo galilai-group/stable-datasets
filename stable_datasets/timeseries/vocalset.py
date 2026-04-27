@@ -1,88 +1,64 @@
-import io
-import os
 import zipfile
 
-from scipy.io.wavfile import read as wav_read
-from tqdm import tqdm
+from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Sequence, Value, Version
+from stable_datasets.utils import BaseDatasetBuilder
 
-from ..utils import download_dataset
-
-
-_urls = {"https://zenodo.org/record/1442513/files/VocalSet11.zip?download=1": "VocalSet11.zip"}
-
-_name = "vocalset"
+from ._audio_utils import wav_bytes_to_series
 
 
-def load(path=None):
-    """singer/technique/vowel of singing voices
+class VocalSet(BaseDatasetBuilder):
+    """VocalSet singing voice dataset."""
 
-    source: https://zenodo.org/record/1442513#.W7OaFBNKjx4
+    VERSION = Version("1.0.0")
+    SOURCE = DatasetSource(
+        homepage="https://zenodo.org/records/1442513",
+        assets={
+            "train": DownloadInfo(
+                url="https://zenodo.org/record/1442513/files/VocalSet11.zip?download=1",
+                fallbacks=["https://zenodo.org/records/1442513/files/VocalSet11.zip"],
+                filename="VocalSet11.zip",
+            ),
+        },
+        citation="See dataset homepage.",
+    )
 
-    We present VocalSet, a singing voice dataset consisting of 10.1 hours
-    of monophonic recorded audio of professional singers demonstrating both
-    standard and extended vocal techniques on all 5 vowels. Existing
-    singing voice datasets aim to capture a focused subset of singing
-    voice characteristics, and generally consist of just a few singers.
-    VocalSet contains recordings from 20 different singers (9 male, 11
-    female) and a range of voice types.  VocalSet aims to improve the
-    state of existing singing voice datasets and singing voice research by
-    capturing not only a range of vowels, but also a diverse set of voices
-    on many different vocal techniques, sung in contexts of scales,
-    arpeggios, long tones, and excerpts.
-    Parameters
-    ----------
+    def _info(self):
+        return DatasetInfo(
+            description="VocalSet singing voice recordings with singer, gender, and vowel metadata.",
+            features=Features(
+                {
+                    "series": Sequence(Sequence(Value("float32"))),
+                    "singer": Value("string"),
+                    "gender": Value("string"),
+                    "vowel": Value("string"),
+                    "relative_path": Value("string"),
+                    "filename": Value("string"),
+                }
+            ),
+            supervised_keys=None,
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
+        )
 
-    path: str (optional)
-        a string where to load the data and download if not present
-
-    Returns
-    -------
-
-    singers: list
-        the list of singers as strings, 11 males and 9 females as in male1,
-        male2, ...
-
-    genders: list
-        the list of genders of the singers as in male, male, female, ...
-
-    vowels: list
-        the vowels being pronunced
-
-    data: list
-        the list of waveforms, not all equal length
-
-    """
-    if path is None:
-        path = os.environ["DATASET_PATH"]
-
-    download_dataset(path, _name, _urls)
-
-    # load wavs
-    f = zipfile.ZipFile(os.path.join(path, "vocalset/VocalSet11.zip"))
-
-    # init. the data array
-    singers = []
-    genders = []
-    vowels = []
-    #        techniques = []
-    data = []
-    for filename in tqdm(f.namelist(), ascii=True):
-        if ".wav" not in filename or "excerpts" in filename or "_" == filename[0]:
-            continue
-        vowel = filename[-5]
-        if vowel not in ["a", "e", "i", "o", "u"]:
-            continue
-        vowels.append(vowel)
-        bytes_ = io.BytesIO(f.read(filename))
-        data.append(wav_read(bytes_)[1].astype("float32"))
-        split = filename.split("/")
-        genders.append("".join(x for x in split[1] if x.isalpha()))
-        singers.append(split[1])
-    #            techniques.append(split[-1][3:-6])
-
-    dataset = {
-        "singers": singers,
-        "genders": genders,
-        "vowels": vowels,
-    }
-    return dataset
+    def _generate_examples(self, data_path, split):
+        del split
+        with zipfile.ZipFile(data_path) as archive:
+            for filename in sorted(archive.namelist()):
+                if not filename.lower().endswith(".wav") or "excerpts" in filename or filename.startswith("_"):
+                    continue
+                vowel = filename[-5]
+                if vowel not in {"a", "e", "i", "o", "u"}:
+                    continue
+                parts = filename.split("/")
+                if len(parts) < 3:
+                    continue
+                singer = parts[1]
+                gender = "".join(ch for ch in singer if ch.isalpha())
+                yield filename, {
+                    "series": wav_bytes_to_series(archive.read(filename)),
+                    "singer": singer,
+                    "gender": gender,
+                    "vowel": vowel,
+                    "relative_path": filename,
+                    "filename": parts[-1],
+                }

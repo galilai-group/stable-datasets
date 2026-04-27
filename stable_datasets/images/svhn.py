@@ -1,7 +1,7 @@
 import scipy.io as sio
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -18,14 +18,17 @@ class SVHN(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "http://ufldl.stanford.edu/housenumbers/",
-        "assets": {
-            "train": "http://ufldl.stanford.edu/housenumbers/train_32x32.mat",
-            "test": "http://ufldl.stanford.edu/housenumbers/test_32x32.mat",
-            "extra": "http://ufldl.stanford.edu/housenumbers/extra_32x32.mat",
+    SOURCE = DatasetSource(
+        homepage= "http://ufldl.stanford.edu/housenumbers/",
+        assets= {
+            "train": DownloadInfo(url="http://ufldl.stanford.edu/housenumbers/train_32x32.mat"),
+
+            "test": DownloadInfo(url="http://ufldl.stanford.edu/housenumbers/test_32x32.mat"),
+
+            "extra": DownloadInfo(url="http://ufldl.stanford.edu/housenumbers/extra_32x32.mat"),
+
         },
-        "citation": """@inproceedings{netzer2011reading,
+        citation= """@inproceedings{netzer2011reading,
                           title={Reading digits in natural images with unsupervised feature learning},
                           author={Netzer, Yuval and Wang, Tao and Coates, Adam and Bissacco, Alessandro and Wu, Baolin and Ng, Andrew Y and others},
                           booktitle={NIPS workshop on deep learning and unsupervised feature learning},
@@ -35,7 +38,7 @@ class SVHN(BaseDatasetBuilder):
                           year={2011},
                           organization={Granada}
                         }""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

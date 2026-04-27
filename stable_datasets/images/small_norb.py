@@ -3,7 +3,7 @@ from zipfile import ZipFile
 import numpy as np
 from PIL import Image as PILImage
 
-from stable_datasets.schema import DatasetInfo, Features, Image, Sequence, Value, Version
+from stable_datasets.schema import DatasetInfo, Features, Image, Sequence, Value, Version, DownloadInfo, DatasetSource
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -55,14 +55,16 @@ class SmallNORB(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/",
-        "assets": {
-            "train": "https://huggingface.co/datasets/randall-lab/small-norb/resolve/main/smallnorb-train.zip",
-            "test": "https://huggingface.co/datasets/randall-lab/small-norb/resolve/main/smallnorb-test.zip",
+    SOURCE = DatasetSource(
+        homepage= "https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/",
+        assets= {
+            "train": DownloadInfo(url="https://huggingface.co/datasets/randall-lab/small-norb/resolve/main/smallnorb-train.zip"),
+
+            "test": DownloadInfo(url="https://huggingface.co/datasets/randall-lab/small-norb/resolve/main/smallnorb-test.zip"),
+
         },
-        "license": "Apache-2.0",
-        "citation": """@inproceedings{lecun2004learning,
+        license="Apache-2.0",
+        citation= """@inproceedings{lecun2004learning,
   title={Learning methods for generic object recognition with invariance to pose and lighting},
   author={LeCun, Yann and Huang, Fu Jie and Bottou, Leon},
   booktitle={Proceedings of the 2004 IEEE Computer Society Conference on Computer Vision and Pattern Recognition, 2004. CVPR 2004.},
@@ -71,7 +73,7 @@ class SmallNORB(BaseDatasetBuilder):
   year={2004},
   organization={IEEE}
 }""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

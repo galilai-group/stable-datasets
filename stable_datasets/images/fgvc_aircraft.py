@@ -2,7 +2,7 @@ import tarfile
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import BuilderConfig, ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import BuilderConfig, ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -33,14 +33,17 @@ class FGVCAircraft(BaseDatasetBuilder):
     ]
     DEFAULT_CONFIG_NAME = "variant"
 
-    SOURCE = {
-        "homepage": "https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/",
-        "assets": {
-            "train": "https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz",
-            "validation": "https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz",
-            "test": "https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz",
+    SOURCE = DatasetSource(
+        homepage= "https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/",
+        assets= {
+            "train": DownloadInfo(url="https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz"),
+
+            "validation": DownloadInfo(url="https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz"),
+
+            "test": DownloadInfo(url="https://www.robots.ox.ac.uk/~vgg/data/fgvc-aircraft/archives/fgvc-aircraft-2013b.tar.gz"),
+
         },
-        "citation": """@techreport{maji13fine-grained,
+        citation= """@techreport{maji13fine-grained,
                         title         = {Fine-Grained Visual Classification of Aircraft},
                         author        = {S. Maji and J. Kannala and E. Rahtu and M. Blaschko and A. Vedaldi},
                         year          = {2013},
@@ -48,8 +51,8 @@ class FGVCAircraft(BaseDatasetBuilder):
                         eprint        = {1306.5151},
                         primaryClass  = "cs.CV",
                     }""",
-        "license": "Unknown",
-    }
+        license="Unknown",
+    )
 
     def _info(self):
         config_name = self.config.name

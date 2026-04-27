@@ -1,5 +1,45 @@
 #!/usr/bin/env python
 
+from .audiomnist import AudioMNIST
+from .birdvox_dcase_20k import BirdVoxDCASE20k
+from .CatsDogs import CatsDogs
+from .freefield1010 import Freefield1010
+from .fsd_kaggle_2018 import FSDKaggle2018
+from .groove_MIDI import GrooveMIDI
+from .gtzan import GTZAN
+from .JapaneseVowels import JapaneseVowels
+from .MosquitoSound import MosquitoSound
+from .Phoneme import Phoneme
+from .picidae import Picidae
+from .seizures_neonatal import SeizuresNeonatal
+from .sonycust import SONYCUST
+from .speech_commands import SpeechCommands
+from .UrbanSound import UrbanSound
+from .VoiceGenderDetection import VoiceGenderDetection
+from .vocalset import VocalSet
+from .warblr import Warblr
+
+__all__ = [
+    "AudioMNIST",
+    "BirdVoxDCASE20k",
+    "CatsDogs",
+    "Freefield1010",
+    "FSDKaggle2018",
+    "GrooveMIDI",
+    "GTZAN",
+    "JapaneseVowels",
+    "MosquitoSound",
+    "Phoneme",
+    "Picidae",
+    "SeizuresNeonatal",
+    "SONYCUST",
+    "SpeechCommands",
+    "UrbanSound",
+    "VoiceGenderDetection",
+    "VocalSet",
+    "Warblr",
+]
+
 # from . import (
 #    VoiceGenderDetection,
 #    JapaneseVowels,

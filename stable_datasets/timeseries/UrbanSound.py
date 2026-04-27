@@ -1,57 +1,76 @@
-import os
-import pathlib
+import zipfile
 
 import numpy as np
 from scipy.io import arff
 
-from ..utils import download_dataset
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Sequence, Value, Version, DownloadInfo, DatasetSource
+from stable_datasets.utils import BaseDatasetBuilder
 
 
-def load(path=None):
-    """See http://www.timeseriesclassification.com/description.php?Dataset=UrbanSound
-    Parameters
-    ----------
-        path: str (optional)
-            default ($DATASET_PATH), the path to look for the data and
-            where the data will be downloaded if not present
+class UrbanSound(BaseDatasetBuilder):
+    """UrbanSound timeseries classification dataset."""
 
-    Returns
-    -------
+    VERSION = Version("1.0.0")
+    SOURCE = DatasetSource(
+        homepage= "http://www.timeseriesclassification.com/description.php?Dataset=UrbanSound",
+        assets= {
+            "train": DownloadInfo(url="http://www.timeseriesclassification.com/Downloads/UrbanSound.zip"),
 
-        train_images: array
+            "test": DownloadInfo(url="http://www.timeseriesclassification.com/Downloads/UrbanSound.zip"),
 
-        train_labels: array
-
-        valid_images: array
-
-        valid_labels: array
-
-        test_images: array
-
-        test_labels: array
-
-    """
-
-    if path is None:
-        path = os.environ["DATASET_PATH"]
-
-    path = pathlib.Path(path) / "UrbanSound"
-    download_dataset(
-        path,
-        {"UrbanSound.zip": "http://www.timeseriesclassification.com/Downloads/UrbanSound.zip"},
-        extract=True,
+        },
+        citation= "See dataset homepage.",
     )
 
-    path = path / "extracted_UrbanSound"
+    def _info(self):
+        return DatasetInfo(
+            description="UrbanSound audio-derived timeseries classification dataset.",
+            features=Features(
+                {
+                    "series": Sequence(Sequence(Value("float32"))),
+                    "label": ClassLabel(num_classes=10),
+                }
+            ),
+            supervised_keys=("series", "label"),
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
+        )
 
-    data_train = arff.loadarff(path / "UrbanSound/UrbanSound_TRAIN.arff")
-    data_test = arff.loadarff(path / "UrbanSound/UrbanSound_TEST.arff")
+    def _generate_examples(self, data_path, split):
+        with zipfile.ZipFile(data_path) as archive:
+            member = _find_member(archive, f"UrbanSound_{split.upper()}.arff")
+            with archive.open(member) as fh:
+                records, meta = arff.loadarff(fh)
 
-    data_train = np.asarray([data_train[0][name] for name in data_train[1].names()])
-    X_train = data_train[:-1].T.astype("float64")
-    y_train = data_train[-1]
+        names = meta.names()
+        columns = np.asarray([records[name] for name in names], dtype=object)
+        series = columns[:-1].T.astype("float32")
+        labels = columns[-1]
+        label_to_id = _label_to_id(labels, names[-1], meta)
 
-    data_test = np.asarray([data_test[0][name] for name in data_test[1].names()])
-    X_test = data_test[:-1].T.astype("float64")
-    y_test = data_test[-1]
-    return (X_train, y_train), (X_test, y_test)
+        for idx, (x, y) in enumerate(zip(series, labels)):
+            yield idx, {"series": x[:, None], "label": label_to_id[_label_name(y)]}
+
+
+def _find_member(archive: zipfile.ZipFile, suffix: str) -> str:
+    suffix = suffix.lower()
+    for name in archive.namelist():
+        if name.lower().endswith(suffix):
+            return name
+    raise FileNotFoundError(f"Could not find {suffix!r} in {archive.filename}")
+
+
+def _label_name(value) -> str:
+    if isinstance(value, bytes):
+        return value.decode("utf-8")
+    if hasattr(value, "item"):
+        value = value.item()
+    return str(value)
+
+
+def _label_to_id(labels, label_attr: str, meta) -> dict[str, int]:
+    try:
+        declared = [_label_name(v) for v in meta[label_attr][1]]
+    except Exception:
+        declared = sorted({_label_name(v) for v in labels})
+    return {name: idx for idx, name in enumerate(declared)}

@@ -34,7 +34,7 @@ from .cache import (
     write_lance_cache,
     write_sharded_arrow_cache,
 )
-from .schema import BuilderConfig, Image, Version
+from .schema import BuilderConfig, DatasetSource, DownloadInfo, Image, Version
 from .splits import Split, SplitGenerator
 
 
@@ -73,7 +73,7 @@ class BaseDatasetBuilder:
     # - define a class attribute SOURCE (static), or
     # - override _source(self) to compute it at runtime (e.g. from self.config)
     VERSION: Version
-    SOURCE: Mapping
+    SOURCE: DatasetSource | Mapping
 
     # Optional: multi-variant datasets define BUILDER_CONFIGS and optionally DEFAULT_CONFIG_NAME.
     BUILDER_CONFIGS: list = []
@@ -115,6 +115,15 @@ class BaseDatasetBuilder:
         """
         if isinstance(obj, MappingProxyType):
             return obj
+        if isinstance(obj, DatasetSource):
+            return obj
+        if isinstance(obj, DownloadInfo):
+            return DownloadInfo(
+                url=obj.url,
+                fallbacks=list(obj.fallbacks),
+                checksum=obj.checksum,
+                filename=obj.filename,
+            )
         if isinstance(obj, Mapping):
             # Create a fresh dict so callers can't retain a handle to the mutable original.
             return MappingProxyType({k: BaseDatasetBuilder._freeze(v) for k, v in dict(obj).items()})
@@ -151,7 +160,7 @@ class BaseDatasetBuilder:
 
         # Freeze static SOURCE at class creation time.
         if has_static_source:
-            cls.SOURCE = cls._freeze(getattr(cls, "SOURCE"))
+            cls.SOURCE = cls._normalize_dataset_source(getattr(cls, "SOURCE"))
 
         # If subclass overrides _source(), wrap it so the returned mapping is frozen/immutable.
         if has_dynamic_source and not getattr(cls._source, "_stable_datasets_freezes_source", False):
@@ -159,7 +168,7 @@ class BaseDatasetBuilder:
 
             def _wrapped_source(self):
                 source = original(self)
-                return BaseDatasetBuilder._freeze(source)
+                return BaseDatasetBuilder._normalize_dataset_source(source)
 
             _wrapped_source._stable_datasets_freezes_source = True  # type: ignore[attr-defined]
             cls._source = _wrapped_source  # type: ignore[method-assign]
@@ -185,7 +194,7 @@ class BaseDatasetBuilder:
     def info(self):
         return self._dataset_info
 
-    def _source(self) -> Mapping:
+    def _source(self) -> DatasetSource:
         """
         Return dataset provenance / download configuration.
 
@@ -194,19 +203,47 @@ class BaseDatasetBuilder:
         """
         if not hasattr(self.__class__, "SOURCE"):
             raise TypeError(f"{self.__class__.__name__} does not define SOURCE and did not override _source().")
-        return getattr(self.__class__, "SOURCE")
+        return self._normalize_dataset_source(getattr(self.__class__, "SOURCE"))
 
     @staticmethod
-    def _validate_source(source: Mapping) -> None:
-        # Required for provenance
-        if "homepage" not in source or source["homepage"] is None or not isinstance(source["homepage"], str):
-            raise TypeError("SOURCE['homepage'] must be a string and must be present.")
-        if "citation" not in source or source["citation"] is None or not isinstance(source["citation"], str):
-            raise TypeError("SOURCE['citation'] must be a string and must be present.")
+    def _normalize_dataset_source(source) -> DatasetSource:
+        """Normalize a builder source object to DatasetSource."""
+        if isinstance(source, DatasetSource):
+            return source
+        if isinstance(source, Mapping):
+            homepage = source.get("homepage")
+            citation = source.get("citation")
+            license = source.get("license", "")
+            assets = source.get("assets")
+            checksums = source.get("checksums")
+            return DatasetSource(
+                homepage=homepage,
+                assets=assets,
+                citation=citation,
+                license=license,
+                checksums=checksums,
+            )
+        raise TypeError(f"SOURCE must be a DatasetSource or mapping, got {type(source).__name__}.")
 
-        # Required for downloads (even if a dataset overrides _split_generators).
-        if "assets" not in source or not isinstance(source["assets"], Mapping):
-            raise TypeError("SOURCE must contain a mapping-valued 'assets' key.")
+    @staticmethod
+    def _validate_source(source: DatasetSource | Mapping) -> None:
+        source = BaseDatasetBuilder._normalize_dataset_source(source)
+        for asset_name, spec in source["assets"].items():
+            BaseDatasetBuilder._normalize_download_info(spec, asset_name=asset_name)
+
+    @staticmethod
+    def _normalize_download_info(asset_spec, *, asset_name: str | None = None) -> DownloadInfo:
+        """Normalize a source asset spec to a DownloadInfo instance."""
+        if isinstance(asset_spec, str):
+            return DownloadInfo(url=asset_spec)
+        if isinstance(asset_spec, DownloadInfo):
+            return asset_spec
+        if asset_name is None:
+            raise TypeError("Asset spec must be a URL string or DownloadInfo.")
+        raise TypeError(
+            f"SOURCE['assets']['{asset_name}'] must be a URL string or DownloadInfo, "
+            f"got {type(asset_spec).__name__}."
+        )
 
     def _split_generators(self):
         """
@@ -216,8 +253,6 @@ class BaseDatasetBuilder:
         via `SOURCE["assets"]`. Datasets with different layouts can override this method.
         """
         source = self._source()
-        if not isinstance(source, Mapping):
-            raise TypeError(f"{self.__class__.__name__}._source() must return a mapping.")
         self._validate_source(source)
 
         assets = source["assets"]
@@ -225,24 +260,51 @@ class BaseDatasetBuilder:
             raise ValueError(f"{self.__class__.__name__}.SOURCE['assets'] is empty; cannot infer splits.")
 
         split_names = list(assets.keys())
-        ordered_urls = [assets[s] for s in split_names]
+        download_infos = {
+            split_name: self._normalize_download_info(assets[split_name], asset_name=split_name)
+            for split_name in split_names
+        }
 
-        # Build URL -> checksum mapping from SOURCE["checksums"] if present
+        # Build primary URL -> checksum mapping from SOURCE["checksums"] if present
         checksums_by_split = source.get("checksums") or {}
-        url_checksums = {}
+        download_specs = []
         for split_name in split_names:
             cs = checksums_by_split.get(split_name) if checksums_by_split else None
-            if cs:
-                url_checksums[assets[split_name]] = cs
+            info = download_infos[split_name]
+            if cs and info.checksum is None:
+                info = DownloadInfo(
+                    url=info.url,
+                    fallbacks=list(info.fallbacks),
+                    checksum=cs,
+                    filename=info.filename,
+                )
+            download_specs.append(info)
 
-        # Deduplicate URLs to avoid redundant downloads for datasets where all splits share a single file.
-        unique_urls = list(dict.fromkeys(ordered_urls))
+        # Deduplicate assets by their full candidate URL set so shared mirrors only download once.
+        unique_specs = list(
+            dict.fromkeys(
+                (info.url, tuple(info.fallbacks), info.checksum, info.filename) for info in download_specs
+            )
+        )
         download_dir = getattr(self, "_raw_download_dir", None)
         if download_dir is None:
             download_dir = _default_dest_folder()
-        unique_paths = bulk_download(unique_urls, dest_folder=download_dir, checksums=url_checksums)
-        url_to_path = dict(zip(unique_urls, unique_paths))
-        local_paths = [url_to_path[u] for u in ordered_urls]
+        unique_paths = bulk_download(
+            [
+                DownloadInfo(
+                    url=primary,
+                    fallbacks=list(fallbacks),
+                    checksum=checksum,
+                    filename=filename,
+                )
+                for primary, fallbacks, checksum, filename in unique_specs
+            ],
+            dest_folder=download_dir,
+        )
+        spec_to_path = dict(zip(unique_specs, unique_paths))
+        local_paths = [
+            spec_to_path[(info.url, tuple(info.fallbacks), info.checksum, info.filename)] for info in download_specs
+        ]
 
         split_to_path = dict(zip(split_names, local_paths))
 
@@ -267,6 +329,17 @@ class BaseDatasetBuilder:
     def _generate_examples(self, **kwargs):
         """Yield (key, example_dict) pairs. Must be overridden."""
         raise NotImplementedError
+
+    def _candidate_splits(self) -> list:
+        """Return split names used for cache lookup before any download occurs."""
+        source = self._source()
+        _name_map = {
+            "train": Split.TRAIN,
+            "test": Split.TEST,
+            "val": Split.VALIDATION,
+        }
+        asset_split_names = list(source["assets"].keys())
+        return [_name_map.get(s, s) for s in asset_split_names]
 
     def __new__(
         cls,
@@ -327,22 +400,12 @@ class BaseDatasetBuilder:
 
         # 3) Validate dataset SOURCE contract early.
         source = instance._source()
-        if not isinstance(source, Mapping):
-            raise TypeError(f"{cls.__name__}._source() must return a mapping.")
         cls._validate_source(source)
 
         features = instance._dataset_info.features
 
         # 4) Try to load all splits from cache without downloading.
-        #    Derive split names from SOURCE["assets"] keys using the same
-        #    name_map that _split_generators() applies.
-        _name_map = {
-            "train": Split.TRAIN,
-            "test": Split.TEST,
-            "val": Split.VALIDATION,
-        }
-        asset_split_names = list(source["assets"].keys())
-        candidate_splits = [_name_map.get(s, s) for s in asset_split_names]
+        candidate_splits = instance._candidate_splits()
 
         splits_data = {}
         all_cached = bool(candidate_splits)  # empty assets → must call _split_generators
@@ -469,7 +532,7 @@ class BaseDatasetBuilder:
 
 
 def bulk_download(
-    urls: Iterable[str],
+    urls: Iterable[str | DownloadInfo],
     dest_folder: str | Path,
     checksums: dict[str, str] | None = None,
 ) -> list[Path]:
@@ -477,25 +540,37 @@ def bulk_download(
     Download multiple files concurrently and return their local paths.
 
     Args:
-        urls: Iterable of URL strings to download.
+        urls: Iterable of URL strings or DownloadInfo specs to download.
         dest_folder: Destination folder for downloads.
-        checksums: Optional dict mapping URL -> checksum string (e.g.
-            ``"sha256:abcdef..."``).
+        checksums: Optional dict mapping primary URL -> checksum string.
 
     Returns:
         list[Path]: Local file paths in the same order as the input URLs.
     """
-    urls = list(urls)
     checksums = checksums or {}
-    num_workers = min(len(urls), os.cpu_count() or 4, 8)
+    download_infos = []
+    for asset_spec in urls:
+        info = BaseDatasetBuilder._normalize_download_info(asset_spec)
+        if info.checksum is None and checksums.get(info.url):
+            info = DownloadInfo(
+                url=info.url,
+                fallbacks=list(info.fallbacks),
+                checksum=checksums[info.url],
+                filename=info.filename,
+            )
+        download_infos.append(info)
+    num_workers = min(len(download_infos), os.cpu_count() or 4, 8)
     if num_workers == 0:
         return []
 
     dest_folder = Path(dest_folder)
     dest_folder.mkdir(parents=True, exist_ok=True)
 
-    filenames = [os.path.basename(urlparse(url).path) for url in urls]
-    results: list[Path] = [None] * len(urls)
+    filenames = [
+        info.filename or os.path.basename(urlparse(info.url).path) or f"download_{idx}"
+        for idx, info in enumerate(download_infos)
+    ]
+    results: list[Path] = [None] * len(download_infos)
 
     with rich.progress.Progress(
         TextColumn("[progress.description]{task.description}"),
@@ -513,16 +588,20 @@ def bulk_download(
 
             with ProcessPoolExecutor(max_workers=num_workers) as executor:
                 # submit one download task per URL
-                for i in range(len(urls)):
+                for i in range(len(download_infos)):
                     task_id = f"{i}:{filenames[i]}"
+                    info = download_infos[i]
                     future = executor.submit(
                         download,
-                        urls[i],
+                        info.url,
                         dest_folder,
                         False,  # disable per-file tqdm; Rich handles progress
                         _progress,
                         task_id,
-                        checksums.get(urls[i]),
+                        info.checksum,
+                        info.fallbacks,
+                        info.filename,
+                        info.url,
                     )
                     futures.append((i, future))
 
@@ -551,12 +630,15 @@ def bulk_download(
 
 
 def download(
-    url: str,
+    url: str | DownloadInfo,
     dest_folder: str | Path | None = None,
     progress_bar: bool = True,
     _progress_dict=None,
     _task_id=None,
     checksum: str | None = None,
+    fallbacks: list[str] | None = None,
+    filename: str | None = None,
+    cache_key_url: str | None = None,
 ) -> Path:
     """Download a file to *dest_folder*, returning the local path.
 
@@ -568,14 +650,27 @@ def download(
     ``"sha256:a3f8..."``).  The downloaded file is verified after
     completion and deleted on mismatch.
     """
+    info = BaseDatasetBuilder._normalize_download_info(url)
+    if checksum is None:
+        checksum = info.checksum
+    if fallbacks is None:
+        fallbacks = list(info.fallbacks)
+    if filename is None:
+        filename = info.filename
+    if cache_key_url is None:
+        cache_key_url = info.url
+    url = info.url
+
     if dest_folder is None:
         dest_folder = _default_dest_folder()
     dest_folder = Path(dest_folder)
     dest_folder.mkdir(parents=True, exist_ok=True)
 
-    filename = os.path.basename(urlparse(url).path)
-    p = Path(filename)
-    h = hashlib.sha256(url.encode("utf-8")).hexdigest()[:10]
+    source_url = cache_key_url or url
+    candidate_urls = [url, *(fallbacks or [])]
+    resolved_filename = filename or os.path.basename(urlparse(source_url).path)
+    p = Path(resolved_filename)
+    h = hashlib.sha256(source_url.encode("utf-8")).hexdigest()[:10]
     # Keep original extension at the end: e.g. cars196_test.0275d128da.zip
     dest = dest_folder / f"{p.stem}.{h}{p.suffix}"
     lock = dest.with_suffix(dest.suffix + ".lock")
@@ -588,65 +683,74 @@ def download(
             return dest
 
         try:
-            with requests.Session() as session:
-                session.headers.update({"User-Agent": "stable-datasets"})
+            errors = []
+            total_size = 0
+            for candidate_url in candidate_urls:
+                try:
+                    with requests.Session() as session:
+                        session.headers.update({"User-Agent": "stable-datasets"})
 
-                # Resume from partial download if .tmp exists
-                existing_size = tmp.stat().st_size if tmp.exists() else 0
-                req_headers = {}
-                if existing_size > 0:
-                    req_headers["Range"] = f"bytes={existing_size}-"
-                    logging.info(f"Resuming download from byte {existing_size}: {url}")
-                else:
-                    logging.info(f"Downloading: {url}")
+                        # Resume from partial download if .tmp exists
+                        existing_size = tmp.stat().st_size if tmp.exists() else 0
+                        req_headers = {}
+                        if existing_size > 0:
+                            req_headers["Range"] = f"bytes={existing_size}-"
+                            logging.info(f"Resuming download from byte {existing_size}: {candidate_url}")
+                        else:
+                            logging.info(f"Downloading: {candidate_url}")
 
-                with session.get(
-                    url,
-                    stream=True,
-                    allow_redirects=True,
-                    timeout=(10, 300),
-                    headers=req_headers,
-                ) as response:
-                    response.raise_for_status()
+                        with session.get(
+                            candidate_url,
+                            stream=True,
+                            allow_redirects=True,
+                            timeout=(10, 300),
+                            headers=req_headers,
+                        ) as response:
+                            response.raise_for_status()
 
-                    if response.status_code == 206:
-                        # Server supports Range — append to existing file
-                        mode = "ab"
-                        remaining = int(response.headers.get("content-length", 0) or 0)
-                        total_size = existing_size + remaining
-                    else:
-                        # Full response (200) — start over
-                        mode = "wb"
-                        existing_size = 0
-                        total_size = int(response.headers.get("content-length", 0) or 0)
+                            if response.status_code == 206:
+                                mode = "ab"
+                                remaining = int(response.headers.get("content-length", 0) or 0)
+                                total_size = existing_size + remaining
+                            else:
+                                mode = "wb"
+                                existing_size = 0
+                                total_size = int(response.headers.get("content-length", 0) or 0)
 
-                    logging.info(f"Total size: {total_size} bytes")
+                            logging.info(f"Total size: {total_size} bytes")
 
-                    downloaded = existing_size
-                    with (
-                        open(tmp, mode) as f,
-                        tqdm(
-                            desc=dest.name,
-                            total=total_size or None,
-                            initial=existing_size,
-                            unit="B",
-                            unit_scale=True,
-                            unit_divisor=1024,
-                            disable=not progress_bar,
-                        ) as bar,
-                    ):
-                        for chunk in response.iter_content(chunk_size=8192):
-                            if not chunk:
-                                continue
-                            f.write(chunk)
-                            downloaded += len(chunk)
-                            bar.update(len(chunk))
+                            downloaded = existing_size
+                            with (
+                                open(tmp, mode) as f,
+                                tqdm(
+                                    desc=dest.name,
+                                    total=total_size or None,
+                                    initial=existing_size,
+                                    unit="B",
+                                    unit_scale=True,
+                                    unit_divisor=1024,
+                                    disable=not progress_bar,
+                                ) as bar,
+                            ):
+                                for chunk in response.iter_content(chunk_size=8192):
+                                    if not chunk:
+                                        continue
+                                    f.write(chunk)
+                                    downloaded += len(chunk)
+                                    bar.update(len(chunk))
 
-                            if _progress_dict is not None and _task_id is not None:
-                                _progress_dict[_task_id] = {
-                                    "progress": downloaded,
-                                    "total": total_size,
-                                }
+                                    if _progress_dict is not None and _task_id is not None:
+                                        _progress_dict[_task_id] = {
+                                            "progress": downloaded,
+                                            "total": total_size,
+                                        }
+                    break
+                except Exception as candidate_error:
+                    errors.append((candidate_url, candidate_error))
+                    continue
+            else:
+                attempted = ", ".join(url for url, _ in errors)
+                raise RuntimeError(f"Failed to download from all candidate URLs: {attempted}") from errors[-1][1]
 
             # Validate size on disk
             if total_size and tmp.stat().st_size != total_size:

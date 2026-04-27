@@ -3,7 +3,16 @@
 import pytest
 import torch
 
-from benchmarks.dataset import DATASET_CONFIGS, DatasetConfig, get_config
+from benchmarks.dataset import (
+    DATASET_CONFIGS,
+    IMAGE_DATASET_CONFIGS,
+    INCLUDED_IMAGE_DATASETS,
+    TIMESERIES_DATASET_CONFIGS,
+    DatasetConfig,
+    _get_dataset_class,
+    _load_validation_split,
+    get_config,
+)
 from benchmarks.models import (
     build_module,
     collate_multicrop,
@@ -16,6 +25,7 @@ from benchmarks.models import (
     ssl_augmentation,
     val_transform,
 )
+from stable_datasets.schema import ClassLabel, Features, Image, Sequence
 
 
 # A minimal ds_config for testing (no real data needed)
@@ -68,6 +78,84 @@ class TestDatasetConfig:
         for key, cfg in DATASET_CONFIGS.items():
             assert cfg.display_name, f"{key} missing display_name"
             assert cfg.display_name != cfg.name, f"{key} display_name is just the key"
+
+    def test_all_configs_resolve_to_class_labeled_builders(self):
+        for key, cfg in DATASET_CONFIGS.items():
+            cls = _get_dataset_class(cfg)
+            builder = object.__new__(cls)
+            cls.__init__(builder, **cfg.builder_kwargs)
+            label_feature = builder.info.features.get(cfg.label_key)
+            assert isinstance(label_feature, ClassLabel), f"{key} label is not ClassLabel"
+            assert label_feature.num_classes == cfg.num_classes
+
+    def test_image_normalization_matches_channels(self):
+        for key, cfg in IMAGE_DATASET_CONFIGS.items():
+            assert len(cfg.mean) == cfg.channels, f"{key} mean length mismatch"
+            assert len(cfg.std) == cfg.channels, f"{key} std length mismatch"
+
+    def test_included_image_dataset_set_matches_expected_policy(self):
+        assert "galaxy10" in INCLUDED_IMAGE_DATASETS
+        assert "awa2" in INCLUDED_IMAGE_DATASETS
+        assert "imagenet" not in INCLUDED_IMAGE_DATASETS
+        assert "tinyimagenet" not in INCLUDED_IMAGE_DATASETS
+
+    def test_timeseries_normalization_matches_channels(self):
+        for key, cfg in TIMESERIES_DATASET_CONFIGS.items():
+            assert cfg.input_key == "series"
+            assert cfg.label_key == "label"
+            assert len(cfg.mean) == cfg.num_channels, f"{key} mean length mismatch"
+            assert len(cfg.std) == cfg.num_channels, f"{key} std length mismatch"
+
+    def test_timeseries_builders_have_series_feature(self):
+        for key, cfg in TIMESERIES_DATASET_CONFIGS.items():
+            cls = _get_dataset_class(cfg)
+            builder = object.__new__(cls)
+            cls.__init__(builder, **cfg.builder_kwargs)
+            assert isinstance(builder.info.features["series"], Sequence), key
+
+    def test_validation_prefers_validation_before_test(self):
+        class FakeDataset:
+            features = Features({"image": Image(), "label": ClassLabel(num_classes=2)})
+
+            def __init__(self, split):
+                self.split = split
+
+            def __len__(self):
+                return 1
+
+            def __getitem__(self, idx):
+                return {"label": 1}
+
+        class FakeBuilder:
+            def __new__(cls, split, **kwargs):
+                if split in {"train", "validation", "test"}:
+                    return FakeDataset(split)
+                raise ValueError(split)
+
+        cfg = DatasetConfig("fake", "Fake", 2, channels=3, mean=[0.5] * 3, std=[0.2] * 3)
+        assert _load_validation_split(FakeBuilder, cfg).split == "validation"
+
+    def test_validation_skips_unlabeled_test_for_holdout(self):
+        class FakeDataset:
+            features = Features({"image": Image(), "label": ClassLabel(num_classes=2)})
+
+            def __init__(self, split):
+                self.split = split
+
+            def __len__(self):
+                return 1
+
+            def __getitem__(self, idx):
+                return {"label": -1}
+
+        class FakeBuilder:
+            def __new__(cls, split, **kwargs):
+                if split == "test":
+                    return FakeDataset(split)
+                raise ValueError(split)
+
+        cfg = DatasetConfig("fake", "Fake", 2, channels=3, mean=[0.5] * 3, std=[0.2] * 3)
+        assert _load_validation_split(FakeBuilder, cfg) is None
 
 
 # Backbone and projector
