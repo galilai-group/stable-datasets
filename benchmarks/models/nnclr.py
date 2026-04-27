@@ -21,7 +21,7 @@ from benchmarks.models import (
 NUM_VIEWS = 2
 
 
-def create_transforms(ds_config):
+def create_transforms(ds_config, model_cfg=None):
     """Returns (train_transform, val_transform, collate_fn)."""
     h, w = ds_config.image_size
     view = ssl_augmentation(ds_config, (h, w), crop_scale=(0.08, 1.0))
@@ -50,6 +50,6 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
             "support_set_size": cfg.model.queue_size,
             "projection_dim": proj_out,
         },
-        optim=build_optim_config(cfg.model, cfg.backbone),
+        optim=build_optim_config(cfg.model),
     )
     return module, embed_dim

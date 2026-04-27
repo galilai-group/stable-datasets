@@ -1,81 +1,67 @@
-import os
-import pathlib
-from multiprocessing import Pool
+import zipfile
 
-import numpy as np
-from pydub import AudioSegment
-from tqdm import tqdm
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Sequence,
+    Value,
+    Version,
+)
+from stable_datasets.utils import BaseDatasetBuilder
 
-from ..utils import download_dataset
+from ._audio_utils import audiosegment_bytes_to_series
 
 
-def load(path=None, num_workers=16):
-    """
+class VoiceGenderDetection(BaseDatasetBuilder):
+    """Voice gender detection dataset derived from VoxCeleb clips."""
 
-    Parameters
-    ----------
-        path: str (optional)
-            default ($DATASET_PATH), the path to look for the data and
-            where the data will be downloaded if not present
-
-    Returns
-    -------
-
-        train_images: array
-
-        train_labels: array
-
-        valid_images: array
-
-        valid_labels: array
-
-        test_images: array
-
-        test_labels: array
-
-    """
-
-    if path is None:
-        path = os.environ["DATASET_PATH"]
-
-    path = pathlib.Path(path) / "VoiceGenderDetection"
-    download_dataset(
-        path,
-        {
-            "VoxCeleb_gender.zip": "https://drive.google.com/u/0/uc?id=1HRbWocxwClGy9Fj1MQeugpR4vOaL9ebO&export=download"
+    VERSION = Version("1.0.0")
+    SOURCE = DatasetSource(
+        homepage="https://dagshub.com/DagsHub/audio-datasets/src/main/voice_gender_detection",
+        assets={
+            "train": DownloadInfo(
+                url="https://drive.google.com/u/0/uc?id=1HRbWocxwClGy9Fj1MQeugpR4vOaL9ebO&export=download",
+                filename="VoxCeleb_gender.zip",
+            ),
         },
-        extract=True,
+        citation="See dataset homepage.",
     )
 
-    path = path / "extracted_VoxCeleb_gender/VoxCeleb_gender/"
-
-    males = list((path / "males").glob("*.m4a"))
-    females = list((path / "females").glob("*.m4a"))
-
-    with Pool(num_workers) as pool:
-        X_train = tuple(
-            tqdm(
-                pool.imap(_reader, males),
-                desc="Loading male voices...",
-                total=len(males),
-            )
+    def _info(self):
+        return DatasetInfo(
+            description="Voice gender detection dataset with male/female labels.",
+            features=Features(
+                {
+                    "series": Sequence(Sequence(Value("float32"))),
+                    "label": ClassLabel(names=["male", "female"]),
+                    "gender": Value("string"),
+                    "filename": Value("string"),
+                }
+            ),
+            supervised_keys=("series", "label"),
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
-        y_train = np.zeros(len(X_train))
 
-    with Pool(num_workers) as pool:
-        results = tuple(
-            tqdm(
-                pool.imap(_reader, females),
-                desc="Loading female voices...",
-                total=len(females),
-            )
-        )
-        # iterate results
-        X_train += tuple(results)
-    y_train = np.concatenate([y_train, np.ones(len(results))])
-
-    return (X_train, y_train), None
-
-
-def _reader(x):
-    return AudioSegment.from_file(x).get_array_of_samples()
+    def _generate_examples(self, data_path, split):
+        del split
+        with zipfile.ZipFile(data_path) as archive:
+            for name in sorted(archive.namelist()):
+                if name.endswith("/") or not name.lower().endswith(".m4a"):
+                    continue
+                parts = name.split("/")
+                if len(parts) < 2:
+                    continue
+                gender = parts[-2]
+                if gender not in {"males", "females"}:
+                    continue
+                filename = parts[-1]
+                yield name, {
+                    "series": audiosegment_bytes_to_series(archive.read(name), format="m4a"),
+                    "label": 0 if gender == "males" else 1,
+                    "gender": gender[:-1],
+                    "filename": filename,
+                }

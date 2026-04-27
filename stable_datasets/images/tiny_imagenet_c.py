@@ -2,7 +2,7 @@ import os
 import tarfile
 from pathlib import Path
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version, DownloadInfo, DatasetSource
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -14,18 +14,19 @@ class TinyImagenetC(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://zenodo.org/records/2536630",
-        "assets": {
-            "test": "https://zenodo.org/records/2536630/files/Tiny-ImageNet-C.tar?download=1",
+    SOURCE = DatasetSource(
+        homepage= "https://zenodo.org/records/2536630",
+        assets= {
+            "test": DownloadInfo(url="https://zenodo.org/records/2536630/files/Tiny-ImageNet-C.tar?download=1"),
+
         },
-        "citation": """@article{hendrycks2019robustness,
+        citation= """@article{hendrycks2019robustness,
                         title={Benchmarking Neural Network Robustness to Common Corruptions and Perturbations},
                         author={Dan Hendrycks and Thomas Dietterich},
                         journal={Proceedings of the International Conference on Learning Representations},
                         year={2019}}""",
-        "license": "CC BY 4.0",
-    }
+        license="CC BY 4.0",
+    )
 
     def _info(self):
         source = self._source()

@@ -27,18 +27,19 @@ class Imagenette(BaseDatasetBuilder):
 
     VERSION = datasets.Version("2.0.0")
 
-    SOURCE = {
-        "homepage": "https://github.com/fastai/imagenette",
-        "assets": {
-            "archive": "https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz",
+    SOURCE = DatasetSource(
+        homepage= "https://github.com/fastai/imagenette",
+        assets= {
+            "archive": DownloadInfo(url="https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz"),
+
         },
-        "citation": """@misc{howard2019imagenette,
+        citation= """@misc{howard2019imagenette,
             author={Jeremy Howard},
             title={Imagenette: A smaller subset of 10 easily classified classes from ImageNet},
             year={2019},
             url={https://github.com/fastai/imagenette}
         }""",
-    }
+    )
 
     def _info(self):
         return datasets.DatasetInfo(

@@ -2,7 +2,7 @@ import tarfile
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -24,18 +24,20 @@ class Food101(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
-        "assets": {
-            "train": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_train.tar",
-            "test": "https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_test.tar",
+    SOURCE = DatasetSource(
+        homepage= "https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
+        assets= {
+            "train": DownloadInfo(url="https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_train.tar"),
+
+            "test": DownloadInfo(url="https://huggingface.co/datasets/haodoz0118/food101-img/resolve/main/food101_test.tar"),
+
         },
-        "citation": """@inproceedings{bossard14,
+        citation= """@inproceedings{bossard14,
             title = {Food-101 -- Mining Discriminative Components with Random Forests},
             author = {Bossard, Lukas and Guillaumin, Matthieu and Van Gool, Luc},
             booktitle = {European Conference on Computer Vision},
             year = {2014}}""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

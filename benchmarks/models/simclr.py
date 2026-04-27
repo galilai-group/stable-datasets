@@ -20,7 +20,7 @@ from benchmarks.models import (
 NUM_VIEWS = 2
 
 
-def create_transforms(ds_config):
+def create_transforms(ds_config, model_cfg=None):
     """Returns (train_transform, val_transform, collate_fn)."""
     h, w = ds_config.image_size
     view = ssl_augmentation(ds_config, (h, w), crop_scale=(0.08, 1.0))
@@ -37,6 +37,6 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         projector=projector,
         forward=forward.simclr_forward,
         simclr_loss=spt.losses.NTXEntLoss(temperature=cfg.model.loss.temperature),
-        optim=build_optim_config(cfg.model, cfg.backbone),
+        optim=build_optim_config(cfg.model),
     )
     return module, embed_dim

@@ -10,6 +10,15 @@ from tqdm import tqdm
 
 from ..utils import download_dataset
 
+"""
+TODO(builder-migration):
+- Keep recording unit identity as first-class metadata; the corpus is spread
+  across six HDF5 files, one per unit.
+- Decide whether the builder should expose the full corpus with unit metadata
+  only, or define evaluation splits/groupings by recording unit.
+- Preserve the binary bird/no-bird labels without inventing a random split.
+"""
+
 
 _urls = {
     f"https://zenodo.org/record/1226427/files/BirdVox-70k_unit{i}.hdf5?download=1": f"BirdVox-70k_unit{i}.hdf5"

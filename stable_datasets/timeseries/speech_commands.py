@@ -1,92 +1,117 @@
-import os
 import tarfile
-import time
 
-import numpy as np
-from scipy.io.wavfile import read as wav_read
-from tqdm import tqdm
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Sequence,
+    Value,
+    Version,
+)
+from stable_datasets.utils import BaseDatasetBuilder
 
-from ..utils import download_dataset
-
-
-DOC = """speech commands classification
-
-    source: https://ai.googleblog.com/2017/08/launching-speech-commands-dataset.html
-
-    The dataset has 65,000 one-second long utterances of 30 short
-    words, by thousands of different people, contributed by
-    members of the public through the AIY website. It’s released
-    under a Creative Commons BY 4.0 license, and will continue to
-    grow in future releases as more contributions are received.
-    The dataset is designed to let you build basic but useful
-    voice interfaces for applications, with common words like
-    “Yes”, “No”, digits, and directions included. The
-    infrastructure we used to create the data has been open
-    sourced too, and we hope to see it used by the wider community
-    to create their own versions, especially to cover underserved
-    languages and applications.
-
-    """
-
-name2class = {
-    "blues": 0,
-    "classical": 1,
-    "country": 2,
-    "disco": 3,
-    "hiphop": 4,
-    "jazz": 5,
-    "metal": 6,
-    "pop": 7,
-    "reggae": 8,
-    "rock": 9,
-}
-
-_dataset = "speech_commands"
-_urls = {"http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz": "speech_commands_v0.01.tar.gz"}
+from ._audio_utils import wav_bytes_to_series
 
 
-def load(path=None):
-    if path is None:
-        path = os.environ["DATASET_PATH"]
-    download_dataset(path, _dataset, _urls)
+SPEECH_COMMAND_LABELS = [
+    "bed",
+    "bird",
+    "cat",
+    "dog",
+    "down",
+    "eight",
+    "five",
+    "four",
+    "go",
+    "happy",
+    "house",
+    "left",
+    "marvin",
+    "nine",
+    "no",
+    "off",
+    "on",
+    "one",
+    "right",
+    "seven",
+    "sheila",
+    "six",
+    "stop",
+    "three",
+    "tree",
+    "two",
+    "up",
+    "wow",
+    "yes",
+    "zero",
+]
 
-    t0 = time.time()
 
-    print("Loading speech command")
+class SpeechCommands(BaseDatasetBuilder):
+    """Speech Commands keyword classification dataset."""
 
-    tar = tarfile.open(path + "speech_commands/speech_commands_v0.01.tar.gz", "r:gz")
+    VERSION = Version("1.0.0")
+    SOURCE = DatasetSource(
+        homepage="https://ai.googleblog.com/2017/08/launching-speech-commands-dataset.html",
+        assets={
+            "train": DownloadInfo(
+                url="http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz",
+                filename="speech_commands_v0.01.tar.gz",
+            ),
+        },
+        citation="See dataset homepage.",
+    )
 
-    # Load train set
-    wavs = []
-    labels = []
-    noises = []
-    noise_labels = []
-    names = tar.getmembers()
-    for name in tqdm(names, ascii=True):
-        if "wav" not in name.name:
-            continue
-        f = tar.extractfile(name.name)  # .read()
-        wav = wav_read(f)[1]
-        if "noise" in name.name:
-            noises.append(wav)
-            noise_labels.append(name.name.split("/")[-1])
-        else:
-            left = 16000 - len(wav)
-            to_pad = left // 2
-            wavs.append(np.pad(wav, [[to_pad, left - to_pad]]))
-            labels.append(name.name.split("/")[-2])
-    labels = np.array(labels)
-    unique_labels = np.unique(labels)
-    y = np.squeeze(np.array([np.nonzero(label == unique_labels)[0] for label in labels]).astype("int32"))
+    def _info(self):
+        return DatasetInfo(
+            description="Speech Commands keyword classification dataset.",
+            features=Features(
+                {
+                    "series": Sequence(Sequence(Value("float32"))),
+                    "label": ClassLabel(names=SPEECH_COMMAND_LABELS),
+                    "label_name": Value("string"),
+                    "speaker_id": Value("string"),
+                    "utterance_id": Value("int32"),
+                    "filename": Value("string"),
+                }
+            ),
+            supervised_keys=("series", "label"),
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
+        )
 
-    data = {
-        "wavs": np.array(wavs).astype("float32"),
-        "labels": y,
-        "names": labels,
-        "noises": noises,
-        "noises_labels": noise_labels,
-    }
-
-    print(f"Dataset speech commands loaded in{time.time() - t0:.2f}s.")
-
-    return data
+    def _generate_examples(self, data_path, split):
+        del split
+        with tarfile.open(data_path, "r:gz") as archive:
+            for member in archive.getmembers():
+                if not member.name.lower().endswith(".wav"):
+                    continue
+                parts = member.name.split("/")
+                if len(parts) < 2:
+                    continue
+                label_name = parts[-2]
+                if label_name == "_background_noise_" or label_name not in SPEECH_COMMAND_LABELS:
+                    continue
+                filename = parts[-1]
+                stem = filename[:-4]
+                speaker_id = ""
+                utterance_id = 0
+                if "_nohash_" in stem:
+                    speaker_id, utterance = stem.split("_nohash_", 1)
+                    try:
+                        utterance_id = int(utterance)
+                    except ValueError:
+                        utterance_id = 0
+                extracted = archive.extractfile(member)
+                if extracted is None:
+                    continue
+                yield member.name, {
+                    "series": wav_bytes_to_series(extracted.read()),
+                    "label": SPEECH_COMMAND_LABELS.index(label_name),
+                    "label_name": label_name,
+                    "speaker_id": speaker_id,
+                    "utterance_id": utterance_id,
+                    "filename": filename,
+                }

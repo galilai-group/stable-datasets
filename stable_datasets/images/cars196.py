@@ -4,7 +4,7 @@ from zipfile import ZipFile
 from PIL import Image as PILImage
 from tqdm import tqdm
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -22,19 +22,21 @@ class Cars196(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://ai.stanford.edu/~jkrause/cars/car_dataset.html",
-        "assets": {
-            "train": "https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_train.zip",
-            "test": "https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_test.zip",
+    SOURCE = DatasetSource(
+        homepage= "https://ai.stanford.edu/~jkrause/cars/car_dataset.html",
+        assets= {
+            "train": DownloadInfo(url="https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_train.zip"),
+
+            "test": DownloadInfo(url="https://huggingface.co/datasets/haodoz0118/cars196-img/resolve/main/cars196_test.zip"),
+
         },
-        "citation": """@inproceedings{krause20133d,
+        citation= """@inproceedings{krause20133d,
             title={3d object representations for fine-grained categorization},
             author={Krause, Jonathan and Stark, Michael and Deng, Jia and Fei-Fei, Li},
             booktitle={Proceedings of the IEEE international conference on computer vision workshops},
             pages={554--561},
             year={2013}}""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

@@ -5,7 +5,10 @@ Each feature type maps itself to a PyArrow type for Arrow IPC serialization.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Iterable, Iterator, Mapping
+from dataclasses import dataclass, field
+from types import MappingProxyType
+from typing import NewType
 
 import pyarrow as pa
 
@@ -33,6 +36,134 @@ class Version:
 
     def __hash__(self) -> int:
         return hash((self.major, self.minor, self.patch))
+
+
+@dataclass
+class DownloadInfo:
+    """Download source metadata for one raw asset.
+
+    ``url`` is attempted first. Any ``fallbacks`` are tried in order if the
+    primary URL fails.
+    """
+
+    url: str
+    fallbacks: list[str] = field(default_factory=list)
+    checksum: str | None = None
+    filename: str | None = None
+
+    def __post_init__(self):
+        if not isinstance(self.url, str) or not self.url:
+            raise TypeError("DownloadInfo.url must be a non-empty string.")
+        if not isinstance(self.fallbacks, list) or not all(isinstance(url, str) and url for url in self.fallbacks):
+            raise TypeError("DownloadInfo.fallbacks must be a list of non-empty strings.")
+        if self.checksum is not None and not isinstance(self.checksum, str):
+            raise TypeError("DownloadInfo.checksum must be a string when provided.")
+        if self.filename is not None and not isinstance(self.filename, str):
+            raise TypeError("DownloadInfo.filename must be a string when provided.")
+
+    def all_urls(self) -> list[str]:
+        return [self.url, *self.fallbacks]
+
+
+URL = NewType("URL", str)
+
+
+@dataclass(frozen=True)
+class DatasetSource(Mapping[str, object]):
+    """Typed provenance + download metadata for one dataset builder."""
+
+    homepage: URL | str
+    assets: dict[str, DownloadInfo | str]
+    citation: str
+    license: str = ""
+    checksums: dict[str, str] | None = None
+
+    def __post_init__(self):
+        if not isinstance(self.homepage, str) or not self.homepage:
+            raise TypeError("DatasetSource.homepage must be a non-empty string.")
+        if not isinstance(self.citation, str) or not self.citation:
+            raise TypeError("DatasetSource.citation must be a non-empty string.")
+        if not isinstance(self.license, str):
+            raise TypeError("DatasetSource.license must be a string.")
+        if not isinstance(self.assets, Mapping):
+            raise TypeError("DatasetSource.assets must be a mapping.")
+
+        normalized_assets = {}
+        for key, value in self.assets.items():
+            if not isinstance(key, str) or not key:
+                raise TypeError("DatasetSource asset keys must be non-empty strings.")
+            if isinstance(value, str):
+                normalized_assets[key] = DownloadInfo(url=value)
+            elif isinstance(value, DownloadInfo):
+                normalized_assets[key] = value
+            else:
+                raise TypeError(
+                    f"DatasetSource.assets['{key}'] must be a URL string or DownloadInfo, "
+                    f"got {type(value).__name__}."
+                )
+
+        normalized_checksums = None
+        if self.checksums is not None:
+            if not isinstance(self.checksums, Mapping):
+                raise TypeError("DatasetSource.checksums must be a mapping when provided.")
+            normalized_checksums = {}
+            for key, value in self.checksums.items():
+                if not isinstance(key, str) or not key:
+                    raise TypeError("DatasetSource.checksums keys must be non-empty strings.")
+                if not isinstance(value, str) or not value:
+                    raise TypeError("DatasetSource.checksums values must be non-empty strings.")
+                normalized_checksums[key] = value
+
+        object.__setattr__(self, "homepage", str(self.homepage))
+        object.__setattr__(self, "assets", MappingProxyType(normalized_assets))
+        object.__setattr__(
+            self,
+            "checksums",
+            None if normalized_checksums is None else MappingProxyType(normalized_checksums),
+        )
+
+    def __getitem__(self, key: str) -> object:
+        if key == "homepage":
+            return self.homepage
+        if key == "assets":
+            return self.assets
+        if key == "citation":
+            return self.citation
+        if key == "license":
+            return self.license
+        if key == "checksums":
+            return self.checksums
+        raise KeyError(key)
+
+    def __iter__(self) -> Iterator[str]:
+        yield "homepage"
+        yield "assets"
+        yield "citation"
+        if self.license:
+            yield "license"
+        if self.checksums is not None:
+            yield "checksums"
+
+    def __len__(self) -> int:
+        return 3 + int(bool(self.license)) + int(self.checksums is not None)
+
+    def get(self, key: str, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+
+def collect_dataset_citations(sources: Iterable[DatasetSource | Mapping[str, object]]) -> list[str]:
+    """Collect unique citation strings in stable first-seen order."""
+    citations = []
+    seen = set()
+    for source in sources:
+        citation = source["citation"] if isinstance(source, Mapping) else source.citation
+        if citation not in seen:
+            seen.add(citation)
+            citations.append(citation)
+    return citations
 
 
 class FeatureType:

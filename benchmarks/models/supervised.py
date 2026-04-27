@@ -15,7 +15,7 @@ from benchmarks.models import (
 )
 
 
-def create_transforms(ds_config):
+def create_transforms(ds_config, model_cfg=None):
     """Returns (train_transform, val_transform, collate_fn).
 
     Uses the same augmentation pipeline as the SSL models so the
@@ -50,6 +50,6 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         classifier=classifier,
         supervised_loss=nn.CrossEntropyLoss(),
         forward=forward,
-        optim=build_optim_config(cfg.model, cfg.backbone),
+        optim=build_optim_config(cfg.model),
     )
     return module, embed_dim

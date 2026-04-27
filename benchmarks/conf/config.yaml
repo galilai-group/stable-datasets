@@ -1,8 +1,8 @@
 defaults:
   - model: simclr
-  - backbone: vit_small
   - _self_
 
+backbone: vit_small_patch16_224
 dataset: cifar10
 seed: null  # set to an int to run a seeded ablation (tagged "seed" in wandb)
 run_tag: null  # extra wandb tag for this run (e.g. "final_runs")
@@ -33,7 +33,7 @@ wandb:
 
 hydra:
   run:
-    dir: ${oc.env:PROJECT_ROOT,/oscar/home/sboughan/scratch/.stable-datasets}/benchmark-runs/${model.name}_${backbone.name}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${oc.env:PROJECT_ROOT,/oscar/home/sboughan/scratch/.stable-datasets}/benchmark-runs/${model.name}_${backbone}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
   sweep:
     dir: ${oc.env:PROJECT_ROOT,/oscar/home/sboughan/scratch/.stable-datasets}/benchmark-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
-    subdir: ${model.name}_${backbone.name}_${dataset}
+    subdir: ${model.name}_${backbone}_${dataset}

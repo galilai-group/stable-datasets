@@ -7,14 +7,18 @@ import logging
 import stable_pretraining as spt
 from stable_pretraining.data import transforms
 
-from benchmarks.models import build_optim_config, collate_single, val_transform
-from benchmarks.models.vit import create_vit
+from benchmarks.models import (
+    build_optim_config,
+    collate_single,
+    resolve_backbone_name,
+    val_transform,
+)
 
 
 log = logging.getLogger(__name__)
 
 
-def create_transforms(ds_config):
+def create_transforms(ds_config, model_cfg=None):
     """Returns (train_transform, val_transform, collate_fn).
 
     MAE uses minimal augmentation (no color jitter, no blur) — just
@@ -71,29 +75,29 @@ def forward(self, batch, stage):
 
 def build(cfg, ds_config) -> tuple[spt.Module, int]:
     h, w = ds_config.image_size
-    patch_size = cfg.backbone.patch_size
     decoder_embed_dim = cfg.model.decoder.embed_dim
     decoder_depth = cfg.model.decoder.depth
     mask_ratio = cfg.model.mask_ratio
+    backbone_name = resolve_backbone_name(cfg.backbone, ds_config)
 
+    masking = spt.backbone.PatchMasking(mask_ratio=mask_ratio)
+    encoder = spt.backbone.MaskedEncoder(
+        model_or_model_name=backbone_name,
+        masking=masking,
+        img_size=(h, w),
+        dynamic_img_size=True,
+    )
+    patch_size = encoder.patch_size_h
     grid_size = (h // patch_size, w // patch_size)
     num_patches = grid_size[0] * grid_size[1]
     output_dim = patch_size * patch_size * 3
+    encoder_embed_dim = encoder.embed_dim
 
-    vit_model = create_vit(
-        size=cfg.backbone.size,
-        img_size=(h, w),
-        patch_size=patch_size,
-    )
     log.info(
-        f"MAE config: patch_size={patch_size}, grid={grid_size}, "
-        f"num_patches={num_patches}, mask_ratio={mask_ratio:.2f}, "
+        f"MAE config: backbone={backbone_name}, patch_size={patch_size}, "
+        f"grid={grid_size}, num_patches={num_patches}, mask_ratio={mask_ratio:.2f}, "
         f"visible={int(num_patches * (1 - mask_ratio))}"
     )
-
-    masking = spt.backbone.PatchMasking(mask_ratio=mask_ratio)
-    encoder = spt.backbone.MaskedEncoder(model_or_model_name=vit_model, masking=masking)
-    encoder_embed_dim = getattr(encoder, "embed_dim", 768)
 
     decoder = spt.backbone.MAEDecoder(
         embed_dim=encoder_embed_dim,
@@ -112,6 +116,6 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         forward=forward,
         patch_size=patch_size,
         norm_pix_loss=norm_pix_loss,
-        optim=build_optim_config(cfg.model, cfg.backbone),
+        optim=build_optim_config(cfg.model),
     )
     return module, encoder_embed_dim

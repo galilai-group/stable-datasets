@@ -9,6 +9,15 @@ from tqdm import tqdm
 
 from ..utils import download_dataset
 
+"""
+TODO(builder-migration):
+- Train and test do not share the same target shape.
+- Training labels come from folder structure and are mostly single predominant
+  instrument labels.
+- Test labels come from sidecar text files and may be multi-instrument or
+  otherwise more ambiguous, so the builder should preserve that asymmetry.
+"""
+
 
 _urls = {
     "https://zenodo.org/record/1290750/files/IRMAS-TrainingData.zip?download=1": "IRMAS-TrainingData.zip",

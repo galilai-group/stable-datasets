@@ -3,7 +3,7 @@ import io
 import rarfile
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -26,18 +26,20 @@ class Linnaeus5(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "http://chaladze.com/l5/",
-        "citation": """@article{chaladze2017linnaeus,
+    SOURCE = DatasetSource(
+        homepage= "http://chaladze.com/l5/",
+        citation= """@article{chaladze2017linnaeus,
                       title={Linnaeus 5 dataset for machine learning},
                       author={Chaladze, G and Kalatozishvili, L},
                       journal={chaladze.com},
                       year={2017}}""",
-        "assets": {
-            "train": "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar",
-            "test": "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar",
+        assets= {
+            "train": DownloadInfo(url="http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar"),
+
+            "test": DownloadInfo(url="http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar"),
+
         },
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

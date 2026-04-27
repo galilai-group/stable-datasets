@@ -1,66 +1,97 @@
-import io
-import os
-import time
+import csv
 import zipfile
 
-import numpy as np
-from scipy.io.wavfile import read as wav_read
-from tqdm import tqdm
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Sequence,
+    Value,
+    Version,
+)
+from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
-from ..utils import download_dataset
+from ._audio_utils import wav_bytes_to_series
 
 
-_urls = {
-    "https://archive.org/download/warblrb10k_public/warblrb10k_public_wav.zip": "warblrb10k_public_wav.zip",
-    "https://ndownloader.figshare.com/files/6035817": "warblrb10k_public_metadata.csv",
-}
+class Warblr(BaseDatasetBuilder):
+    """Warblr bird-presence classification dataset."""
 
-_name = "warblr"
-
-
-def load(path=None):
-    """Binary audio classification, presence or absence of a bird.
-
-    `Warblr <http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/#downloads>`_
-    comes from a UK bird-sound crowdsourcing
-    research spinout called Warblr. From this initiative we have
-    10,000 ten-second smartphone audio recordings from around the UK.
-    The audio totals around 44 hours duration. The audio will be
-    published by Warblr under a Creative Commons licence. The audio
-    covers a wide distribution of UK locations and environments, and
-    includes weather noise, traffic noise, human speech and even human
-    bird imitations. It is directly representative of the data that is
-    collected from a mobile crowdsourcing initiative.
-    Load the data given a path
-    """
-
-    if path is None:
-        path = os.environ["DATASET_PATH"]
-
-    download_dataset(path, _name, _urls)
-
-    # Load the dataset (download if necessary) and set
-    # the class attributes.
-    print("Loading warblr")
-    t = time.time()
-
-    # Loading Labels
-    labels = np.loadtxt(
-        path + "warblr/warblrb10k_public_metadata.csv",
-        delimiter=",",
-        skiprows=1,
-        dtype="str",
+    VERSION = Version("1.0.0")
+    SOURCE = DatasetSource(
+        homepage="http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/#downloads",
+        assets={
+            "audio": DownloadInfo(
+                url="https://archive.org/download/warblrb10k_public/warblrb10k_public_wav.zip",
+                filename="warblrb10k_public_wav.zip",
+            ),
+            "metadata": DownloadInfo(
+                url="https://ndownloader.figshare.com/files/6035817",
+                filename="warblrb10k_public_metadata.csv",
+            ),
+        },
+        citation="See dataset homepage.",
     )
 
-    # Loading the files
-    f = zipfile.ZipFile(path + "warblr/warblrb10k_public_wav.zip")
-    wavs = []
-    for i, files_ in tqdm(enumerate(labels), ascii=True):
-        wavfile = f.read("wav/" + files_[0] + ".wav")
-        byt = io.BytesIO(wavfile)
-        wavs.append(np.expand_dims(wav_read(byt)[1].astype("float32"), 0))
-    labels = labels[:, 1].astype("int32")
+    def _info(self):
+        return DatasetInfo(
+            description="Warblr binary bird-presence audio classification dataset.",
+            features=Features(
+                {
+                    "series": Sequence(Sequence(Value("float32"))),
+                    "label": ClassLabel(names=["no_bird", "bird"]),
+                    "recording_id": Value("string"),
+                    "filename": Value("string"),
+                }
+            ),
+            supervised_keys=("series", "label"),
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
+        )
 
-    print("Dataset warblr loaded in", f"{time.time() - t:.2f}", "s.")
-    dataset = {"wavs": wavs, "labels": labels}
-    return dataset
+    def _split_generators(self):
+        source = self._source()
+        audio_path, metadata_path = bulk_download(
+            [
+                self._normalize_download_info(source["assets"]["audio"], asset_name="audio"),
+                self._normalize_download_info(source["assets"]["metadata"], asset_name="metadata"),
+            ],
+            dest_folder=self._raw_download_dir,
+        )
+        return [
+            SplitGenerator(
+                name=Split.TRAIN,
+                gen_kwargs={"audio_path": audio_path, "metadata_path": metadata_path, "split": "train"},
+            )
+        ]
+
+    def _candidate_splits(self) -> list:
+        return [Split.TRAIN]
+
+    def _generate_examples(self, audio_path, metadata_path, split):
+        del split
+        with open(metadata_path, newline="", encoding="utf-8") as fh:
+            rows = list(csv.DictReader(fh))
+
+        with zipfile.ZipFile(audio_path) as archive:
+            for row in rows:
+                recording_id = str(row.get("itemid", row.get("id", "")))
+                filename = f"{recording_id}.wav"
+                member = _zip_member_by_suffix(archive, f"wav/{filename}")
+                yield recording_id, {
+                    "series": wav_bytes_to_series(archive.read(member)),
+                    "label": int(row.get("hasbird", row.get("label", 0))),
+                    "recording_id": recording_id,
+                    "filename": filename,
+                }
+
+
+def _zip_member_by_suffix(archive: zipfile.ZipFile, suffix: str) -> str:
+    suffix = suffix.lower()
+    for name in archive.namelist():
+        if name.lower().endswith(suffix):
+            return name
+    raise FileNotFoundError(f"Could not find {suffix!r} in {archive.filename}")

@@ -1,115 +1,88 @@
-#!/usr/bin/env python
-
-__author__ = "Randall Balestriero"
-
-import io
-import os
-import time
 import zipfile
 
-import numpy as np
-from scipy.io.wavfile import read as wav_read
-from tqdm import tqdm
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Sequence,
+    Value,
+    Version,
+)
+from stable_datasets.utils import BaseDatasetBuilder
 
-from ..utils import download_dataset
-
-
-DOC = """An Annotated Acoustic Dataset of 7 Picidae Species
-
-    The proposed dataset contains 1669 labeled audio files from
-    the following Picidae species doing 3 types of birdsongs:
-    call, drumming and song. Audio data are organized in thirteen
-    folders: twelve containing the labeled audios of each
-    birdsong type from every Picidae specie listed in what
-    follows and one folder containing the background sound samples
-
-    1- DendrocoposLeucotos - call.
-
-    2- DendrocoposLeucotos - drumming.
-
-    3- DendrocoposMajor - call.
-
-    4- DendrocoposMajor - drumming.
-
-    5- DendrocoposMedius - call.
-
-    6- DendrocoposMedius - song.
-
-    7- DendrocoposMinor - call.
-
-    8- DendrocoposMinor - drumming.
-
-    9- DryocopusMartius - call.
-
-    10- DryocopusMartius - drumming.
-
-    11- JynxTorquilla - song.
-
-    12- PicusViridis - song.
-
-    13- Silence (or background noise).
-
-   """
-
-_dataset = "picidae"
-_urls = {"https://zenodo.org/record/574438/files/PicidaeDataset.zip?download=1": "PicidaeDataset.zip"}
+from ._audio_utils import wav_bytes_to_series
 
 
-def load(path=None):
-    """
-    Parameters
-    ----------
-        path: str (optional)
-            default ($DATASET_PATH), the path to look for the data and
-            where the data will be downloaded if not present
+PICIDAE_LABELS = [
+    "BackgroundNoise",
+    "DendrocoposLeucotos-call",
+    "DendrocoposLeucotos-drumming",
+    "DendrocoposMajor-call",
+    "DendrocoposMajor-drumming",
+    "DendrocoposMedius-call",
+    "DendrocoposMedius-song",
+    "DendrocoposMinor-call",
+    "DendrocoposMinor-drumming",
+    "DryocopusMartius-call",
+    "DryocopusMartius-drumming",
+    "JynxTorquilla-song",
+    "PicusViridis-song",
+]
 
-    Returns
-    -------
 
-        wavs: array
-            the waveforms in the time amplitude domain
+class Picidae(BaseDatasetBuilder):
+    """Picidae birdsong classification dataset."""
 
-        labels: array
-            binary values representing the presence or not of an avian
+    VERSION = Version("1.0.0")
+    SOURCE = DatasetSource(
+        homepage="https://zenodo.org/records/574438",
+        assets={
+            "train": DownloadInfo(
+                url="https://zenodo.org/record/574438/files/PicidaeDataset.zip?download=1",
+                fallbacks=["https://zenodo.org/records/574438/files/PicidaeDataset.zip"],
+                filename="PicidaeDataset.zip",
+            ),
+        },
+        citation="See dataset homepage.",
+    )
 
-        flag: array
-            the Xeno-Canto ID
+    def _info(self):
+        return DatasetInfo(
+            description="Picidae birdsong classification dataset with species/song-type labels.",
+            features=Features(
+                {
+                    "series": Sequence(Sequence(Value("float32"))),
+                    "label": ClassLabel(names=PICIDAE_LABELS),
+                    "label_name": Value("string"),
+                    "xc_identifier": Value("string"),
+                    "filename": Value("string"),
+                }
+            ),
+            supervised_keys=("series", "label"),
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
+        )
 
-    """
-
-    if path is None:
-        path = os.environ["DATASET_PATH"]
-
-    download_dataset(path, _dataset, _urls, extract=True)
-
-    t0 = time.time()
-
-    archive = zipfile.ZipFile(path + "picidae/PicidaeDataset.zip")
-    wavs = []
-    labels = []
-    XC = []
-    for item in tqdm(archive.namelist(), ascii=True):
-        if item[-4:] == ".wav" and "._" not in item:
-            wavfile = archive.read(item)
-            byt = io.BytesIO(wavfile)
-            wavs.append(wav_read(byt)[1].astype("float32"))
-            labels.append(item.split("/")[1])
-            XC.append(item.split("/")[2].split("-")[0])
-
-    labels = np.array(labels)
-    unique = np.unique(labels)
-    y = np.zeros(len(labels), dtype="int32")
-    for k, name in enumerate(np.sort(unique)):
-        y[labels == name] = k
-
-    data = {
-        "wavs": wavs,
-        "labels": y,
-        "names": labels,
-        "XC_identifiers": XC,
-        "DOC": DOC,
-    }
-
-    print(f"Dataset picidae loaded in {time.time() - t0:.2f}s.")
-
-    return data
+    def _generate_examples(self, data_path, split):
+        del split
+        with zipfile.ZipFile(data_path) as archive:
+            for name in sorted(archive.namelist()):
+                if not name.lower().endswith(".wav") or "/._" in name or name.rsplit("/", 1)[-1].startswith("._"):
+                    continue
+                parts = name.split("/")
+                if len(parts) < 3:
+                    continue
+                label_name = parts[-2]
+                if label_name not in PICIDAE_LABELS:
+                    continue
+                filename = parts[-1]
+                xc_identifier = filename.split("-")[0]
+                yield name, {
+                    "series": wav_bytes_to_series(archive.read(name)),
+                    "label": PICIDAE_LABELS.index(label_name),
+                    "label_name": label_name,
+                    "xc_identifier": xc_identifier,
+                    "filename": filename,
+                }

@@ -69,6 +69,78 @@ params:
     batch_size: 128
     max_epochs: 150
 
+  # ----- new datasets (auto-inserted, paper tier rule) -----
+  # 1× ImageNet base
+  imagenet100:
+    batch_size: 256
+    max_epochs: 50
+  # Medium-simple — ×3
+  emnist_byclass:
+    batch_size: 256
+    max_epochs: 150
+  emnist_bymerge:
+    batch_size: 256
+    max_epochs: 150
+  emnist_digits:
+    batch_size: 256
+    max_epochs: 150
+  emnist_letters:
+    batch_size: 256
+    max_epochs: 150
+  emnist_mnist:
+    batch_size: 256
+    max_epochs: 150
+  hasyv2:
+    batch_size: 256
+    max_epochs: 150
+  # Medium-hard — ×4
+  awa2:
+    batch_size: 256
+    max_epochs: 200
+  galaxy10:
+    batch_size: 256
+    max_epochs: 200
+  bloodmnist:
+    batch_size: 256
+    max_epochs: 200
+  breastmnist:
+    batch_size: 256
+    max_epochs: 200
+  dermamnist:
+    batch_size: 256
+    max_epochs: 200
+  octmnist:
+    batch_size: 256
+    max_epochs: 200
+  organamnist:
+    batch_size: 256
+    max_epochs: 200
+  organcmnist:
+    batch_size: 256
+    max_epochs: 200
+  organsmnist:
+    batch_size: 256
+    max_epochs: 200
+  pathmnist:
+    batch_size: 256
+    max_epochs: 200
+  retinamnist:
+    batch_size: 256
+    max_epochs: 200
+  tissuemnist:
+    batch_size: 256
+    max_epochs: 200
+  # Fine-grained — ×6
+  cars196:
+    batch_size: 256
+    max_epochs: 300
+  fgvcaircraft_family:
+    batch_size: 256
+    max_epochs: 300
+  fgvcaircraft_manufacturer:
+    batch_size: 256
+    max_epochs: 300
+
 vit_optimizer:
   type: AdamW
   lr: 5e-4

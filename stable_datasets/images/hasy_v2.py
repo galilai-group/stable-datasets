@@ -5,7 +5,7 @@ import tarfile
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import BuilderConfig, ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import BuilderConfig, ClassLabel, DatasetInfo, DownloadInfo, Features, Version, DatasetSource
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -39,15 +39,18 @@ class HASYv2(BaseDatasetBuilder):
     DEFAULT_CONFIG_NAME = "fold-1"
 
     _HASYV2_URL = "https://zenodo.org/record/259444/files/HASYv2.tar.bz2?download=1"
-    SOURCE = {
-        "homepage": "https://github.com/MartinThoma/HASY",
-        "citation": """@article{thoma2017hasyv2,
+    SOURCE = DatasetSource(
+        homepage= "https://github.com/MartinThoma/HASY",
+        citation= """@article{thoma2017hasyv2,
                          title={The hasyv2 dataset},
                          author={Thoma, Martin},
                          journal={arXiv preprint arXiv:1701.08380},
                          year={2017}}""",
-        "assets": {"train": _HASYV2_URL, "test": _HASYV2_URL},
-    }
+        assets= {
+            "train": DownloadInfo(url=_HASYV2_URL),
+            "test": DownloadInfo(url=_HASYV2_URL),
+        },
+    )
 
     def _info(self):
         return DatasetInfo(
