@@ -21,9 +21,9 @@ import numpy as np
 import pytest
 
 from stable_datasets.dataset import StableDataset
-from stable_datasets.arrow_backend import ArrowBackend
+from stable_datasets.backends.arrow_shards import ArrowBackend
 from stable_datasets.cache import write_lance_cache, write_sharded_arrow_cache
-from stable_datasets.lance_backend import LanceBackend
+from stable_datasets.backends.lance_rows import LanceBackend
 from stable_datasets.samplers import ShardShuffleSampler
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value
 

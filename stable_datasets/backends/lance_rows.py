@@ -120,6 +120,10 @@ class LanceBackend:
         return True
 
     @property
+    def cache_dir(self) -> Path:
+        return self._uri
+
+    @property
     def schema(self) -> pa.Schema:
         return self._dataset.schema
 

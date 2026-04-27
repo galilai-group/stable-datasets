@@ -24,17 +24,15 @@ from rich.progress import (
 from tqdm import tqdm
 
 from .dataset import StableDataset, StableDatasetDict
-from .arrow_backend import ArrowBackend
-from .lance_backend import LanceBackend
 from .cache import (
     cache_fingerprint,
     detect_cache_format,
-    read_lance_cache_meta,
-    validate_sharded_cache,
+    open_cache,
     write_lance_cache,
+    write_lance_video_frames_cache,
     write_sharded_arrow_cache,
 )
-from .schema import BuilderConfig, DatasetSource, DownloadInfo, Image, Version
+from .schema import BuilderConfig, DatasetSource, DownloadInfo, Image, Version, Video
 from .splits import Split, SplitGenerator
 
 
@@ -348,6 +346,7 @@ class BaseDatasetBuilder:
         processed_cache_dir=None,
         download_dir=None,
         storage_format=None,
+        backend_kwargs=None,
         **kwargs,
     ):
         """
@@ -381,6 +380,7 @@ class BaseDatasetBuilder:
             raise ValueError(
                 f"storage_format must be 'arrow' or 'lance', got {storage_format!r}"
             )
+        backend_kwargs = dict(backend_kwargs or {})
 
         instance = object.__new__(cls)
         effective_format = storage_format if storage_format is not None else cls.STORAGE_FORMAT
@@ -403,6 +403,12 @@ class BaseDatasetBuilder:
         cls._validate_source(source)
 
         features = instance._dataset_info.features
+        has_frame_video = any(isinstance(f, Video) and f.storage == "frames" for f in features.values())
+        if has_frame_video and effective_format != "lance":
+            raise ValueError(
+                "Video(storage='frames') requires storage_format='lance' because "
+                "it uses the specialized lance-video-frames layout."
+            )
 
         # 4) Try to load all splits from cache without downloading.
         candidate_splits = instance._candidate_splits()
@@ -427,32 +433,13 @@ class BaseDatasetBuilder:
                     # cache-fingerprint bug. Treat as a cache miss.
                     all_cached = False
                     break
-                if effective_format == "lance":
-                    lance_meta = read_lance_cache_meta(shard_dir)
-                    backend = LanceBackend(uri=shard_dir)
-                    # num_rows must be passed from metadata -- reading
-                    # it through the backend would open Lance in the
-                    # main process and segfault DataLoader workers on
-                    # fork. See LanceBackend fork-safety contract.
-                    splits_data[split_name] = StableDataset(
-                        features=features,
-                        info=instance._dataset_info,
-                        backend=backend,
-                        num_rows=lance_meta.num_rows,
-                    )
-                else:
-                    meta = validate_sharded_cache(shard_dir, features)
-                    backend = ArrowBackend(
-                        shard_paths=meta.shard_paths,
-                        shard_row_counts=meta.shard_row_counts,
-                        schema=features.to_arrow_schema(),
-                    )
-                    splits_data[split_name] = StableDataset(
-                        features=features,
-                        info=instance._dataset_info,
-                        backend=backend,
-                        num_rows=meta.num_rows,
-                    )
+                opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
+                splits_data[split_name] = StableDataset(
+                    features=features,
+                    info=instance._dataset_info,
+                    backend=opened.backend,
+                    num_rows=opened.num_rows,
+                )
             else:
                 all_cached = False
                 break
@@ -473,41 +460,48 @@ class BaseDatasetBuilder:
                 )
                 shard_dir = instance._processed_cache_dir / shard_dir_name
 
-                if effective_format == "lance":
-                    if (shard_dir / "_metadata.json").exists():
-                        lance_meta = read_lance_cache_meta(shard_dir)
-                    else:
+                if has_frame_video:
+                    if not (shard_dir / "_metadata.json").exists():
                         generator = instance._generate_examples(**sg.gen_kwargs)
-                        lance_meta = write_lance_cache(
-                            generator, features, shard_dir, num_encode_workers=4
+                        write_lance_video_frames_cache(
+                            generator,
+                            features,
+                            shard_dir,
                         )
-                    backend = LanceBackend(uri=shard_dir)
+                    opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
                     splits_data[sg.name] = StableDataset(
                         features=features,
                         info=instance._dataset_info,
-                        backend=backend,
-                        num_rows=lance_meta.num_rows,
+                        backend=opened.backend,
+                        num_rows=opened.num_rows,
+                    )
+                elif effective_format == "lance":
+                    if not (shard_dir / "_metadata.json").exists():
+                        generator = instance._generate_examples(**sg.gen_kwargs)
+                        write_lance_cache(
+                            generator, features, shard_dir, num_encode_workers=4
+                        )
+                    opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
+                    splits_data[sg.name] = StableDataset(
+                        features=features,
+                        info=instance._dataset_info,
+                        backend=opened.backend,
+                        num_rows=opened.num_rows,
                     )
                 else:
-                    if (shard_dir / "_metadata.json").exists():
-                        meta = validate_sharded_cache(shard_dir, features)
-                    else:
+                    if not (shard_dir / "_metadata.json").exists():
                         generator = instance._generate_examples(**sg.gen_kwargs)
                         has_images = any(isinstance(f, Image) for f in features.values())
                         compression = None if has_images else "zstd"
-                        meta = write_sharded_arrow_cache(
+                        write_sharded_arrow_cache(
                             generator, features, shard_dir, compression=compression, num_encode_workers=4
                         )
-                    backend = ArrowBackend(
-                        shard_paths=meta.shard_paths,
-                        shard_row_counts=meta.shard_row_counts,
-                        schema=features.to_arrow_schema(),
-                    )
+                    opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
                     splits_data[sg.name] = StableDataset(
                         features=features,
                         info=instance._dataset_info,
-                        backend=backend,
-                        num_rows=meta.num_rows,
+                        backend=opened.backend,
+                        num_rows=opened.num_rows,
                     )
 
         # 6) Return single split or dict

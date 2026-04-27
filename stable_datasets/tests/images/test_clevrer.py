@@ -3,6 +3,7 @@ import json
 import pytest
 
 from stable_datasets.images import CLEVRER
+from stable_datasets.schema import VideoRef
 
 
 pytestmark = pytest.mark.large
@@ -22,6 +23,8 @@ def test_clevrer_dataset():
     sample = clevrer_train[0]
     expected_keys = {"video", "scene_index", "video_filename", "questions_json", "annotations_json"}
     assert set(sample.keys()) == expected_keys, f"Expected keys {expected_keys}, got {set(sample.keys())}"
+    assert isinstance(sample["video"], VideoRef), f"video should be a VideoRef, got {type(sample['video'])}."
+    assert sample["video"].path is not None
 
     # Test 3: Validate scene_index type
     scene_index = sample["scene_index"]

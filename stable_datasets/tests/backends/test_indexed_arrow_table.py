@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pyarrow as pa
 
-from stable_datasets._indexed_arrow_table import IndexedArrowTable
+from stable_datasets.backends._indexed_arrow_table import IndexedArrowTable
 
 
 def _make_chunked_table() -> pa.Table:
