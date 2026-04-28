@@ -1,6 +1,6 @@
 __version__ = "0.0.0a1"
 
-from . import images, timeseries, video
+from . import features, images, timeseries, video
 from .dataset import StableDataset, StableDatasetDict
 from .schema import (
     Array3D,
@@ -15,6 +15,9 @@ from .schema import (
     Value,
     Version,
     Video,
+    VideoDecodeConfig,
+    VideoDecodeFn,
+    VideoDecodeFnBatched,
     VideoRef,
 )
 from .utils import BaseDatasetBuilder
@@ -22,6 +25,7 @@ from .utils import BaseDatasetBuilder
 
 __all__ = [
     "images",
+    "features",
     "timeseries",
     "video",
     "Array3D",
@@ -39,5 +43,8 @@ __all__ = [
     "Value",
     "Version",
     "Video",
+    "VideoDecodeConfig",
+    "VideoDecodeFn",
+    "VideoDecodeFnBatched",
     "VideoRef",
 ]

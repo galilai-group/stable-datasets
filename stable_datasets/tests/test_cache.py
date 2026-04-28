@@ -8,14 +8,13 @@ import numpy as np
 import pytest
 from PIL import Image as PILImage
 
-from stable_datasets.dataset import StableDataset
 from stable_datasets.cache import (
-    _encode_image,
     read_shard,
     read_sharded_cache_meta,
     validate_sharded_cache,
     write_sharded_arrow_cache,
 )
+from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import (
     ClassLabel,
     DatasetInfo,
@@ -83,6 +82,8 @@ class TestShardedWriter:
         assert meta_path.exists()
         raw = json.loads(meta_path.read_text())
         assert raw["cache_format_version"] == 1
+        assert raw["format"] == "arrow"
+        assert raw["layout"] == "arrow-shards"
         assert raw["num_rows"] == 50
         assert raw["num_shards"] == meta.num_shards
         assert len(raw["shard_filenames"]) == meta.num_shards
@@ -164,7 +165,7 @@ class TestImageEncoding:
         img.save(buf, format="JPEG")
         jpeg_bytes = buf.getvalue()
 
-        result = _encode_image(jpeg_bytes)
+        result = Image().encode(jpeg_bytes)
         assert result == jpeg_bytes
         assert result[:2] == b"\xff\xd8"  # JPEG magic
 
@@ -175,18 +176,18 @@ class TestImageEncoding:
         img.save(str(path), format="JPEG")
         reopened = PILImage.open(str(path))
 
-        result = _encode_image(reopened)
+        result = Image().encode(reopened)
         assert result[:2] == b"\xff\xd8"  # JPEG magic, not PNG
 
     def test_pil_png_for_rgba(self, tmp_path):
         # RGBA images should always use PNG even if source was JPEG
         img = PILImage.new("RGBA", (4, 4), color=(128, 64, 32, 255))
-        result = _encode_image(img)
+        result = Image().encode(img)
         assert result[:4] == b"\x89PNG"
 
     def test_numpy_array_to_png(self):
         arr = np.zeros((4, 4, 3), dtype=np.uint8)
-        result = _encode_image(arr)
+        result = Image().encode(arr)
         assert result[:4] == b"\x89PNG"
 
     def test_file_path_reads_raw_bytes(self, tmp_path):
@@ -195,11 +196,11 @@ class TestImageEncoding:
         img.save(str(path))
         with open(path, "rb") as f:
             expected = f.read()
-        result = _encode_image(str(path))
+        result = Image().encode(str(path))
         assert result == expected
 
     def test_none_returns_none(self):
-        assert _encode_image(None) is None
+        assert Image().encode(None) is None
 
 
 # Cache validation tests
@@ -428,7 +429,7 @@ class TestCompression:
         for i in range(20):
             assert ds[i]["x"] == i
 
-    def test_backward_compat_reads_uncompressed(self, tmp_path):
+    def test_uncompressed_cache_reports_no_compression(self, tmp_path):
         features = _simple_features()
         cache_dir = tmp_path / "uncompressed"
         write_sharded_arrow_cache(

@@ -17,6 +17,11 @@ params:
   default:
     batch_size: 256
     max_epochs: 63
+    # 8 views per sample (2 global + 6 local) at 224×224 OOMs a 22GB
+    # 3090 with bs=256. Keep effective batch size 256 by accumulating
+    # over 8 micro-batches of 32. Per-dataset blocks inherit this unless
+    # they override.
+    accumulate_grad_batches: 8
   # CIFAR-scale (32x32)
   cifar10:
     batch_size: 256
@@ -40,7 +45,7 @@ params:
   notmnist:
     batch_size: 256
     max_epochs: 250
-  medmnist:
+  pneumoniamnist:
     batch_size: 256
     max_epochs: 250
   # Other small datasets

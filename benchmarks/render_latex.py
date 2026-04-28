@@ -146,20 +146,36 @@ def _matches_expected(config: dict, expected: dict) -> bool:
 
 _KNOWN_MODELS = {"simclr", "dino", "mae", "lejepa", "nnclr", "barlow_twins", "supervised"}
 
+# Backwards-compatible dataset key remap. The "medmnist" registry key was
+# renamed to "pneumoniamnist" (the actual MedMNIST sub-task it pointed at);
+# historical W&B runs are still tagged ``dataset=medmnist`` and would
+# otherwise be dropped by the INCLUDED_DATASETS filter.
+_DATASET_ALIASES: dict[str, str] = {"medmnist": "pneumoniamnist"}
 
-def _parse_name(name: str, backbone: str = "vit_small") -> tuple[str | None, str | None]:
+# Tuple of backbone identifiers we recognize on W&B. Includes both the
+# pre-refactor short name (``vit_small``) and the post-refactor timm name
+# (``vit_small_patch16_224``) so historical runs are still picked up.
+DEFAULT_BACKBONES: tuple[str, ...] = ("vit_small", "vit_small_patch16_224")
+
+
+def _parse_name(
+    name: str,
+    backbones: tuple[str, ...] = DEFAULT_BACKBONES,
+) -> tuple[str | None, str | None]:
     """Parse ``'{model}_{backbone}_{dataset}'`` from a W&B run name.
 
-    Handles multi-word model names (e.g., 'barlow_twins'). Returns
+    Tries each backbone variant; longest first so ``vit_small_patch16_224``
+    wins over a partial match against ``vit_small``. Returns
     ``(model, dataset)`` or ``(None, None)`` on failure.
     """
-    tag = f"_{backbone}_"
-    if tag not in name:
-        return None, None
-    model_part, _, dataset_part = name.partition(tag)
-    if model_part not in _KNOWN_MODELS:
-        return None, None
-    return model_part, dataset_part.lower()
+    for backbone in sorted(backbones, key=len, reverse=True):
+        tag = f"_{backbone}_"
+        if tag not in name:
+            continue
+        model_part, _, dataset_part = name.partition(tag)
+        if model_part in _KNOWN_MODELS:
+            return model_part, dataset_part.lower()
+    return None, None
 
 
 # Collection
@@ -169,7 +185,7 @@ def collect_runs(
     entity: str,
     project: str,
     expected_params: dict[str, dict[str, dict]],
-    backbone: str = "vit_small",
+    backbones: tuple[str, ...] = DEFAULT_BACKBONES,
 ) -> pd.DataFrame:
     """Fetch runs from W&B and filter against expected hyperparameters.
 
@@ -182,9 +198,9 @@ def collect_runs(
     :data:`METRICS`.
     """
     api = wandb.Api(timeout=60)
-    filters = {"config.backbone": backbone}
+    filters = {"$or": [{"config.backbone": b} for b in backbones]}
     runs = _retry(lambda: list(api.runs(f"{entity}/{project}", filters=filters, per_page=1000)))
-    print(f"Found {len(runs)} {backbone} runs in {entity}/{project}")
+    print(f"Found {len(runs)} runs in {entity}/{project} matching backbones={backbones}")
 
     rows = []
     skipped_no_metric = 0
@@ -204,7 +220,7 @@ def collect_runs(
 
         # Fall back to parsing the run name when config is empty
         if not model or not dataset:
-            name_model, name_ds = _parse_name(run.name, backbone)
+            name_model, name_ds = _parse_name(run.name, backbones)
             if name_model:
                 model = model or name_model
                 dataset = dataset or name_ds
@@ -212,6 +228,8 @@ def collect_runs(
         if not model or not dataset:
             skipped_unparseable += 1
             continue
+
+        dataset = _DATASET_ALIASES.get(dataset, dataset)
 
         if dataset not in INCLUDED_DATASETS:
             skipped_excluded[dataset] = skipped_excluded.get(dataset, 0) + 1

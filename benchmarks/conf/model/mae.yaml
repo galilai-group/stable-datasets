@@ -40,7 +40,7 @@ params:
   notmnist:
     batch_size: 256
     max_epochs: 400
-  medmnist:
+  pneumoniamnist:
     batch_size: 256
     max_epochs: 400
   # Other small datasets

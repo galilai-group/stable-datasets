@@ -23,7 +23,6 @@ from rich.progress import (
 )
 from tqdm import tqdm
 
-from .dataset import StableDataset, StableDatasetDict
 from .cache import (
     cache_fingerprint,
     detect_cache_format,
@@ -32,6 +31,7 @@ from .cache import (
     write_lance_video_frames_cache,
     write_sharded_arrow_cache,
 )
+from .dataset import StableDataset, StableDatasetDict
 from .schema import BuilderConfig, DatasetSource, DownloadInfo, Image, Version, Video
 from .splits import Split, SplitGenerator
 
@@ -347,6 +347,7 @@ class BaseDatasetBuilder:
         download_dir=None,
         storage_format=None,
         backend_kwargs=None,
+        decode_video=None,
         **kwargs,
     ):
         """
@@ -370,6 +371,9 @@ class BaseDatasetBuilder:
                 Note this is distinct from :meth:`StableDataset.with_format`,
                 which controls the output type (torch / numpy / raw) of
                 decoded rows.
+            decode_video: Optional read-time video decode config or mapping.
+                This is applied after cache open/build and is not part of the
+                cache fingerprint.
             **kwargs: Additional arguments passed to the dataset builder (e.g. config_name).
 
         Returns:
@@ -512,6 +516,9 @@ class BaseDatasetBuilder:
             result = splits_data[split]
         else:
             result = StableDatasetDict(splits_data)
+
+        if decode_video is not None:
+            result = result.set_video_decode(decode_video)
 
         # Expose cache locations on the returned dataset object for convenience.
         try:

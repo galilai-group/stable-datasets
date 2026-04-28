@@ -1,5 +1,18 @@
-"""Feature codec modules.
+"""Feature codec modules."""
 
-Feature classes currently live in :mod:`stable_datasets.schema`; this package
-is the home for future split-out modality implementations.
-"""
+from .array import Array3D
+from .base import ClassLabel, FeatureType, Sequence, Value
+from .image import Image
+from .video import Video, VideoRef
+
+
+__all__ = [
+    "Array3D",
+    "ClassLabel",
+    "FeatureType",
+    "Image",
+    "Sequence",
+    "Value",
+    "Video",
+    "VideoRef",
+]

@@ -14,6 +14,14 @@ from datetime import timedelta
 import hydra
 import lightning as pl
 import stable_pretraining as spt
+
+# Disable spt's run registry. Lightning's ModelCheckpoint (configured via
+# cfg.checkpoint.dir) is the single source of truth for checkpoints; spt's
+# parallel runs/<date>/<time>/<id>/ tree is redundant and bloats home quota.
+# `spt.set(cache_dir=None)` is a no-op (treats None as "unchanged"), so set the
+# config attribute directly. Manager._resolve_run_dir() then returns None and
+# falls back to Trainer.default_root_dir; rank-0-gated spt loggers write nothing.
+spt.get_config().cache_dir = None
 import torch
 from hydra.core.hydra_config import HydraConfig
 from lightning.pytorch.callbacks import ModelCheckpoint
@@ -185,8 +193,9 @@ def main(cfg: DictConfig) -> None:
     # Callbacks
     callbacks = create_eval_callbacks(module, ds_config, embed_dim)
     ckpt_cfg = cfg.checkpoint
+    run_ckpt_dir = os.path.join(ckpt_cfg.dir, f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}")
     ckpt_kwargs = dict(
-        dirpath=os.path.join(ckpt_cfg.dir, f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}"),
+        dirpath=run_ckpt_dir,
         filename="{epoch}-{step}",
         every_n_epochs=ckpt_cfg.every_n_epochs,
         save_last=ckpt_cfg.save_last,
@@ -196,6 +205,13 @@ def main(cfg: DictConfig) -> None:
         save_weights_only=True,
     )
     callbacks.append(ModelCheckpoint(**ckpt_kwargs))
+
+    # Auto-resume: if a previous SLURM walltime-out / requeue / manual resubmit
+    # left a last.ckpt at the same (model, backbone, dataset) path, hand it to
+    # spt.Manager so trainer.fit() picks up where it stopped.
+    resume_ckpt = os.path.join(run_ckpt_dir, "last.ckpt")
+    if not os.path.isfile(resume_ckpt):
+        resume_ckpt = None
 
     # Logger
     smoke_test = cfg.get("smoke_test", False)
@@ -221,7 +237,9 @@ def main(cfg: DictConfig) -> None:
     )
 
     try:
-        manager = spt.Manager(trainer=trainer, module=module, data=data)
+        if resume_ckpt is not None:
+            log.info(f"Resuming from checkpoint: {resume_ckpt}")
+        manager = spt.Manager(trainer=trainer, module=module, data=data, ckpt_path=resume_ckpt)
         manager()
     finally:
         if cfg.wandb.enabled and not smoke_test:
