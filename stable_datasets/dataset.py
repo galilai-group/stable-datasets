@@ -20,7 +20,8 @@ protocol, never on a concrete implementation or on-disk layout.
 from __future__ import annotations
 
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -38,6 +39,8 @@ from .schema import (
     Image,
     Sequence,
     Video,
+    VideoDecodeConfig,
+    VideoRef,
 )
 
 
@@ -71,6 +74,7 @@ class StableDataset:
         # Format control
         _format_type: str | None = None,
         _decode_images: bool = True,
+        _video_decode_config: VideoDecodeConfig | None = None,
         _transform: Callable | None = None,
         _cache_dir: Path | None = None,
     ):
@@ -98,6 +102,7 @@ class StableDataset:
         # Format and transform
         self._format_type = _format_type
         self._decode_images = _decode_images
+        self._video_decode_config = _video_decode_config
         self._transform = _transform
         self._cache_dir = Path(_cache_dir) if _cache_dir is not None else self._infer_cache_dir()
         self._formatter = get_formatter(
@@ -129,6 +134,7 @@ class StableDataset:
             "_indices": self._indices,
             "_format_type": self._format_type,
             "_decode_images": self._decode_images,
+            "_video_decode_config": self._video_decode_config,
             "_transform": self._transform,
             "_cache_dir": self._cache_dir,
         }
@@ -142,6 +148,7 @@ class StableDataset:
             _indices=state.get("_indices"),
             _format_type=state.get("_format_type"),
             _decode_images=state.get("_decode_images", True),
+            _video_decode_config=state.get("_video_decode_config"),
             _transform=state.get("_transform"),
             _cache_dir=state.get("_cache_dir"),
         )
@@ -191,6 +198,7 @@ class StableDataset:
             physical = int(self._indices[idx]) if self._indices is not None else idx
             row = self._backend.get_row(physical)
             row = self._formatter.format_row(row)
+            row = self._apply_video_decode_row(row, sample_index=idx)
             if self._transform is not None:
                 row = self._transform(row)
             return row
@@ -217,14 +225,28 @@ class StableDataset:
         """
         prefer_batched = getattr(self._backend, "prefer_batched_take", False)
         if self._has_binary_cols and not prefer_batched:
-            return [self[i] for i in indices]
+            rows = []
+            sample_indices = []
+            for idx in indices:
+                normalized = self._normalize_index(int(idx))
+                physical = int(self._indices[normalized]) if self._indices is not None else normalized
+                rows.append(self._formatter.format_row(self._backend.get_row(physical)))
+                sample_indices.append(normalized)
+            rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
+            if self._transform is not None:
+                rows = [self._transform(row) for row in rows]
+            return rows
 
         idx_array = np.asarray(indices, dtype=np.int64)
+        sample_indices = [self._normalize_index(int(idx)) for idx in idx_array.tolist()]
         if self._indices is not None:
-            idx_array = self._indices[idx_array]
+            idx_array = self._indices[np.asarray(sample_indices, dtype=np.int64)]
+        else:
+            idx_array = np.asarray(sample_indices, dtype=np.int64)
 
         batch_table = self._backend.take(idx_array)
         rows = self._formatter.format_batch(batch_table)
+        rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
 
         if self._transform is not None:
             rows = [self._transform(row) for row in rows]
@@ -251,9 +273,13 @@ class StableDataset:
 
     def _iter_batches_formatted(self, batch_iter):
         """Format Arrow batches in bulk and yield individual rows."""
+        sample_offset = 0
         for batch in batch_iter:
             # Use batch formatting: one to_pydict() + column-wise decode
             rows = self._formatter.format_batch(batch)
+            sample_indices = list(range(sample_offset, sample_offset + len(rows)))
+            rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
+            sample_offset += len(rows)
             if self._transform is not None:
                 for row in rows:
                     yield self._transform(row)
@@ -453,6 +479,7 @@ class StableDataset:
             num_rows=meta.num_rows,
             _format_type=self._format_type,
             _decode_images=self._decode_images,
+            _video_decode_config=self._video_decode_config,
             _transform=self._transform,
             _cache_dir=self._cache_dir,
         )
@@ -522,6 +549,34 @@ class StableDataset:
     def set_decode(self, decode: bool) -> StableDataset:
         """Control whether Image columns are decoded or left as raw bytes."""
         return self._shallow_copy(_decode_images=decode)
+
+    def set_video_decode(
+        self,
+        config: VideoDecodeConfig | Mapping | None = None,
+        **kwargs,
+    ) -> StableDataset:
+        """Return a view that decodes a video column at read time.
+
+        Passing ``None`` with no keyword arguments disables video decoding on
+        the returned view.
+        """
+        if config is None and not kwargs:
+            return self._shallow_copy(_video_decode_config=None)
+        if config is None:
+            next_config = VideoDecodeConfig(**kwargs)
+        elif isinstance(config, VideoDecodeConfig):
+            next_config = replace(config, **kwargs) if kwargs else config
+        elif isinstance(config, Mapping):
+            data = dict(config)
+            data.update(kwargs)
+            next_config = VideoDecodeConfig(**data)
+        else:
+            raise TypeError(
+                "set_video_decode expects a VideoDecodeConfig, mapping, None, "
+                f"or keyword arguments, got {type(config).__name__}."
+            )
+        self._validate_video_decode_config(next_config)
+        return self._shallow_copy(_video_decode_config=next_config)
 
     def make_sampler(self, kind: str = "shard_shuffle", **kwargs):
         """Return a backend-aware ``torch.utils.data.Sampler`` for this dataset.
@@ -637,6 +692,7 @@ class StableDataset:
             num_rows=materialized.num_rows,
             _format_type=self._format_type,
             _decode_images=self._decode_images,
+            _video_decode_config=self._video_decode_config,
             _transform=self._transform,
             _cache_dir=self._cache_dir,
         )
@@ -652,6 +708,7 @@ class StableDataset:
             _indices=np.asarray(indices, dtype=np.int64),
             _format_type=self._format_type,
             _decode_images=self._decode_images,
+            _video_decode_config=self._video_decode_config,
             _transform=self._transform,
             _cache_dir=self._cache_dir,
         )
@@ -677,6 +734,7 @@ class StableDataset:
             "_indices": self._indices,
             "_format_type": self._format_type,
             "_decode_images": self._decode_images,
+            "_video_decode_config": self._video_decode_config,
             "_transform": self._transform,
             "_cache_dir": self._cache_dir,
         }
@@ -691,8 +749,93 @@ class StableDataset:
             backend=ArrowBackend(table=table, schema=(features or self._features).to_arrow_schema()),
             _format_type=self._format_type,
             _decode_images=self._decode_images,
+            _video_decode_config=self._video_decode_config,
             _transform=self._transform,
             _cache_dir=self._cache_dir,
+        )
+
+    def _normalize_index(self, idx: int) -> int:
+        n = len(self)
+        if idx < 0:
+            idx += n
+        if idx < 0 or idx >= n:
+            raise IndexError(f"Index {idx} out of range for dataset of length {n}")
+        return idx
+
+    def _validate_video_decode_config(self, config: VideoDecodeConfig) -> None:
+        feat = self._features.get(config.column)
+        if not isinstance(feat, Video):
+            raise ValueError(
+                f"Video decode column {config.column!r} must exist and be a Video feature."
+            )
+
+    def _apply_video_decode_row(self, row: dict, *, sample_index: int | None) -> dict:
+        config = self._video_decode_config
+        if config is None:
+            return row
+        decoded = self._decode_video_value(row, config, sample_index=sample_index)
+        out = dict(row)
+        out[config.column] = decoded
+        return out
+
+    def _apply_video_decode_batch(
+        self,
+        rows: list[dict],
+        *,
+        sample_indices: list[int] | None,
+    ) -> list[dict]:
+        config = self._video_decode_config
+        if config is None or not rows:
+            return rows
+        if config.decode_fn_batched is not None:
+            refs = [self._coerce_video_ref(row[config.column], config) for row in rows]
+            decoded = config.decode_fn_batched(
+                refs,
+                config,
+                rows=rows,
+                sample_indices=sample_indices,
+            )
+            if len(decoded) != len(rows):
+                raise ValueError(
+                    "decode_fn_batched must return one decoded value per input row."
+                )
+            out_rows = [dict(row) for row in rows]
+            for row, value in zip(out_rows, decoded):
+                row[config.column] = value
+            return out_rows
+        return [
+            self._apply_video_decode_row(
+                row,
+                sample_index=None if sample_indices is None else sample_indices[i],
+            )
+            for i, row in enumerate(rows)
+        ]
+
+    def _decode_video_value(
+        self,
+        row: Mapping,
+        config: VideoDecodeConfig,
+        *,
+        sample_index: int | None,
+    ):
+        ref = self._coerce_video_ref(row[config.column], config)
+        if config.decode_fn is not None:
+            return config.decode_fn(
+                ref,
+                config,
+                row=row,
+                sample_index=sample_index,
+            )
+        return _decode_video_builtin(ref, config, sample_index=sample_index)
+
+    def _coerce_video_ref(self, value, config: VideoDecodeConfig) -> VideoRef:
+        if isinstance(value, VideoRef):
+            return value
+        if isinstance(value, Mapping):
+            return VideoRef(value, cache_dir=self._cache_dir)
+        raise TypeError(
+            f"Video decode column {config.column!r} produced {type(value).__name__}; "
+            "expected VideoRef or raw video struct."
         )
 
     def _infer_cache_dir(self) -> Path | None:
@@ -700,6 +843,285 @@ class StableDataset:
         if cache_dir is not None:
             return Path(cache_dir)
         return None
+
+
+def _decode_video_builtin(
+    ref: VideoRef,
+    config: VideoDecodeConfig,
+    *,
+    sample_index: int | None,
+):
+    if config.decoder == "cv2":
+        frames = _decode_video_cv2(ref, config, sample_index=sample_index)
+    elif config.decoder == "decord":
+        frames = _decode_video_decord(ref, config, sample_index=sample_index)
+    elif config.decoder == "torchcodec":
+        frames = _decode_video_torchcodec(ref, config, sample_index=sample_index)
+    else:  # pragma: no cover - VideoDecodeConfig validates this.
+        raise ValueError(f"Unknown video decoder {config.decoder!r}.")
+    return _format_decoded_video_frames(frames, config, sample_index=sample_index)
+
+
+def _decode_video_cv2(
+    ref: VideoRef,
+    config: VideoDecodeConfig,
+    *,
+    sample_index: int | None,
+) -> np.ndarray:
+    try:
+        import cv2
+    except ImportError as exc:
+        raise ImportError("VideoDecodeConfig(decoder='cv2') requires opencv-python.") from exc
+
+    path = ref.path
+    if path is None:
+        raise ValueError("cv2 video decoding requires a filesystem path.")
+    cap = cv2.VideoCapture(str(path))
+    try:
+        if not cap.isOpened():
+            raise ValueError(f"Could not open video for decoding: {path}")
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        if total_frames <= 0:
+            frames = []
+            while True:
+                ok, bgr = cap.read()
+                if not ok:
+                    break
+                frames.append(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+            if not frames:
+                raise ValueError(f"Could not decode any frames from {path}")
+            indices = _sample_video_indices(len(frames), config, sample_index=sample_index)
+            return np.stack([frames[int(i)] for i in indices], axis=0)
+
+        indices = _sample_video_indices(total_frames, config, sample_index=sample_index)
+        decoded = []
+        for idx in indices:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, int(idx))
+            ok, bgr = cap.read()
+            if not ok:
+                raise ValueError(f"Could not decode frame {int(idx)} from {path}")
+            decoded.append(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+        return np.stack(decoded, axis=0)
+    finally:
+        cap.release()
+
+
+def _decode_video_decord(
+    ref: VideoRef,
+    config: VideoDecodeConfig,
+    *,
+    sample_index: int | None,
+) -> np.ndarray:
+    try:
+        from decord import VideoReader, cpu
+    except ImportError as exc:
+        raise ImportError("VideoDecodeConfig(decoder='decord') requires decord.") from exc
+    path = ref.path
+    if path is None:
+        raise ValueError("decord video decoding requires a filesystem path.")
+    reader = VideoReader(str(path), ctx=cpu(0))
+    indices = _sample_video_indices(len(reader), config, sample_index=sample_index)
+    return reader.get_batch(indices.astype(np.int64).tolist()).asnumpy()
+
+
+def _decode_video_torchcodec(
+    ref: VideoRef,
+    config: VideoDecodeConfig,
+    *,
+    sample_index: int | None,
+) -> np.ndarray:
+    try:
+        import cv2
+        import torch
+        from torchcodec.decoders import VideoDecoder
+    except ImportError as exc:
+        raise ImportError(
+            "VideoDecodeConfig(decoder='torchcodec') requires torchcodec, torch, and opencv-python."
+        ) from exc
+
+    path = ref.path
+    if path is None:
+        raise ValueError("torchcodec video decoding requires a filesystem path.")
+
+    cap = cv2.VideoCapture(str(path))
+    try:
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        fps = float(cap.get(cv2.CAP_PROP_FPS) or 0.0)
+    finally:
+        cap.release()
+    if total_frames <= 0 or fps <= 0:
+        raise ValueError(f"Could not determine frame count/fps for {path}")
+
+    decoder = VideoDecoder(str(path))
+    indices = _sample_video_indices(total_frames, config, sample_index=sample_index)
+    frames = []
+    for idx in indices:
+        frame = decoder.get_frame_at(float(idx) / fps)
+        data = getattr(frame, "data", frame)
+        if isinstance(data, torch.Tensor):
+            arr = data.detach().cpu().numpy()
+        else:
+            arr = np.asarray(data)
+        if arr.ndim == 3 and arr.shape[0] in (1, 3, 4):
+            arr = np.transpose(arr, (1, 2, 0))
+        if arr.dtype.kind == "f" and arr.max(initial=0) <= 1.0:
+            arr = np.clip(arr * 255.0, 0, 255).astype(np.uint8)
+        else:
+            arr = arr.astype(np.uint8, copy=False)
+        frames.append(arr[..., :3])
+    return np.stack(frames, axis=0)
+
+
+def _sample_video_indices(
+    total_frames: int,
+    config: VideoDecodeConfig,
+    *,
+    sample_index: int | None,
+) -> np.ndarray:
+    total_frames = int(total_frames)
+    if total_frames <= 0:
+        raise ValueError("Cannot sample frames from an empty video.")
+    num_frames = int(config.num_frames)
+    stride = int(config.frame_stride)
+
+    if config.sampling == "uniform":
+        if total_frames >= num_frames:
+            return np.rint(np.linspace(0, total_frames - 1, num_frames)).astype(np.int64)
+        return _pad_video_indices(np.arange(total_frames, dtype=np.int64), config)
+
+    span = (num_frames - 1) * stride + 1
+    if total_frames >= span:
+        if config.sampling == "start":
+            start = 0
+        elif config.sampling == "center":
+            start = (total_frames - span) // 2
+        elif config.sampling == "random":
+            if config.seed is None:
+                rng = np.random.default_rng()
+            else:
+                idx_seed = 0 if sample_index is None else int(sample_index)
+                rng = np.random.default_rng(int(config.seed) + idx_seed)
+            start = int(rng.integers(0, total_frames - span + 1))
+        else:  # pragma: no cover - VideoDecodeConfig validates this.
+            raise ValueError(f"Unknown sampling strategy {config.sampling!r}.")
+        return start + np.arange(num_frames, dtype=np.int64) * stride
+
+    base = np.arange(0, total_frames, stride, dtype=np.int64)
+    if base.size == 0:
+        base = np.array([0], dtype=np.int64)
+    return _pad_video_indices(base[:num_frames], config)
+
+
+def _pad_video_indices(indices: np.ndarray, config: VideoDecodeConfig) -> np.ndarray:
+    num_frames = int(config.num_frames)
+    if indices.size >= num_frames:
+        return indices[:num_frames].astype(np.int64)
+    if config.pad == "error":
+        raise ValueError(
+            f"Video has only {indices.size} sampled frames, but num_frames={num_frames}."
+        )
+    if config.pad == "repeat_last":
+        pad = np.full(num_frames - indices.size, int(indices[-1]), dtype=np.int64)
+        return np.concatenate([indices.astype(np.int64), pad])
+    if config.pad == "loop":
+        return np.resize(indices.astype(np.int64), num_frames)
+    raise ValueError(f"Unknown pad strategy {config.pad!r}.")
+
+
+def _format_decoded_video_frames(
+    frames: np.ndarray,
+    config: VideoDecodeConfig,
+    *,
+    sample_index: int | None,
+):
+    frames = np.asarray(frames)
+    if frames.ndim != 4:
+        raise ValueError(f"Decoded video must have shape (T, H, W, C), got {frames.shape}.")
+    if frames.shape[-1] > 3:
+        frames = frames[..., :3]
+    frames = _resize_video_frames(frames, config)
+    frames = _crop_video_frames(frames, config, sample_index=sample_index)
+
+    if config.dtype == "float32":
+        frames = frames.astype(np.float32, copy=False)
+        if config.scale == "zero_one":
+            frames = frames / 255.0
+    elif config.dtype == "uint8":
+        frames = frames.astype(np.uint8, copy=False)
+    else:  # pragma: no cover - VideoDecodeConfig validates this.
+        raise ValueError(f"Unknown decoded dtype {config.dtype!r}.")
+
+    frames = _layout_video_frames(frames, config.layout)
+    if config.output == "numpy":
+        return np.ascontiguousarray(frames)
+    if config.output == "torch":
+        import torch
+
+        return torch.from_numpy(np.ascontiguousarray(frames))
+    raise ValueError(f"Unknown decoded output {config.output!r}.")
+
+
+def _resize_video_frames(frames: np.ndarray, config: VideoDecodeConfig) -> np.ndarray:
+    if config.resize is None:
+        return frames
+    try:
+        import cv2
+    except ImportError as exc:
+        raise ImportError("VideoDecodeConfig(resize=...) requires opencv-python.") from exc
+    if isinstance(config.resize, int):
+        height = width = int(config.resize)
+    else:
+        height, width = config.resize
+    resized = [
+        cv2.resize(frame, (int(width), int(height)), interpolation=cv2.INTER_AREA)
+        for frame in frames
+    ]
+    return np.stack(resized, axis=0)
+
+
+def _crop_video_frames(
+    frames: np.ndarray,
+    config: VideoDecodeConfig,
+    *,
+    sample_index: int | None,
+) -> np.ndarray:
+    if config.crop == "none":
+        return frames
+    if config.resize is None:
+        raise ValueError("VideoDecodeConfig(crop=...) requires resize to define the crop size.")
+    if isinstance(config.resize, int):
+        crop_h = crop_w = int(config.resize)
+    else:
+        crop_h, crop_w = config.resize
+    _, height, width, _ = frames.shape
+    if crop_h > height or crop_w > width:
+        raise ValueError(
+            f"Crop size {(crop_h, crop_w)} exceeds frame size {(height, width)}."
+        )
+    if config.crop == "center":
+        top = (height - crop_h) // 2
+        left = (width - crop_w) // 2
+    elif config.crop == "random":
+        if config.seed is None:
+            rng = np.random.default_rng()
+        else:
+            idx_seed = 0 if sample_index is None else int(sample_index)
+            rng = np.random.default_rng(int(config.seed) + idx_seed)
+        top = int(rng.integers(0, height - crop_h + 1))
+        left = int(rng.integers(0, width - crop_w + 1))
+    else:  # pragma: no cover - VideoDecodeConfig validates this.
+        raise ValueError(f"Unknown crop mode {config.crop!r}.")
+    return frames[:, top : top + crop_h, left : left + crop_w, :]
+
+
+def _layout_video_frames(frames: np.ndarray, layout: str) -> np.ndarray:
+    if layout == "THWC":
+        return frames
+    if layout == "TCHW":
+        return np.transpose(frames, (0, 3, 1, 2))
+    if layout == "CTHW":
+        return np.transpose(frames, (3, 0, 1, 2))
+    raise ValueError(f"Unknown decoded video layout {layout!r}.")
 
 
 def _infer_feature(arrow_type: pa.DataType):
@@ -759,4 +1181,15 @@ def _infer_feature(arrow_type: pa.DataType):
 class StableDatasetDict(dict):
     """Dict of ``split_name -> StableDataset``."""
 
-    pass
+    def set_video_decode(
+        self,
+        config: VideoDecodeConfig | Mapping | None = None,
+        **kwargs,
+    ) -> StableDatasetDict:
+        """Return a split dict where each split applies the same video decode view."""
+        return StableDatasetDict(
+            {
+                split: dataset.set_video_decode(config, **kwargs)
+                for split, dataset in self.items()
+            }
+        )

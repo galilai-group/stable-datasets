@@ -221,7 +221,15 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     ),
     "fashionmnist": _gray("fashionmnist", "FashionMNIST", 10, mean=[0.2860], std=[0.3530]),
     "kmnist": _gray("kmnist", "KMNIST", 10, mean=[0.1918], std=[0.3483]),
-    "medmnist": _gray("medmnist", "MedMNIST", 2, mean=[0.4823], std=[0.2363]),
+    "pneumoniamnist": _gray(
+        "pneumoniamnist",
+        "PneumoniaMNIST",
+        2,
+        mean=[0.4823],
+        std=[0.2363],
+        builder_name="MedMNIST",
+        builder_kwargs={"config_name": "pneumoniamnist"},
+    ),
     "pathmnist": _rgb(
         "pathmnist",
         "PathMNIST",
@@ -330,7 +338,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
 }
 
 DATASET_CONFIGS["emnist"].builder_kwargs = {"config_name": "balanced"}
-DATASET_CONFIGS["medmnist"].builder_kwargs = {"config_name": "pneumoniamnist"}
 
 IMAGE_DATASET_CONFIGS: dict[str, DatasetConfig] = {
     name: cfg for name, cfg in DATASET_CONFIGS.items() if cfg.modality == "image"

@@ -21,20 +21,7 @@ import pyarrow.ipc as ipc
 from filelock import FileLock
 from loguru import logger as logging
 
-from .schema import Array3D, FeatureType, Features, Image, Video
-
-
-# Encoding helpers
-
-
-def _encode_image(img, encode_format: str = "PNG") -> bytes | None:
-    """Compatibility wrapper for image encoding tests and callers."""
-    return Image(encode_format=encode_format).encode(img)
-
-
-def _encode_array3d(arr, feat: Array3D) -> bytes | None:
-    """Encode a numpy array to flat bytes for Arrow storage."""
-    return feat.encode(arr)
+from .schema import Features, FeatureType, Video
 
 
 def encode_example(example: dict, features: Features, *, cache_dir: Path | None = None) -> dict:
@@ -66,15 +53,11 @@ def cache_fingerprint(
 ) -> str:
     """Deterministic cache directory name for a dataset variant + split.
 
-    ``storage_format`` is included in the hash for non-Arrow formats so
-    Arrow and Lance caches for the same dataset coexist at different
-    paths rather than colliding. For ``storage_format="arrow"`` (the
-    default) we preserve the pre-Lance hash format so existing on-disk
-    Arrow caches are not retroactively invalidated.
+    ``storage_format`` is always included in the hash so Arrow and Lance
+    caches for the same dataset coexist at different paths rather than
+    colliding.
     """
-    key = f"{cls_name}:{version}:{config_name}:{split}"
-    if storage_format != "arrow":
-        key = f"{key}:{storage_format}"
+    key = f"{cls_name}:{version}:{config_name}:{split}:{storage_format}"
     digest = hashlib.sha256(key.encode()).hexdigest()[:16]
     return f"{cls_name.lower()}_{config_name}_{split}_{digest}"
 
@@ -270,6 +253,7 @@ def write_sharded_arrow_cache(
             # Write metadata
             meta = {
                 "cache_format_version": _CACHE_FORMAT_VERSION,
+                "format": "arrow",
                 "layout": "arrow-shards",
                 "schema_fingerprint": _features_fingerprint(features),
                 "num_rows": total_count,
@@ -669,27 +653,31 @@ class LanceCacheMeta:
 
 
 def detect_cache_format(cache_dir: Path) -> str:
-    """Return ``"arrow"`` or ``"lance"`` based on the cache's metadata.
-
-    Caches written before Phase C do not carry a ``"format"`` field in
-    their ``_metadata.json``; those default to ``"arrow"``.
-    """
+    """Return ``"arrow"`` or ``"lance"`` based on the cache's metadata."""
     meta_path = Path(cache_dir) / _METADATA_FILE
     if not meta_path.exists():
         raise FileNotFoundError(f"No metadata file at {meta_path}")
     raw = json.loads(meta_path.read_text())
-    return raw.get("format", "arrow")
+    if "format" not in raw:
+        raise ValueError(
+            f"Cache metadata at {meta_path} is missing required 'format'. "
+            "Rebuild the cache with the current stable-datasets version."
+        )
+    return raw["format"]
 
 
 def detect_cache_layout(cache_dir: Path) -> str:
-    """Return the physical cache layout, defaulting old caches safely."""
+    """Return the physical cache layout recorded in cache metadata."""
     meta_path = Path(cache_dir) / _METADATA_FILE
     if not meta_path.exists():
         raise FileNotFoundError(f"No metadata file at {meta_path}")
     raw = json.loads(meta_path.read_text())
-    if raw.get("layout"):
-        return raw["layout"]
-    return "lance-rows" if raw.get("format") == "lance" else "arrow-shards"
+    if "layout" not in raw:
+        raise ValueError(
+            f"Cache metadata at {meta_path} is missing required 'layout'. "
+            "Rebuild the cache with the current stable-datasets version."
+        )
+    return raw["layout"]
 
 
 class CacheOpenResult:
@@ -818,6 +806,11 @@ def read_sharded_cache_meta(cache_dir: Path) -> ShardedCacheMeta:
         raise FileNotFoundError(f"No metadata file at {meta_path}")
 
     raw = json.loads(meta_path.read_text())
+
+    if raw.get("format") != "arrow":
+        raise ValueError(f"Not an Arrow sharded cache: {cache_dir} (format={raw.get('format')!r})")
+    if raw.get("layout") != "arrow-shards":
+        raise ValueError(f"Not an Arrow sharded cache: {cache_dir} (layout={raw.get('layout')!r})")
 
     # Version check
     fmt_version = raw.get("cache_format_version")

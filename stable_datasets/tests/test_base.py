@@ -7,7 +7,17 @@ import pytest
 
 from stable_datasets import utils
 from stable_datasets.dataset import StableDataset, StableDatasetDict
-from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Value, Version, collect_dataset_citations
+from stable_datasets.schema import (
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Value,
+    Version,
+    Video,
+    VideoDecodeConfig,
+    collect_dataset_citations,
+)
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -57,6 +67,30 @@ class _TinyDynamicSourceBuilder(BaseDatasetBuilder):
     def _generate_examples(self, n):
         for i in range(n):
             yield i, {"x": i}
+
+
+class _TinyVideoBuilder(BaseDatasetBuilder):
+    VERSION = Version("0.0.0")
+    SOURCE = {"homepage": "https://example.com", "citation": "TBD", "assets": {}}
+
+    def __init__(self, video_path, config_name: str | None = None, **kwargs):
+        self.video_path = Path(video_path)
+        super().__init__(config_name=config_name, **kwargs)
+
+    def _info(self):
+        return DatasetInfo(features=Features({"video": Video(storage="path"), "x": Value("int32")}))
+
+    def _candidate_splits(self):
+        return [Split.TRAIN, Split.TEST]
+
+    def _split_generators(self):
+        return [
+            SplitGenerator(name=Split.TRAIN, gen_kwargs={"x": 1}),
+            SplitGenerator(name=Split.TEST, gen_kwargs={"x": 2}),
+        ]
+
+    def _generate_examples(self, x):
+        yield x, {"video": self.video_path, "x": x}
 
 
 class _TinyBaseSplitBuilder(BaseDatasetBuilder):
@@ -140,6 +174,56 @@ def test_base_builder_allows_runtime_source_override(tmp_path):
     ds = _TinyDynamicSourceBuilder(split="train", processed_cache_dir=str(tmp_path))
     assert isinstance(ds, StableDataset)
     assert len(ds) == 1
+
+
+def test_base_builder_decode_video_constructor_sugar(tmp_path):
+    video_path = tmp_path / "clip.mp4"
+    video_path.write_bytes(b"builder video")
+
+    def decode_fn(ref, config, *, row=None, sample_index=None):
+        return f"{row['x']}:{ref.bytes.decode()}"
+
+    config = VideoDecodeConfig(num_frames=1, decode_fn=decode_fn)
+    via_constructor = _TinyVideoBuilder(
+        video_path,
+        split="train",
+        processed_cache_dir=tmp_path / "processed_a",
+        decode_video=config,
+    )
+    via_method = _TinyVideoBuilder(
+        video_path,
+        split="train",
+        processed_cache_dir=tmp_path / "processed_b",
+    ).set_video_decode(config)
+
+    assert via_constructor[0]["video"] == via_method[0]["video"] == "1:builder video"
+
+
+def test_base_builder_decode_video_applies_to_datasetdict(tmp_path):
+    video_path = tmp_path / "clip.mp4"
+    video_path.write_bytes(b"builder video")
+
+    def decode_fn(ref, config, *, row=None, sample_index=None):
+        return f"split-value:{row['x']}"
+
+    datasets = _TinyVideoBuilder(
+        video_path,
+        split=None,
+        processed_cache_dir=tmp_path / "processed",
+        decode_video=VideoDecodeConfig(num_frames=1, decode_fn=decode_fn),
+    )
+
+    assert datasets["train"][0]["video"] == "split-value:1"
+    assert datasets["test"][0]["video"] == "split-value:2"
+
+
+def test_base_builder_decode_video_rejects_non_video_dataset(tmp_path):
+    with pytest.raises(ValueError, match="must exist and be a Video feature"):
+        _TinyLocalBuilder(
+            split="train",
+            processed_cache_dir=tmp_path,
+            decode_video=VideoDecodeConfig(num_frames=1),
+        )
 
 
 def test_base_builder_processed_cache_dir_is_used(tmp_path):

@@ -74,6 +74,14 @@ def forward(self, batch, stage):
     Fix: accumulate center contributions across micro-batches, apply ONE EMA
     update per effective batch.
     """
+    def _cls(features):
+        """Extract CLS embedding from HF output / 3D tensor / 2D tensor."""
+        if hasattr(features, "last_hidden_state"):
+            return features.last_hidden_state[:, 0]
+        if features.ndim == 3:
+            return features[:, 0]
+        return features
+
     out = {}
 
     global_views, local_views, all_views = _get_views_by_prefix(batch, global_prefix="global", local_prefix="local")
@@ -87,7 +95,7 @@ def forward(self, batch, stage):
             out["label"] = batch["label"]
         with torch.no_grad():
             teacher_features = self.backbone.forward_teacher(images)
-        out["embedding"] = teacher_features.last_hidden_state[:, 0].detach()
+        out["embedding"] = _cls(teacher_features).detach()
         return out
 
     batch_size = all_views[0]["image"].shape[0]
@@ -102,7 +110,7 @@ def forward(self, batch, stage):
         all_images = torch.cat([view["image"] for view in all_views], dim=0)
         with torch.no_grad():
             teacher_features = self.backbone.forward_teacher(all_images)
-        out["embedding"] = teacher_features.last_hidden_state[:, 0].detach()
+        out["embedding"] = _cls(teacher_features).detach()
         return out
 
     # --- Training ---
@@ -110,31 +118,25 @@ def forward(self, batch, stage):
 
     with torch.no_grad():
         teacher_features = self.backbone.forward_teacher(global_images)
-        if hasattr(teacher_features, "last_hidden_state"):
-            teacher_cls_features = teacher_features.last_hidden_state[:, 0, :]
-        else:
-            teacher_cls_features = teacher_features[:, 0, :] if teacher_features.ndim == 3 else teacher_features
+        teacher_cls_features = _cls(teacher_features)
         teacher_logits = self.projector.forward_teacher(teacher_cls_features)
         teacher_logits = teacher_logits.view(n_global, batch_size, -1)
 
     # Student: all views
     student_logits_list = []
     student_features = self.backbone.forward_student(global_images)
-    if hasattr(student_features, "last_hidden_state"):
-        student_cls_features = student_features.last_hidden_state[:, 0, :]
-    else:
-        student_cls_features = student_features[:, 0, :] if student_features.ndim == 3 else student_features
+    student_cls_features = _cls(student_features)
     student_global_logits = self.projector.forward_student(student_cls_features)
     student_global_logits = student_global_logits.view(n_global, batch_size, -1)
     student_logits_list.append(student_global_logits)
 
     if n_local > 0:
         local_images = torch.cat([view["image"] for view in local_views], dim=0)
-        student_features = self.backbone.forward_student(local_images, interpolate_pos_encoding=True)
-        if hasattr(student_features, "last_hidden_state"):
-            student_local_cls = student_features.last_hidden_state[:, 0, :]
-        else:
-            student_local_cls = student_features[:, 0, :] if student_features.ndim == 3 else student_features
+        # Pos-embed interpolation for off-grid local-crop sizes is handled
+        # automatically by timm's ViT when ``dynamic_img_size=True`` is set on
+        # the backbone (see ``benchmarks/models/vit.py``); no explicit kwarg.
+        student_features = self.backbone.forward_student(local_images)
+        student_local_cls = _cls(student_features)
         student_local_logits = self.projector.forward_student(student_local_cls)
         student_local_logits = student_local_logits.view(n_local, batch_size, -1)
         student_logits_list.append(student_local_logits)
