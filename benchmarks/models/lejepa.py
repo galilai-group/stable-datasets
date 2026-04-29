@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import stable_pretraining as spt
-import torch
 from stable_pretraining.data import transforms
 from stable_pretraining.methods.lejepa import LeJEPA, LeJEPAOutput
 
@@ -83,19 +82,11 @@ def forward(self, batch, stage):
 
     images = batch.get("image")
     if stage == "fit":
-        global_views = [
-            batch[key]["image"] for key in batch if key.startswith("global")
-        ]
+        global_views = [batch[key]["image"] for key in batch if key.startswith("global")]
         local_views = [batch[key]["image"] for key in batch if key.startswith("local")]
-        labels = next(
-            batch[key]["label"]
-            for key in batch
-            if key.startswith("global") or key.startswith("local")
-        )
+        labels = next(batch[key]["label"] for key in batch if key.startswith("global") or key.startswith("local"))
 
-        output: LeJEPAOutput = self.model.forward(
-            global_views=global_views, local_views=local_views, images=images
-        )
+        output: LeJEPAOutput = self.model.forward(global_views=global_views, local_views=local_views, images=images)
         out["label"] = labels.repeat(len(global_views))
     else:
         output: LeJEPAOutput = self.model.forward(images=images)
@@ -111,9 +102,7 @@ def forward(self, batch, stage):
         on_epoch=True,
         sync_dist=True,
     )
-    self.log(
-        f"{stage}/inv", output.inv_loss, on_step=True, on_epoch=True, sync_dist=True
-    )
+    self.log(f"{stage}/inv", output.inv_loss, on_step=True, on_epoch=True, sync_dist=True)
     self.log(f"{stage}/loss", output.loss, on_step=True, on_epoch=True, sync_dist=True)
     return out
 

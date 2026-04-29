@@ -267,9 +267,7 @@ def collect_runs(
         f"no_metric={skipped_no_metric}"
     )
     if skipped_excluded:
-        excluded_summary = ", ".join(
-            f"{d}={n}" for d, n in sorted(skipped_excluded.items(), key=lambda x: -x[1])
-        )
+        excluded_summary = ", ".join(f"{d}={n}" for d, n in sorted(skipped_excluded.items(), key=lambda x: -x[1]))
         print(
             f"WARNING: skipped {sum(skipped_excluded.values())} runs whose dataset is "
             f"not in INCLUDED_DATASETS: {excluded_summary}"
@@ -371,9 +369,7 @@ def format_latex(
     lines = [
         f"\\begin{{tabular}}{{l {'c ' * n_cols}}}",
         "\\toprule",
-        "\\textbf{Dataset} & "
-        + " & ".join(_display_name(m) for m in method_cols)
-        + " & \\textbf{Avg.} \\\\",
+        "\\textbf{Dataset} & " + " & ".join(_display_name(m) for m in method_cols) + " & \\textbf{Avg.} \\\\",
     ]
 
     n_total_cols = n_cols + 1  # leading dataset col + method cols + Avg
@@ -383,9 +379,7 @@ def format_latex(
             continue
         lines.append("\\midrule")
         if label:
-            lines.append(
-                f"\\multicolumn{{{n_total_cols}}}{{l}}{{\\textit{{{label}}}}} \\\\"
-            )
+            lines.append(f"\\multicolumn{{{n_total_cols}}}{{l}}{{\\textit{{{label}}}}} \\\\")
             lines.append("\\midrule")
         for ds in section_ds:
             cells = [_display_name(ds)]
@@ -435,9 +429,7 @@ def main():
         return
 
     # Pivot each metric (may yield empty frames for missing metrics).
-    pivots: dict[str, tuple[pd.DataFrame, pd.DataFrame | None]] = {
-        short: pivot_table(df, short) for short in METRICS
-    }
+    pivots: dict[str, tuple[pd.DataFrame, pd.DataFrame | None]] = {short: pivot_table(df, short) for short in METRICS}
 
     summary_cols = ["model", "dataset"] + [m for m in METRICS if m in df.columns]
     print(f"\n=== Results ({len(df)} runs) ===")

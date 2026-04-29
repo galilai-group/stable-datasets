@@ -91,12 +91,15 @@ class BirdVoxDCASE20k(BaseDatasetBuilder):
                     label_value = row.get(fieldnames[2])
                 filename = f"{recording_id}.wav"
                 member = _zip_member_by_stem(archive, recording_id)
-                yield recording_id, {
-                    "series": wav_bytes_to_series(archive.read(member)),
-                    "label": int(label_value),
-                    "recording_id": recording_id,
-                    "filename": filename,
-                }
+                yield (
+                    recording_id,
+                    {
+                        "series": wav_bytes_to_series(archive.read(member)),
+                        "label": int(label_value),
+                        "recording_id": recording_id,
+                        "filename": filename,
+                    },
+                )
 
 
 def _zip_member_by_stem(archive: zipfile.ZipFile, stem: str) -> str:

@@ -107,11 +107,14 @@ class SpeechCommands(BaseDatasetBuilder):
                 extracted = archive.extractfile(member)
                 if extracted is None:
                     continue
-                yield member.name, {
-                    "series": wav_bytes_to_series(extracted.read()),
-                    "label": SPEECH_COMMAND_LABELS.index(label_name),
-                    "label_name": label_name,
-                    "speaker_id": speaker_id,
-                    "utterance_id": utterance_id,
-                    "filename": filename,
-                }
+                yield (
+                    member.name,
+                    {
+                        "series": wav_bytes_to_series(extracted.read()),
+                        "label": SPEECH_COMMAND_LABELS.index(label_name),
+                        "label_name": label_name,
+                        "speaker_id": speaker_id,
+                        "utterance_id": utterance_id,
+                        "filename": filename,
+                    },
+                )

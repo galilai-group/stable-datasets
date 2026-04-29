@@ -214,9 +214,9 @@ def test_set_video_decode_uses_batched_hook_before_transform(tmp_path):
         row["video"] = f"transform:{row['video']}"
         return row
 
-    decoded = ds.set_video_decode(
-        VideoDecodeConfig(num_frames=1, decode_fn_batched=decode_fn_batched)
-    ).with_transform(transform)
+    decoded = ds.set_video_decode(VideoDecodeConfig(num_frames=1, decode_fn_batched=decode_fn_batched)).with_transform(
+        transform
+    )
     rows = decoded.__getitems__([2, 0])
 
     assert [row["video"] for row in rows] == [

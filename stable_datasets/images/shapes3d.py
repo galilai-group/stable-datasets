@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image as PILImage
 
-from stable_datasets.schema import DatasetInfo, Features, Sequence, Value, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Sequence, Value, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -12,13 +12,14 @@ class Shapes3D(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
-        homepage= "https://github.com/google-deepmind/3dshapes-dataset/",
-        assets= {
-            "train": DownloadInfo(url="https://huggingface.co/datasets/randall-lab/shapes3d/resolve/main/shapes3d.npz"),
-
+        homepage="https://github.com/google-deepmind/3dshapes-dataset/",
+        assets={
+            "train": DownloadInfo(
+                url="https://huggingface.co/datasets/randall-lab/shapes3d/resolve/main/shapes3d.npz"
+            ),
         },
         license="apache-2.0",
-        citation= """@InProceedings{pmlr-v80-kim18b,
+        citation="""@InProceedings{pmlr-v80-kim18b,
   title = {Disentangling by Factorising},
   author = {Kim, Hyunjik and Mnih, Andriy},
   booktitle = {Proceedings of the 35th International Conference on Machine Learning},

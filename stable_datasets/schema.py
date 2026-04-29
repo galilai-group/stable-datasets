@@ -5,6 +5,7 @@ Each feature type maps itself to a PyArrow type for Arrow IPC serialization.
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from collections.abc import Iterable, Iterator, Mapping
 from collections.abc import Sequence as ABCSequence
 from dataclasses import dataclass, field
@@ -96,7 +97,7 @@ URL = NewType("URL", str)
 
 @dataclass(frozen=True)
 class DatasetSource(Mapping[str, object]):
-    """Typed provenance + download metadata for one dataset builder."""
+    """Typed source and download metadata for one dataset builder."""
 
     homepage: URL | str
     assets: dict[str, DownloadInfo | str]
@@ -124,8 +125,7 @@ class DatasetSource(Mapping[str, object]):
                 normalized_assets[key] = value
             else:
                 raise TypeError(
-                    f"DatasetSource.assets['{key}'] must be a URL string or DownloadInfo, "
-                    f"got {type(value).__name__}."
+                    f"DatasetSource.assets['{key}'] must be a URL string or DownloadInfo, got {type(value).__name__}."
                 )
 
         normalized_checksums = None
@@ -280,8 +280,8 @@ def _validate_literal(name: str, value: str, allowed: set[str]) -> None:
         raise ValueError(f"{name} must be one of {sorted(allowed)}, got {value!r}.")
 
 
-class Features(dict):
-    """Ordered dict of ``field_name -> FeatureType``.
+class Features(OrderedDict):
+    """Ordered mapping of ``field_name -> FeatureType``.
 
     Generates a PyArrow schema via ``.to_arrow_schema()``.
     """
@@ -296,9 +296,8 @@ class Features(dict):
         return pa.schema(fields)
 
     def fingerprint_data(self) -> str:
-        # Preserve the historical repr-based fingerprint payload so existing
-        # non-video caches are not invalidated by the codec refactor.
-        return repr(self)
+        # Preserve the historical dict-style payload so cache keys stay stable.
+        return repr(dict(self))
 
 
 @dataclass

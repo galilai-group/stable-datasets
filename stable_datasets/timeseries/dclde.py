@@ -1,21 +1,15 @@
-"""DCLDE dataset (stub).
+"""DCLDE dataset builder stub."""
 
-This file was previously a legacy imperative loader at the top-level package. It was
-moved under `stable_datasets.timeseries` to match the repository layout.
-
-TODO: Implement using `BaseDatasetBuilder` and the local download helpers in `stable_datasets.utils`.
-"""
-
-from stable_datasets.schema import DatasetInfo, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import DatasetInfo, DatasetSource, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class DCLDE(BaseDatasetBuilder):
     VERSION = Version("0.0.0")
     SOURCE = DatasetSource(
-        homepage= "TBD",
-        citation= "TBD",
-        assets= {},
+        homepage="TBD",
+        citation="TBD",
+        assets={},
     )
 
     def _info(self) -> DatasetInfo:  # pragma: no cover

@@ -3,7 +3,7 @@ import tarfile
 
 from PIL import Image
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
@@ -17,19 +17,16 @@ class Places365Small(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
-        homepage= "http://places2.csail.mit.edu/",
-        citation= """@article{zhou2017places,
+        homepage="http://places2.csail.mit.edu/",
+        citation="""@article{zhou2017places,
                          title={Places: A 10 million Image Database for Scene Recognition},
                          author={Zhou, Bolei and Lapedriza, Agata and Khosla, Aditya and Oliva, Aude and Torralba, Antonio},
                          year={2017}}
             """,
-        assets= {
+        assets={
             "train": DownloadInfo(url="http://data.csail.mit.edu/places/places365/train_256_places365standard.tar"),
-
             "val": DownloadInfo(url="http://data.csail.mit.edu/places/places365/val_256.tar"),
-
             "devkit": DownloadInfo(url="http://data.csail.mit.edu/places/places365/filelist_places365-standard.tar"),
-
         },
     )
 

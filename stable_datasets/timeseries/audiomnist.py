@@ -63,10 +63,13 @@ class AudioMNIST(BaseDatasetBuilder):
                     digit_str, speaker_str, utterance_str = stem.split("_")
                 except ValueError:
                     continue
-                yield filename, {
-                    "series": wav_bytes_to_series(archive.read(name)),
-                    "label": int(digit_str),
-                    "speaker_id": int(speaker_str) - 1,
-                    "utterance_id": int(utterance_str),
-                    "filename": filename,
-                }
+                yield (
+                    filename,
+                    {
+                        "series": wav_bytes_to_series(archive.read(name)),
+                        "label": int(digit_str),
+                        "speaker_id": int(speaker_str) - 1,
+                        "utterance_id": int(utterance_str),
+                        "filename": filename,
+                    },
+                )

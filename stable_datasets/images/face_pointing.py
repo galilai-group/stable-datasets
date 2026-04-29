@@ -4,7 +4,7 @@ import tarfile
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import DatasetInfo, DownloadInfo, Features, Sequence, Value, Version, DatasetSource
+from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Sequence, Value, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -16,9 +16,9 @@ class FacePointing(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "http://crowley-coutaz.fr/HeadPoseDataSet/",
-        assets= {"train": DownloadInfo(url="http://crowley-coutaz.fr/HeadPoseDataSet/HeadPoseImageDatabase.tar.gz")},
-        citation= """@inproceedings{gourier2004estimating,
+        homepage="http://crowley-coutaz.fr/HeadPoseDataSet/",
+        assets={"train": DownloadInfo(url="http://crowley-coutaz.fr/HeadPoseDataSet/HeadPoseImageDatabase.tar.gz")},
+        citation="""@inproceedings{gourier2004estimating,
                          title={Estimating face orientation from robust detection of salient facial features},
                          author={Gourier, Nicolas and Hall, Daniela and Crowley, James L},
                          booktitle={ICPR International Workshop on Visual Observation of Deictic Gestures},

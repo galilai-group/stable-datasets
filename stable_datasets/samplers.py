@@ -10,7 +10,7 @@ the format was designed to exploit.
 
 This module exposes samplers that yield indices in shard-aware
 orderings, preserving the classical PyTorch API (``DataLoader(ds,
-sampler=...)``) while giving the user a knob that matches the
+sampler=...)``) while providing a sampler that matches the
 backend's access-pattern preferences:
 
     from stable_datasets.samplers import ShardShuffleSampler
@@ -31,7 +31,7 @@ See also
 ``lance.sampler.ShardedFragmentSampler`` : Lance's own fragment
    sampler for its native :class:`lance.torch.data.LanceDataset`
    integration. ``ShardShuffleSampler`` is the nearest equivalent
-   exposed through our unified backend protocol.
+   exposed through the StableDataset backend protocol.
 """
 
 from __future__ import annotations
@@ -93,9 +93,7 @@ class ShardShuffleSampler(Sampler[int]):
         within_shard: Literal["random", "sequential"] = "random",
     ):
         if within_shard not in ("random", "sequential"):
-            raise ValueError(
-                f"within_shard must be 'random' or 'sequential', got {within_shard!r}"
-            )
+            raise ValueError(f"within_shard must be 'random' or 'sequential', got {within_shard!r}")
         self._n = len(dataset)
         self._seed = int(seed)
         self._within_shard = within_shard
@@ -106,10 +104,9 @@ class ShardShuffleSampler(Sampler[int]):
     def _compute_shard_ranges(dataset) -> list[tuple[int, int]]:
         """Return [(start, end_exclusive), ...] per shard.
 
-        For backends with ``num_shards`` and per-shard row counts
-        (our file-backed backends), we partition the dataset's
-        index space into contiguous per-shard ranges. For other
-        backends (e.g. in-memory tables, indexed views), the whole
+        File-backed backends with ``num_shards`` and per-shard row
+        counts are partitioned into contiguous per-shard ranges. For
+        other backends (e.g. in-memory tables, indexed views), the whole
         dataset becomes a single shard.
         """
         n = len(dataset)
@@ -117,19 +114,10 @@ class ShardShuffleSampler(Sampler[int]):
         if backend is None or not getattr(backend, "is_file_backed", False):
             return [(0, n)]
 
-        # ArrowBackend stores per-shard row counts as _shard_row_counts
-        # (it predates this sampler; we accept both names so future
-        # public property additions work without changes here).
-        shard_row_counts = getattr(
-            backend, "shard_row_counts", None
-        ) or getattr(backend, "_shard_row_counts", None)
+        # Accept both public and private per-shard row-count attributes.
+        shard_row_counts = getattr(backend, "shard_row_counts", None) or getattr(backend, "_shard_row_counts", None)
         if shard_row_counts is None:
-            # Lance: read from fragments. ``_dataset`` opens lazily;
-            # it's safe to touch here because the sampler is
-            # constructed in the same process that's about to hand
-            # it to DataLoader, and DataLoader workers never
-            # reconstruct samplers -- they inherit an already-
-            # instantiated one via pickle.
+            # Lance fragments provide shard row counts when available.
             try:
                 fragments = backend._dataset.get_fragments()
                 shard_row_counts = [f.count_rows() for f in fragments]
@@ -142,8 +130,7 @@ class ShardShuffleSampler(Sampler[int]):
             ranges.append((start, start + int(c)))
             start += int(c)
         if start != n:
-            # Defensive: if shard row counts don't sum to len, fall
-            # back to a single shard rather than risk missing rows.
+            # Inconsistent row counts are treated as a single shard.
             return [(0, n)]
         return ranges
 

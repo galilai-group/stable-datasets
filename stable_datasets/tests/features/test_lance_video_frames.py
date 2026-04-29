@@ -71,7 +71,9 @@ def test_lance_video_frames_cache_segment_roundtrip(tmp_path):
     assert row["frame_indices"] == [0, 1, 2]
     assert row["label"] == 3
 
-    ds = StableDataset(features=features, info=DatasetInfo(features=features), backend=backend, num_rows=backend.num_rows)
+    ds = StableDataset(
+        features=features, info=DatasetInfo(features=features), backend=backend, num_rows=backend.num_rows
+    )
     sample = ds[0]
     assert sample["video"].shape == (3, 12, 12, 3)
     assert list(ds)[1]["frame_indices"] == [2, 3, 4]

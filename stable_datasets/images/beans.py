@@ -1,6 +1,6 @@
 import zipfile
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -12,16 +12,13 @@ class Beans(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "https://github.com/AI-Lab-Makerere/ibean/",
-        assets= {
+        homepage="https://github.com/AI-Lab-Makerere/ibean/",
+        assets={
             "train": DownloadInfo(url="https://storage.googleapis.com/ibeans/train.zip"),
-
             "test": DownloadInfo(url="https://storage.googleapis.com/ibeans/test.zip"),
-
             "validation": DownloadInfo(url="https://storage.googleapis.com/ibeans/validation.zip"),
-
         },
-        citation= """@misc{makerere2020beans,
+        citation="""@misc{makerere2020beans,
                          author = "{Makerere AI Lab}",
                          title = "{Bean Disease Dataset}",
                          year = "2020",

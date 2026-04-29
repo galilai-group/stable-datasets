@@ -9,19 +9,10 @@ from __future__ import annotations
 import logging
 import math
 import os
-from datetime import timedelta
 
 import hydra
 import lightning as pl
 import stable_pretraining as spt
-
-# Disable spt's run registry. Lightning's ModelCheckpoint (configured via
-# cfg.checkpoint.dir) is the single source of truth for checkpoints; spt's
-# parallel runs/<date>/<time>/<id>/ tree is redundant and bloats home quota.
-# `spt.set(cache_dir=None)` is a no-op (treats None as "unchanged"), so set the
-# config attribute directly. Manager._resolve_run_dir() then returns None and
-# falls back to Trainer.default_root_dir; rank-0-gated spt loggers write nothing.
-spt.get_config().cache_dir = None
 import torch
 from hydra.core.hydra_config import HydraConfig
 from lightning.pytorch.callbacks import ModelCheckpoint
@@ -149,6 +140,17 @@ def _assign_gpu():
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig) -> None:
+    # Disable spt's run-registry / cache_dir on the SLURM worker. Module-level
+    # placement is unreliable here because hydra-submitit-launcher unpickles
+    # `main` directly and the spt singleton is created during plugin discovery
+    # before benchmarks.run is re-imported. Setting this inside main() runs
+    # before `spt.Manager(...)` is constructed below, which is when
+    # `_resolve_run_dir` reads cache_dir. With cache_dir=None, manager.py:469
+    # short-circuits and Lightning's ModelCheckpoint at cfg.checkpoint.dir is
+    # the only path that gets written.
+    spt.get_config().cache_dir = None
+    log.info(f"spt cache_dir disabled (was: {spt.get_config().cache_dir!r})")
+
     if cfg.get("distribute_gpus", False):
         _assign_gpu()
 
@@ -194,16 +196,16 @@ def main(cfg: DictConfig) -> None:
     callbacks = create_eval_callbacks(module, ds_config, embed_dim)
     ckpt_cfg = cfg.checkpoint
     run_ckpt_dir = os.path.join(ckpt_cfg.dir, f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}")
-    ckpt_kwargs = dict(
-        dirpath=run_ckpt_dir,
-        filename="{epoch}-{step}",
-        every_n_epochs=ckpt_cfg.every_n_epochs,
-        save_last=ckpt_cfg.save_last,
-        monitor=ckpt_cfg.monitor,
-        mode=ckpt_cfg.mode,
-        save_top_k=ckpt_cfg.save_top_k,
-        save_weights_only=True,
-    )
+    ckpt_kwargs = {
+        "dirpath": run_ckpt_dir,
+        "filename": "{epoch}-{step}",
+        "every_n_epochs": ckpt_cfg.every_n_epochs,
+        "save_last": ckpt_cfg.save_last,
+        "monitor": ckpt_cfg.monitor,
+        "mode": ckpt_cfg.mode,
+        "save_top_k": ckpt_cfg.save_top_k,
+        "save_weights_only": True,
+    }
     callbacks.append(ModelCheckpoint(**ckpt_kwargs))
 
     # Auto-resume: if a previous SLURM walltime-out / requeue / manual resubmit

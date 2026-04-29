@@ -1,3 +1,5 @@
+"""ESC-10/ESC-50 environmental sound classification loader."""
+
 import io
 import os
 import zipfile
@@ -5,16 +7,6 @@ import zipfile
 import numpy as np
 from scipy.io.wavfile import read as wav_read
 from tqdm import tqdm
-
-"""
-TODO(builder-migration):
-- Model the official 5-fold ESC split explicitly; this dataset is not just one
-  flat train/test archive.
-- Preserve the three supervision views: 50-way fine labels, 5-way coarse
-  labels, and the ESC-10 subset flag.
-- Decide whether folds should be exposed as builder configs, split generators,
-  or metadata plus one canonical split view.
-"""
 
 
 fine_to_coarse = {

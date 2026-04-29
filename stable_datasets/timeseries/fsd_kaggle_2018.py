@@ -5,7 +5,16 @@ import zipfile
 import numpy as np
 from scipy.io.wavfile import read as wav_read
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, DownloadInfo, Features, Sequence, Value, Version, DatasetSource
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Sequence,
+    Value,
+    Version,
+)
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
@@ -15,8 +24,8 @@ class FSDKaggle2018(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
     SOURCE = DatasetSource(
-        homepage= "https://zenodo.org/records/2552860",
-        assets= {
+        homepage="https://zenodo.org/records/2552860",
+        assets={
             "train_audio": DownloadInfo(
                 url="https://zenodo.org/record/2552860/files/FSDKaggle2018.audio_train.zip?download=1",
                 fallbacks=["https://zenodo.org/records/2552860/files/FSDKaggle2018.audio_train.zip"],
@@ -33,7 +42,7 @@ class FSDKaggle2018(BaseDatasetBuilder):
                 filename="FSDKaggle2018.meta.zip",
             ),
         },
-        citation= """@dataset{fonseca2019fsdkaggle2018,
+        citation="""@dataset{fonseca2019fsdkaggle2018,
                          title={FSDKaggle2018},
                          author={Fonseca, Eduardo and Plakal, Manoj and Font, Frederic and Ellis, Daniel P.W. and Serra, Xavier},
                          year={2019},
@@ -89,7 +98,9 @@ class FSDKaggle2018(BaseDatasetBuilder):
 
     def _generate_examples(self, audio_path, meta_path, split):
         metadata = _load_metadata(meta_path)
-        label_to_id = {name: idx for idx, name in enumerate(sorted({row["label"] for rows in metadata.values() for row in rows}))}
+        label_to_id = {
+            name: idx for idx, name in enumerate(sorted({row["label"] for rows in metadata.values() for row in rows}))
+        }
         split_rows = {row["filename"]: row for row in metadata[split]}
 
         with zipfile.ZipFile(audio_path) as archive:
@@ -107,14 +118,17 @@ class FSDKaggle2018(BaseDatasetBuilder):
                 if series.ndim == 1:
                     series = series[:, None]
 
-                yield filename, {
-                    "series": series,
-                    "label": label_to_id[row["label"]],
-                    "filename": filename,
-                    "fsid": row.get("fsid", ""),
-                    "verified": row.get("verified", ""),
-                    "usage": row.get("usage", ""),
-                }
+                yield (
+                    filename,
+                    {
+                        "series": series,
+                        "label": label_to_id[row["label"]],
+                        "filename": filename,
+                        "fsid": row.get("fsid", ""),
+                        "verified": row.get("verified", ""),
+                        "usage": row.get("usage", ""),
+                    },
+                )
 
 
 def _load_metadata(meta_path) -> dict[str, list[dict[str, str]]]:

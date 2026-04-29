@@ -54,11 +54,14 @@ class VocalSet(BaseDatasetBuilder):
                     continue
                 singer = parts[1]
                 gender = "".join(ch for ch in singer if ch.isalpha())
-                yield filename, {
-                    "series": wav_bytes_to_series(archive.read(filename)),
-                    "singer": singer,
-                    "gender": gender,
-                    "vowel": vowel,
-                    "relative_path": filename,
-                    "filename": parts[-1],
-                }
+                yield (
+                    filename,
+                    {
+                        "series": wav_bytes_to_series(archive.read(filename)),
+                        "singer": singer,
+                        "gender": gender,
+                        "vowel": vowel,
+                        "relative_path": filename,
+                        "filename": parts[-1],
+                    },
+                )

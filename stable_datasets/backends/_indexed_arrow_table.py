@@ -1,10 +1,8 @@
 """Indexed Arrow table helpers for fast random batch access.
 
-The core gather path here is modeled on the strategy used by
-``datasets``/Hugging Face: pre-index record-batch boundaries once, then
-reconstruct arbitrary row batches from inexpensive ``RecordBatch.slice``
-calls instead of relying on ``pyarrow.Table.take`` for non-contiguous
-binary-heavy access.
+Pre-indexes record-batch boundaries once, then reconstructs arbitrary
+row batches from inexpensive ``RecordBatch.slice`` calls for
+non-contiguous binary-heavy access.
 """
 
 from __future__ import annotations

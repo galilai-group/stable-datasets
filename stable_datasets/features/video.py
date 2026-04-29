@@ -118,9 +118,7 @@ class Video(FeatureType):
         if value is None:
             return None
         if self.storage == "frames":
-            raise NotImplementedError(
-                "Video(storage='frames') uses the specialized Lance video-frames layout."
-            )
+            raise NotImplementedError("Video(storage='frames') uses the specialized Lance video-frames layout.")
         if self.storage == "path":
             path, checksum = self._coerce_path_value(value)
             return self._encode_path(path, checksum=checksum, cache_dir=cache_dir)
@@ -159,8 +157,7 @@ class Video(FeatureType):
             checksum = None
         if not isinstance(raw_path, str | Path):
             raise TypeError(
-                "Video(storage='path') values must be str, pathlib.Path, "
-                "or {'path': ..., 'checksum': ...} mappings."
+                "Video(storage='path') values must be str, pathlib.Path, or {'path': ..., 'checksum': ...} mappings."
             )
         path = Path(raw_path)
         if not path.is_file():
@@ -235,10 +232,7 @@ class Video(FeatureType):
     def _validate_extension(self, ext: str):
         ext = ext.lower() if ext.startswith(".") else f".{ext.lower()}"
         if ext not in self.allowed_extensions:
-            raise ValueError(
-                f"Unsupported video extension {ext!r}. "
-                f"Allowed: {list(self.allowed_extensions)}"
-            )
+            raise ValueError(f"Unsupported video extension {ext!r}. Allowed: {list(self.allowed_extensions)}")
 
     def fingerprint_data(self) -> str:
         return repr(self)

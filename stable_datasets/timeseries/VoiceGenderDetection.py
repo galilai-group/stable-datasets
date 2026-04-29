@@ -59,9 +59,12 @@ class VoiceGenderDetection(BaseDatasetBuilder):
                 if gender not in {"males", "females"}:
                     continue
                 filename = parts[-1]
-                yield name, {
-                    "series": audiosegment_bytes_to_series(archive.read(name), format="m4a"),
-                    "label": 0 if gender == "males" else 1,
-                    "gender": gender[:-1],
-                    "filename": filename,
-                }
+                yield (
+                    name,
+                    {
+                        "series": audiosegment_bytes_to_series(archive.read(name), format="m4a"),
+                        "label": 0 if gender == "males" else 1,
+                        "gender": gender[:-1],
+                        "filename": filename,
+                    },
+                )

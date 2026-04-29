@@ -1,16 +1,16 @@
 from stable_datasets.schema import ClassLabel, Sequence
 from stable_datasets.timeseries import (
+    GTZAN,
+    SONYCUST,
     AudioMNIST,
     BirdVoxDCASE20k,
     Freefield1010,
     GrooveMIDI,
-    GTZAN,
     Picidae,
     SeizuresNeonatal,
-    SONYCUST,
     SpeechCommands,
-    VoiceGenderDetection,
     VocalSet,
+    VoiceGenderDetection,
     Warblr,
 )
 

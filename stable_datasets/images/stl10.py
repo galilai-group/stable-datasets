@@ -2,7 +2,7 @@ import tarfile
 
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -13,16 +13,13 @@ class STL10(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "https://cs.stanford.edu/~acoates/stl10/",
-        assets= {
+        homepage="https://cs.stanford.edu/~acoates/stl10/",
+        assets={
             "train": DownloadInfo(url="https://cs.stanford.edu/~acoates/stl10/stl10_binary.tar.gz"),
-
             "test": DownloadInfo(url="https://cs.stanford.edu/~acoates/stl10/stl10_binary.tar.gz"),
-
             "unlabeled": DownloadInfo(url="https://cs.stanford.edu/~acoates/stl10/stl10_binary.tar.gz"),
-
         },
-        citation= """@article{coates2011analysis,
+        citation="""@article{coates2011analysis,
                         title={An analysis of single-layer networks in unsupervised feature learning},
                         author={Coates, Adam and Ng, Andrew Y},
                         journal={AISTATS},

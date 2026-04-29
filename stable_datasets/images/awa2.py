@@ -3,7 +3,7 @@ import zipfile
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -17,12 +17,11 @@ class AWA2(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
-        homepage= "https://cvml.ista.ac.at/AwA2/",
-        assets= {
+        homepage="https://cvml.ista.ac.at/AwA2/",
+        assets={
             "train": DownloadInfo(url="https://cvml.ista.ac.at/AwA2/AwA2-data.zip"),
-
         },
-        citation= """@ARTICLE{8413121,
+        citation="""@ARTICLE{8413121,
                          author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},
                          journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
                          title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly},

@@ -3,7 +3,16 @@ import zipfile
 import numpy as np
 from scipy.io import arff
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Sequence, Value, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Sequence,
+    Value,
+    Version,
+)
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -12,14 +21,12 @@ class Phoneme(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
     SOURCE = DatasetSource(
-        homepage= "http://www.timeseriesclassification.com/description.php?Dataset=Phoneme",
-        assets= {
+        homepage="http://www.timeseriesclassification.com/description.php?Dataset=Phoneme",
+        assets={
             "train": DownloadInfo(url="http://www.timeseriesclassification.com/Downloads/Phoneme.zip"),
-
             "test": DownloadInfo(url="http://www.timeseriesclassification.com/Downloads/Phoneme.zip"),
-
         },
-        citation= "See dataset homepage.",
+        citation="See dataset homepage.",
     )
 
     def _info(self):

@@ -25,14 +25,11 @@ binary columns out-of-line and only pays off when paired with
 ``take_blobs`` and ``to_batches(blob_handling="all_binary")`` at read
 time, plus per-column field metadata at write time. The read methods
 here use plain ``take`` / ``to_batches``, which work for any Lance
-dataset regardless of whether the column was blob-encoded. A future
-blob-aware subclass or flag can be added if profiling justifies it.
+dataset regardless of whether the column was blob-encoded.
 
-**Pickling is cheap.** ``__getstate__`` serializes only the dataset URI
-plus cached row/shard counts; ``__setstate__`` reopens by URI via
-``lance.dataset(...)``. This keeps DataLoader worker-fork cost constant
-regardless of dataset size, unlike an ``ArrowBackend`` whose mmap'd
-table state can be tens of GB.
+**Pickling is URI-based.** ``__getstate__`` serializes only the dataset
+URI plus cached row/shard counts; ``__setstate__`` reopens by URI via
+``lance.dataset(...)``.
 """
 
 from __future__ import annotations
@@ -46,15 +43,8 @@ import pyarrow as pa
 
 class LanceBackend:
     #: Hint to :class:`StableDataset.__getitems__` that this backend's
-    #: batched ``take(indices)`` path is faster than a per-row loop of
-    #: ``get_row``. ArrowBackend leaves this unset (effectively False)
-    #: because Arrow's ``slice(i, 1)`` on an mmap'd table is zero-copy
-    #: and unbeatable per-row, while Arrow's ``take`` rebuilds offsets
-    #: across chunks. For Lance the cost structure is inverted: every
-    #: call crosses the Python<->Rust async boundary at fixed cost, so
-    #: batching amortizes it. Benchmark: CIFAR-10 map-style shuffled
-    #: access, 128-row batches, Lance batched is ~30x faster than
-    #: Lance per-row.
+    #: batched ``take(indices)`` path should be used for random index
+    #: reads. Batching amortizes Lance's Python/Rust call boundary.
     prefer_batched_take: bool = True
 
     def __init__(self, *, uri: str | Path, batch_readahead: int = 8):
@@ -79,19 +69,9 @@ class LanceBackend:
 
     # -- Lazy open ------------------------------------------------------------
     #
-    # Fork-safety contract: opening the Lance dataset initializes Lance's
-    # Rust tokio runtime, which includes a worker thread pool. ``fork()``
-    # does not duplicate threads -- only the main thread survives in the
-    # child. A child process that inherits an already-initialized tokio
-    # state but only has one thread will segfault on its first Lance
-    # call. Therefore ``_dataset`` should NOT be touched in the main
-    # process before a DataLoader fork. Every public accessor that
-    # triggers it (``num_rows``, ``num_shards``, ``schema``, ``table``,
-    # ``take``, etc.) is a potential footgun when called pre-fork.
-    #
-    # Callers that need metadata pre-fork should cache it at construction
-    # time and pass it explicitly. ``StableDataset._shallow_copy`` is
-    # fixed to forward ``num_rows`` for this reason.
+    # The Lance dataset opens lazily in each process. Opening initializes
+    # Lance's Rust runtime, so worker-based callers should pass cached
+    # metadata and leave this property untouched before DataLoader forks.
 
     @property
     def _dataset(self):

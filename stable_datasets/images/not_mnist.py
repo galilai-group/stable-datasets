@@ -3,7 +3,7 @@ import struct
 
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
 
@@ -15,18 +15,22 @@ class NotMNIST(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "https://yaroslavvb.blogspot.com/2011/09/notmnist-dataset.html",
-        assets= {
-            "train_images": DownloadInfo(url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-images-idx3-ubyte.gz"),
-
-            "train_labels": DownloadInfo(url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-labels-idx1-ubyte.gz"),
-
-            "test_images": DownloadInfo(url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-images-idx3-ubyte.gz"),
-
-            "test_labels": DownloadInfo(url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-labels-idx1-ubyte.gz"),
-
+        homepage="https://yaroslavvb.blogspot.com/2011/09/notmnist-dataset.html",
+        assets={
+            "train_images": DownloadInfo(
+                url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-images-idx3-ubyte.gz"
+            ),
+            "train_labels": DownloadInfo(
+                url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/train-labels-idx1-ubyte.gz"
+            ),
+            "test_images": DownloadInfo(
+                url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-images-idx3-ubyte.gz"
+            ),
+            "test_labels": DownloadInfo(
+                url="https://github.com/davidflanagan/notMNIST-to-MNIST/raw/refs/heads/master/t10k-labels-idx1-ubyte.gz"
+            ),
         },
-        citation= """@misc{bulatov2011notmnist,
+        citation="""@misc{bulatov2011notmnist,
                           author={Yaroslav Bulatov},
                           title={notMNIST dataset},
                           year={2011},

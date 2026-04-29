@@ -2,7 +2,7 @@ import gzip
 
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -17,14 +17,16 @@ class FashionMNIST(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "https://github.com/zalandoresearch/fashion-mnist",
-        assets= {
-            "train": DownloadInfo(url="http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz"),
-
-            "test": DownloadInfo(url="http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz"),
-
+        homepage="https://github.com/zalandoresearch/fashion-mnist",
+        assets={
+            "train": DownloadInfo(
+                url="http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/train-images-idx3-ubyte.gz"
+            ),
+            "test": DownloadInfo(
+                url="http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/t10k-images-idx3-ubyte.gz"
+            ),
         },
-        citation= """@article{xiao2017fashion,
+        citation="""@article{xiao2017fashion,
                          title={Fashion-MNIST: a Novel Image Dataset for Benchmarking Machine Learning Algorithms},
                          author={Xiao, Han and Rasul, Kashif and Vollgraf, Roland},
                          journal={arXiv preprint arXiv:1708.07747},

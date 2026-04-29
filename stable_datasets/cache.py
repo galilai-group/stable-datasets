@@ -54,8 +54,7 @@ def cache_fingerprint(
     """Deterministic cache directory name for a dataset variant + split.
 
     ``storage_format`` is always included in the hash so Arrow and Lance
-    caches for the same dataset coexist at different paths rather than
-    colliding.
+    caches for the same dataset coexist at different paths.
     """
     key = f"{cls_name}:{version}:{config_name}:{split}:{storage_format}"
     digest = hashlib.sha256(key.encode()).hexdigest()[:16]
@@ -327,7 +326,7 @@ def write_lance_cache(
         When > 0, encode examples in parallel using a thread pool
         (same contract as the Arrow writer).
     lineage : dict, optional
-        Optional provenance blob written into ``_metadata.json``.
+        Optional metadata blob written into ``_metadata.json``.
     """
     import lance
 
@@ -338,8 +337,7 @@ def write_lance_cache(
 
     tmp_dir = Path(tempfile.mkdtemp(dir=cache_dir.parent, prefix=f".{cache_dir.name}_tmp_"))
 
-    # Bookkeeping kept out of the generator so we can read it after the
-    # stream is consumed by lance.write_dataset.
+    # Counter state is read after Lance consumes the batch stream.
     counter = {"rows": 0}
 
     encoded_gen = _encode_gen(generator, features, batch_size, num_encode_workers, cache_dir=tmp_dir)
@@ -351,18 +349,12 @@ def write_lance_cache(
                 batch_rows[col_name].append(encoded.get(col_name))
             counter["rows"] += 1
             if counter["rows"] % batch_size == 0:
-                arrays = [
-                    pa.array(batch_rows[name], type=features[name].to_arrow_type())
-                    for name in features
-                ]
+                arrays = [pa.array(batch_rows[name], type=features[name].to_arrow_type()) for name in features]
                 yield pa.record_batch(arrays, schema=schema)
                 for col in batch_rows:
                     batch_rows[col] = []
         if batch_rows[next(iter(batch_rows))]:
-            arrays = [
-                pa.array(batch_rows[name], type=features[name].to_arrow_type())
-                for name in features
-            ]
+            arrays = [pa.array(batch_rows[name], type=features[name].to_arrow_type()) for name in features]
             yield pa.record_batch(arrays, schema=schema)
 
     try:
@@ -505,10 +497,7 @@ def write_lance_video_frames_cache(
     """
     import lance
 
-    frame_columns = [
-        name for name, feat in features.items()
-        if isinstance(feat, Video) and feat.storage == "frames"
-    ]
+    frame_columns = [name for name, feat in features.items() if isinstance(feat, Video) and feat.storage == "frames"]
     if video_column is None:
         if len(frame_columns) != 1:
             raise ValueError(
@@ -536,7 +525,8 @@ def write_lance_video_frames_cache(
                 allowed_extensions=feat.allowed_extensions,
             )
             metadata = {
-                k: v for k, v in example.items()
+                k: v
+                for k, v in example.items()
                 if k != video_column and isinstance(v, str | int | float | bool | type(None))
             }
             examples.append(
@@ -631,8 +621,7 @@ def write_lance_video_frames_cache(
         shutil.rmtree(input_tmp_dir, ignore_errors=True)
 
     logging.info(
-        f"Cached {meta['total_rows']} video frames from {meta['n_videos']} videos "
-        f"in Lance format to {cache_dir}"
+        f"Cached {meta['total_rows']} video frames from {meta['n_videos']} videos in Lance format to {cache_dir}"
     )
     return LanceCacheMeta(
         cache_dir=cache_dir,

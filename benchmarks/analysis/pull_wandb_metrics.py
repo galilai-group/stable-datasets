@@ -38,6 +38,7 @@ import pandas as pd
 
 from benchmarks.analysis.utils import BENCHMARK_RESULTS_CSV, REP_SCORES_CSV
 
+
 WANDB_ENTITY = "samibg"
 WANDB_PROJECT = "finalized-stable-datasets"
 
@@ -118,17 +119,19 @@ def fetch_runs(pull_history: bool = True) -> pd.DataFrame:
             rankme = _last_history_value(run, "rankme")
         if pull_history and lidar is None:
             lidar = _last_history_value(run, "lidar")
-        rows.append({
-            "model": model,
-            "dataset": dataset,
-            "seed": seed,
-            "wandb_run_id": run.id,
-            "wandb_state": run.state,
-            "rankme_wandb": rankme,
-            "lidar_wandb": lidar,
-            "probe": summary.get("eval/linear_probe_top1_epoch"),
-            "knn": summary.get("eval/knn_probe_top1"),
-        })
+        rows.append(
+            {
+                "model": model,
+                "dataset": dataset,
+                "seed": seed,
+                "wandb_run_id": run.id,
+                "wandb_state": run.state,
+                "rankme_wandb": rankme,
+                "lidar_wandb": lidar,
+                "probe": summary.get("eval/linear_probe_top1_epoch"),
+                "knn": summary.get("eval/knn_probe_top1"),
+            }
+        )
         if i % 25 == 0:
             print(f"  {i}/{total} runs processed")
     return pd.DataFrame(rows)
@@ -141,7 +144,9 @@ def merge_into_rep_scores(wandb_df: pd.DataFrame, csv_path: Path) -> None:
     finished runs with a non-null rankme.
     """
     wandb_df = wandb_df.copy()
-    priority = wandb_df["rankme_wandb"].notna().astype(int) * 2 + wandb_df["wandb_state"].isin(["finished", "completed"]).astype(int)
+    priority = wandb_df["rankme_wandb"].notna().astype(int) * 2 + wandb_df["wandb_state"].isin(
+        ["finished", "completed"]
+    ).astype(int)
     wandb_df = wandb_df.assign(_priority=priority)
     wandb_df = wandb_df.sort_values("_priority", ascending=False).drop_duplicates(["model", "dataset"], keep="first")
     wandb_df = wandb_df[["model", "dataset", "rankme_wandb", "lidar_wandb"]]
@@ -218,8 +223,8 @@ def main() -> None:
         "--no-history",
         action="store_true",
         help="skip the per-run run.history() fetch for rankme/lidar (faster, but "
-             "those columns will be null for runs where the callback logged them "
-             "as step metrics instead of summary values)",
+        "those columns will be null for runs where the callback logged them "
+        "as step metrics instead of summary values)",
     )
     args = parser.parse_args()
 

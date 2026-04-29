@@ -7,10 +7,6 @@ with :class:`LanceBackend` backed by a native Lance cache written via
 for Arrow and fails for Lance is evidence of a protocol leak -- some
 place where :class:`StableDataset` or its consumers reach past the
 abstraction and depend on Arrow-specific behavior.
-
-This is the load-bearing test for the Lance-migration plan: if the
-protocol is watertight enough to make both backends interchangeable at
-this level, the same should hold for real workloads.
 """
 
 from __future__ import annotations
@@ -22,10 +18,10 @@ import numpy as np
 import pyarrow as pa
 import pytest
 
-from stable_datasets.dataset import StableDataset
 from stable_datasets.backends.arrow_shards import ArrowBackend
-from stable_datasets.cache import write_lance_cache, write_sharded_arrow_cache
 from stable_datasets.backends.lance_rows import LanceBackend
+from stable_datasets.cache import write_lance_cache, write_sharded_arrow_cache
+from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value
 
 
@@ -40,15 +36,13 @@ def make_ds(request, tmp_path) -> Callable[..., StableDataset]:
     Both variants consume the same in-memory generator, so the test
     content is identical row-for-row between Arrow and Lance runs.
     The Lance variant writes through :func:`write_lance_cache`
-    directly -- the same native Phase C write path that
-    :class:`BaseDatasetBuilder` uses when ``STORAGE_FORMAT="lance"``.
+    directly, matching the path :class:`BaseDatasetBuilder` uses when
+    ``STORAGE_FORMAT="lance"``.
     """
     kind: BackendKind = request.param
 
     def _make(n: int = 10, batch_size: int = 5) -> StableDataset:
-        features = Features(
-            {"x": Value("int32"), "label": ClassLabel(names=["a", "b"])}
-        )
+        features = Features({"x": Value("int32"), "label": ClassLabel(names=["a", "b"])})
         info = DatasetInfo(features=features)
 
         def gen():
@@ -57,9 +51,7 @@ def make_ds(request, tmp_path) -> Callable[..., StableDataset]:
 
         if kind == "arrow":
             cache_dir = tmp_path / f"arrow_cache_{n}"
-            meta = write_sharded_arrow_cache(
-                gen(), features, cache_dir, batch_size=batch_size
-            )
+            meta = write_sharded_arrow_cache(gen(), features, cache_dir, batch_size=batch_size)
             backend = ArrowBackend(
                 shard_paths=meta.shard_paths,
                 shard_row_counts=meta.shard_row_counts,
@@ -68,17 +60,13 @@ def make_ds(request, tmp_path) -> Callable[..., StableDataset]:
             num_rows = meta.num_rows
         elif kind == "lance":
             lance_dir = tmp_path / f"lance_cache_{n}"
-            lance_meta = write_lance_cache(
-                gen(), features, lance_dir, batch_size=batch_size
-            )
+            lance_meta = write_lance_cache(gen(), features, lance_dir, batch_size=batch_size)
             backend = LanceBackend(uri=lance_dir)
             num_rows = lance_meta.num_rows
         else:
             raise AssertionError(f"unknown backend {kind}")
 
-        return StableDataset(
-            features=features, info=info, backend=backend, num_rows=num_rows
-        )
+        return StableDataset(features=features, info=info, backend=backend, num_rows=num_rows)
 
     _make.kind = kind  # type: ignore[attr-defined]
     return _make
@@ -237,20 +225,10 @@ class TestProtocol:
         assert total == 23
 
 
-# ── Shallow-copy + fork-safety regression ────────────────────────────────────
+# ── Shallow-copy + fork-safety ────────────────────────────────────────────────
 #
-# Regression test for the segfault we hit on set_decode(False) + multi-worker
-# DataLoader with LanceBackend. Root cause: ``_shallow_copy`` did not forward
-# ``num_rows``, so the new :class:`StableDataset.__init__` computed it by
-# calling ``self._backend.num_rows``. For :class:`LanceBackend` that opens
-# the underlying Lance dataset in the main process, initializing Lance's
-# Rust tokio runtime. If DataLoader then forks workers, the children
-# inherit stale tokio state and segfault on their first Lance call.
-#
-# We can't easily assert absence-of-segfault in a unit test, but we can
-# assert the *root cause*: ``_shallow_copy`` must not trigger a backend
-# access for ``num_rows``, and for Lance specifically the underlying
-# dataset handle must remain unopened.
+# ``_shallow_copy`` must not trigger backend access for ``num_rows``.
+# For Lance, the underlying dataset handle remains unopened until use.
 
 
 class TestShallowCopyForkSafety:
@@ -294,7 +272,7 @@ class TestShallowCopyForkSafety:
         assert backend._ds is None
 
 
-# ── Phase C: BaseDatasetBuilder with STORAGE_FORMAT="lance" ─────────────────
+# ── BaseDatasetBuilder with STORAGE_FORMAT="lance" ──────────────────────────
 #
 # Integration test for the direct Lance writer. A tiny builder subclass
 # opts into Lance storage via ``STORAGE_FORMAT = "lance"``; the round
@@ -304,14 +282,11 @@ class TestShallowCopyForkSafety:
 
 
 class _TinyLanceBuilder:
-    """Module-level fixture for the Phase C integration tests.
+    """Module-level fixture for Lance builder integration tests.
 
     Defined as a module-level class so the Python pickle machinery can
     locate it during ``pickle.dumps(ds)``. Actual BaseDatasetBuilder
-    inheritance is added lazily inside the test setup, because
-    importing BaseDatasetBuilder at module load time would also import
-    a lot of side-effectful schema validation we want to keep out of
-    pytest collection.
+    inheritance is added inside the test setup.
     """
 
 
@@ -332,11 +307,7 @@ def _make_lance_builder_class():
         STORAGE_FORMAT = "lance"
 
         def _info(self):
-            return DatasetInfo(
-                features=Features(
-                    {"x": Value("int32"), "label": ClassLabel(names=["a", "b", "c"])}
-                )
-            )
+            return DatasetInfo(features=Features({"x": Value("int32"), "label": ClassLabel(names=["a", "b", "c"])}))
 
         def _split_generators(self):
             return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 15})]
@@ -393,13 +364,8 @@ class TestBuilderStorageFormat:
         ds1 = Builder(processed_cache_dir=tmp_path, download_dir=tmp_path / "dl", split="train")
         assert len(ds1) == 15
 
-        # Second call with same cache dir: must hit the cache-hit path,
-        # not re-run _generate_examples. We detect this by making the
-        # second call succeed without having the download dir present
-        # (which _split_generators would otherwise require for most
-        # real builders; our _TinyLanceBuilder has empty assets so it
-        # does not actually download, but we still want to verify the
-        # metadata-driven cache-hit path runs).
+        # Second call with the same cache dir must hit the metadata-driven
+        # cache path without running _generate_examples.
         ds2 = Builder(processed_cache_dir=tmp_path, download_dir=tmp_path / "dl", split="train")
         assert len(ds2) == 15
         # Sanity: both datasets produce identical contents.
@@ -441,10 +407,7 @@ class TestBuilderStorageFormat:
             assert ds_arrow[i]["label"] == ds_lance[i]["label"]
 
         # Both caches must live on disk at distinct directories.
-        cache_dirs = sorted(
-            p.name for p in tmp_path.iterdir()
-            if p.is_dir() and (p / "_metadata.json").exists()
-        )
+        cache_dirs = sorted(p.name for p in tmp_path.iterdir() if p.is_dir() and (p / "_metadata.json").exists())
         assert len(cache_dirs) == 2, f"expected two cache dirs, got {cache_dirs}"
 
         # Class default must not have been mutated by the override.
@@ -500,6 +463,4 @@ class TestBuilderStorageFormat:
 
         # The two caches live at different directories.
         cache_dirs = sorted(p.name for p in tmp_path.iterdir() if p.is_dir() and (p / "_metadata.json").exists())
-        assert len(cache_dirs) == 2, (
-            f"expected two cache dirs (one per format), got {cache_dirs}"
-        )
+        assert len(cache_dirs) == 2, f"expected two cache dirs (one per format), got {cache_dirs}"

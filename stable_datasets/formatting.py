@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .schema import FeatureType, Features
+from .schema import Features, FeatureType
 
 
 def _zip_cols_to_rows(cols: dict, n: int) -> list[dict]:
@@ -36,10 +36,7 @@ class Formatter:
 
     def format_row(self, row: dict) -> dict:
         """Format a single row dict (from backend.get_row)."""
-        return {
-            name: self._format_value(name, value)
-            for name, value in row.items()
-        }
+        return {name: self._format_value(name, value) for name, value in row.items()}
 
     def format_batch(self, table) -> list[dict]:
         """Format a batch (from backend.take). Returns list of row dicts.
@@ -62,19 +59,18 @@ class Formatter:
         return value
 
     def _format_columns(self, cols: dict) -> dict:
-        return {
-            name: [self._format_value(name, value) for value in values]
-            for name, values in cols.items()
-        }
+        return {name: [self._format_value(name, value) for value in values] for name, values in cols.items()}
 
 
 class PythonFormatter(Formatter):
     """Default format: Image -> PIL, Array3D -> numpy, scalars -> Python native."""
+
     format_type = "default"
 
 
 class RawFormatter(Formatter):
     """Raw format: all values as-is from Arrow (bytes for images, bytes for Array3D)."""
+
     format_type = "raw"
 
     def __init__(self, features: Features, decode_images: bool = False, cache_dir: Path | None = None):
@@ -89,11 +85,13 @@ class RawFormatter(Formatter):
 
 class TorchFormatter(Formatter):
     """Torch format: Image -> CHW float32 tensor, Array3D -> float32 tensor, scalars -> tensors."""
+
     format_type = "torch"
 
 
 class NumpyFormatter(Formatter):
     """Numpy format: Image -> HWC numpy array, rest as-is."""
+
     format_type = "numpy"
 
 

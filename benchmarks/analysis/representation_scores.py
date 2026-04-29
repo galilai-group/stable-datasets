@@ -27,7 +27,6 @@ Records go through ``ExperimentManager`` to
 from __future__ import annotations
 
 import argparse
-import math
 import time
 from pathlib import Path
 
@@ -36,7 +35,6 @@ import torch
 import torch.nn.functional as F
 from hydra import compose, initialize_config_dir
 from omegaconf import open_dict
-
 from stable_pretraining.callbacks.lidar import LiDAR as _LiDARCallback
 
 from benchmarks.analysis.experiment_manager import ExperimentManager
@@ -150,8 +148,9 @@ def _lidar_helper() -> _LiDARCallback:
     )
 
 
-def lidar(E: torch.Tensor, y: torch.Tensor, samples_per_class: int = LIDAR_SAMPLES_PER_CLASS
-          ) -> tuple[float | None, int, int]:
+def lidar(
+    E: torch.Tensor, y: torch.Tensor, samples_per_class: int = LIDAR_SAMPLES_PER_CLASS
+) -> tuple[float | None, int, int]:
     """LDA-rank entropy using real class labels. Delegates to SPT's kernel.
 
     For each class with ≥ ``samples_per_class`` embeddings we sample exactly
@@ -208,15 +207,19 @@ def _build_loader(split: str, model: str, dataset: str, cfg, ds_config):
         train_t, val_t, collate = vt, vt, collate_single
     else:
         raise ValueError(f"unknown split: {split}")
-    data, _ = create_dataset(
-        dataset, train_t, val_t, collate, cfg.training, data_dir=cfg.get("data_dir")
-    )
+    data, _ = create_dataset(dataset, train_t, val_t, collate, cfg.training, data_dir=cfg.get("data_dir"))
     return data.train if split == "train" else data.val
 
 
-def process_one(model: str, dataset: str, split: str, device: torch.device,
-                mgr: ExperimentManager, overwrite: bool = False,
-                dry_run: bool = False) -> dict | None:
+def process_one(
+    model: str,
+    dataset: str,
+    split: str,
+    device: torch.device,
+    mgr: ExperimentManager,
+    overwrite: bool = False,
+    dry_run: bool = False,
+) -> dict | None:
     if (model, dataset) in COLLAPSED:
         print(f"[{model}/{dataset}] in COLLAPSED skip-set; skip", flush=True)
         return None
@@ -246,7 +249,7 @@ def process_one(model: str, dataset: str, split: str, device: torch.device,
         print(f"  [warn] missing keys: {len(missing)} (first: {missing[:3]})", flush=True)
     module.eval().to(device)
     encoder = resolve_encoder(module)
-    print(f"[{model}/{dataset}] built+loaded in {time.time()-t_build:.1f}s embed_dim={embed_dim}", flush=True)
+    print(f"[{model}/{dataset}] built+loaded in {time.time() - t_build:.1f}s embed_dim={embed_dim}", flush=True)
 
     loader = _build_loader(split, model, dataset, cfg, ds_config)
     if loader is None:
@@ -303,16 +306,22 @@ def main() -> None:
     parser.add_argument("--model", type=str)
     parser.add_argument("--dataset", type=str)
     parser.add_argument("--all", action="store_true")
-    parser.add_argument("--split", choices=["val", "train"], default="val",
-                        help="which split to extract embeddings from. val uses the model's "
-                             "default transforms; train uses the val transform + single-view "
-                             "collate so train images are processed identically to val.")
+    parser.add_argument(
+        "--split",
+        choices=["val", "train"],
+        default="val",
+        help="which split to extract embeddings from. val uses the model's "
+        "default transforms; train uses the val transform + single-view "
+        "collate so train images are processed identically to val.",
+    )
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
-        "--shard-dir", type=Path, default=None,
+        "--shard-dir",
+        type=Path,
+        default=None,
         help="write results to a per-(model,dataset) JSON shard here instead of the "
-             "main history file. Required for parallel SLURM runs to avoid write races.",
+        "main history file. Required for parallel SLURM runs to avoid write races.",
     )
     args = parser.parse_args()
 
@@ -337,14 +346,15 @@ def main() -> None:
     else:
         parser.error("pass --model+--dataset or --all")
 
-    print(f"targets ({len(targets)}): {targets[:5]}{'…' if len(targets)>5 else ''}", flush=True)
+    print(f"targets ({len(targets)}): {targets[:5]}{'…' if len(targets) > 5 else ''}", flush=True)
     for model, dataset in targets:
         try:
-            process_one(model, dataset, args.split, device, mgr,
-                        overwrite=args.overwrite, dry_run=args.dry_run)
+            process_one(model, dataset, args.split, device, mgr, overwrite=args.overwrite, dry_run=args.dry_run)
         except Exception as e:
             print(f"[{model}/{dataset}] FAILED: {type(e).__name__}: {e}", flush=True)
-            import traceback; traceback.print_exc()
+            import traceback
+
+            traceback.print_exc()
 
 
 if __name__ == "__main__":

@@ -5,9 +5,9 @@ import zipfile
 
 import pytest
 
-from stable_datasets.video.something_something_v2 import _EXTRACTION_SENTINEL
 from stable_datasets.schema import VideoRef
-from stable_datasets.video import SSv2, SomethingSomethingV2
+from stable_datasets.video import SomethingSomethingV2, SSv2
+from stable_datasets.video.something_something_v2 import _EXTRACTION_SENTINEL
 
 
 def _builder():

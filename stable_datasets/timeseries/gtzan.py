@@ -80,9 +80,12 @@ class GTZAN(BaseDatasetBuilder):
                 extracted = archive.extractfile(member)
                 if extracted is None:
                     continue
-                yield member.name, {
-                    "series": wav_bytes_to_series(extracted.read()),
-                    "label": GTZAN_LABELS.index(genre),
-                    "genre": genre,
-                    "filename": filename,
-                }
+                yield (
+                    member.name,
+                    {
+                        "series": wav_bytes_to_series(extracted.read()),
+                        "label": GTZAN_LABELS.index(genre),
+                        "genre": genre,
+                        "filename": filename,
+                    },
+                )

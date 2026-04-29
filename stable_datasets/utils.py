@@ -52,7 +52,7 @@ def _default_dest_folder() -> Path:
 
 
 def _default_processed_cache_dir() -> Path:
-    """Default folder where processed datasets (Arrow files) are cached."""
+    """Default folder where processed datasets are cached."""
     return Path(os.path.expanduser(_get_cache_dir())) / "processed"
 
 
@@ -67,7 +67,7 @@ class BaseDatasetBuilder:
     # Subclasses must define:
     # - VERSION: schema.Version
     #
-    # For dataset provenance / downloads, subclasses can either:
+    # For dataset source metadata and downloads, subclasses can either:
     # - define a class attribute SOURCE (static), or
     # - override _source(self) to compute it at runtime (e.g. from self.config)
     VERSION: Version
@@ -87,19 +87,7 @@ class BaseDatasetBuilder:
     # passing ``storage_format="arrow"`` or ``storage_format="lance"``
     # to the builder constructor, e.g. ``CIFAR10(split="train",
     # storage_format="lance")``. Arrow and Lance caches coexist at
-    # distinct paths because ``cache_fingerprint`` hashes the format,
-    # so flipping the format at load time does not invalidate or
-    # clobber the other cache.
-    #
-    # Decision guide (from our profiling on ImageNet-1K and the small
-    # image datasets): keep "arrow" for datasets under ~100 GB on
-    # 256 GB training nodes -- Arrow's mmap is unbeatable when the
-    # dataset fits warm in the page cache. Use "lance" for datasets
-    # that will thrash the page cache (above ~300 GB, or any size on
-    # sub-128 GB nodes), and for cheap-decode workloads (tensors,
-    # audio, embeddings) where decode does not mask the storage-layer
-    # difference. See benchmarks/results/lance_investigation_table.tex
-    # for the supporting measurements.
+    # distinct paths; ``cache_fingerprint`` includes the format.
     STORAGE_FORMAT: str = "arrow"
 
     @staticmethod
@@ -239,8 +227,7 @@ class BaseDatasetBuilder:
         if asset_name is None:
             raise TypeError("Asset spec must be a URL string or DownloadInfo.")
         raise TypeError(
-            f"SOURCE['assets']['{asset_name}'] must be a URL string or DownloadInfo, "
-            f"got {type(asset_spec).__name__}."
+            f"SOURCE['assets']['{asset_name}'] must be a URL string or DownloadInfo, got {type(asset_spec).__name__}."
         )
 
     def _split_generators(self):
@@ -280,9 +267,7 @@ class BaseDatasetBuilder:
 
         # Deduplicate assets by their full candidate URL set so shared mirrors only download once.
         unique_specs = list(
-            dict.fromkeys(
-                (info.url, tuple(info.fallbacks), info.checksum, info.filename) for info in download_specs
-            )
+            dict.fromkeys((info.url, tuple(info.fallbacks), info.checksum, info.filename) for info in download_specs)
         )
         download_dir = getattr(self, "_raw_download_dir", None)
         if download_dir is None:
@@ -381,9 +366,7 @@ class BaseDatasetBuilder:
                 or a StableDatasetDict (all splits).
         """
         if storage_format is not None and storage_format not in ("arrow", "lance"):
-            raise ValueError(
-                f"storage_format must be 'arrow' or 'lance', got {storage_format!r}"
-            )
+            raise ValueError(f"storage_format must be 'arrow' or 'lance', got {storage_format!r}")
         backend_kwargs = dict(backend_kwargs or {})
 
         instance = object.__new__(cls)
@@ -432,9 +415,7 @@ class BaseDatasetBuilder:
             if (shard_dir / "_metadata.json").exists():
                 on_disk_format = detect_cache_format(shard_dir)
                 if on_disk_format != effective_format:
-                    # Different format lives at a different fingerprint;
-                    # if we got here the hash collided, which would be a
-                    # cache-fingerprint bug. Treat as a cache miss.
+                    # Mismatched format metadata is treated as a cache miss.
                     all_cached = False
                     break
                 opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
@@ -482,9 +463,7 @@ class BaseDatasetBuilder:
                 elif effective_format == "lance":
                     if not (shard_dir / "_metadata.json").exists():
                         generator = instance._generate_examples(**sg.gen_kwargs)
-                        write_lance_cache(
-                            generator, features, shard_dir, num_encode_workers=4
-                        )
+                        write_lance_cache(generator, features, shard_dir, num_encode_workers=4)
                     opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
                     splits_data[sg.name] = StableDataset(
                         features=features,
@@ -678,8 +657,7 @@ def download(
     tmp = dest.with_suffix(dest.suffix + ".tmp")
 
     with FileLock(lock):
-        # If you trust your pipeline never leaves a partial 'dest', this is OK.
-        # Otherwise, prefer a size/checksum validation here.
+        # Existing completed downloads are treated as cache hits.
         if dest.exists():
             return dest
 

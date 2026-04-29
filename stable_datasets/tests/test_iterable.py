@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-from stable_datasets.dataset import StableDataset
 from stable_datasets.cache import write_sharded_arrow_cache
+from stable_datasets.dataset import StableDataset
 from stable_datasets.iterable import StableIterableDataset
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value
 
