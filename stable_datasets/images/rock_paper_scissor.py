@@ -1,6 +1,6 @@
 import zipfile
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -12,14 +12,12 @@ class RockPaperScissor(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "https://laurencemoroney.com/datasets.html",
-        assets= {
+        homepage="https://laurencemoroney.com/datasets.html",
+        assets={
             "train": DownloadInfo(url="https://storage.googleapis.com/download.tensorflow.org/data/rps.zip"),
-
             "test": DownloadInfo(url="https://storage.googleapis.com/download.tensorflow.org/data/rps-test-set.zip"),
-
         },
-        citation= """@misc{laurence2019rock,
+        citation="""@misc{laurence2019rock,
                          title={Rock Paper Scissors Dataset},
                          author={Laurence Moroney},
                          year={2019},

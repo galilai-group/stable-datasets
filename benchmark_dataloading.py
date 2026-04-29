@@ -69,11 +69,11 @@ import sys
 import time
 import warnings
 
-
-warnings.filterwarnings("ignore")
-
 import torch
 from torch.utils.data import DataLoader
+
+
+warnings.filterwarnings("ignore")
 
 
 # ── Constants ────────────────────────────────────────────────────────────────

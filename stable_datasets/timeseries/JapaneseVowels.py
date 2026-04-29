@@ -4,7 +4,16 @@ from pathlib import Path
 
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, Features, Sequence, Value, Version, DownloadInfo
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Sequence,
+    Value,
+    Version,
+)
 from stable_datasets.utils import BaseDatasetBuilder, load_from_tsfile_to_dataframe
 
 

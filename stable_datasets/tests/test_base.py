@@ -343,6 +343,7 @@ def test_source_is_frozen_for_static_source():
 
 def test_base_builder_requires_source_homepage(tmp_path):
     with pytest.raises(TypeError):
+
         class _MissingHomepage(BaseDatasetBuilder):
             VERSION = Version("0.0.0")
             SOURCE = {"citation": "TBD", "assets": {}}
@@ -359,6 +360,7 @@ def test_base_builder_requires_source_homepage(tmp_path):
 
 def test_base_builder_requires_source_citation(tmp_path):
     with pytest.raises(TypeError):
+
         class _MissingCitation(BaseDatasetBuilder):
             VERSION = Version("0.0.0")
             SOURCE = {"homepage": "https://example.com", "assets": {}}
@@ -375,6 +377,7 @@ def test_base_builder_requires_source_citation(tmp_path):
 
 def test_base_builder_requires_source_assets(tmp_path):
     with pytest.raises(TypeError):
+
         class _MissingDownloadUrls(BaseDatasetBuilder):
             VERSION = Version("0.0.0")
             SOURCE = {"homepage": "https://example.com", "citation": "TBD"}
@@ -391,6 +394,7 @@ def test_base_builder_requires_source_assets(tmp_path):
 
 def test_base_builder_validates_source_field_types(tmp_path):
     with pytest.raises(TypeError):
+
         class _BadTypes(BaseDatasetBuilder):
             VERSION = Version("0.0.0")
             SOURCE = {"homepage": 123, "citation": object(), "assets": "not-a-dict"}

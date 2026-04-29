@@ -228,7 +228,7 @@ def command_for_run(spec: RunSpec, python_executable: str = "python") -> list[st
 
 
 def shell_command_for_run(spec: RunSpec, python_executable: str = "python") -> str:
-    return " ".join(shlex.quote(part) for part in command_for_run(spec, python_executable=python_executable))
+    return shlex.join(command_for_run(spec, python_executable=python_executable))
 
 
 def recommended_cpus_per_task(spec: RunSpec, slack: int = 2) -> int:

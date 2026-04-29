@@ -4,7 +4,16 @@ import zipfile
 import numpy as np
 import scipy.io as sio
 
-from stable_datasets.schema import BuilderConfig, ClassLabel, DatasetInfo, DatasetSource, Features, Image, Version, DownloadInfo
+from stable_datasets.schema import (
+    BuilderConfig,
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Image,
+    Version,
+)
 from stable_datasets.utils import BaseDatasetBuilder
 
 

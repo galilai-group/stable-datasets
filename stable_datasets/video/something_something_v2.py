@@ -1,4 +1,3 @@
-from collections.abc import Iterator
 import csv
 import json
 import os
@@ -7,6 +6,7 @@ import stat
 import tarfile
 import tempfile
 import zipfile
+from collections.abc import Iterator
 from pathlib import Path
 
 from loguru import logger as logging
@@ -210,9 +210,7 @@ class SomethingSomethingV2(BaseDatasetBuilder):
         else:
             label_zips = sorted(data_dir.glob("*labels*.zip"))
             if not label_zips:
-                raise FileNotFoundError(
-                    f"Could not find labels/ or a *labels*.zip file under {data_dir}"
-                )
+                raise FileNotFoundError(f"Could not find labels/ or a *labels*.zip file under {data_dir}")
             labels_source = label_zips[0]
 
         videos_dir = data_dir / "videos"
@@ -224,8 +222,7 @@ class SomethingSomethingV2(BaseDatasetBuilder):
             return [data_dir], labels_source
 
         archive_candidates = sorted(
-            p for p in data_dir.iterdir()
-            if p.is_file() and p.name.startswith("20bn-something-something-v2")
+            p for p in data_dir.iterdir() if p.is_file() and p.name.startswith("20bn-something-something-v2")
         )
         if not archive_candidates:
             raise FileNotFoundError(

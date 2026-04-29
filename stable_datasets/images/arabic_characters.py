@@ -4,7 +4,7 @@ from zipfile import ZipFile
 from PIL import Image as PILImage
 from tqdm import tqdm
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -26,14 +26,16 @@ class ArabicCharacters(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "https://github.com/mloey/Arabic-Handwritten-Characters-Dataset",
-        assets= {
-            "train": DownloadInfo(url="https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Train%20Images%2013440x32x32.zip"),
-
-            "test": DownloadInfo(url="https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Test%20Images%203360x32x32.zip"),
-
+        homepage="https://github.com/mloey/Arabic-Handwritten-Characters-Dataset",
+        assets={
+            "train": DownloadInfo(
+                url="https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Train%20Images%2013440x32x32.zip"
+            ),
+            "test": DownloadInfo(
+                url="https://github.com/mloey/Arabic-Handwritten-Characters-Dataset/raw/master/Test%20Images%203360x32x32.zip"
+            ),
         },
-        citation= """@article{el2017arabic,
+        citation="""@article{el2017arabic,
                         title={Arabic handwritten characters recognition using convolutional neural network},
                         author={El-Sawy, Ahmed and Loey, Mohamed and El-Bakry, Hazem},
                         journal={WSEAS Transactions on Computer Research},

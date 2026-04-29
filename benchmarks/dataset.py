@@ -12,8 +12,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import stable_pretraining as spt
 import numpy as np
+import stable_pretraining as spt
 import torch
 
 import stable_datasets as sds
@@ -345,9 +345,7 @@ IMAGE_DATASET_CONFIGS: dict[str, DatasetConfig] = {
 TIMESERIES_DATASET_CONFIGS: dict[str, DatasetConfig] = {
     name: cfg for name, cfg in DATASET_CONFIGS.items() if cfg.modality == "timeseries"
 }
-INCLUDED_IMAGE_DATASETS: set[str] = {
-    name for name, cfg in IMAGE_DATASET_CONFIGS.items() if cfg.include_in_results
-}
+INCLUDED_IMAGE_DATASETS: set[str] = {name for name, cfg in IMAGE_DATASET_CONFIGS.items() if cfg.include_in_results}
 INCLUDED_TIMESERIES_DATASETS: set[str] = {
     name for name, cfg in TIMESERIES_DATASET_CONFIGS.items() if cfg.include_in_results
 }

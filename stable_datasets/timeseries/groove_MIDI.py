@@ -86,18 +86,21 @@ class GrooveMIDI(BaseDatasetBuilder):
                     series = soundfile_bytes_to_series(audio_bytes)
                 except RuntimeError:
                     continue
-                yield row["id"], {
-                    "series": series,
-                    "midi": midi_bytes,
-                    "drummer": row["drummer"],
-                    "session": row["session"],
-                    "example_id": row["id"],
-                    "style": row["style"],
-                    "bpm": row["bpm"],
-                    "beat_type": row["beat_type"],
-                    "time_signature": row["time_signature"],
-                    "duration": row["duration"],
-                    "split": row["split"],
-                    "audio_filename": row["audio_filename"],
-                    "midi_filename": row["midi_filename"],
-                }
+                yield (
+                    row["id"],
+                    {
+                        "series": series,
+                        "midi": midi_bytes,
+                        "drummer": row["drummer"],
+                        "session": row["session"],
+                        "example_id": row["id"],
+                        "style": row["style"],
+                        "bpm": row["bpm"],
+                        "beat_type": row["beat_type"],
+                        "time_signature": row["time_signature"],
+                        "duration": row["duration"],
+                        "split": row["split"],
+                        "audio_filename": row["audio_filename"],
+                        "midi_filename": row["midi_filename"],
+                    },
+                )

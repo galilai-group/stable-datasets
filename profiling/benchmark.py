@@ -12,6 +12,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+
 try:
     from filelock import FileLock
 except ImportError:
@@ -72,13 +73,10 @@ def validate_args(args: argparse.Namespace) -> None:
             raise ValueError("--lance-io-threads must be positive when provided.")
         if args.num_workers > 0 and args.multiprocessing_context != "spawn":
             raise ValueError(
-                "Lance with --num-workers > 0 must use --multiprocessing-context spawn "
-                "because Lance is not fork-safe."
+                "Lance with --num-workers > 0 must use --multiprocessing-context spawn because Lance is not fork-safe."
             )
     elif args.lance_cpu_threads is not None or args.lance_io_threads is not None:
-        raise ValueError(
-            "--lance-cpu-threads/--lance-io-threads may only be provided when --backend lance."
-        )
+        raise ValueError("--lance-cpu-threads/--lance-io-threads may only be provided when --backend lance.")
 
     if args.batch_size <= 0:
         raise ValueError("--batch-size must be positive.")
@@ -115,7 +113,6 @@ def load_runtime_dependencies() -> None:
     import torch as _torch
     from torch.utils.data import DataLoader as _DataLoader
     from torch.utils.data import Dataset as _Dataset
-
     from utils import PeakMemoryMonitor as _PeakMemoryMonitor
     from utils import StageProfile as _StageProfile
     from utils import dump_cprofile as _dump_cprofile

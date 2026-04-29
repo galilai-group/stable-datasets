@@ -121,9 +121,7 @@ class LanceVideoFramesBackend:
             min_video_frames,
         )
         if self._seg_vid.size == 0:
-            raise ValueError(
-                f"no valid segments: every video has fewer than span={self._span} frames"
-            )
+            raise ValueError(f"no valid segments: every video has fewer than span={self._span} frames")
         self._ds = None
 
     @property

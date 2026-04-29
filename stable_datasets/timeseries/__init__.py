@@ -15,9 +15,10 @@ from .seizures_neonatal import SeizuresNeonatal
 from .sonycust import SONYCUST
 from .speech_commands import SpeechCommands
 from .UrbanSound import UrbanSound
-from .VoiceGenderDetection import VoiceGenderDetection
 from .vocalset import VocalSet
+from .VoiceGenderDetection import VoiceGenderDetection
 from .warblr import Warblr
+
 
 __all__ = [
     "AudioMNIST",

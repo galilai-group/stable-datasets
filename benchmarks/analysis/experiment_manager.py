@@ -161,8 +161,8 @@ class ExperimentManager:
                 if r is None:
                     cells.append(f"{'--':>14}")
                 else:
-                    rm = r['rankme']
-                    ld = r['lidar']
+                    rm = r["rankme"]
+                    ld = r["lidar"]
                     rm_s = f"{rm:>6.2f}" if rm is not None else "    --"
                     ld_s = f"{ld:>5.2f}" if ld is not None else "   --"
                     cells.append(f"{rm_s}/{ld_s}")
@@ -181,7 +181,6 @@ class ExperimentManager:
             w = csv.DictWriter(f, fieldnames=keys)
             w.writeheader()
             w.writerows(rows)
-
 
     def gather_shards(self, shard_dir: Path | str, overwrite: bool = False) -> int:
         """Merge per-shard JSON files (written by parallel SLURM tasks) into this history.
@@ -220,17 +219,21 @@ def main() -> None:
     parser.add_argument("--history", type=Path, default=DEFAULT_HISTORY_PATH)
     parser.add_argument("--summary", action="store_true")
     parser.add_argument("--csv", type=Path, default=None, help="export all runs to a flat CSV")
-    parser.add_argument("--gather", type=Path, default=None,
-                        help="merge per-task shard JSONs from this directory into the main history")
-    parser.add_argument("--overwrite", action="store_true",
-                        help="with --gather, replace existing entries on key collision")
+    parser.add_argument(
+        "--gather",
+        type=Path,
+        default=None,
+        help="merge per-task shard JSONs from this directory into the main history",
+    )
+    parser.add_argument(
+        "--overwrite", action="store_true", help="with --gather, replace existing entries on key collision"
+    )
     args = parser.parse_args()
 
     mgr = ExperimentManager(args.history)
     if args.gather:
         added = mgr.gather_shards(args.gather, overwrite=args.overwrite)
-        print(f"gathered {added} new runs from {args.gather} → {args.history}  "
-              f"(total runs: {len(mgr.runs)})")
+        print(f"gathered {added} new runs from {args.gather} → {args.history}  (total runs: {len(mgr.runs)})")
     if args.summary:
         print(mgr.summary())
     if args.csv:

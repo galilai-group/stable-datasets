@@ -3,7 +3,7 @@ import os
 import zipfile
 from pathlib import Path
 
-from stable_datasets.schema import DatasetInfo, DownloadInfo, Features, Value, Version, Video, DatasetSource
+from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Value, Version, Video
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
 
@@ -28,26 +28,24 @@ class CLEVRER(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
-        homepage= "http://clevrer.csail.mit.edu/",
-        assets= {
+        homepage="http://clevrer.csail.mit.edu/",
+        assets={
             "train_videos": DownloadInfo(url="http://data.csail.mit.edu/clevrer/videos/train/video_train.zip"),
-
-            "train_annotations": DownloadInfo(url="http://data.csail.mit.edu/clevrer/annotations/train/annotation_train.zip"),
-
+            "train_annotations": DownloadInfo(
+                url="http://data.csail.mit.edu/clevrer/annotations/train/annotation_train.zip"
+            ),
             "train_questions": DownloadInfo(url="http://data.csail.mit.edu/clevrer/questions/train.json"),
-
-            "validation_videos": DownloadInfo(url="http://data.csail.mit.edu/clevrer/videos/validation/video_validation.zip"),
-
-            "validation_annotations": DownloadInfo(url="http://data.csail.mit.edu/clevrer/annotations/validation/annotation_validation.zip"),
-
+            "validation_videos": DownloadInfo(
+                url="http://data.csail.mit.edu/clevrer/videos/validation/video_validation.zip"
+            ),
+            "validation_annotations": DownloadInfo(
+                url="http://data.csail.mit.edu/clevrer/annotations/validation/annotation_validation.zip"
+            ),
             "validation_questions": DownloadInfo(url="http://data.csail.mit.edu/clevrer/questions/validation.json"),
-
             "test_videos": DownloadInfo(url="http://data.csail.mit.edu/clevrer/videos/test/video_test.zip"),
-
             "test_questions": DownloadInfo(url="http://data.csail.mit.edu/clevrer/questions/test.json"),
-
         },
-        citation= """@inproceedings{yi2020clevrer,
+        citation="""@inproceedings{yi2020clevrer,
             title={CLEVRER: CoLlision Events for Video REpresentation and Reasoning},
             author={Yi, Kexin and Gan, Chuang and Li, Yunzhu and Kohli, Pushmeet and Wu, Jiajun and Torralba, Antonio and Tenenbaum, Joshua B},
             booktitle={International Conference on Learning Representations},

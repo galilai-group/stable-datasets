@@ -1,5 +1,4 @@
 import csv
-import io
 import tarfile
 
 import numpy as np
@@ -106,16 +105,19 @@ class SONYCUST(BaseDatasetBuilder):
                 extracted = archive.extractfile(member)
                 if extracted is None:
                     continue
-                yield idx, {
-                    "series": wav_bytes_to_series(extracted.read()),
-                    "fine_labels": fine_labels.tolist(),
-                    "coarse_labels": coarse_labels,
-                    "fine_label_names": fine_label_names,
-                    "coarse_label_names": COARSE_LABELS,
-                    "relative_path": relative_path,
-                    "filename": row[2],
-                    "metadata": row[:4],
-                }
+                yield (
+                    idx,
+                    {
+                        "series": wav_bytes_to_series(extracted.read()),
+                        "fine_labels": fine_labels.tolist(),
+                        "coarse_labels": coarse_labels,
+                        "fine_label_names": fine_label_names,
+                        "coarse_label_names": COARSE_LABELS,
+                        "relative_path": relative_path,
+                        "filename": row[2],
+                        "metadata": row[:4],
+                    },
+                )
 
 
 def _find_member(archive: tarfile.TarFile, suffix: str) -> tarfile.TarInfo:

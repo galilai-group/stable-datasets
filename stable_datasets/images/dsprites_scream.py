@@ -3,7 +3,7 @@ import os
 import numpy as np
 from PIL import Image as PILImage
 
-from stable_datasets.schema import DatasetInfo, Features, Sequence, Value, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Sequence, Value, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -22,12 +22,13 @@ class DSpritesScream(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
-        homepage= "https://github.com/deepmind/dsprites-dataset",
-        assets= {
-            "train": DownloadInfo(url="https://github.com/google-deepmind/dsprites-dataset/raw/refs/heads/master/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz"),
-
+        homepage="https://github.com/deepmind/dsprites-dataset",
+        assets={
+            "train": DownloadInfo(
+                url="https://github.com/google-deepmind/dsprites-dataset/raw/refs/heads/master/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz"
+            ),
         },
-        citation= """@inproceedings{higgins2017beta,
+        citation="""@inproceedings{higgins2017beta,
                     title={beta-vae: Learning basic visual concepts with a constrained variational framework},
                     author={Higgins, Irina and Matthey, Loic and Pal, Arka and Burgess, Christopher and Glorot, Xavier and Botvinick, Matthew and Mohamed, Shakir and Lerchner, Alexander},
                     booktitle={International conference on learning representations},

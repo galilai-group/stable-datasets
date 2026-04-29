@@ -60,25 +60,123 @@ SUPERVISED = "supervised"
 #   centered      : objects are centered/cropped on clean background — proxy
 #                   for LOW intra-class variation.
 METADATA: dict[str, dict] = {
-    "arabiccharacters": dict(num_classes=28,  train_size=13440, natural=0, fine_grained=0, grayscale=1, centered=1),
-    "arabicdigits":     dict(num_classes=10,  train_size=60000, natural=0, fine_grained=0, grayscale=1, centered=1),
-    "beans":            dict(num_classes=3,   train_size=1034,  natural=1, fine_grained=1, grayscale=0, centered=1),
-    "cifar10":          dict(num_classes=10,  train_size=50000, natural=1, fine_grained=0, grayscale=0, centered=0),
-    "cifar100":         dict(num_classes=100, train_size=50000, natural=1, fine_grained=0, grayscale=0, centered=0),
-    "country211":       dict(num_classes=211, train_size=31650, natural=1, fine_grained=1, grayscale=0, centered=0),
-    "cub200":           dict(num_classes=200, train_size=5994,  natural=1, fine_grained=1, grayscale=0, centered=0),
-    "dtd":              dict(num_classes=47,  train_size=1880,  natural=1, fine_grained=0, grayscale=0, centered=0),
-    "emnist":           dict(num_classes=47,  train_size=112800,natural=0, fine_grained=0, grayscale=1, centered=1),
-    "fashionmnist":     dict(num_classes=10,  train_size=60000, natural=0, fine_grained=0, grayscale=1, centered=1),
-    "fgvcaircraft":     dict(num_classes=100, train_size=6667,  natural=1, fine_grained=1, grayscale=0, centered=0),
-    "flowers102":       dict(num_classes=102, train_size=1020,  natural=1, fine_grained=1, grayscale=0, centered=0),
-    "food101":          dict(num_classes=101, train_size=75750, natural=1, fine_grained=1, grayscale=0, centered=0),
-    "imagenette":       dict(num_classes=10,  train_size=9469,  natural=1, fine_grained=0, grayscale=0, centered=0),
-    "medmnist":         dict(num_classes=9,   train_size=89996, natural=0, fine_grained=0, grayscale=0, centered=1),
-    "notmnist":         dict(num_classes=10,  train_size=18724, natural=0, fine_grained=0, grayscale=1, centered=1),
-    "rockpaperscissor": dict(num_classes=3,   train_size=2520,  natural=1, fine_grained=0, grayscale=0, centered=1),
-    "stl10":            dict(num_classes=10,  train_size=5000,  natural=1, fine_grained=0, grayscale=0, centered=0),
-    "svhn":             dict(num_classes=10,  train_size=73257, natural=1, fine_grained=0, grayscale=0, centered=1),
+    "arabiccharacters": {
+        "num_classes": 28,
+        "train_size": 13440,
+        "natural": 0,
+        "fine_grained": 0,
+        "grayscale": 1,
+        "centered": 1,
+    },
+    "arabicdigits": {
+        "num_classes": 10,
+        "train_size": 60000,
+        "natural": 0,
+        "fine_grained": 0,
+        "grayscale": 1,
+        "centered": 1,
+    },
+    "beans": {"num_classes": 3, "train_size": 1034, "natural": 1, "fine_grained": 1, "grayscale": 0, "centered": 1},
+    "cifar10": {
+        "num_classes": 10,
+        "train_size": 50000,
+        "natural": 1,
+        "fine_grained": 0,
+        "grayscale": 0,
+        "centered": 0,
+    },
+    "cifar100": {
+        "num_classes": 100,
+        "train_size": 50000,
+        "natural": 1,
+        "fine_grained": 0,
+        "grayscale": 0,
+        "centered": 0,
+    },
+    "country211": {
+        "num_classes": 211,
+        "train_size": 31650,
+        "natural": 1,
+        "fine_grained": 1,
+        "grayscale": 0,
+        "centered": 0,
+    },
+    "cub200": {"num_classes": 200, "train_size": 5994, "natural": 1, "fine_grained": 1, "grayscale": 0, "centered": 0},
+    "dtd": {"num_classes": 47, "train_size": 1880, "natural": 1, "fine_grained": 0, "grayscale": 0, "centered": 0},
+    "emnist": {
+        "num_classes": 47,
+        "train_size": 112800,
+        "natural": 0,
+        "fine_grained": 0,
+        "grayscale": 1,
+        "centered": 1,
+    },
+    "fashionmnist": {
+        "num_classes": 10,
+        "train_size": 60000,
+        "natural": 0,
+        "fine_grained": 0,
+        "grayscale": 1,
+        "centered": 1,
+    },
+    "fgvcaircraft": {
+        "num_classes": 100,
+        "train_size": 6667,
+        "natural": 1,
+        "fine_grained": 1,
+        "grayscale": 0,
+        "centered": 0,
+    },
+    "flowers102": {
+        "num_classes": 102,
+        "train_size": 1020,
+        "natural": 1,
+        "fine_grained": 1,
+        "grayscale": 0,
+        "centered": 0,
+    },
+    "food101": {
+        "num_classes": 101,
+        "train_size": 75750,
+        "natural": 1,
+        "fine_grained": 1,
+        "grayscale": 0,
+        "centered": 0,
+    },
+    "imagenette": {
+        "num_classes": 10,
+        "train_size": 9469,
+        "natural": 1,
+        "fine_grained": 0,
+        "grayscale": 0,
+        "centered": 0,
+    },
+    "medmnist": {
+        "num_classes": 9,
+        "train_size": 89996,
+        "natural": 0,
+        "fine_grained": 0,
+        "grayscale": 0,
+        "centered": 1,
+    },
+    "notmnist": {
+        "num_classes": 10,
+        "train_size": 18724,
+        "natural": 0,
+        "fine_grained": 0,
+        "grayscale": 1,
+        "centered": 1,
+    },
+    "rockpaperscissor": {
+        "num_classes": 3,
+        "train_size": 2520,
+        "natural": 1,
+        "fine_grained": 0,
+        "grayscale": 0,
+        "centered": 1,
+    },
+    "stl10": {"num_classes": 10, "train_size": 5000, "natural": 1, "fine_grained": 0, "grayscale": 0, "centered": 0},
+    "svhn": {"num_classes": 10, "train_size": 73257, "natural": 1, "fine_grained": 0, "grayscale": 0, "centered": 1},
 }
 
 FEATURES = [
@@ -107,13 +205,13 @@ def load_gaps() -> pd.DataFrame:
             continue
         best_ssl_row = ssl.loc[ssl[col].idxmax()]
         rows.append(
-            dict(
-                dataset=ds,
-                best_supervised=float(sup.max()),
-                best_ssl=float(best_ssl_row[col]),
-                best_ssl_method=best_ssl_row["model"],
-                ssl_advantage=float(best_ssl_row[col]) - float(sup.max()),
-            )
+            {
+                "dataset": ds,
+                "best_supervised": float(sup.max()),
+                "best_ssl": float(best_ssl_row[col]),
+                "best_ssl_method": best_ssl_row["model"],
+                "ssl_advantage": float(best_ssl_row[col]) - float(sup.max()),
+            }
         )
     return pd.DataFrame(rows).sort_values("ssl_advantage", ascending=False).reset_index(drop=True)
 
@@ -135,7 +233,7 @@ def fit_r2(X: np.ndarray, y: np.ndarray) -> tuple[float, np.ndarray]:
     X1 = np.column_stack([np.ones(len(X)), X])
     beta, *_ = np.linalg.lstsq(X1, y, rcond=None)
     resid = y - X1 @ beta
-    ss_res = float((resid ** 2).sum())
+    ss_res = float((resid**2).sum())
     ss_tot = float(((y - y.mean()) ** 2).sum())
     r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0.0
     return r2, beta
@@ -162,13 +260,13 @@ def rank_features(df: pd.DataFrame) -> pd.DataFrame:
         x = df[f].to_numpy().reshape(-1, 1)
         r2, _ = fit_r2(x, y)
         rho, p = stats.spearmanr(df[f], y)
-        rows.append(dict(features=f, r2=r2, loo_r2=loo_r2(x, y),
-                         spearman=float(rho), spearman_p=float(p)))
+        rows.append({"features": f, "r2": r2, "loo_r2": loo_r2(x, y), "spearman": float(rho), "spearman_p": float(p)})
     for f1, f2 in itertools.combinations(FEATURES, 2):
         X = df[[f1, f2]].to_numpy()
         r2, _ = fit_r2(X, y)
-        rows.append(dict(features=f"{f1} + {f2}", r2=r2, loo_r2=loo_r2(X, y),
-                         spearman=np.nan, spearman_p=np.nan))
+        rows.append(
+            {"features": f"{f1} + {f2}", "r2": r2, "loo_r2": loo_r2(X, y), "spearman": np.nan, "spearman_p": np.nan}
+        )
     return pd.DataFrame(rows).sort_values("loo_r2", ascending=False).reset_index(drop=True)
 
 
@@ -187,7 +285,8 @@ def _plot_advantage_bars(df, path):
 
 def _plot_headroom(df, path):
     fig, ax = plt.subplots(figsize=(7, 6))
-    x = df["supervised_ceiling"]; y = df["ssl_advantage"]
+    x = df["supervised_ceiling"]
+    y = df["ssl_advantage"]
     ax.scatter(x, y, c=["#1f77b4" if a >= 0 else "#d62728" for a in y], s=60)
     ax.axhline(0, color="k", lw=0.5)
     for _, r in df.iterrows():
@@ -215,8 +314,7 @@ def run_gap_stage() -> pd.DataFrame:
 
     print(f"[gap] n datasets = {len(df)}  ->  {GAP_CSV.name}")
     print("Per-dataset SSL advantage (positive = SSL wins):")
-    print(df[["dataset", "best_supervised", "best_ssl", "best_ssl_method", "ssl_advantage"]]
-          .to_string(index=False))
+    print(df[["dataset", "best_supervised", "best_ssl", "best_ssl_method", "ssl_advantage"]].to_string(index=False))
     print("\nTop 10 features by leave-one-out R²:")
     print(ranked.head(10).to_string(index=False))
     return df
@@ -231,13 +329,16 @@ def _spearman_pearson(x: pd.Series, y: pd.Series) -> dict:
     # silently give wrong rhos if the two Series are indexed in different orders.
     df = pd.DataFrame({"x": x, "y": y}).dropna()
     if len(df) < 3:
-        return dict(n=int(len(df)), spearman_rho=None, spearman_p=None,
-                    pearson_r=None, pearson_p=None)
+        return {"n": int(len(df)), "spearman_rho": None, "spearman_p": None, "pearson_r": None, "pearson_p": None}
     rho, p = stats.spearmanr(df["x"], df["y"])
     r, pr = stats.pearsonr(df["x"], df["y"])
-    return dict(n=int(len(df)),
-                spearman_rho=float(rho), spearman_p=float(p),
-                pearson_r=float(r), pearson_p=float(pr))
+    return {
+        "n": int(len(df)),
+        "spearman_rho": float(rho),
+        "spearman_p": float(p),
+        "pearson_r": float(r),
+        "pearson_p": float(pr),
+    }
 
 
 def _collect_rows_for_split(hist: pd.DataFrame, gap: pd.DataFrame, split: str) -> list[dict]:
@@ -262,18 +363,46 @@ def _collect_rows_for_split(hist: pd.DataFrame, gap: pd.DataFrame, split: str) -
 
     for metric in ("rankme", "lidar"):
         if not best_ssl.empty:
-            out.append(dict(framing="delta", metric=metric, split=split, method="best_ssl",
-                            **_spearman_pearson(best_ssl[metric] - sup[metric], gap_idx)))
-            out.append(dict(framing="ssl", metric=metric, split=split, method="best_ssl",
-                            **_spearman_pearson(best_ssl[metric], gap_idx)))
-        out.append(dict(framing="sup", metric=metric, split=split, method="supervised",
-                        **_spearman_pearson(sup[metric], gap_idx)))
+            out.append(
+                dict(
+                    framing="delta",
+                    metric=metric,
+                    split=split,
+                    method="best_ssl",
+                    **_spearman_pearson(best_ssl[metric] - sup[metric], gap_idx),
+                )
+            )
+            out.append(
+                dict(
+                    framing="ssl",
+                    metric=metric,
+                    split=split,
+                    method="best_ssl",
+                    **_spearman_pearson(best_ssl[metric], gap_idx),
+                )
+            )
+        out.append(
+            dict(
+                framing="sup",
+                metric=metric,
+                split=split,
+                method="supervised",
+                **_spearman_pearson(sup[metric], gap_idx),
+            )
+        )
         for method in SSL_METHODS:
             m_rows = hist[hist.model == method].set_index("dataset")
             if m_rows.empty:
                 continue
-            out.append(dict(framing="method", metric=metric, split=split, method=method,
-                            **_spearman_pearson(m_rows[metric], gap_idx)))
+            out.append(
+                dict(
+                    framing="method",
+                    metric=metric,
+                    split=split,
+                    method=method,
+                    **_spearman_pearson(m_rows[metric], gap_idx),
+                )
+            )
     return out
 
 
@@ -287,8 +416,10 @@ def run_correlation_stage(gap: pd.DataFrame | None = None) -> pd.DataFrame:
     val_hist = load_history(HISTORY_PATHS["val"], "val")
     train_hist = load_history(HISTORY_PATHS["train"], "train")
 
-    print(f"[correlate] val: {len(val_hist)} rows ({val_hist.dataset.nunique()} datasets), "
-          f"train: {len(train_hist)} rows ({train_hist.dataset.nunique()} datasets)")
+    print(
+        f"[correlate] val: {len(val_hist)} rows ({val_hist.dataset.nunique()} datasets), "
+        f"train: {len(train_hist)} rows ({train_hist.dataset.nunique()} datasets)"
+    )
 
     rows: list[dict] = []
     if len(val_hist) > 0:
@@ -296,8 +427,9 @@ def run_correlation_stage(gap: pd.DataFrame | None = None) -> pd.DataFrame:
     if len(train_hist) > 0:
         rows.extend(_collect_rows_for_split(train_hist, gap, "train"))
 
-    df = pd.DataFrame(rows)[["framing", "metric", "split", "method", "n",
-                              "spearman_rho", "spearman_p", "pearson_r", "pearson_p"]]
+    df = pd.DataFrame(rows)[
+        ["framing", "metric", "split", "method", "n", "spearman_rho", "spearman_p", "pearson_r", "pearson_p"]
+    ]
     df.to_csv(REPORT_CSV, index=False)
     print(f"[correlate] wrote {REPORT_CSV} ({len(df)} rows)")
 
@@ -305,8 +437,10 @@ def run_correlation_stage(gap: pd.DataFrame | None = None) -> pd.DataFrame:
     printable = df.dropna(subset=["spearman_rho"]).copy()
     printable["abs_rho"] = printable["spearman_rho"].abs()
     for _, r in printable.sort_values("abs_rho", ascending=False).head(15).iterrows():
-        print(f"  {r['split']:<5}  {r['metric']:<6}  {r['framing']:<6}  {r['method']:<14}"
-              f"  n={int(r['n']):3d}  ρ={r['spearman_rho']:+.3f}  p={r['spearman_p']:.4f}")
+        print(
+            f"  {r['split']:<5}  {r['metric']:<6}  {r['framing']:<6}  {r['method']:<14}"
+            f"  n={int(r['n']):3d}  ρ={r['spearman_rho']:+.3f}  p={r['spearman_p']:.4f}"
+        )
     return df
 
 
@@ -316,8 +450,12 @@ def run_correlation_stage(gap: pd.DataFrame | None = None) -> pd.DataFrame:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--stage", choices=["gap", "correlate", "both"], default="both",
-                        help="which pipeline stage(s) to run (default: both)")
+    parser.add_argument(
+        "--stage",
+        choices=["gap", "correlate", "both"],
+        default="both",
+        help="which pipeline stage(s) to run (default: both)",
+    )
     args = parser.parse_args()
 
     gap = None

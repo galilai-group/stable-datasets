@@ -80,9 +80,12 @@ class SeizuresNeonatal(BaseDatasetBuilder):
             annotation = np.asarray(annotations[subject_id - 1]).astype("int32")
             if annotation.ndim == 1:
                 annotation = annotation[:, None]
-            yield subject_id, {
-                "series": series,
-                "annotations": annotation.tolist(),
-                "subject_id": subject_id,
-                "filename": Path(eeg_path).name,
-            }
+            yield (
+                subject_id,
+                {
+                    "series": series,
+                    "annotations": annotation.tolist(),
+                    "subject_id": subject_id,
+                    "filename": Path(eeg_path).name,
+                },
+            )

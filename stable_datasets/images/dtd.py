@@ -4,7 +4,7 @@ from io import BytesIO
 from PIL import Image as PILImage
 from tqdm import tqdm
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -27,16 +27,13 @@ class DTD(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
-        homepage= "https://www.robots.ox.ac.uk/~vgg/data/dtd/",
-        assets= {
+        homepage="https://www.robots.ox.ac.uk/~vgg/data/dtd/",
+        assets={
             "train": DownloadInfo(url="https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz"),
-
             "test": DownloadInfo(url="https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz"),
-
             "val": DownloadInfo(url="https://www.robots.ox.ac.uk/~vgg/data/dtd/download/dtd-r1.0.1.tar.gz"),
-
         },
-        citation= """@InProceedings{cimpoi14describing,
+        citation="""@InProceedings{cimpoi14describing,
                     Author    = {M. Cimpoi and S. Maji and I. Kokkinos and S. Mohamed and and A. Vedaldi},
                     Title     = {Describing Textures in the Wild},
                     Booktitle = {Proceedings of the {IEEE} Conf. on Computer Vision and Pattern Recognition ({CVPR})},

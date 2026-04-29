@@ -39,8 +39,6 @@ version = {attr = "stable_datasets.__version__"}
 
 [project.optional-dependencies]
 
-tensordict = ["tensordict"]
-
 video = ["torchcodec"]
 
 # Benchmark dependencies (profiling + SSL evaluation suite)

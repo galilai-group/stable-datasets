@@ -19,6 +19,7 @@ Re-running is cheap: scores already in the output CSV are skipped unless
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +32,7 @@ from scipy import stats
 
 from benchmarks.dataset import DATASET_CONFIGS, INCLUDED_IMAGE_DATASETS, DatasetConfig, _get_dataset_class
 
+
 REPO = Path(__file__).resolve().parents[2]
 OUT_DIR = REPO / "benchmarks" / "results"
 GAP_CSV = OUT_DIR / "ssl_supervised_gap.csv"
@@ -38,10 +40,10 @@ GAP_CSV = OUT_DIR / "ssl_supervised_gap.csv"
 # Match benchmarks/conf/config.yaml so we reuse the existing scratch cache
 # instead of re-downloading multi-GB tarballs into $HOME.
 DATA_ROOT = Path("/oscar/home/sboughan/scratch/.stable-datasets")
-DATA_KWARGS = dict(
-    download_dir=str(DATA_ROOT / "downloads"),
-    processed_cache_dir=str(DATA_ROOT / "processed"),
-)
+DATA_KWARGS = {
+    "download_dir": str(DATA_ROOT / "downloads"),
+    "processed_cache_dir": str(DATA_ROOT / "processed"),
+}
 
 # Encoder registry. Each entry maps a short tag (used in output filenames
 # and CLI) to a timm model id. The tag gets embedded in all per-encoder
@@ -56,16 +58,14 @@ DATA_KWARGS = dict(
 ENCODERS: dict[str, str] = {
     "dinov2": "vit_small_patch14_dinov2",
     "in21k": "vit_small_patch16_224.augreg_in21k",
-    "clip":   "vit_large_patch14_clip_224.openai",
+    "clip": "vit_large_patch14_clip_224.openai",
 }
 
 N_PER_CLASS = 32
 BATCH_SIZE = 32  # conservative; ViT-L CLIP at 224 still fits comfortably
 
 DATASETS: dict[str, DatasetConfig] = {
-    name: cfg
-    for name, cfg in DATASET_CONFIGS.items()
-    if name in INCLUDED_IMAGE_DATASETS
+    name: cfg for name, cfg in DATASET_CONFIGS.items() if name in INCLUDED_IMAGE_DATASETS
 }
 
 
@@ -76,7 +76,7 @@ def build_model(encoder: str, device: torch.device) -> torch.nn.Module:
     return model
 
 
-def build_transform(model: torch.nn.Module) -> transforms.Compose:
+def build_transform(model: torch.nn.Module) -> Callable[[Image.Image], torch.Tensor]:
     cfg = timm.data.resolve_model_data_config(model)
     return timm.data.create_transform(**cfg, is_training=False)
 
@@ -172,7 +172,7 @@ def process_one(name: str, model, transform, device, seed: int) -> dict | None:
     embs, cls_arr = embed_samples(model, transform, ds, sampled, device)
     score = intraclass_variation(embs, cls_arr)
     print(f"[{name}] intraclass_variation = {score:.4f}", flush=True)
-    return dict(dataset=name, intraclass_variation=score, n_sampled=n_sampled, n_classes=len(sampled))
+    return {"dataset": name, "intraclass_variation": score, "n_sampled": n_sampled, "n_classes": len(sampled)}
 
 
 def analyze_and_plot(scores: pd.DataFrame, encoder: str) -> None:

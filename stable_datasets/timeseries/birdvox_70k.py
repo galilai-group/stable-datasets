@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+"""BirdVox-70k avian flight-call detection loader."""
+
 __author__ = "Randall Balestriero"
 import os
 import time
@@ -9,15 +11,6 @@ import numpy as np
 from tqdm import tqdm
 
 from ..utils import download_dataset
-
-"""
-TODO(builder-migration):
-- Keep recording unit identity as first-class metadata; the corpus is spread
-  across six HDF5 files, one per unit.
-- Decide whether the builder should expose the full corpus with unit metadata
-  only, or define evaluation splits/groupings by recording unit.
-- Preserve the binary bird/no-bird labels without inventing a random split.
-"""
 
 
 _urls = {

@@ -1,3 +1,5 @@
+"""IRMAS predominant-instrument audio classification loader."""
+
 import io
 import os
 import time
@@ -8,15 +10,6 @@ from scipy.io.wavfile import read as wav_read
 from tqdm import tqdm
 
 from ..utils import download_dataset
-
-"""
-TODO(builder-migration):
-- Train and test do not share the same target shape.
-- Training labels come from folder structure and are mostly single predominant
-  instrument labels.
-- Test labels come from sidecar text files and may be multi-instrument or
-  otherwise more ambiguous, so the builder should preserve that asymmetry.
-"""
 
 
 _urls = {

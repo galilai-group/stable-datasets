@@ -1,6 +1,6 @@
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.utils import (
     BaseDatasetBuilder,
     _default_dest_folder,
@@ -22,14 +22,12 @@ class KMNIST(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "http://codh.rois.ac.jp/kmnist/",
-        assets= {
+        homepage="http://codh.rois.ac.jp/kmnist/",
+        assets={
             "train": DownloadInfo(url="https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-train-imgs.npz"),
-
             "test": DownloadInfo(url="https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-test-imgs.npz"),
-
         },
-        citation= """@online{clanuwat2018deep,
+        citation="""@online{clanuwat2018deep,
                          author       = {Tarin Clanuwat and Mikel Bober-Irizar and Asanobu Kitamoto and Alex Lamb and Kazuaki Yamamoto and David Ha},
                          title        = {Deep Learning for Classical Japanese Literature},
                          date         = {2018-12-03},

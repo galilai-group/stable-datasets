@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, download
 
@@ -28,12 +28,11 @@ class Imagenette(BaseDatasetBuilder):
 
     VERSION = Version("2.0.0")
     SOURCE = DatasetSource(
-        homepage= "https://github.com/fastai/imagenette",
-        assets= {
+        homepage="https://github.com/fastai/imagenette",
+        assets={
             "archive": DownloadInfo(url="https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz"),
-
         },
-        citation= """@misc{howard2019imagenette,
+        citation="""@misc{howard2019imagenette,
             author={Jeremy Howard},
             title={Imagenette: A smaller subset of 10 easily classified classes from ImageNet},
             year={2019},

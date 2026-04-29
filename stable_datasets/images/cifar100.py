@@ -1,7 +1,7 @@
 import pickle
 import tarfile
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -12,14 +12,12 @@ class CIFAR100(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "https://www.cs.toronto.edu/~kriz/cifar.html",
-        assets= {
+        homepage="https://www.cs.toronto.edu/~kriz/cifar.html",
+        assets={
             "train": DownloadInfo(url="https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"),
-
             "test": DownloadInfo(url="https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"),
-
         },
-        citation= """@article{krizhevsky2009learning,
+        citation="""@article{krizhevsky2009learning,
                          title={Learning multiple layers of features from tiny images},
                          author={Krizhevsky, Alex and Hinton, Geoffrey and others},
                          year={2009},

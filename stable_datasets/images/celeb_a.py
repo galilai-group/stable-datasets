@@ -6,7 +6,7 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Sequence, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Sequence, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
@@ -21,20 +21,21 @@ class CelebA(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
-        homepage= "http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html",
-        citation= """@inproceedings{liu2015faceattributes,
+        homepage="http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html",
+        citation="""@inproceedings{liu2015faceattributes,
                          title = {Deep Learning Face Attributes in the Wild},
                          author = {Liu, Ziwei and Luo, Ping and Wang, Xiaogang and Tang, Xiaoou},
                          booktitle = {Proceedings of International Conference on Computer Vision (ICCV)},
                          month = {December},
                          year = {2015}}""",
-        assets= {
+        assets={
             "archive": DownloadInfo(url="https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pZjFTYXZWM3FlRnM"),
-
-            "attributes": DownloadInfo(url="https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pblRyaVFSWGxPY0U"),
-
-            "partition": DownloadInfo(url="https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pY0NSMzRuSXJEVkk"),
-
+            "attributes": DownloadInfo(
+                url="https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pblRyaVFSWGxPY0U"
+            ),
+            "partition": DownloadInfo(
+                url="https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pY0NSMzRuSXJEVkk"
+            ),
         },
     )
 

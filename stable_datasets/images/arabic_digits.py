@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image as PILImage
 from tqdm import tqdm
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -17,15 +17,17 @@ class ArabicDigits(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "https://github.com/mloey/Arabic-Handwritten-Digits-Dataset",
-        assets= {
+        homepage="https://github.com/mloey/Arabic-Handwritten-Digits-Dataset",
+        assets={
             # Both splits come from the same CSV zip file
-            "train": DownloadInfo(url="https://raw.githubusercontent.com/mloey/Arabic-Handwritten-Digits-Dataset/master/Arabic%20Handwritten%20Digits%20Dataset%20CSV.zip"),
-
-            "test": DownloadInfo(url="https://raw.githubusercontent.com/mloey/Arabic-Handwritten-Digits-Dataset/master/Arabic%20Handwritten%20Digits%20Dataset%20CSV.zip"),
-
+            "train": DownloadInfo(
+                url="https://raw.githubusercontent.com/mloey/Arabic-Handwritten-Digits-Dataset/master/Arabic%20Handwritten%20Digits%20Dataset%20CSV.zip"
+            ),
+            "test": DownloadInfo(
+                url="https://raw.githubusercontent.com/mloey/Arabic-Handwritten-Digits-Dataset/master/Arabic%20Handwritten%20Digits%20Dataset%20CSV.zip"
+            ),
         },
-        citation= """@inproceedings{el2016cnn,
+        citation="""@inproceedings{el2016cnn,
                         title={CNN for handwritten arabic digits recognition based on LeNet-5},
                         author={El-Sawy, Ahmed and Hazem, EL-Bakry and Loey, Mohamed},
                         booktitle={International conference on advanced intelligent systems and informatics},

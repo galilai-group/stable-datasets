@@ -79,10 +79,13 @@ class Picidae(BaseDatasetBuilder):
                     continue
                 filename = parts[-1]
                 xc_identifier = filename.split("-")[0]
-                yield name, {
-                    "series": wav_bytes_to_series(archive.read(name)),
-                    "label": PICIDAE_LABELS.index(label_name),
-                    "label_name": label_name,
-                    "xc_identifier": xc_identifier,
-                    "filename": filename,
-                }
+                yield (
+                    name,
+                    {
+                        "series": wav_bytes_to_series(archive.read(name)),
+                        "label": PICIDAE_LABELS.index(label_name),
+                        "label_name": label_name,
+                        "xc_identifier": xc_identifier,
+                        "filename": filename,
+                    },
+                )

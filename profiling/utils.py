@@ -167,9 +167,7 @@ class StageProfile:
             "normalize_avg_sec_per_call": (
                 self.normalize_total_sec / self.normalize_calls if self.normalize_calls else None
             ),
-            "collate_avg_sec_per_call": (
-                self.collate_total_sec / self.collate_calls if self.collate_calls else None
-            ),
+            "collate_avg_sec_per_call": (self.collate_total_sec / self.collate_calls if self.collate_calls else None),
         }
 
 

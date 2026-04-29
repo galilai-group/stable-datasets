@@ -81,12 +81,15 @@ class Warblr(BaseDatasetBuilder):
                 recording_id = str(row.get("itemid", row.get("id", "")))
                 filename = f"{recording_id}.wav"
                 member = _zip_member_by_suffix(archive, f"wav/{filename}")
-                yield recording_id, {
-                    "series": wav_bytes_to_series(archive.read(member)),
-                    "label": int(row.get("hasbird", row.get("label", 0))),
-                    "recording_id": recording_id,
-                    "filename": filename,
-                }
+                yield (
+                    recording_id,
+                    {
+                        "series": wav_bytes_to_series(archive.read(member)),
+                        "label": int(row.get("hasbird", row.get("label", 0))),
+                        "recording_id": recording_id,
+                        "filename": filename,
+                    },
+                )
 
 
 def _zip_member_by_suffix(archive: zipfile.ZipFile, suffix: str) -> str:

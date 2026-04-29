@@ -1,3 +1,5 @@
+"""TUT Acoustic Scenes 2017 audio scene classification loader."""
+
 import io
 import os
 import zipfile
@@ -7,16 +9,6 @@ import soundfile as sf
 from tqdm import tqdm
 
 from ..utils import download_dataset
-
-"""
-TODO(builder-migration):
-- Respect the official development folds and separate evaluation set rather
-  than collapsing everything into one ad hoc dataset object.
-- Represent fold membership as part of the builder contract, not just derived
-  metadata reconstructed at load time.
-- Good target shape is likely fold-aware development splits plus a distinct
-  evaluation/test split.
-"""
 
 
 _urls = {

@@ -178,7 +178,7 @@ class StableDataset:
         For single-file datasets this is a cheap mmap. For multi-file
         datasets this concatenates all files — prefer ``__getitem__``
         or ``__iter__`` for row access. Use this for bulk operations
-        like ``to_tensordict()`` or column mutations.
+        like column mutations.
         """
         return self._backend.table
 
@@ -490,8 +490,8 @@ class StableDataset:
         """Return the table reflecting the current logical view.
 
         If this dataset has an indices mapping, materializes only the
-        selected rows. Column mutations must use this instead of
-        ``self.table`` to respect indexed views.
+        selected rows. Column mutations use this table to respect
+        indexed views.
         """
         tbl = self.table
         if self._indices is not None:
@@ -625,25 +625,6 @@ class StableDataset:
             transform=transform,
         )
 
-    def to_tensordict(self, columns: list[str] | None = None):
-        """Convert numeric columns to a ``tensordict.TensorDict``."""
-        import torch
-        from tensordict import TensorDict
-
-        tbl = self.table
-        td = {}
-        for col_name, feat in self._features.items():
-            if isinstance(feat, Image | Video | Array3D):
-                continue
-            if columns and col_name not in columns:
-                continue
-            col = tbl.column(col_name)
-            if isinstance(feat, Sequence):
-                td[col_name] = torch.tensor(col.to_pylist())
-            else:
-                td[col_name] = torch.from_numpy(col.to_numpy(zero_copy_only=False))
-        return TensorDict(td, batch_size=[len(self)])
-
     def flatten_indices(self, cache_dir: Path | None = None) -> StableDataset:
         """Materialize an indexed view into a new contiguous Arrow file."""
         if self._indices is None:
@@ -716,15 +697,9 @@ class StableDataset:
     def _shallow_copy(self, **overrides) -> StableDataset:
         """Return a shallow copy with optional attribute overrides.
 
-        ``num_rows`` is forwarded from the current instance rather than
-        recomputed. This is both a perf win (no backend round-trip for
-        an already-known value) and a correctness fix for backends
-        whose ``num_rows`` property has side effects -- e.g.
-        :class:`LanceBackend` opens the underlying dataset lazily on
-        first access, which initializes Lance's Rust tokio runtime. If
-        that init happens in the main process and DataLoader then
-        forks workers, the child processes inherit stale tokio state
-        and segfault on their first Lance call.
+        ``num_rows`` is forwarded from the current instance. Backends
+        with process-local lazy state, such as :class:`LanceBackend`,
+        can keep dataset handles unopened until the copy is used.
         """
         kw = {
             "features": self._features,
@@ -765,9 +740,7 @@ class StableDataset:
     def _validate_video_decode_config(self, config: VideoDecodeConfig) -> None:
         feat = self._features.get(config.column)
         if not isinstance(feat, Video):
-            raise ValueError(
-                f"Video decode column {config.column!r} must exist and be a Video feature."
-            )
+            raise ValueError(f"Video decode column {config.column!r} must exist and be a Video feature.")
 
     def _apply_video_decode_row(self, row: dict, *, sample_index: int | None) -> dict:
         config = self._video_decode_config
@@ -796,9 +769,7 @@ class StableDataset:
                 sample_indices=sample_indices,
             )
             if len(decoded) != len(rows):
-                raise ValueError(
-                    "decode_fn_batched must return one decoded value per input row."
-                )
+                raise ValueError("decode_fn_batched must return one decoded value per input row.")
             out_rows = [dict(row) for row in rows]
             for row, value in zip(out_rows, decoded):
                 row[config.column] = value
@@ -1017,9 +988,7 @@ def _pad_video_indices(indices: np.ndarray, config: VideoDecodeConfig) -> np.nda
     if indices.size >= num_frames:
         return indices[:num_frames].astype(np.int64)
     if config.pad == "error":
-        raise ValueError(
-            f"Video has only {indices.size} sampled frames, but num_frames={num_frames}."
-        )
+        raise ValueError(f"Video has only {indices.size} sampled frames, but num_frames={num_frames}.")
     if config.pad == "repeat_last":
         pad = np.full(num_frames - indices.size, int(indices[-1]), dtype=np.int64)
         return np.concatenate([indices.astype(np.int64), pad])
@@ -1072,10 +1041,7 @@ def _resize_video_frames(frames: np.ndarray, config: VideoDecodeConfig) -> np.nd
         height = width = int(config.resize)
     else:
         height, width = config.resize
-    resized = [
-        cv2.resize(frame, (int(width), int(height)), interpolation=cv2.INTER_AREA)
-        for frame in frames
-    ]
+    resized = [cv2.resize(frame, (int(width), int(height)), interpolation=cv2.INTER_AREA) for frame in frames]
     return np.stack(resized, axis=0)
 
 
@@ -1095,9 +1061,7 @@ def _crop_video_frames(
         crop_h, crop_w = config.resize
     _, height, width, _ = frames.shape
     if crop_h > height or crop_w > width:
-        raise ValueError(
-            f"Crop size {(crop_h, crop_w)} exceeds frame size {(height, width)}."
-        )
+        raise ValueError(f"Crop size {(crop_h, crop_w)} exceeds frame size {(height, width)}.")
     if config.crop == "center":
         top = (height - crop_h) // 2
         left = (width - crop_w) // 2
@@ -1188,8 +1152,5 @@ class StableDatasetDict(dict):
     ) -> StableDatasetDict:
         """Return a split dict where each split applies the same video decode view."""
         return StableDatasetDict(
-            {
-                split: dataset.set_video_decode(config, **kwargs)
-                for split, dataset in self.items()
-            }
+            {split: dataset.set_video_decode(config, **kwargs) for split, dataset in self.items()}
         )

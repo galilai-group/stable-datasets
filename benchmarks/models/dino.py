@@ -11,8 +11,8 @@ from torch import nn
 
 from benchmarks.models import (
     build_optim_config,
-    create_backbone,
     collate_multicrop,
+    create_backbone,
     get_embedding_dim,
     ssl_augmentation,
     val_transform,
@@ -50,9 +50,7 @@ def create_transforms(ds_config, model_cfg=None):
         transform_dict[f"global_{i + 1}"] = globals_[i % 2]
 
     local_size = (max(h // 2, 32), max(w // 2, 32))
-    local_aug = ssl_augmentation(
-        ds_config, local_size, crop_scale=(0.05, 0.4), blur_p=0.5, interpolation=bicubic
-    )
+    local_aug = ssl_augmentation(ds_config, local_size, crop_scale=(0.05, 0.4), blur_p=0.5, interpolation=bicubic)
     for i in range(num_local):
         transform_dict[f"local_{i + 1}"] = local_aug
 
@@ -74,6 +72,7 @@ def forward(self, batch, stage):
     Fix: accumulate center contributions across micro-batches, apply ONE EMA
     update per effective batch.
     """
+
     def _cls(features):
         """Extract CLS embedding from HF output / 3D tensor / 2D tensor."""
         if hasattr(features, "last_hidden_state"):
@@ -234,7 +233,6 @@ def forward(self, batch, stage):
 
 
 def build(cfg, ds_config) -> tuple[spt.Module, int]:
-    h = ds_config.image_size[0]
     backbone = create_backbone(cfg.backbone, ds_config)
     embed_dim = get_embedding_dim(backbone)
     backbone_wrapper = spt.backbone.TeacherStudentWrapper(

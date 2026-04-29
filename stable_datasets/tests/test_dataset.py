@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 from PIL import Image as PILImage
 
-from stable_datasets.dataset import StableDataset
 from stable_datasets.cache import write_sharded_arrow_cache
+from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Value, Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder

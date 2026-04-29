@@ -4,7 +4,7 @@ from io import BytesIO
 import numpy as np
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version, DownloadInfo, DatasetSource
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Value, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -16,12 +16,11 @@ class CIFAR10C(BaseDatasetBuilder):
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = DatasetSource(
-        homepage= "https://zenodo.org/records/2535967",
-        assets= {
+        homepage="https://zenodo.org/records/2535967",
+        assets={
             "test": DownloadInfo(url="https://zenodo.org/records/2535967/files/CIFAR-10-C.tar?download=1"),
-
         },
-        citation= """@article{hendrycks2019robustness,
+        citation="""@article{hendrycks2019robustness,
                         title={Benchmarking Neural Network Robustness to Common Corruptions and Perturbations},
                         author={Dan Hendrycks and Thomas Dietterich},
                         journal={Proceedings of the International Conference on Learning Representations},

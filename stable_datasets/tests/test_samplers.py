@@ -17,13 +17,12 @@ from __future__ import annotations
 
 import pickle
 
-import numpy as np
 import pytest
 
-from stable_datasets.dataset import StableDataset
 from stable_datasets.backends.arrow_shards import ArrowBackend
-from stable_datasets.cache import write_lance_cache, write_sharded_arrow_cache
 from stable_datasets.backends.lance_rows import LanceBackend
+from stable_datasets.cache import write_lance_cache, write_sharded_arrow_cache
+from stable_datasets.dataset import StableDataset
 from stable_datasets.samplers import ShardShuffleSampler
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value
 
@@ -68,9 +67,7 @@ def _make_lance_ds(tmp_path, n: int = 40, batch_size: int = 10):
     lance_meta = write_lance_cache(gen(), features, lance_dir, batch_size=batch_size)
     backend = LanceBackend(uri=lance_dir)
     return (
-        StableDataset(
-            features=features, info=info, backend=backend, num_rows=lance_meta.num_rows
-        ),
+        StableDataset(features=features, info=info, backend=backend, num_rows=lance_meta.num_rows),
         lance_meta,
     )
 
@@ -121,6 +118,7 @@ class TestShardShuffleSamplerArrow:
         for c in meta.shard_row_counts:
             ranges.append((total, total + c))
             total += c
+
         # We don't know which shard came first, but we know contiguous
         # runs in the emitted stream correspond to shards.
         # Group consecutive emitted indices by shard membership.
@@ -169,9 +167,7 @@ class TestShardShuffleSamplerArrow:
                 current_shard = shard_of(idx)
                 groups.append([idx])
         for g in groups:
-            assert g == sorted(g), (
-                f"within_shard='sequential' expected ascending within-shard but got {g}"
-            )
+            assert g == sorted(g), f"within_shard='sequential' expected ascending within-shard but got {g}"
 
     def test_shard_block_structure(self, tmp_path):
         """All indices from any single shard are emitted contiguously."""
@@ -236,15 +232,15 @@ class TestFactoryMethod:
         ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=20)
         s = ds.make_sampler("shard_shuffle", seed=42)
         assert isinstance(s, ShardShuffleSampler)
-        assert sorted(list(s)) == list(range(20))
+        assert sorted(s) == list(range(20))
 
     def test_make_sampler_forwards_kwargs(self, tmp_path):
         ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=20)
         s_random = ds.make_sampler("shard_shuffle", seed=0, within_shard="random")
         s_sequential = ds.make_sampler("shard_shuffle", seed=0, within_shard="sequential")
         # Both cover indices but with potentially different orderings.
-        assert sorted(list(s_random)) == list(range(20))
-        assert sorted(list(s_sequential)) == list(range(20))
+        assert sorted(s_random) == list(range(20))
+        assert sorted(s_sequential) == list(range(20))
 
     def test_make_sampler_unknown_kind_raises(self, tmp_path):
         ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=10)

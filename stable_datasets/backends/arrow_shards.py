@@ -38,9 +38,8 @@ class ArrowBackend:
     all storage concerns here.
     """
 
-    # Arrow now prefers batched gather for DataLoader __getitems__ as well.
-    # We avoid ``pa.Table.take`` on binary-heavy random access and instead
-    # rebuild the requested batch from record-batch slices.
+    # DataLoader ``__getitems__`` uses batched gather for Arrow-backed data.
+    # Binary-heavy random access is rebuilt from record-batch slices.
     prefer_batched_take: bool = True
 
     def __init__(
@@ -104,8 +103,8 @@ class ArrowBackend:
 
         For single-file datasets this is a cheap mmap. For multi-shard
         datasets this concatenates all shards into one table — use only
-        when full materialization is intended (e.g. ``to_tensordict``,
-        column mutations). Hot paths should use ``get_row``, ``take``,
+        when full materialization is intended (e.g. column mutations).
+        Hot paths should use ``get_row``, ``take``,
         or ``iter_batches`` instead.
         """
         if self._table is None:
@@ -311,14 +310,8 @@ def _upgrade_binary_columns(table: pa.Table) -> pa.Table:
     buffer is shared, so the runtime cost is negligible and existing
     on-disk caches need no rewrite.
     """
-    needs_cast = [
-        f for f in table.schema
-        if pa.types.is_binary(f.type) and not pa.types.is_large_binary(f.type)
-    ]
+    needs_cast = [f for f in table.schema if pa.types.is_binary(f.type) and not pa.types.is_large_binary(f.type)]
     if not needs_cast:
         return table
-    new_schema = pa.schema([
-        pa.field(f.name, pa.large_binary()) if f in needs_cast else f
-        for f in table.schema
-    ])
+    new_schema = pa.schema([pa.field(f.name, pa.large_binary()) if f in needs_cast else f for f in table.schema])
     return table.cast(new_schema)

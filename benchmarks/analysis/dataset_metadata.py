@@ -29,20 +29,19 @@ from scipy import stats
 
 from benchmarks.dataset import DATASET_CONFIGS, INCLUDED_IMAGE_DATASETS, DatasetConfig, _get_dataset_class
 
+
 REPO = Path(__file__).resolve().parents[2]
 OUT_DIR = REPO / "benchmarks" / "results"
 OUT_CSV = OUT_DIR / "dataset_metadata.csv"
 
 DATA_ROOT = Path("/oscar/home/sboughan/scratch/.stable-datasets")
-DATA_KWARGS = dict(
-    download_dir=str(DATA_ROOT / "downloads"),
-    processed_cache_dir=str(DATA_ROOT / "processed"),
-)
+DATA_KWARGS = {
+    "download_dir": str(DATA_ROOT / "downloads"),
+    "processed_cache_dir": str(DATA_ROOT / "processed"),
+}
 
 DATASETS: dict[str, DatasetConfig] = {
-    name: cfg
-    for name, cfg in DATASET_CONFIGS.items()
-    if name in INCLUDED_IMAGE_DATASETS
+    name: cfg for name, cfg in DATASET_CONFIGS.items() if name in INCLUDED_IMAGE_DATASETS
 }
 
 N_RESOLUTION_SAMPLES = 16
@@ -98,17 +97,17 @@ def one_dataset(name: str, cfg: DatasetConfig) -> dict:
     mean_h, mean_w, mean_c = sample_resolution(ds, N_RESOLUTION_SAMPLES)
     mean_pixels = mean_h * mean_w
 
-    row = dict(
-        dataset=name,
-        train_size=int(len(ds)),
-        num_classes=k,
-        class_balance=class_balance,
-        imbalance_ratio=imbalance_ratio,
-        mean_height=mean_h,
-        mean_width=mean_w,
-        mean_channels=mean_c,
-        mean_pixels=mean_pixels,
-    )
+    row = {
+        "dataset": name,
+        "train_size": int(len(ds)),
+        "num_classes": k,
+        "class_balance": class_balance,
+        "imbalance_ratio": imbalance_ratio,
+        "mean_height": mean_h,
+        "mean_width": mean_w,
+        "mean_channels": mean_c,
+        "mean_pixels": mean_pixels,
+    }
     print(
         f"[{name}] K={k}  n={len(ds)}  balance={class_balance:.3f}  "
         f"imb_ratio={imbalance_ratio:.2f}  res={mean_h:.0f}x{mean_w:.0f}x{mean_c:.0f}",
@@ -143,13 +142,13 @@ def correlations_report(meta: pd.DataFrame) -> None:
         rho_adv, p_adv = stats.spearmanr(df[f], df["ssl_advantage"])
         rho_int, p_int = stats.spearmanr(df[f], df["intraclass_dinov2"])
         rows.append(
-            dict(
-                feature=f,
-                rho_vs_ssl_advantage=float(rho_adv),
-                p_vs_ssl_advantage=float(p_adv),
-                rho_vs_intraclass_dinov2=float(rho_int),
-                p_vs_intraclass_dinov2=float(p_int),
-            )
+            {
+                "feature": f,
+                "rho_vs_ssl_advantage": float(rho_adv),
+                "p_vs_ssl_advantage": float(p_adv),
+                "rho_vs_intraclass_dinov2": float(rho_int),
+                "p_vs_intraclass_dinov2": float(p_int),
+            }
         )
     out = pd.DataFrame(rows)
     out.to_csv(OUT_DIR / "dataset_metadata_correlations.csv", index=False)
@@ -161,10 +160,8 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, default=None,
-                        help="compute one dataset (for job-array mode)")
-    parser.add_argument("--gather", action="store_true",
-                        help="merge per-dataset shards + run correlations")
+    parser.add_argument("--dataset", type=str, default=None, help="compute one dataset (for job-array mode)")
+    parser.add_argument("--gather", action="store_true", help="merge per-dataset shards + run correlations")
     args = parser.parse_args()
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -173,6 +170,7 @@ def main() -> None:
 
     if args.gather:
         import glob as g
+
         shards = sorted(g.glob(str(shard_dir / "*.csv")))
         if not shards:
             print("no shards found")
@@ -196,10 +194,9 @@ def main() -> None:
         print(f"  wrote {shard}")
 
     if not args.dataset:
-        meta = pd.DataFrame([
-            pd.read_csv(shard_dir / f"{n}.csv").iloc[0]
-            for n in DATASETS if (shard_dir / f"{n}.csv").exists()
-        ])
+        meta = pd.DataFrame(
+            [pd.read_csv(shard_dir / f"{n}.csv").iloc[0] for n in DATASETS if (shard_dir / f"{n}.csv").exists()]
+        )
         meta.to_csv(OUT_CSV, index=False)
         print(f"\nwrote {OUT_CSV}")
         correlations_report(meta)

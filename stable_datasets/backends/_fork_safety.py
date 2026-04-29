@@ -1,6 +1,5 @@
 """Shared fork-safety helpers for backend implementations.
 
-This module is intentionally small for now. Lance-backed layouts should keep
-opened dataset handles out of parent processes before DataLoader forks, and
-video backends should pin OpenCV worker threads inside children.
+Backends use this module for process-local runtime state, including
+worker-local library configuration after DataLoader forks.
 """

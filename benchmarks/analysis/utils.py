@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pandas as pd
 
+
 # --- filesystem layout ---------------------------------------------------
 
 REPO = Path(__file__).resolve().parents[2]
@@ -97,15 +98,15 @@ def load_history(path: Path, split_label: str = "val") -> pd.DataFrame:
             continue
         res = r.get("results", {})
         rows.append(
-            dict(
-                model=r["model"],
-                dataset=r["dataset"],
-                split=r.get("split", split_label),
-                rankme=res.get("rankme"),
-                lidar=res.get("lidar"),
-                lidar_n_classes_used=res.get("lidar_n_classes_used"),
-                n_classes=res.get("n_classes"),
-                embed_dim=res.get("embed_dim"),
-            )
+            {
+                "model": r["model"],
+                "dataset": r["dataset"],
+                "split": r.get("split", split_label),
+                "rankme": res.get("rankme"),
+                "lidar": res.get("lidar"),
+                "lidar_n_classes_used": res.get("lidar_n_classes_used"),
+                "n_classes": res.get("n_classes"),
+                "embed_dim": res.get("embed_dim"),
+            }
         )
     return pd.DataFrame(rows)
