@@ -54,6 +54,15 @@ MODEL_DISPLAY_NAMES: dict[str, str] = {
 }
 
 
+# (model, dataset) pairs confirmed to be training collapses — rendered as "---".
+# Add entries here rather than deleting rows from the CSV so the raw data is preserved.
+KNOWN_FAILURES: set[tuple[str, str]] = {
+    ("dino", "emnist_digits"),   # collapse: probe=21.3, chance=10.0
+    ("dino", "emnist_mnist"),    # collapse: probe=18.5, chance=10.0
+    ("nnclr", "emnist_mnist"),   # collapse: probe=26.2, chance=10.0
+}
+
+
 def _display_name(key: str) -> str:
     """Look up display name: datasets from DATASET_CONFIGS, models from MODEL_DISPLAY_NAMES."""
     if key in MODEL_DISPLAY_NAMES:
@@ -130,7 +139,7 @@ def _matches_expected(config: dict, expected: dict) -> bool:
 
     if "lr" in expected:
         run_lr = config.get("lr")
-        if run_lr is not None and abs(float(run_lr) - expected["lr"]) > 1e-8:
+        if run_lr is not None and abs(float(run_lr) - float(expected["lr"])) > 1e-8:
             return False
 
     if "effective_batch_size" in expected:
@@ -207,18 +216,48 @@ def collect_runs(
     skipped_bad_params = 0
     skipped_unparseable = 0
     skipped_excluded: dict[str, int] = {}
+    skipped_transfer = 0
+    skipped_short_runtime = 0
     for run in tqdm(runs, desc="Scanning runs"):
         state = _retry(lambda: run.state)
         if state != "finished":
             continue
 
+        # Exclude transfer/offline-probe runs: these evaluate a frozen pretrained
+        # backbone *on* a dataset rather than training the SSL method on it, so
+        # their probe numbers are not comparable to training-run probes.
+        run_tags = set(_retry(lambda: run.tags or []))
+        if {"offline_probe", "transfer"} & run_tags:
+            skipped_transfer += 1
+            continue
+
         config = _retry(lambda: run.config)
         summary = _retry(lambda: run.summary)
+
+        # Exclude jobs that exited without actually training (e.g. crashed
+        # immediately, loaded a stale checkpoint and quit). 5 min is well below
+        # any real training cycle even on the smallest datasets.
+        runtime = summary.get("_runtime")
+        if runtime is not None and runtime < 300:
+            skipped_short_runtime += 1
+            continue
 
         model = config.get("model") or ""
         dataset = (config.get("dataset") or "").lower()
 
-        # Fall back to parsing the run name when config is empty
+        # The batch API returns truncated configs for resumed/contaminated runs.
+        # Re-fetch individually when either field is missing; this is authoritative
+        # over name-parsing since the run name may be stale after a resume.
+        if not model or not dataset:
+            try:
+                run_id_local = run.id
+                full_config = _retry(lambda: api.run(f"{entity}/{project}/{run_id_local}").config)
+                model = (full_config.get("model") or "") or model
+                dataset = ((full_config.get("dataset") or "").lower()) or dataset
+            except Exception:
+                pass
+
+        # Last resort: parse model/dataset from the run name
         if not model or not dataset:
             name_model, name_ds = _parse_name(run.name, backbones)
             if name_model:
@@ -239,6 +278,11 @@ def collect_runs(
         ds_params = model_params.get(dataset)
         if ds_params is not None and not _matches_expected(config, ds_params):
             skipped_bad_params += 1
+            continue
+
+        rankme = summary.get("rankme")
+        if rankme is None:
+            skipped_no_metric += 1
             continue
 
         metric_values: dict[str, float] = {}
@@ -264,7 +308,9 @@ def collect_runs(
         f"Kept {len(rows)} runs | "
         f"skipped: unparseable={skipped_unparseable}, "
         f"bad_params={skipped_bad_params}, "
-        f"no_metric={skipped_no_metric}"
+        f"no_rankme_or_metric={skipped_no_metric}, "
+        f"transfer={skipped_transfer}, "
+        f"short_runtime={skipped_short_runtime}"
     )
     if skipped_excluded:
         excluded_summary = ", ".join(f"{d}={n}" for d, n in sorted(skipped_excluded.items(), key=lambda x: -x[1]))
@@ -312,14 +358,27 @@ def pivot_table(df: pd.DataFrame, metric: str) -> tuple[pd.DataFrame, pd.DataFra
             else:
                 table[col] = seed_mean[col]
 
-    # Averages
-    table["Average"] = table.mean(axis=1)
-    avg_row = table.drop(columns="Average").mean()
-    avg_row["Average"] = table["Average"].mean()
+    # Mask known training collapses so they render as "---" rather than a
+    # misleading score. The raw CSV rows are kept intact.
+    for model, dataset in KNOWN_FAILURES:
+        if dataset in table.index and model in table.columns:
+            table.loc[dataset, model] = float("nan")
+            if std_table is not None and dataset in std_table.index and model in std_table.columns:
+                std_table.loc[dataset, model] = float("nan")
+
+    # Chance baseline: random class guess accuracy for each dataset.
+    table["Chance"] = pd.Series(
+        {
+            ds: 1.0 / DATASET_CONFIGS[ds].num_classes
+            for ds in table.index
+            if ds in DATASET_CONFIGS and DATASET_CONFIGS[ds].num_classes > 0
+        }
+    )
+    avg_row = table.drop(columns="Chance").mean()
+    avg_row["Chance"] = table["Chance"].mean()
     table.loc["Average"] = avg_row
 
     if std_table is not None:
-        std_table["Average"] = std_table.mean(axis=1)
         std_table.loc["Average"] = std_table.mean()
 
     return table, std_table
@@ -343,7 +402,7 @@ def format_latex(
     pct = table * 100
     pct_std = std_table * 100 if std_table is not None else None
 
-    method_cols = [c for c in pct.columns if c != "Average"]
+    method_cols = [c for c in pct.columns if c != "Chance"]
     all_ds = [idx for idx in pct.index if idx != "Average"]
 
     if sections is None:
@@ -364,15 +423,15 @@ def format_latex(
     def _cell(ds, col):
         return _fmt_one(pct.loc[ds, col], _std_at(pct_std, ds, col))
 
-    n_cols = len(method_cols) + 1  # +1 for Average
+    n_cols = len(method_cols) + 1  # +1 for Chance
 
     lines = [
         f"\\begin{{tabular}}{{l {'c ' * n_cols}}}",
         "\\toprule",
-        "\\textbf{Dataset} & " + " & ".join(_display_name(m) for m in method_cols) + " & \\textbf{Avg.} \\\\",
+        "\\textbf{Dataset} & " + " & ".join(_display_name(m) for m in method_cols) + " & \\textbf{Chance} \\\\",
     ]
 
-    n_total_cols = n_cols + 1  # leading dataset col + method cols + Avg
+    n_total_cols = n_cols + 1  # leading dataset col + method cols + Chance
     for i, (label, keys) in enumerate(sections):
         section_ds = [ds for ds in all_ds if ds in keys]
         if not section_ds:
@@ -385,7 +444,7 @@ def format_latex(
             cells = [_display_name(ds)]
             for col in method_cols:
                 cells.append(_cell(ds, col))
-            cells.append(_cell(ds, "Average"))
+            cells.append(_cell(ds, "Chance"))
             lines.append(" & ".join(cells) + " \\\\")
 
         # Per-section averages
@@ -394,7 +453,7 @@ def format_latex(
         sub_pct = pct.loc[section_ds]
         for col in method_cols:
             cells.append(_fmt_one(sub_pct[col].mean()))
-        cells.append(_fmt_one(sub_pct["Average"].mean()))
+        cells.append(_fmt_one(sub_pct["Chance"].mean()))
         lines.append(" & ".join(cells) + " \\\\")
 
     lines.extend(["\\bottomrule", "\\end{tabular}"])
@@ -417,12 +476,24 @@ def main():
     parser = argparse.ArgumentParser(description="Render benchmark results from W&B to LaTeX")
     parser.add_argument("--entity", default="samibg")
     parser.add_argument("--project", default="finalized-stable-datasets")
+    parser.add_argument(
+        "--from-csv",
+        action="store_true",
+        help=f"Skip W&B and load results from {DEFAULT_CSV_PATH}",
+    )
     args = parser.parse_args()
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    expected_params = _load_expected_params()
-    df = collect_runs(args.entity, args.project, expected_params)
+    if args.from_csv:
+        if not DEFAULT_CSV_PATH.exists():
+            print(f"No cached CSV at {DEFAULT_CSV_PATH}; run without --from-csv first.")
+            return
+        df = pd.read_csv(DEFAULT_CSV_PATH)
+        print(f"Loaded {len(df)} rows from {DEFAULT_CSV_PATH}")
+    else:
+        expected_params = _load_expected_params()
+        df = collect_runs(args.entity, args.project, expected_params)
 
     if df.empty:
         print("No runs found.")
@@ -447,7 +518,7 @@ def main():
     for short, (tbl, std) in pivots.items():
         if tbl.empty:
             continue
-        out_path = RESULTS_DIR / f"benchmark_table_{short}.tex"
+        out_path = RESULTS_DIR / f"benchmark_table_{short}_with_rankme.tex"
         out_path.write_text(format_latex(tbl, std, sections=SECTIONS))
         print(f"LaTeX table saved to {out_path}")
 

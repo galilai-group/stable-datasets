@@ -63,6 +63,7 @@ params:
   arabiccharacters:
     batch_size: 256
     max_epochs: 313
+    accumulate_grad_batches: 1
     sinkhorn_knopp: true
   arabicdigits:
     batch_size: 256
@@ -109,18 +110,17 @@ params:
   emnist_byclass:
     batch_size: 256
     max_epochs: 189
-  emnist_bymerge:
-    batch_size: 256
-    max_epochs: 189
   emnist_digits:
     batch_size: 256
     max_epochs: 189
+    sinkhorn_knopp: true
   emnist_letters:
     batch_size: 256
     max_epochs: 189
   emnist_mnist:
     batch_size: 256
     max_epochs: 189
+    sinkhorn_knopp: true
   hasyv2:
     batch_size: 256
     max_epochs: 189
@@ -171,6 +171,21 @@ params:
   fgvcaircraft_manufacturer:
     batch_size: 256
     max_epochs: 378
+
+# Per-dataset backbone overrides: patch_size and img_size for datasets whose
+# native resolution is too small for the default ViT/16 at 224×224.
+# crop sizes in create_transforms are driven by img_size; the backbone is
+# built with the matching patch_size so token count is sensible.
+per_dataset_backbone:
+  arabiccharacters:
+    patch_size: 4   # 32/4 = 8×8 = 64 tokens at native resolution
+    img_size: 32
+  emnist_digits:
+    patch_size: 4   # 28/4 = 7×7 = 49 tokens at native resolution
+    img_size: 28
+  emnist_mnist:
+    patch_size: 4   # 28/4 = 7×7 = 49 tokens at native resolution
+    img_size: 28
 
 vit_optimizer:
   type: AdamW

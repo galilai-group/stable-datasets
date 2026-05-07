@@ -28,6 +28,11 @@ def create_transforms(ds_config, model_cfg=None):
       - local_*:  smaller crop, blur p=0.5
     All resizes use BICUBIC to match the canonical DINO recipe.
     Crop counts are read from ``model_cfg.transforms.{num_global,num_local}``.
+
+    Per-dataset backbone override: if ``model_cfg.per_dataset_backbone``
+    contains an entry for this dataset with ``img_size``, (h, w) is replaced
+    with that value for BOTH training crops and the returned val resize, so
+    training and evaluation see the same ViT input resolution.
     """
     h, w = ds_config.image_size
 
@@ -35,12 +40,21 @@ def create_transforms(ds_config, model_cfg=None):
     num_global = int(getattr(tcfg, "num_global", 2)) if tcfg is not None else 2
     num_local = int(getattr(tcfg, "num_local", 6)) if tcfg is not None else 6
 
+    # Per-dataset backbone override: smaller img_size means the ViT runs at
+    # native resolution (e.g. 32×32 with patch_size=4 → 8×8=64 tokens).
+    per_ds_bb = getattr(model_cfg, "per_dataset_backbone", None) if model_cfg is not None else None
+    ds_bb = per_ds_bb.get(ds_config.name) if per_ds_bb is not None else None
+    if ds_bb is not None:
+        img_size_override = getattr(ds_bb, "img_size", None)
+        if img_size_override is not None:
+            h = w = int(img_size_override)
+
     bicubic = transforms.InterpolationMode.BICUBIC
     global_aug_1 = ssl_augmentation(
-        ds_config, (h, w), crop_scale=(0.4, 1.0), blur_p=1.0, solarize_p=0.0, interpolation=bicubic
+        ds_config, (h, w), crop_scale=(0.4, 1.0), blur_p=1.0, solarize_p=0.0, interpolation=bicubic,
     )
     global_aug_2 = ssl_augmentation(
-        ds_config, (h, w), crop_scale=(0.4, 1.0), blur_p=0.1, solarize_p=0.2, interpolation=bicubic
+        ds_config, (h, w), crop_scale=(0.4, 1.0), blur_p=0.1, solarize_p=0.2, interpolation=bicubic,
     )
     globals_ = [global_aug_1, global_aug_2]
 
@@ -55,7 +69,15 @@ def create_transforms(ds_config, model_cfg=None):
         transform_dict[f"local_{i + 1}"] = local_aug
 
     train = transforms.MultiViewTransform(transform_dict)
-    return train, val_transform(ds_config), collate_multicrop
+    if (h, w) != tuple(ds_config.image_size):
+        effective_val = transforms.Compose(
+            transforms.RGB(),
+            transforms.Resize((h, w)),
+            transforms.ToImage(mean=ds_config.mean, std=ds_config.std),
+        )
+    else:
+        effective_val = val_transform(ds_config)
+    return train, effective_val, collate_multicrop
 
 
 # Forward
@@ -233,7 +255,11 @@ def forward(self, batch, stage):
 
 
 def build(cfg, ds_config) -> tuple[spt.Module, int]:
-    backbone = create_backbone(cfg.backbone, ds_config)
+    per_ds_bb = getattr(cfg.model, "per_dataset_backbone", None)
+    ds_bb = per_ds_bb.get(ds_config.name) if per_ds_bb is not None else None
+    patch_size_override = int(ds_bb.patch_size) if ds_bb is not None and hasattr(ds_bb, "patch_size") else None
+    img_size_override = int(ds_bb.img_size) if ds_bb is not None and hasattr(ds_bb, "img_size") else None
+    backbone = create_backbone(cfg.backbone, ds_config, patch_size=patch_size_override, img_size=img_size_override)
     embed_dim = get_embedding_dim(backbone)
     backbone_wrapper = spt.backbone.TeacherStudentWrapper(
         student=backbone, base_ema_coefficient=cfg.model.momentum_teacher

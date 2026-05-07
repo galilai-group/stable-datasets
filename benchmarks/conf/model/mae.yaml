@@ -90,9 +90,6 @@ params:
   emnist_byclass:
     batch_size: 256
     max_epochs: 300
-  emnist_bymerge:
-    batch_size: 256
-    max_epochs: 300
   emnist_digits:
     batch_size: 256
     max_epochs: 300

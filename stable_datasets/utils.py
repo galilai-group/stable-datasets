@@ -445,47 +445,42 @@ class BaseDatasetBuilder:
                 )
                 shard_dir = instance._processed_cache_dir / shard_dir_name
 
-                if has_frame_video:
-                    if not (shard_dir / "_metadata.json").exists():
-                        generator = instance._generate_examples(**sg.gen_kwargs)
-                        write_lance_video_frames_cache(
-                            generator,
-                            features,
-                            shard_dir,
-                        )
-                    opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
-                    splits_data[sg.name] = StableDataset(
-                        features=features,
-                        info=instance._dataset_info,
-                        backend=opened.backend,
-                        num_rows=opened.num_rows,
-                    )
-                elif effective_format == "lance":
-                    if not (shard_dir / "_metadata.json").exists():
-                        generator = instance._generate_examples(**sg.gen_kwargs)
-                        write_lance_cache(generator, features, shard_dir, num_encode_workers=4)
-                    opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
-                    splits_data[sg.name] = StableDataset(
-                        features=features,
-                        info=instance._dataset_info,
-                        backend=opened.backend,
-                        num_rows=opened.num_rows,
-                    )
-                else:
-                    if not (shard_dir / "_metadata.json").exists():
-                        generator = instance._generate_examples(**sg.gen_kwargs)
-                        has_images = any(isinstance(f, Image) for f in features.values())
-                        compression = None if has_images else "zstd"
-                        write_sharded_arrow_cache(
-                            generator, features, shard_dir, compression=compression, num_encode_workers=4
-                        )
-                    opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
-                    splits_data[sg.name] = StableDataset(
-                        features=features,
-                        info=instance._dataset_info,
-                        backend=opened.backend,
-                        num_rows=opened.num_rows,
-                    )
+                # Per-shard FileLock so concurrent workers (e.g. multiple SLURM
+                # jobs sharing the same scratch cache) don't all race to write
+                # the same lance/arrow shard. The first into the lock builds the
+                # cache; the rest wait and find _metadata.json present.
+                shard_dir.parent.mkdir(parents=True, exist_ok=True)
+                lock_path = shard_dir.parent / (shard_dir.name + ".build.lock")
+
+                with FileLock(str(lock_path)):
+                    if has_frame_video:
+                        if not (shard_dir / "_metadata.json").exists():
+                            generator = instance._generate_examples(**sg.gen_kwargs)
+                            write_lance_video_frames_cache(
+                                generator,
+                                features,
+                                shard_dir,
+                            )
+                    elif effective_format == "lance":
+                        if not (shard_dir / "_metadata.json").exists():
+                            generator = instance._generate_examples(**sg.gen_kwargs)
+                            write_lance_cache(generator, features, shard_dir, num_encode_workers=4)
+                    else:
+                        if not (shard_dir / "_metadata.json").exists():
+                            generator = instance._generate_examples(**sg.gen_kwargs)
+                            has_images = any(isinstance(f, Image) for f in features.values())
+                            compression = None if has_images else "zstd"
+                            write_sharded_arrow_cache(
+                                generator, features, shard_dir, compression=compression, num_encode_workers=4
+                            )
+
+                opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
+                splits_data[sg.name] = StableDataset(
+                    features=features,
+                    info=instance._dataset_info,
+                    backend=opened.backend,
+                    num_rows=opened.num_rows,
+                )
 
         # 6) Return single split or dict
         if split is not None:

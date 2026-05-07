@@ -204,15 +204,35 @@ def main(cfg: DictConfig) -> None:
         "monitor": ckpt_cfg.monitor,
         "mode": ckpt_cfg.mode,
         "save_top_k": ckpt_cfg.save_top_k,
-        "save_weights_only": True,
+        # Must be False so the checkpoint includes optimizer/scheduler/loop state
+        # — Trainer.fit(ckpt_path=...) raises KeyError on resume otherwise, and
+        # the error gets swallowed by submitit so the job appears to "complete"
+        # without actually training. Discovered the hard way; see git log.
+        "save_weights_only": False,
     }
     callbacks.append(ModelCheckpoint(**ckpt_kwargs))
 
     # Auto-resume: if a previous SLURM walltime-out / requeue / manual resubmit
     # left a last.ckpt at the same (model, backbone, dataset) path, hand it to
     # spt.Manager so trainer.fit() picks up where it stopped.
+    # Safety check: weights-only checkpoints (legacy from save_weights_only=True)
+    # cause Trainer.fit(ckpt_path=...) to raise KeyError on optimizer state, which
+    # submitit silently swallows. Verify optimizer_states present before resuming.
     resume_ckpt = os.path.join(run_ckpt_dir, "last.ckpt")
-    if not os.path.isfile(resume_ckpt):
+    if os.path.isfile(resume_ckpt):
+        try:
+            _ckpt_peek = torch.load(resume_ckpt, map_location="cpu", weights_only=False)
+            if "optimizer_states" not in _ckpt_peek:
+                log.warning(
+                    f"Skipping resume: {resume_ckpt} is weights-only (no optimizer state). "
+                    f"Starting fresh."
+                )
+                resume_ckpt = None
+            del _ckpt_peek
+        except Exception as e:
+            log.warning(f"Skipping resume: failed to load {resume_ckpt}: {e}")
+            resume_ckpt = None
+    else:
         resume_ckpt = None
 
     # Logger
