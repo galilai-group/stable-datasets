@@ -116,7 +116,7 @@ def _timeseries(
 
 DATASET_CONFIGS: dict[str, DatasetConfig] = {
     # RGB datasets (3-channel, ImageNet stats unless overridden)
-    "beans": _rgb("beans", "Beans", 3),
+    "beans": _rgb("beans", "Beans", 3, include_in_results=False),
     "awa2": _rgb("awa2", "AWA2", 50),
     "cifar10": _rgb("cifar10", "CIFAR-10", 10, mean=[0.4914, 0.4822, 0.4465], std=[0.247, 0.2435, 0.2616]),
     "cifar100": _rgb("cifar100", "CIFAR-100", 100, mean=[0.5071, 0.4867, 0.4408], std=[0.2675, 0.2565, 0.2761]),
@@ -191,6 +191,7 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
         std=[0.3332],
         builder_name="EMNIST",
         builder_kwargs={"config_name": "bymerge"},
+        include_in_results=False,  # Excluded: 700k images, too costly. Use emnist_byclass instead.
     ),
     "emnist_letters": _gray(
         "emnist_letters",

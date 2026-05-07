@@ -78,15 +78,25 @@ def resolve_backbone_name(backbone_cfg, ds_config=None) -> str:
     raise TypeError(f"Unsupported backbone config: {backbone_cfg!r}")
 
 
-def create_backbone(backbone_cfg, ds_config) -> nn.Module:
+def create_backbone(
+    backbone_cfg,
+    ds_config,
+    patch_size: int | None = None,
+    img_size: int | tuple[int, int] | None = None,
+) -> nn.Module:
     """Create a backbone from either a timm model name or a structured config.
 
     Always builds a 3-channel patch embed: the SSL transform pipeline starts
     with ``transforms.RGB()`` which upcasts grayscale source images to 3
     channels before they reach the model.
+
+    ``patch_size`` and ``img_size`` override the defaults derived from the
+    backbone name / ds_config when a dataset needs a non-standard ViT config
+    (e.g. small native resolution with a finer patch grid).
     """
     name = resolve_backbone_name(backbone_cfg, ds_config)
-    return create_vit(name, img_size=ds_config.image_size, in_chans=3)
+    effective_img_size = img_size if img_size is not None else ds_config.image_size
+    return create_vit(name, img_size=effective_img_size, in_chans=3, patch_size=patch_size)
 
 
 # Projector

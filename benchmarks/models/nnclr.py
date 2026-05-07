@@ -26,9 +26,25 @@ NUM_VIEWS = 2
 def create_transforms(ds_config, model_cfg=None):
     """Returns (train_transform, val_transform, collate_fn)."""
     h, w = ds_config.image_size
+
+    per_ds_bb = getattr(model_cfg, "per_dataset_backbone", None) if model_cfg is not None else None
+    ds_bb = per_ds_bb.get(ds_config.name) if per_ds_bb is not None else None
+    if ds_bb is not None:
+        img_size_override = getattr(ds_bb, "img_size", None)
+        if img_size_override is not None:
+            h = w = int(img_size_override)
+
     view = ssl_augmentation(ds_config, (h, w), crop_scale=(0.08, 1.0))
     train = transforms.MultiViewTransform([view] * NUM_VIEWS)
-    return train, val_transform(ds_config), collate_multiview
+    if (h, w) != tuple(ds_config.image_size):
+        effective_val = transforms.Compose(
+            transforms.RGB(),
+            transforms.Resize((h, w)),
+            transforms.ToImage(mean=ds_config.mean, std=ds_config.std),
+        )
+    else:
+        effective_val = val_transform(ds_config)
+    return train, effective_val, collate_multiview
 
 
 def forward(self, batch, stage):
@@ -98,7 +114,11 @@ def forward(self, batch, stage):
 
 
 def build(cfg, ds_config) -> tuple[spt.Module, int]:
-    backbone = create_backbone(cfg.backbone, ds_config)
+    per_ds_bb = getattr(cfg.model, "per_dataset_backbone", None)
+    ds_bb = per_ds_bb.get(ds_config.name) if per_ds_bb is not None else None
+    patch_size_override = int(ds_bb.patch_size) if ds_bb is not None and hasattr(ds_bb, "patch_size") else None
+    img_size_override = int(ds_bb.img_size) if ds_bb is not None and hasattr(ds_bb, "img_size") else None
+    backbone = create_backbone(cfg.backbone, ds_config, patch_size=patch_size_override, img_size=img_size_override)
     embed_dim = get_embedding_dim(backbone)
     proj_out = cfg.model.projector.output_dim
     projector = create_projector(embed_dim, cfg.model.projector.hidden_dim, proj_out)

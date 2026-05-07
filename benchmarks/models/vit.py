@@ -15,6 +15,7 @@ def create_vit(
     name: str,
     img_size: int | tuple[int, int] | None = None,
     in_chans: int = 3,
+    patch_size: int | None = None,
     **kwargs,
 ) -> nn.Module:
     extra = {}
@@ -22,6 +23,8 @@ def create_vit(
         extra["dynamic_img_size"] = True
         if img_size is not None:
             extra["img_size"] = img_size
+        if patch_size is not None:
+            extra["patch_size"] = patch_size
     return timm.create_model(
         name,
         pretrained=False,

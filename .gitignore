@@ -7,6 +7,14 @@ core.*
 *.jpg
 *.mp4
 figures/
+!benchmarks/figures/
+!benchmarks/figures/*.py
+!benchmarks/figures/*.tex
+!benchmarks/figures/*.csv
+!benchmarks/figures/dataset_samples/
+!benchmarks/figures/dataset_samples/*.tex
+!benchmarks/figures/dataset_samples/*.csv
+benchmarks/figures/dataset_samples/*.png
 old_experiments/
 toy_experiments/
 __pycache__/
