@@ -54,6 +54,7 @@ Available Datasets
    oxford_pet
    plant_village
    eurosat
+   stanford_dogs
    dtd
    fashion_mnist
    k_mnist

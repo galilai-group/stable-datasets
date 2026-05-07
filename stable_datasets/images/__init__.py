@@ -39,6 +39,7 @@ from .plant_village import PlantVillage
 from .rock_paper_scissor import RockPaperScissor
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
+from .stanford_dogs import StanfordDogs
 from .stl10 import STL10
 from .svhn import SVHN
 from .tiny_imagenet import TinyImagenet
@@ -81,6 +82,7 @@ __all__ = [
     "RockPaperScissor",
     "Shapes3D",
     "SmallNORB",
+    "StanfordDogs",
     "STL10",
     "SVHN",
 ]
