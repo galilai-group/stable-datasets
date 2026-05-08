@@ -51,6 +51,10 @@ Available Datasets
    cifar10_c
    cifar100_c
    cars196
+   oxford_pet
+   plant_village
+   eurosat
+   stanford_dogs
    dtd
    fashion_mnist
    k_mnist

@@ -103,9 +103,15 @@ def _features_fingerprint(features: Features) -> str:
     return hashlib.sha256(repr(features).encode()).hexdigest()[:16]
 
 
-def cache_fingerprint(cls_name: str, version: str, config_name: str, split: str) -> str:
-    """Deterministic cache directory name for a dataset variant + split."""
-    key = f"{cls_name}:{version}:{config_name}:{split}"
+def cache_fingerprint(cls_name: str, version: str, config_name: str, split: str, extra: str = "") -> str:
+    """Deterministic cache directory name for a dataset variant + split.
+
+    ``extra`` discriminates runtime config overrides; empty preserves the legacy hash.
+    """
+    if extra:
+        key = f"{cls_name}:{version}:{config_name}:{split}:{extra}"
+    else:
+        key = f"{cls_name}:{version}:{config_name}:{split}"
     digest = hashlib.sha256(key.encode()).hexdigest()[:16]
     return f"{cls_name.lower()}_{config_name}_{split}_{digest}"
 

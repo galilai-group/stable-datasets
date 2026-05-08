@@ -4,82 +4,85 @@ from PIL import Image
 from stable_datasets.images import DSprites
 
 
-def test_dsprites_dataset():
-    # Load training split
-    dsprites_train = DSprites(split="train")
+def test_dsprites_variants():
+    """Download/integration test for all DSprites variants."""
 
-    # Test 1: Check number of training samples
-    expected_num_train_samples = 737280
-    assert len(dsprites_train) == expected_num_train_samples, (
-        f"Expected {expected_num_train_samples} training samples, got {len(dsprites_train)}."
-    )
+    variants = ["original", "color", "noise", "scream"]
 
-    # Test 2: Check sample keys and label range
-    sample = dsprites_train[0]
-    expected_keys = {
-        "image",
-        "index",
-        "label",
-        "label_values",
-        "color",
-        "shape",
-        "scale",
-        "orientation",
-        "posX",
-        "posY",
-        "colorValue",
-        "shapeValue",
-        "scaleValue",
-        "orientationValue",
-        "posXValue",
-        "posYValue",
-    }
-    assert sorted(set(sample.keys())) == sorted(set(expected_keys)), (
-        f"Expected keys {expected_keys}, got {set(sample.keys())}."
-    )
+    for variant in variants:
+        ds = DSprites(split="train", config_name=variant)
 
-    # Test 3: Validate image type
-    image = sample["image"]
-    assert isinstance(image, Image.Image), f"Image should be a PIL.Image.Image, got {type(image)}."
-    image_np = np.array(image)
-    assert image_np.ndim == 2, f"DSprites images should be HxW, got shape {image_np.shape}."
-    assert image_np.dtype == np.uint8, f"Image dtype should be uint8, got {image_np.dtype}."
-    assert image_np.shape == (64, 64), f"Image should have shape (64, 64), got {image_np.shape}"
+        # Check dataset size
+        expected_num_samples = 737280
+        assert len(ds) == expected_num_samples, f"{variant}: Expected {expected_num_samples} samples, got {len(ds)}."
 
-    # Test 4: Validate label type and range
-    label = sample["label"]
-    label_values = sample["label_values"]
-    assert isinstance(label, list), f"Label should be int, got {type(list)}."
-    assert isinstance(label_values, list), f"Label values should be list, got {type(label_values)}."
-    assert len(label) == 6, f"Label should have 6 elements, got {len(label)}."
-    assert len(label_values) == 6, f"Label values should have 6 elements, got {len(label_values)}."
+        sample = ds[0]
 
-    color = sample["color"]
-    shape = sample["shape"]
-    scale = sample["scale"]
-    orientation = sample["orientation"]
-    posX = sample["posX"]
-    posY = sample["posY"]
-    colorValue = sample["colorValue"]
-    shapeValue = sample["shapeValue"]
-    scaleValue = sample["scaleValue"]
-    orientationValue = sample["orientationValue"]
-    posXValue = sample["posXValue"]
-    posYValue = sample["posYValue"]
+        # Check keys
+        expected_keys = {
+            "image",
+            "index",
+            "label",
+            "label_values",
+            "color",
+            "shape",
+            "scale",
+            "orientation",
+            "posX",
+            "posY",
+            "colorValue",
+            "shapeValue",
+            "scaleValue",
+            "orientationValue",
+            "posXValue",
+            "posYValue",
+        }
+        if variant == "color":
+            expected_keys.add("colorRGB")
 
-    assert 0 <= color < 1, f"Color should be in range [0, 0], got {color}."
-    assert 0 <= shape < 3, f"Shape should be in range [0, 2], got {shape}."
-    assert 0 <= scale < 6, f"Scale should be in range [0, 5], got {scale}."
-    assert 0 <= orientation < 40, f"Orientation should be in range [0, 39], got {orientation}."
-    assert 0 <= posX < 32, f"PosX should be in range [0, 31], got {posX}."
-    assert 0 <= posY < 32, f"PosY should be in range [0, 31], got {posY}."
-    assert colorValue == 1.0, f"Color value should be 1.0, got {colorValue}."
-    assert shapeValue in [1.0, 2.0, 3.0], f"Shape value should be in [1.0, 2.0, 3.0], got {shapeValue}."
-    assert 0.5 <= scaleValue <= 1, f"Scale value should be in range [0.5, 1], got {scaleValue}."
-    assert 0 <= orientationValue <= 2 * np.pi, (
-        f"Orientation value should be in range [0, 2pi], got {orientationValue}."
-    )
-    assert 0 <= posXValue <= 1, f"PosX value should be in range [0, 1], got {posXValue}."
-    assert 0 <= posYValue <= 1, f"PosY value should be in range [0, 1], got {posYValue}."
+        assert set(sample.keys()) == expected_keys, (
+            f"{variant}: Expected keys {sorted(expected_keys)}, got {sorted(sample.keys())}."
+        )
 
-    print("All DSprites dataset tests passed successfully!")
+        # Check image type and shape
+        image = sample["image"]
+        assert isinstance(image, Image.Image), f"{variant}: 'image' should be PIL.Image, got {type(image)}."
+        image_np = np.array(image)
+        assert image_np.dtype == np.uint8, f"{variant}: Image dtype should be uint8, got {image_np.dtype}."
+
+        if variant == "original":
+            assert image_np.shape == (64, 64), f"{variant}: Expected shape (64, 64), got {image_np.shape}."
+        else:
+            assert image_np.shape == (64, 64, 3), f"{variant}: Expected shape (64, 64, 3), got {image_np.shape}."
+
+        # Check label structure
+        label = sample["label"]
+        label_values = sample["label_values"]
+        assert isinstance(label, list), f"{variant}: label should be list, got {type(label)}."
+        assert isinstance(label_values, list), f"{variant}: label_values should be list, got {type(label_values)}."
+        assert len(label) == 6, f"{variant}: label should have 6 elements, got {len(label)}."
+        assert len(label_values) == 6, f"{variant}: label_values should have 6 elements, got {len(label_values)}."
+
+        # Check factor ranges
+        assert 0 <= sample["color"] < 1, f"{variant}: color out of range."
+        assert 0 <= sample["shape"] < 3, f"{variant}: shape out of range."
+        assert 0 <= sample["scale"] < 6, f"{variant}: scale out of range."
+        assert 0 <= sample["orientation"] < 40, f"{variant}: orientation out of range."
+        assert 0 <= sample["posX"] < 32, f"{variant}: posX out of range."
+        assert 0 <= sample["posY"] < 32, f"{variant}: posY out of range."
+
+        # Check factor values
+        assert sample["colorValue"] == 1.0, f"{variant}: colorValue should be 1.0."
+        assert sample["shapeValue"] in [1.0, 2.0, 3.0], f"{variant}: shapeValue out of range."
+        assert 0.5 <= sample["scaleValue"] <= 1, f"{variant}: scaleValue out of range."
+        assert 0 <= sample["orientationValue"] <= 2 * np.pi, f"{variant}: orientationValue out of range."
+        assert 0 <= sample["posXValue"] <= 1, f"{variant}: posXValue out of range."
+        assert 0 <= sample["posYValue"] <= 1, f"{variant}: posYValue out of range."
+
+        # Variant-specific checks
+        if variant == "color":
+            color_rgb = sample["colorRGB"]
+            assert isinstance(color_rgb, list), f"{variant}: colorRGB should be list."
+            assert len(color_rgb) == 3, f"{variant}: colorRGB should have 3 elements."
+            for c in color_rgb:
+                assert 0.5 <= c <= 1.0, f"{variant}: colorRGB values should be in [0.5, 1.0], got {c}."

@@ -138,7 +138,7 @@ protocols rely on:
 References
 ----------
 
-- Dataset homepage: https://github.com/google-deepmind/3dshapes-dataset
+- Dataset homepage: https://github.com/google-deepmind/3d-shapes
 - License: Apache License 2.0
 - Paper: Kim & Mnih, *Disentangling by Factorising*, ICML 2018
 

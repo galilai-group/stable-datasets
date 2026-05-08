@@ -14,11 +14,9 @@ from .clevrer import CLEVRER
 from .country211 import Country211
 from .cub200 import CUB200
 from .dsprites import DSprites
-from .dsprites_color import DSpritesColor
-from .dsprites_noise import DSpritesNoise
-from .dsprites_scream import DSpritesScream
 from .dtd import DTD
 from .e_mnist import EMNIST
+from .eurosat import EuroSAT
 from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
 
@@ -35,12 +33,15 @@ from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
+from .oxford_pet import OxfordPet
+from .plant_village import PlantVillage
 
 # from .mnist import MNIST
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
+from .stanford_dogs import StanfordDogs
 from .stl10 import STL10
 from .svhn import SVHN
 from .tiny_imagenet import TinyImagenet
@@ -62,11 +63,9 @@ __all__ = [
     "Country211",
     "CUB200",
     "DSprites",
-    "DSpritesColor",
-    "DSpritesNoise",
-    "DSpritesScream",
     "DTD",
     "EMNIST",
+    "EuroSAT",
     "FacePointing",
     "FashionMNIST",
     "FGVCAircraft",
@@ -81,9 +80,12 @@ __all__ = [
     "Linnaeus5",
     "MedMNIST",
     "NotMNIST",
+    "OxfordPet",
+    "PlantVillage",
     "RockPaperScissor",
     "Shapes3D",
     "SmallNORB",
+    "StanfordDogs",
     "STL10",
     "SVHN",
     "TinyImagenet",
