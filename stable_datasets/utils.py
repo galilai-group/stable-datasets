@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import multiprocessing
 import os
@@ -143,7 +144,10 @@ class BaseDatasetBuilder:
             cls._source = _wrapped_source  # type: ignore[method-assign]
 
     def __init__(self, config_name: str | None = None, **kwargs):
-        """Initialize builder, selecting a BuilderConfig if applicable."""
+        """Initialize builder, selecting a BuilderConfig and applying per-instance overrides.
+
+        Any extra ``kwargs`` are applied as overrides on a shallow copy of the selected BuilderConfig.
+        """
         if self.BUILDER_CONFIGS:
             if config_name is None:
                 config_name = self.DEFAULT_CONFIG_NAME or self.BUILDER_CONFIGS[0].name
@@ -151,8 +155,24 @@ class BaseDatasetBuilder:
             if not matched:
                 available = [c.name for c in self.BUILDER_CONFIGS]
                 raise ValueError(f"Unknown config '{config_name}'. Available: {available}")
-            self.config = matched[0]
+
+            if kwargs:
+                config = copy.copy(matched[0])
+                for k, v in kwargs.items():
+                    if not hasattr(config, k):
+                        valid = sorted(name for name in vars(config) if not name.startswith("_"))
+                        raise ValueError(
+                            f"Unknown config option {k!r} for config {config_name!r}; valid fields: {valid}"
+                        )
+                    setattr(config, k, v)
+                self.config = config
+            else:
+                self.config = matched[0]
         else:
+            if kwargs:
+                raise ValueError(
+                    f"{type(self).__name__} does not declare BUILDER_CONFIGS; got unexpected kwargs: {list(kwargs)}"
+                )
             self.config = BuilderConfig(name=config_name or "default")
 
         # Populate self.info / self._dataset_info so _generate_examples can use it
@@ -282,12 +302,29 @@ class BaseDatasetBuilder:
         features = instance._dataset_info.features
         splits_data = {}
 
+        # Encode config overrides into the cache fingerprint.
+        template = next(
+            (c for c in cls.BUILDER_CONFIGS if c.name == instance.config.name),
+            None,
+        )
+        if template is not None and template is not instance.config:
+            _missing = object()
+            diffs = {
+                k: v
+                for k, v in vars(instance.config).items()
+                if not k.startswith("_") and getattr(template, k, _missing) != v
+            }
+            extra_fp = ":".join(f"{k}={v!r}" for k, v in sorted(diffs.items()))
+        else:
+            extra_fp = ""
+
         for sg in split_generators:
             shard_dir_name = cache_fingerprint(
                 cls.__name__,
                 str(cls.VERSION),
                 instance.config.name,
                 sg.name,
+                extra=extra_fp,
             )
             shard_dir = instance._processed_cache_dir / shard_dir_name
 
