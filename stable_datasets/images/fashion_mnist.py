@@ -1,8 +1,8 @@
 import gzip
 
-import datasets
 import numpy as np
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -13,7 +13,7 @@ class FashionMNIST(BaseDatasetBuilder):
     and a test set of 10,000 examples. Each example is a 28x28 grayscale image, associated with a label from 10 classes.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -30,12 +30,12 @@ class FashionMNIST(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="Fashion-MNIST is a dataset of Zalando's article images for image classification tasks.",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(
+                    "image": Image(),
+                    "label": ClassLabel(
                         names=[
                             "T-shirt/top",
                             "Trouser",

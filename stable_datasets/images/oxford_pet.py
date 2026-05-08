@@ -2,10 +2,12 @@ import io
 import os
 import tarfile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
+from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
@@ -19,7 +21,7 @@ class OxfordPet(BaseDatasetBuilder):
     paper: 3,680 training images and 3,669 test images, for a total of 7,349 images.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://www.robots.ox.ac.uk/~vgg/data/pets/",
@@ -36,16 +38,16 @@ class OxfordPet(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=(
                 "The Oxford-IIIT Pet dataset contains 7,349 images covering 37 pet breeds "
                 "(12 cats, 25 dogs) with roughly 200 images per class. The official split "
                 "provides 3,680 training images and 3,669 test images."
             ),
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -53,24 +55,27 @@ class OxfordPet(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        """Download both the image and annotation archives; each split is built from both."""
+    def _split_generators(self):
+        """Override default splitting because both the image tar and annotation tar
+        are needed to build any split."""
         source = self._source()
+
         key_url_map = {
             "images": source["assets"]["images"],
             "annotations": source["assets"]["annotations"],
         }
+
         urls = list(key_url_map.values())
         local_paths = bulk_download(urls, dest_folder=self._raw_download_dir)
         path_map = dict(zip(key_url_map.keys(), local_paths))
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={"path_map": path_map, "split": "train"},
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
+            SplitGenerator(
+                name=Split.TEST,
                 gen_kwargs={"path_map": path_map, "split": "test"},
             ),
         ]
@@ -102,8 +107,8 @@ class OxfordPet(BaseDatasetBuilder):
                 if stem not in name_to_label:
                     continue
                 with tar.extractfile(entry) as f:
-                    image = Image.open(io.BytesIO(f.read())).convert("RGB")
-                yield stem, {"image": image, "label": name_to_label[stem]}
+                    image = PILImage.open(io.BytesIO(f.read())).convert("RGB")
+                    yield stem, {"image": image, "label": name_to_label[stem]}
 
     @staticmethod
     def _labels():

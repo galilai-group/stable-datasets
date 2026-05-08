@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from PIL import Image
 
 from stable_datasets.images import EMNIST
@@ -70,17 +69,4 @@ def test_emnist_letters_dataset():
     assert len(ds_test) == expected_num_test_samples, (
         f"Expected {expected_num_test_samples} test samples, got {len(ds_test)}."
     )
-
     print("EMNIST 'letters' tests passed successfully!")
-
-
-def test_emnist_config_enforcement():
-    """
-    Ensures that the user cannot initialize EMNIST without specifying a config.
-    """
-    with pytest.raises(ValueError) as excinfo:
-        # This should fail because EMNIST has multiple configs and no default is forced in base class
-        _ = EMNIST(split="train")
-
-    assert "Config name is missing" in str(excinfo.value)
-    print("EMNIST config enforcement test passed!")

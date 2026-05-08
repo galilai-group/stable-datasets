@@ -1,11 +1,9 @@
-import glob
 import os
-import subprocess
+import tarfile
 from pathlib import Path
 
-import datasets
-from loguru import logger as logging
-
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -14,7 +12,7 @@ class TinyImagenetC(BaseDatasetBuilder):
     Tiny ImageNet-C dataset for image classification tasks with corruptions applied.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://zenodo.org/records/2536630",
@@ -31,15 +29,15 @@ class TinyImagenetC(BaseDatasetBuilder):
 
     def _info(self):
         source = self._source()
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The Tiny ImageNet-C dataset applies multiple corruptions to the Tiny ImageNet images. It
             includes 200 classes and various corruption levels.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
-                    "corruption_name": datasets.Value("string"),
-                    "corruption_level": datasets.Value("int32"),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
+                    "corruption_name": Value("string"),
+                    "corruption_level": Value("int32"),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -49,22 +47,14 @@ class TinyImagenetC(BaseDatasetBuilder):
         )
 
     def _generate_examples(self, data_path, split=None):
-        data_path = str(data_path)
-        if len(glob.glob(os.path.join(data_path[:-4], "Tiny-ImageNet-C", "*/*/*/*"))) == 750000:
-            base_path = os.path.join(data_path[:-4], "Tiny-ImageNet-C")
-            logging.info(f"[tiny_imagenet_c] Extracted dataset found at {base_path} : Total 750,000 images")
-        elif os.path.isfile(data_path) and data_path.lower().endswith(".tar"):
-            extract_dir = Path(
-                os.path.join(os.path.dirname(data_path), os.path.splitext(os.path.basename(data_path))[0])
-            )
-            extract_dir.mkdir(parents=True, exist_ok=True)
-            logging.info("[tiny_imagenet_c] Extracting dataset... (this may take a while)")
-            cmd = f"tar -xf {data_path} -C {extract_dir} --skip-old-files"
+        data_path = Path(data_path)
 
-            subprocess.run(cmd, shell=True)
-            base_path = os.path.join(data_path[:-4], "Tiny-ImageNet-C")
-
-        print(f"[tiny_imagenet_c] Generating examples from {base_path}")
+        # Default BaseDatasetBuilder flow: data_path is the downloaded .tar asset.
+        extract_dir = data_path.with_suffix("")
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        with tarfile.open(data_path, "r:") as tar:
+            tar.extractall(path=extract_dir)
+        base_path = extract_dir / "Tiny-ImageNet-C"
 
         if split == "test":
             corruption_types = [
@@ -88,10 +78,8 @@ class TinyImagenetC(BaseDatasetBuilder):
             for corruption_name in corruption_types:
                 for level in range(1, 6):
                     corruption_dir = os.path.join(base_path, corruption_name, str(level))
-                    print(f"[tiny_imagenet_c] processing corruption: {corruption_name}, level: {level}")
 
                     if not os.path.isdir(corruption_dir):
-                        logging.warning(f"[tiny_imagenet_c] missing directory {corruption_dir}, skipping")
                         continue
 
                     # Each corruption/level folder contains subfolders per label (e.g., n01443537)
@@ -99,7 +87,7 @@ class TinyImagenetC(BaseDatasetBuilder):
                         label_path = os.path.join(corruption_dir, label_dir)
                         if not os.path.isdir(label_path):
                             continue
-                        for i, image_file in enumerate(sorted(os.listdir(label_path))):
+                        for image_file in sorted(os.listdir(label_path)):
                             image_path = os.path.join(label_path, image_file)
                             label_str = label_dir
                             yield (

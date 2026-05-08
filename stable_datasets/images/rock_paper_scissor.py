@@ -2,16 +2,17 @@ import os
 import zipfile
 from pathlib import Path
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class RockPaperScissor(BaseDatasetBuilder):
     """Rock Paper Scissors dataset."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -29,13 +30,13 @@ class RockPaperScissor(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""Rock Paper Scissors contains images from various hands, from different races, ages, and
                            genders, posed into Rock / Paper or Scissors and labeled as such.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=["rock", "paper", "scissors"]),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=["rock", "paper", "scissors"]),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -59,5 +60,5 @@ class RockPaperScissor(BaseDatasetBuilder):
                     file_path = os.path.join(root, file_name)
                     # Open image and ensure it is RGB
                     with open(file_path, "rb") as img_file:
-                        image = Image.open(img_file).convert("RGB")
+                        image = PILImage.open(img_file).convert("RGB")
                         yield file_path, {"image": image, "label": label}

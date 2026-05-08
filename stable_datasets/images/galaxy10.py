@@ -1,8 +1,9 @@
-import datasets
 import h5py
 import numpy as np
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -21,7 +22,7 @@ class Galaxy10Decal(BaseDatasetBuilder):
     classes using volunteer votes with more rigorous filtering.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://astronn.readthedocs.io/en/latest/galaxy10.html",
@@ -42,21 +43,21 @@ class Galaxy10Decal(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=(
                 "Galaxy10 DECaLS dataset: 17,736 256x256 colored galaxy images (g, r and z band) "
                 "separated into 10 classes. Images come from DESI Legacy Imaging Surveys (DECaLS) "
                 "and labels come from Galaxy Zoo volunteer classifications. This dataset is commonly "
                 "used for galaxy morphology classification tasks."
             ),
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
-                    "ra": datasets.Value("float64"),
-                    "dec": datasets.Value("float64"),
-                    "redshift": datasets.Value("float64"),
-                    "pxscale": datasets.Value("float64"),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
+                    "ra": Value("float64"),
+                    "dec": Value("float64"),
+                    "redshift": Value("float64"),
+                    "pxscale": Value("float64"),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -85,7 +86,7 @@ class Galaxy10Decal(BaseDatasetBuilder):
             pxscale = np.array(f["pxscale"])
 
         for idx in range(len(images)):
-            img_pil = Image.fromarray(images[idx], mode="RGB")
+            img_pil = PILImage.fromarray(images[idx], mode="RGB")
 
             yield (
                 idx,

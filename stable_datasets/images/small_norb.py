@@ -1,9 +1,9 @@
 from zipfile import ZipFile
 
-import datasets
 import numpy as np
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import DatasetInfo, Features, Image, Sequence, Value, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -53,7 +53,7 @@ def _load_small_norb_from_zip(zip_path: str):
 class SmallNORB(BaseDatasetBuilder):
     """SmallNORB dataset: 96x96 stereo images with 5 known factors."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/",
@@ -74,22 +74,22 @@ class SmallNORB(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=(
                 "SmallNORB dataset: stereo pair images of 3D toy objects, used for learning object recognition "
                 "robust to pose and lighting. Each image pair corresponds to a combination of 5 factors: "
                 "category, instance, elevation, azimuth, lighting."
             ),
-            features=datasets.Features(
+            features=Features(
                 {
-                    "left_image": datasets.Image(),
-                    "right_image": datasets.Image(),
-                    "label": datasets.Sequence(datasets.Value("int32")),
-                    "category": datasets.Value("int32"),
-                    "instance": datasets.Value("int32"),
-                    "elevation": datasets.Value("int32"),
-                    "azimuth": datasets.Value("int32"),
-                    "lighting": datasets.Value("int32"),
+                    "left_image": Image(),
+                    "right_image": Image(),
+                    "label": Sequence(Value("int32")),
+                    "category": Value("int32"),
+                    "instance": Value("int32"),
+                    "elevation": Value("int32"),
+                    "azimuth": Value("int32"),
+                    "lighting": Value("int32"),
                 }
             ),
             supervised_keys=("left_image", "label"),
@@ -102,8 +102,8 @@ class SmallNORB(BaseDatasetBuilder):
         images_left, images_right, features = _load_small_norb_from_zip(str(data_path))
 
         for idx in range(len(images_left)):
-            left_img = Image.fromarray(images_left[idx].astype(np.uint8), mode="L")
-            right_img = Image.fromarray(images_right[idx].astype(np.uint8), mode="L")
+            left_img = PILImage.fromarray(images_left[idx].astype(np.uint8), mode="L")
+            right_img = PILImage.fromarray(images_right[idx].astype(np.uint8), mode="L")
 
             factors = features[idx].tolist()
 

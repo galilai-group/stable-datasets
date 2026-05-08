@@ -1,11 +1,13 @@
 import io
 import tarfile
 
-import datasets
 import scipy.io
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
+from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
@@ -18,7 +20,7 @@ class StanfordDogs(BaseDatasetBuilder):
     ``train_list.mat`` and ``test_list.mat``.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "http://vision.stanford.edu/aditya86/ImageNetDogs/",
@@ -37,15 +39,15 @@ class StanfordDogs(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=(
                 "Stanford Dogs: 20,580 images of 120 dog breeds drawn from ImageNet, with an "
                 "official 12,000 / 8,580 train/test split."
             ),
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -53,7 +55,7 @@ class StanfordDogs(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self):
         """Download both images.tar and lists.tar; each split joins them via the .mat split files."""
         source = self._source()
         key_url_map = {
@@ -65,12 +67,12 @@ class StanfordDogs(BaseDatasetBuilder):
         path_map = dict(zip(key_url_map.keys(), local_paths))
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={"path_map": path_map, "split": "train"},
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
+            SplitGenerator(
+                name=Split.TEST,
                 gen_kwargs={"path_map": path_map, "split": "test"},
             ),
         ]
@@ -99,7 +101,7 @@ class StanfordDogs(BaseDatasetBuilder):
                 if label is None:
                     continue
                 with img_tar.extractfile(entry) as f:
-                    image = Image.open(io.BytesIO(f.read())).convert("RGB")
+                    image = PILImage.open(io.BytesIO(f.read())).convert("RGB")
                 yield entry.name, {"image": image, "label": label}
 
     @staticmethod

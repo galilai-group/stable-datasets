@@ -3,8 +3,8 @@ import os
 import zipfile
 from pathlib import Path
 
-import datasets
-
+from stable_datasets.schema import DatasetInfo, Features, Value, Version, Video
+from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
 
 
@@ -25,7 +25,7 @@ class CLEVRER(BaseDatasetBuilder):
         - test: 5,000 videos (index 15000 - 19999)
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "http://clevrer.csail.mit.edu/",
@@ -48,19 +48,19 @@ class CLEVRER(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""CLEVRER is a diagnostic video dataset for temporal and causal reasoning.
             It contains 20,000 synthetic videos of moving and colliding objects, with four types
             of questions: descriptive, explanatory, predictive, and counterfactual.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "video": datasets.Video(),
-                    "scene_index": datasets.Value("int32"),
-                    "video_filename": datasets.Value("string"),
+                    "video": Video(),
+                    "scene_index": Value("int32"),
+                    "video_filename": Value("string"),
                     # Store questions as JSON string to avoid nested Sequence issues
-                    "questions_json": datasets.Value("string"),
+                    "questions_json": Value("string"),
                     # Store annotations as JSON string
-                    "annotations_json": datasets.Value("string"),
+                    "annotations_json": Value("string"),
                 }
             ),
             supervised_keys=None,
@@ -69,7 +69,7 @@ class CLEVRER(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self):
         source = self._source()
         assets = source["assets"]
 
@@ -84,8 +84,8 @@ class CLEVRER(BaseDatasetBuilder):
         url_to_path = dict(zip(urls, downloaded_paths))
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={
                     "videos_path": url_to_path[assets["train_videos"]],
                     "annotations_path": url_to_path[assets["train_annotations"]],
@@ -93,8 +93,8 @@ class CLEVRER(BaseDatasetBuilder):
                     "split": "train",
                 },
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION,
+            SplitGenerator(
+                name=Split.VALIDATION,
                 gen_kwargs={
                     "videos_path": url_to_path[assets["validation_videos"]],
                     "annotations_path": url_to_path[assets["validation_annotations"]],
@@ -102,8 +102,8 @@ class CLEVRER(BaseDatasetBuilder):
                     "split": "validation",
                 },
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
+            SplitGenerator(
+                name=Split.TEST,
                 gen_kwargs={
                     "videos_path": url_to_path[assets["test_videos"]],
                     "annotations_path": None,  # Test split has no annotations

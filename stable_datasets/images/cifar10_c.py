@@ -1,17 +1,18 @@
 import tarfile
 from io import BytesIO
 
-import datasets
 import numpy as np
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class CIFAR10C(BaseDatasetBuilder):
     """CIFAR-10-C dataset with corrupted CIFAR-10 images."""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -27,14 +28,14 @@ class CIFAR10C(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""CIFAR-10-C is a corrupted version of the CIFAR-10 dataset, with 19 different types of
                            corruptions applied to the images. The dataset consists of 10 classes and 5 levels
                            of severity per corruption type.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(
+                    "image": ImageFeature(),
+                    "label": ClassLabel(
                         names=[
                             "airplane",
                             "automobile",
@@ -48,8 +49,8 @@ class CIFAR10C(BaseDatasetBuilder):
                             "truck",
                         ]
                     ),
-                    "corruption_name": datasets.Value("string"),
-                    "corruption_level": datasets.Value("int32"),
+                    "corruption_name": Value("string"),
+                    "corruption_level": Value("int32"),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -102,7 +103,7 @@ class CIFAR10C(BaseDatasetBuilder):
                 yield (
                     idx,
                     {
-                        "image": Image.fromarray(image),
+                        "image": PILImage.fromarray(image),
                         "label": int(label),
                         "corruption_name": corruption_name,
                         "corruption_level": corruption_level,

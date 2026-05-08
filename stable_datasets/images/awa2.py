@@ -1,9 +1,10 @@
 import os
 import zipfile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -13,7 +14,24 @@ class AWA2(BaseDatasetBuilder):
     and zero-shot learning research. See https://cvml.ista.ac.at/AwA2/ for more information.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
+
+    SOURCE = {
+        "homepage": "https://cvml.ista.ac.at/AwA2/",
+        "citation": """@ARTICLE{8413121,
+                         author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},
+                         journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+                         title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly},
+                         year={2019},
+                         volume={41},
+                         number={9},
+                         pages={2251-2265},
+                         keywords={Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning},
+                         doi={10.1109/TPAMI.2018.2857768}}""",
+        "assets": {
+            "test": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip",
+        },
+    }
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -34,12 +52,12 @@ class AWA2(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""The AWA2 dataset is an image classification dataset with images of 50 classes, primarily used in attribute-based image recognition research. See https://cvml.ista.ac.at/AwA2/ for more information.""",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(
+                    "image": ImageFeature(),
+                    "label": ClassLabel(
                         names=[
                             "antelope",
                             "grizzly+bear",
@@ -118,6 +136,6 @@ class AWA2(BaseDatasetBuilder):
                 for image_path in z.namelist():
                     if image_path.startswith(class_dir) and image_path.endswith(".jpg"):
                         with z.open(image_path) as image_file:
-                            image = Image.open(image_file).convert("RGB")
+                            image = PILImage.open(image_file).convert("RGB")
                             label = label_mapping[class_name]
                             yield image_path, {"image": image, "label": label}

@@ -1,8 +1,9 @@
 import tarfile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -21,7 +22,7 @@ class Food101(BaseDatasetBuilder):
     All images are automatically rescaled to have a maximum side length of 512 pixels.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://data.vision.ee.ethz.ch/cvl/datasets_extra/food-101/",
@@ -37,12 +38,12 @@ class Food101(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="Food-101 image classification dataset. It has 101 food categories, with 101'000 images. For each class, 250 manually reviewed test images are provided as well as 750 training images. On purpose, the training images were not cleaned, and thus still contain some amount of noise. This comes mostly in the form of intense colors and sometimes wrong labels. All images were rescaled to have a maximum side length of 512 pixels",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -97,7 +98,7 @@ class Food101(BaseDatasetBuilder):
                 # Read and process image
                 try:
                     file_obj = tar.extractfile(member)
-                    image = Image.open(file_obj).convert("RGB")
+                    image = PILImage.open(file_obj).convert("RGB")
 
                     # Use full path as key for uniqueness
                     yield filename, {"image": image, "label": label}

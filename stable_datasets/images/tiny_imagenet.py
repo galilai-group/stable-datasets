@@ -1,9 +1,9 @@
 import os
-import subprocess
+import zipfile
 from pathlib import Path
 
-import datasets
-
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -13,7 +13,7 @@ class TinyImagenet(BaseDatasetBuilder):
     It contains 200 classes with 500 training images, 50 validation images, and 50 test images per class.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -33,13 +33,11 @@ class TinyImagenet(BaseDatasetBuilder):
 
     def _info(self):
         source = self._source()
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""In Tiny ImageNet, there are 100,000 images divided up into 200 classes. Every image in the
             dataset is downsized to a 64×64 colored image. For every class, there are 500 training images, 50 validating
             images, and 50 test images.""",
-            features=datasets.Features(
-                {"image": datasets.Image(), "label": datasets.ClassLabel(names=self._labels())}
-            ),
+            features=Features({"image": ImageFeature(), "label": ClassLabel(names=self._labels())}),
             supervised_keys=("image", "label"),
             homepage=source["homepage"],
             citation=source["citation"],
@@ -47,58 +45,36 @@ class TinyImagenet(BaseDatasetBuilder):
         )
 
     def _generate_examples(self, data_path, split):
-        if os.path.isfile(data_path) and data_path._str.lower().endswith(".zip"):
-            extract_dir = Path(
-                os.path.join(os.path.dirname(data_path), os.path.splitext(os.path.basename(data_path))[0])
-            )
-            extract_dir.mkdir(parents=True, exist_ok=True)
-            print("[tiny_imagenet] Extracting dataset... (this may take a while)")
-            subprocess.run(["unzip", "-nq", data_path, "-d", str(extract_dir)], check=True)
-            base_path = (
-                os.path.join(extract_dir, "tiny-imagenet-200")
-                if os.path.isdir(os.path.join(extract_dir, "tiny-imagenet-200"))
-                else extract_dir
-            )
-        else:
-            base_path = (
-                os.path.join(data_path, "tiny-imagenet-200")
-                if os.path.isdir(os.path.join(data_path, "tiny-imagenet-200"))
-                else data_path
-            )
+        data_path = Path(data_path)
 
-        print(f"[tiny_imagenet] generating examples for split={split} from {base_path}")
+        # Default BaseDatasetBuilder flow: data_path is the downloaded .zip asset.
+        extract_dir = data_path.with_suffix("")
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(data_path, "r") as zf:
+            zf.extractall(path=extract_dir)
+        base_path = extract_dir / "tiny-imagenet-200"
 
         if split == "train":
             label_dirs = sorted(os.listdir(os.path.join(base_path, "train")))
-            total_labels = len(label_dirs)
-            processed = 0
             for label_dir in label_dirs:
                 class_path = os.path.join(base_path, "train", label_dir, "images")
                 files = os.listdir(class_path)
                 for image_file in files:
                     image_path = os.path.join(class_path, image_file)
                     yield image_file, {"image": image_path, "label": label_dir}
-                processed += 1
-                if processed % 50 == 0 or processed == total_labels:
-                    print(f"[tiny_imagenet] processed {processed}/{total_labels} classes")
 
         elif split == "validation":
             annotations = os.path.join(base_path, "val", "val_annotations.txt")
-            print(f"[tiny_imagenet] reading validation annotations: {annotations}")
             with open(annotations) as f:
-                for i, line in enumerate(f):
+                for line in f:
                     image_file, label, *_ = line.strip().split("\t")
                     image_path = os.path.join(base_path, "val", "images", image_file)
-                    if i and i % 1000 == 0:
-                        print(f"[tiny_imagenet] yielded {i} validation examples")
                     yield image_file, {"image": image_path, "label": label}
         elif split == "test":
             test_dir = os.path.join(base_path, "test", "images")
             files = os.listdir(test_dir)
-            for i, image_file in enumerate(files):
+            for image_file in files:
                 image_path = os.path.join(test_dir, image_file)
-                if i and i % 1000 == 0:
-                    print(f"[tiny_imagenet] yielded {i} test examples")
                 yield image_file, {"image": image_path, "label": -1}  # No labels for test set
         else:
             raise ValueError(f"Unknown split: {split} | expected one of 'train', 'validation', 'test'")

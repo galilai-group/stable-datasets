@@ -1,11 +1,12 @@
 import os
 import tarfile
 
-import datasets
 import numpy as np
 import scipy.io
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import DatasetInfo, Features, Sequence, Value, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -14,7 +15,7 @@ class Cars3D(BaseDatasetBuilder):
     183 car types x 24 azimuth angles x 4 elevation angles.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://github.com/google-research/disentanglement_lib/tree/master",
@@ -32,17 +33,17 @@ class Cars3D(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=(
                 "Cars3D dataset with 183 car types, 24 azimuth angles, 4 elevation angles. Images are 128x128 RGB."
             ),
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "car_type": datasets.Value("int32"),
-                    "elevation": datasets.Value("int32"),
-                    "azimuth": datasets.Value("int32"),
-                    "label": datasets.Sequence(datasets.Value("int32")),
+                    "image": ImageFeature(),
+                    "car_type": Value("int32"),
+                    "elevation": Value("int32"),
+                    "azimuth": Value("int32"),
+                    "label": Sequence(Value("int32")),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -69,7 +70,7 @@ class Cars3D(BaseDatasetBuilder):
                 for azim in range(im_data.shape[3]):
                     img = im_data[:, :, :, azim, elev]
                     img = img.astype(np.uint8)
-                    img_pil = Image.fromarray(img, mode="RGB")
+                    img_pil = PILImage.fromarray(img, mode="RGB")
 
                     yield (
                         idx,

@@ -1,13 +1,21 @@
 import os
 
-import datasets
 import numpy as np
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import (
+    BuilderConfig,
+    DatasetInfo,
+    Features,
+    Sequence,
+    Value,
+    Version,
+)
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
-DSPRITES_VERSION = datasets.Version("1.0.0")
+DSPRITES_VERSION = Version("1.0.0")
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.abspath(os.path.join(_THIS_DIR, "..", ".."))
@@ -30,7 +38,7 @@ _CITATION_LOCATELLO = """@inproceedings{locatello2019challenging,
                     }"""
 
 
-class DSpritesConfig(datasets.BuilderConfig):
+class DSpritesConfig(BuilderConfig):
     """BuilderConfig for DSprites variants.
 
     Args:
@@ -93,35 +101,35 @@ class DSprites(BaseDatasetBuilder):
         source = self._source()
 
         features_dict = {
-            "image": datasets.Image(),
-            "index": datasets.Value("int32"),
-            "label": datasets.Sequence(datasets.Value("int32")),
-            "label_values": datasets.Sequence(datasets.Value("float32")),
-            "color": datasets.Value("int32"),
-            "shape": datasets.Value("int32"),
-            "scale": datasets.Value("int32"),
-            "orientation": datasets.Value("int32"),
-            "posX": datasets.Value("int32"),
-            "posY": datasets.Value("int32"),
-            "colorValue": datasets.Value("float64"),
+            "image": ImageFeature(),
+            "index": Value("int32"),
+            "label": Sequence(Value("int32")),
+            "label_values": Sequence(Value("float32")),
+            "color": Value("int32"),
+            "shape": Value("int32"),
+            "scale": Value("int32"),
+            "orientation": Value("int32"),
+            "posX": Value("int32"),
+            "posY": Value("int32"),
+            "colorValue": Value("float64"),
         }
 
         if getattr(self.config, "has_color_rgb", False):
-            features_dict["colorRGB"] = datasets.Sequence(datasets.Value("float32"))
+            features_dict["colorRGB"] = Sequence(Value("float32"))
 
         features_dict.update(
             {
-                "shapeValue": datasets.Value("float64"),
-                "scaleValue": datasets.Value("float64"),
-                "orientationValue": datasets.Value("float64"),
-                "posXValue": datasets.Value("float64"),
-                "posYValue": datasets.Value("float64"),
+                "shapeValue": Value("float64"),
+                "scaleValue": Value("float64"),
+                "orientationValue": Value("float64"),
+                "posXValue": Value("float64"),
+                "posYValue": Value("float64"),
             }
         )
 
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=f"dSprites dataset ({self.config.name} variant).",
-            features=datasets.Features(features_dict),
+            features=Features(features_dict),
             supervised_keys=("image", "label"),
             homepage=source["homepage"],
             citation=source["citation"],
@@ -138,7 +146,7 @@ class DSprites(BaseDatasetBuilder):
         # Pre-load scream background once
         scream = None
         if variant == "scream":
-            scream_img = Image.open(_SCREAM_PATH).convert("RGB")
+            scream_img = PILImage.open(_SCREAM_PATH).convert("RGB")
             scream_img = scream_img.resize((350, 274))
             scream = np.array(scream_img).astype(np.float32) / 255.0
 
@@ -150,19 +158,19 @@ class DSprites(BaseDatasetBuilder):
             color_rgb = None
 
             if variant == "original":
-                img_pil = Image.fromarray(img * 255, mode="L")
+                img_pil = PILImage.fromarray(img * 255, mode="L")
 
             elif variant == "color":
                 img_f = img.astype(np.float32)
                 color_rgb = np.random.uniform(0.5, 1.0, size=(3,))
                 img_rgb = (img_f[..., None] * color_rgb) * 255
-                img_pil = Image.fromarray(img_rgb.astype(np.uint8), mode="RGB")
+                img_pil = PILImage.fromarray(img_rgb.astype(np.uint8), mode="RGB")
 
             elif variant == "noise":
                 img_f = img.astype(np.float32)
                 noise = np.random.uniform(0, 1, size=(64, 64, 3))
                 img_rgb = np.minimum(img_f[..., None] + noise, 1.0) * 255
-                img_pil = Image.fromarray(img_rgb.astype(np.uint8), mode="RGB")
+                img_pil = PILImage.fromarray(img_rgb.astype(np.uint8), mode="RGB")
 
             elif variant == "scream":
                 img_f = img.astype(np.float32)
@@ -172,7 +180,7 @@ class DSprites(BaseDatasetBuilder):
                 mask = img_f == 1
                 output_img = np.copy(background_patch)
                 output_img[mask] = 1.0 - background_patch[mask]
-                img_pil = Image.fromarray((output_img * 255).astype(np.uint8), mode="RGB")
+                img_pil = PILImage.fromarray((output_img * 255).astype(np.uint8), mode="RGB")
 
             example = {
                 "image": img_pil,

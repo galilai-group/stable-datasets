@@ -1,15 +1,15 @@
 import tarfile
 
-import datasets
 import numpy as np
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 class STL10(BaseDatasetBuilder):
     """STL-10 Dataset"""
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -27,12 +27,12 @@ class STL10(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="STL-10 dataset for unsupervised feature learning. Includes labeled and unlabeled images.",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(
+                    "image": Image(),
+                    "label": ClassLabel(
                         names=["airplane", "bird", "car", "cat", "deer", "dog", "horse", "monkey", "ship", "truck"]
                     ),
                 }

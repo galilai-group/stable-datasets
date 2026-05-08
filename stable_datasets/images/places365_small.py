@@ -1,50 +1,67 @@
 import io
 import tarfile
 
-import datasets
 from PIL import Image
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
+from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
-class Places365Small(datasets.GeneratorBasedBuilder):
+
+class Places365Small(BaseDatasetBuilder):
     """
     The Places365-Standard dataset (small version) for image classification.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
-    def _info(self):
-        return datasets.DatasetInfo(
-            description="""
-            Places365-Standard is a large-scale dataset for scene recognition, containing 1.8 million training images
-            and 36,500 validation images over 365 scene categories.
-            """,
-            features=datasets.Features(
-                {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
-                }
-            ),
-            supervised_keys=("image", "label"),
-            homepage="http://places2.csail.mit.edu/",
-            license="MIT License",
-            citation="""@article{zhou2017places,
+    SOURCE = {
+        "homepage": "http://places2.csail.mit.edu/",
+        "citation": """@article{zhou2017places,
                          title={Places: A 10 million Image Database for Scene Recognition},
                          author={Zhou, Bolei and Lapedriza, Agata and Khosla, Aditya and Oliva, Aude and Torralba, Antonio},
                          year={2017}}
             """,
+        "assets": {
+            "train": "http://data.csail.mit.edu/places/places365/train_256_places365standard.tar",
+            "val": "http://data.csail.mit.edu/places/places365/val_256.tar",
+            "devkit": "http://data.csail.mit.edu/places/places365/filelist_places365-standard.tar",
+        },
+    }
+
+    def _info(self):
+        return DatasetInfo(
+            description="""
+            Places365-Standard is a large-scale dataset for scene recognition, containing 1.8 million training images
+            and 36,500 validation images over 365 scene categories.
+            """,
+            features=Features(
+                {
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
+                }
+            ),
+            supervised_keys=("image", "label"),
+            homepage=self.SOURCE["homepage"],
+            license="MIT License",
+            citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        train_path = dl_manager.download("http://data.csail.mit.edu/places/places365/train_256_places365standard.tar")
-        val_path = dl_manager.download("http://data.csail.mit.edu/places/places365/val_256.tar")
-        devkit_path = dl_manager.download("http://data.csail.mit.edu/places/places365/filelist_places365-standard.tar")
+    def _split_generators(self):
+        source = self._source()
+        assets = source["assets"]
+        urls = [assets["train"], assets["val"], assets["devkit"]]
+        local_paths = bulk_download(urls, dest_folder=self._raw_download_dir)
+        train_path, val_path, devkit_path = local_paths
+
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={"archive_path": train_path, "split": "train"},
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION,
+            SplitGenerator(
+                name=Split.VALIDATION,
                 gen_kwargs={"archive_path": val_path, "split": "val", "devkit_path": devkit_path},
             ),
         ]
@@ -54,10 +71,8 @@ class Places365Small(datasets.GeneratorBasedBuilder):
             if split == "train":
                 for member in tar.getmembers():
                     if member.isfile():
-                        # Extract image as file-like object
                         file_like = tar.extractfile(member)
                         if file_like:
-                            # Convert to PIL.Image
                             image = Image.open(io.BytesIO(file_like.read()))
                             label = self.extract_train_class(member.name)
                             yield member.name, {"image": image, "label": label}
@@ -65,7 +80,6 @@ class Places365Small(datasets.GeneratorBasedBuilder):
             elif split == "val":
                 folder = "val_256/"
 
-                # Extract places365_val.txt from devkit
                 label_mapping = {}
                 with tarfile.open(devkit_path, "r") as devkit_tar:
                     val_label_file = devkit_tar.extractfile("places365_val.txt")
@@ -73,30 +87,23 @@ class Places365Small(datasets.GeneratorBasedBuilder):
                         filename, class_idx = line.decode("utf-8").strip().split()
                         label_mapping[filename] = int(class_idx)
 
-                # Process validation images
+                labels = self._labels()
                 for member in tar.getmembers():
                     if member.isfile():
-                        filename = member.name[len(folder) :]  # Remove "val_256/" prefix
+                        filename = member.name[len(folder) :]
                         if filename in label_mapping:
-                            # Extract image as file-like object
                             file_like = tar.extractfile(member)
                             if file_like:
-                                # Convert to PIL.Image
                                 image = Image.open(io.BytesIO(file_like.read()))
                                 class_idx = label_mapping[filename]
-                                label_name = self._labels()[class_idx]  # Map class index to label name
-                                yield member.name, {"image": image, "label": label_name}
+                                yield member.name, {"image": image, "label": labels[class_idx]}
 
     @staticmethod
     def extract_train_class(input_string):
-        # Find the first '/' and trim everything before it
         first_slash_index = input_string.find("/")
         trimmed_start = input_string[first_slash_index:]
-
-        # Remove everything after the last '/'
         last_slash_index = trimmed_start.rfind("/")
         result = trimmed_start[:last_slash_index]
-
         return result
 
     @staticmethod

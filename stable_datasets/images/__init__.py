@@ -26,6 +26,9 @@ from .flowers102 import Flowers102
 from .food101 import Food101
 from .galaxy10 import Galaxy10Decal
 from .hasy_v2 import HASYv2
+from .imagenet_1k import ImageNet1K
+from .imagenet_10 import Imagenette
+from .imagenet_100 import ImageNet100
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
@@ -33,7 +36,6 @@ from .not_mnist import NotMNIST
 from .oxford_pet import OxfordPet
 from .plant_village import PlantVillage
 
-# from .imagenette import Imagenette
 # from .mnist import MNIST
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
@@ -70,9 +72,10 @@ __all__ = [
     "Flowers102",
     "Galaxy10Decal",
     "Food101",
-    "TinyImagenet",
-    "TinyImagenetC",
     "HASYv2",
+    "ImageNet1K",
+    "ImageNet100",
+    "Imagenette",
     "KMNIST",
     "Linnaeus5",
     "MedMNIST",
@@ -85,4 +88,6 @@ __all__ = [
     "StanfordDogs",
     "STL10",
     "SVHN",
+    "TinyImagenet",
+    "TinyImagenetC",
 ]

@@ -1,10 +1,11 @@
 import io
 from zipfile import ZipFile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -21,7 +22,7 @@ class ArabicCharacters(BaseDatasetBuilder):
     The data-set is composed of 16,800 characters written by 60 participants, the age range is between 19 to 40 years, and 90% of participants are right-hand. Each participant wrote each character (from ’alef’ to ’yeh’) ten times on two forms as shown in Fig. 7(a) & 7(b). The forms were scanned at the resolution of 300 dpi. Each block is segmented automatically using Matlab 2016a to determining the coordinates for each block. The database is partitioned into two sets: a training set (13,440 characters to 480 images per class) and a test set (3,360 characters to 120 images per class). Writers of training set and test set are exclusive. Ordering of including writers to test set are randomized to make sure that writers of test set are not from a single institution (to ensure variability of the test set).
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
     SOURCE = {
@@ -40,13 +41,11 @@ class ArabicCharacters(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="""Arabic Handwritten Characters Dataset, consisting of 16,800 characters
                            written by 60 participants. The dataset is split into training and test
                            sets, with a balanced distribution across all classes.""",
-            features=datasets.Features(
-                {"image": datasets.Image(), "label": datasets.ClassLabel(names=[str(i) for i in range(28)])}
-            ),
+            features=Features({"image": ImageFeature(), "label": ClassLabel(names=[str(i) for i in range(28)])}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],
@@ -58,7 +57,7 @@ class ArabicCharacters(BaseDatasetBuilder):
             for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):
                 if entry.filename.endswith(".png"):
                     content = archive.read(entry)
-                    image = Image.open(io.BytesIO(content))
+                    image = PILImage.open(io.BytesIO(content))
                     label = int(entry.filename.split("_")[-1][:-4]) - 1  # Extract label from filename
 
                     yield entry.filename, {"image": image, "label": label}

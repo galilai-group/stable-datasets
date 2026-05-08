@@ -3,9 +3,10 @@ import io
 import os
 import tarfile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import BuilderConfig, ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -25,11 +26,11 @@ class HASYv2(BaseDatasetBuilder):
     - **Splits:** The dataset includes 10 pre-defined folds. This implementation uses 'Fold 1' as the standard train/test split.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
     BUILDER_CONFIGS = [
-        datasets.BuilderConfig(
+        BuilderConfig(
             name=f"fold-{i}",
-            version=datasets.Version("1.0.0"),
+            version=Version("1.0.0"),
             description=f"HASYv2 dataset using fold {i} as the test set.",
         )
         for i in range(1, 11)
@@ -49,12 +50,12 @@ class HASYv2(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=f"HASYv2 dataset (Config: {self.config.name})",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -97,7 +98,7 @@ class HASYv2(BaseDatasetBuilder):
                     f = tar.extractfile(member)
                     if f:
                         image_bytes = f.read()
-                        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+                        image = PILImage.open(io.BytesIO(image_bytes)).convert("RGB")
                         label = image_label_map[member_filename]
 
                         yield (

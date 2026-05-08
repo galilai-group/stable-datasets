@@ -1,9 +1,10 @@
 import io
 
-import datasets
 import rarfile
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -23,7 +24,7 @@ class Linnaeus5(BaseDatasetBuilder):
     - **Splits:** Pre-split into Training (1,200 images per class) and Test (400 images per class).
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "http://chaladze.com/l5/",
@@ -33,17 +34,18 @@ class Linnaeus5(BaseDatasetBuilder):
                       journal={chaladze.com},
                       year={2017}}""",
         "assets": {
-            "data": "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar",
+            "train": "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar",
+            "test": "http://chaladze.com/l5/img/Linnaeus%205%20256X256.rar",
         },
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="Linnaeus 5 dataset with 5 classes (berry, bird, dog, flower, other).",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -51,39 +53,16 @@ class Linnaeus5(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
-        source = self._source()
-        url = source["assets"]["data"]
-
-        archive_path = dl_manager.download(url)
-
-        return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
-                gen_kwargs={
-                    "archive_path": archive_path,
-                    "split_name": "train",
-                },
-            ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
-                gen_kwargs={
-                    "archive_path": archive_path,
-                    "split_name": "test",
-                },
-            ),
-        ]
-
-    def _generate_examples(self, archive_path, split_name):
+    def _generate_examples(self, data_path, split):
         """Iterate over the RAR archive and yield images matching the split."""
 
-        with rarfile.RarFile(archive_path) as rf:
+        with rarfile.RarFile(data_path) as rf:
             for member in rf.infolist():
                 if member.isdir():
                     continue
 
                 filename = member.filename
-                if f"/{split_name}/" in filename.lower() and filename.lower().endswith((".jpg", ".jpeg")):
+                if f"/{split}/" in filename.lower() and filename.lower().endswith((".jpg", ".jpeg")):
                     try:
                         parts = filename.replace("\\", "/").split("/")
                         label_name = parts[-2]
@@ -94,7 +73,7 @@ class Linnaeus5(BaseDatasetBuilder):
                         with rf.open(member) as f:
                             image_bytes = f.read()
 
-                        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+                        image = PILImage.open(io.BytesIO(image_bytes)).convert("RGB")
 
                         yield (
                             filename,

@@ -2,10 +2,12 @@ import io
 import os
 import tarfile
 
-import datasets
 import scipy.io
-from PIL import Image
+from PIL import Image as PILImage
 
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
+from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
@@ -26,7 +28,7 @@ class Flowers102(BaseDatasetBuilder):
     - **Splits:** A predefined split ID file dividing the data into Training (1,020 images), Validation (1,020 images), and Test (6,149 images).
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/",
@@ -45,12 +47,12 @@ class Flowers102(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="Flowers102 dataset with 102 classes.",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -58,7 +60,7 @@ class Flowers102(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self):
         """
         Override default splitting because we need all 3 files (images, labels, IDs)
         to generate examples for any split.
@@ -77,22 +79,22 @@ class Flowers102(BaseDatasetBuilder):
         path_map = dict(zip(key_url_map.keys(), local_paths))
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={
                     "path_map": path_map,
                     "split": "train",
                 },
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.VALIDATION,
+            SplitGenerator(
+                name=Split.VALIDATION,
                 gen_kwargs={
                     "path_map": path_map,
                     "split": "valid",
                 },
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
+            SplitGenerator(
+                name=Split.TEST,
                 gen_kwargs={
                     "path_map": path_map,
                     "split": "test",
@@ -134,7 +136,7 @@ class Flowers102(BaseDatasetBuilder):
 
                         image_bytes = f.read()
 
-                        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+                        image = PILImage.open(io.BytesIO(image_bytes)).convert("RGB")
 
                         # Convert labels to be 0-indexed
                         label = int(labels_data[image_id - 1])

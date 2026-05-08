@@ -1,14 +1,23 @@
 import io
 from zipfile import ZipFile
 
-import datasets
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
+from stable_datasets.schema import (
+    BuilderConfig,
+    ClassLabel,
+    DatasetInfo,
+    Features,
+    Value,
+    Version,
+)
+from stable_datasets.schema import Image as ImageFeature
+from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
-PLANT_VILLAGE_VERSION = datasets.Version("1.0.0")
+PLANT_VILLAGE_VERSION = Version("1.0.0")
 
 _VARIANTS = ("color", "grayscale", "segmented")
 
@@ -55,8 +64,10 @@ _CLASS_NAMES = [
     "Tomato___healthy",
 ]
 
+_CLASS_INDEX = {name: i for i, name in enumerate(_CLASS_NAMES)}
 
-class PlantVillageConfig(datasets.BuilderConfig):
+
+class PlantVillageConfig(BuilderConfig):
     """One BuilderConfig per image variant (color / grayscale / segmented)."""
 
     def __init__(self, *, variant: str, **kwargs):
@@ -129,17 +140,17 @@ class PlantVillage(BaseDatasetBuilder):
 
     def _info(self):
         source = self._source()
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=(
                 "PlantVillage plant-disease image dataset covering 14 crops and 26 diseases "
                 f"(38 classes total) in three image variants: {', '.join(_VARIANTS)}."
             ),
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=_CLASS_NAMES),
-                    "crop": datasets.Value("string"),
-                    "disease": datasets.Value("string"),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=_CLASS_NAMES),
+                    "crop": Value("string"),
+                    "disease": Value("string"),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -147,7 +158,7 @@ class PlantVillage(BaseDatasetBuilder):
             citation=source["citation"],
         )
 
-    def _split_generators(self, dl_manager):
+    def _split_generators(self):
         source = self._source()
         key_url_map = {
             "data": source["assets"]["data"],
@@ -159,12 +170,12 @@ class PlantVillage(BaseDatasetBuilder):
         path_map = dict(zip(key_url_map.keys(), local_paths))
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={"path_map": path_map, "split": "train"},
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
+            SplitGenerator(
+                name=Split.TEST,
                 gen_kwargs={"path_map": path_map, "split": "test"},
             ),
         ]
@@ -192,13 +203,13 @@ class PlantVillage(BaseDatasetBuilder):
                     raw_bytes = archive.read(rel_path)
                 except KeyError:
                     continue
-                image = Image.open(io.BytesIO(raw_bytes)).convert("RGB")
+                image = PILImage.open(io.BytesIO(raw_bytes)).convert("RGB")
 
                 yield (
                     rel_path,
                     {
                         "image": image,
-                        "label": class_name,
+                        "label": _CLASS_INDEX[class_name],
                         "crop": crop,
                         "disease": disease,
                     },

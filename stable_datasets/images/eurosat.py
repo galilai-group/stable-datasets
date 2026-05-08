@@ -1,10 +1,16 @@
 import io
 
-import datasets
 import pyarrow.parquet as pq
-from PIL import Image
+from PIL import Image as PILImage
 from tqdm import tqdm
 
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    Features,
+    Version,
+)
+from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -18,7 +24,7 @@ class EuroSAT(BaseDatasetBuilder):
     5,400 test) as mirrored by the ``timm/eurosat-rgb`` HuggingFace dataset.
     """
 
-    VERSION = datasets.Version("1.0.0")
+    VERSION = Version("1.0.0")
 
     SOURCE = {
         "homepage": "https://github.com/phelber/EuroSAT",
@@ -37,15 +43,15 @@ class EuroSAT(BaseDatasetBuilder):
     }
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description=(
                 "EuroSAT RGB: 27,000 Sentinel-2 64x64 RGB patches covering 10 land use and land cover "
                 "classes, with the google-research split of 16,200 train / 5,400 validation / 5,400 test."
             ),
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=self._labels()),
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=self._labels()),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -67,7 +73,7 @@ class EuroSAT(BaseDatasetBuilder):
             tqdm(zip(images, labels), total=len(images), desc=f"Processing EuroSAT {split}")
         ):
             raw = img_entry["bytes"] if isinstance(img_entry, dict) else img_entry
-            image = Image.open(io.BytesIO(raw)).convert("RGB")
+            image = PILImage.open(io.BytesIO(raw)).convert("RGB")
             yield idx, {"image": image, "label": int(label)}
 
     @staticmethod
