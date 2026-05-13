@@ -4,6 +4,15 @@ Fetches runs from a W&B project, validates them against the expected
 hyperparameters from conf/model/*.yaml, and writes one table per
 evaluation metric (linear probe + kNN) to ``benchmarks/results/``.
 
+Aggregation per (model, dataset) cell: pools each seeded run (deduped by
+seed) plus the single best unseeded run as samples; the rendered value is
+the mean ± std across that pool. Cells with N=1 sample render bare.
+
+Outputs:
+    benchmarks/results/benchmark_results.csv             (per-run rows)
+    benchmarks/results/benchmark_results_aggregated.csv  (per-cell mean/std)
+    benchmarks/results/benchmark_table_*_with_rankme.tex (LaTeX tables)
+
 Usage:
     python -m benchmarks.render_latex
 """
@@ -167,6 +176,14 @@ _DATASET_ALIASES: dict[str, str] = {"medmnist": "pneumoniamnist"}
 DEFAULT_BACKBONES: tuple[str, ...] = ("vit_small", "vit_small_patch16_224")
 
 
+def _parse_seed_from_name(name: str) -> int | None:
+    """Extract ``seedN`` suffix from a run name. Returns the int or None."""
+    import re
+
+    m = re.search(r"_seed(\d+)\b", name)
+    return int(m.group(1)) if m else None
+
+
 def _parse_name(
     name: str,
     backbones: tuple[str, ...] = DEFAULT_BACKBONES,
@@ -294,12 +311,29 @@ def collect_runs(
             skipped_no_metric += 1
             continue
 
+        # Tag presence is authoritative; config.seed is often missing because
+        # the batch API truncates configs. Fall back to the run name suffix
+        # (``_seedN``) — and only re-fetch the full config as a last resort.
+        run_tags = set(_retry(lambda: run.tags or []))
+        is_seed_run = "seed" in run_tags
+        seed = config.get("seed")
+        if seed is None and is_seed_run:
+            seed = _parse_seed_from_name(run.name)
+        if seed is None and is_seed_run:
+            try:
+                full_cfg = _retry(lambda: api.run(f"{entity}/{project}/{run.id}").config)
+                seed = full_cfg.get("seed")
+            except Exception:
+                pass
+
         rows.append(
             {
+                "run_id": run.id,
                 "model": model,
                 "dataset": dataset,
-                "seed": config.get("seed"),
-                "is_seed_run": "seed" in set(_retry(lambda: run.tags or [])),
+                "seed": seed,
+                "is_seed_run": is_seed_run,
+                "tags": ",".join(sorted(run_tags)),
                 **metric_values,
             }
         )
@@ -330,9 +364,16 @@ def collect_runs(
 def pivot_table(df: pd.DataFrame, metric: str) -> tuple[pd.DataFrame, pd.DataFrame | None]:
     """Pivot into {dataset x method} table for a given metric column.
 
-    For seed runs: uses mean across seeds.
-    For non-seed runs: uses the best run per (dataset, method).
-    Returns (table, std_table).  std_table is None if no seed runs exist.
+    Aggregation: each (model, dataset) cell pools every seeded run plus the
+    single best unseeded run as samples. Cell value is the mean; std
+    (rendered as ±) is over the same pool. N=1 cells render bare.
+
+    No per-seed dedup: the W&B batch API returns truncated configs where
+    ``config.seed`` is sometimes missing even though the ``seed`` tag is
+    present. Grouping by seed would drop those rows. The upstream
+    ``collect_runs`` filters (``state=="finished"``, ``_runtime>300s``)
+    already screen out SLURM-requeue partial reruns, so each kept row is
+    one valid sample.
     """
     if metric not in df.columns:
         return pd.DataFrame(), None
@@ -341,22 +382,32 @@ def pivot_table(df: pd.DataFrame, metric: str) -> tuple[pd.DataFrame, pd.DataFra
         return pd.DataFrame(), None
 
     is_seed = df["is_seed_run"].fillna(False).astype(bool)
-    primary = (
-        df[~is_seed].sort_values(metric, ascending=False).drop_duplicates(subset=["dataset", "model"], keep="first")
-    )
-    table = primary.pivot_table(index="dataset", columns="model", values=metric, aggfunc="max")
 
-    std_table = None
-    seed_df = df[is_seed]
-    if not seed_df.empty:
-        seed_mean = seed_df.pivot_table(index="dataset", columns="model", values=metric, aggfunc="mean")
-        std_table = seed_df.pivot_table(index="dataset", columns="model", values=metric, aggfunc="std")
-        for col in seed_mean.columns:
-            mask = seed_mean[col].notna()
-            if col in table.columns:
-                table.loc[mask, col] = seed_mean.loc[mask, col]
-            else:
-                table[col] = seed_mean[col]
+    # Each seeded run is one sample.
+    seed_samples = df[is_seed][["dataset", "model", metric]]
+
+    # One sample per (model, dataset) for unseeded runs (best attempt).
+    unseeded_samples = (
+        df[~is_seed]
+        .groupby(["dataset", "model"], as_index=False)[metric]
+        .max()
+    )
+
+    pooled = pd.concat(
+        [seed_samples, unseeded_samples],
+        ignore_index=True,
+    )
+    if pooled.empty:
+        return pd.DataFrame(), None
+
+    table = pooled.pivot_table(index="dataset", columns="model", values=metric, aggfunc="mean")
+    # std with N=1 yields NaN; formatter falls back to bare value.
+    # dropna=False keeps NaN cells so the std frame matches `table` shape even
+    # when no (model, dataset) cell has more than 1 sample yet.
+    std_table = pooled.pivot_table(
+        index="dataset", columns="model", values=metric, aggfunc="std", dropna=False
+    )
+    std_table = std_table.reindex(index=table.index, columns=table.columns)
 
     # Mask known training collapses so they render as "---" rather than a
     # misleading score. The raw CSV rows are kept intact.
@@ -378,7 +429,7 @@ def pivot_table(df: pd.DataFrame, metric: str) -> tuple[pd.DataFrame, pd.DataFra
     avg_row["Chance"] = table["Chance"].mean()
     table.loc["Average"] = avg_row
 
-    if std_table is not None:
+    if std_table is not None and not std_table.empty:
         std_table.loc["Average"] = std_table.mean()
 
     return table, std_table
@@ -514,6 +565,27 @@ def main():
 
     df.to_csv(DEFAULT_CSV_PATH, index=False)
     print(f"\nSaved CSV to {DEFAULT_CSV_PATH}")
+
+    # Per-cell aggregate CSV (long format: one row per dataset/model/metric).
+    agg_rows = []
+    for short, (tbl, std) in pivots.items():
+        if tbl.empty:
+            continue
+        for ds in tbl.index:
+            if ds == "Average":
+                continue
+            for col in tbl.columns:
+                if col == "Chance":
+                    continue
+                mean = tbl.loc[ds, col]
+                s = std.loc[ds, col] if std is not None and ds in std.index and col in std.columns else float("nan")
+                if pd.isna(mean):
+                    continue
+                agg_rows.append({"metric": short, "dataset": ds, "model": col, "mean": mean, "std": s})
+    if agg_rows:
+        agg_path = RESULTS_DIR / "benchmark_results_aggregated.csv"
+        pd.DataFrame(agg_rows).to_csv(agg_path, index=False)
+        print(f"Saved aggregated CSV to {agg_path}")
 
     for short, (tbl, std) in pivots.items():
         if tbl.empty:
