@@ -16,3 +16,7 @@ hydra:
     # auto-requeued up to 3 times. trainer.fit() resumes from last.ckpt via
     # benchmarks/run.py's auto-resume logic.
     max_num_timeout: 3
+    # Cap concurrent SLURM array tasks. Sized for the seed sweep (~600 jobs):
+    # large enough to make progress, small enough to leave 3090-gcondo headroom
+    # for other users. Override per-launch with hydra.launcher.array_parallelism=N.
+    array_parallelism: 32

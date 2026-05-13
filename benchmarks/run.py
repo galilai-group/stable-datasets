@@ -195,7 +195,10 @@ def main(cfg: DictConfig) -> None:
     # Callbacks
     callbacks = create_eval_callbacks(module, ds_config, embed_dim)
     ckpt_cfg = cfg.checkpoint
-    run_ckpt_dir = os.path.join(ckpt_cfg.dir, f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}")
+    run_dir_name = f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}"
+    if seed is not None:
+        run_dir_name += f"_seed{seed}"
+    run_ckpt_dir = os.path.join(ckpt_cfg.dir, run_dir_name)
     ckpt_kwargs = {
         "dirpath": run_ckpt_dir,
         "filename": "{epoch}-{step}",
@@ -213,8 +216,8 @@ def main(cfg: DictConfig) -> None:
     callbacks.append(ModelCheckpoint(**ckpt_kwargs))
 
     # Auto-resume: if a previous SLURM walltime-out / requeue / manual resubmit
-    # left a last.ckpt at the same (model, backbone, dataset) path, hand it to
-    # spt.Manager so trainer.fit() picks up where it stopped.
+    # left a last.ckpt at the same (model, backbone, dataset, seed) path, hand
+    # it to spt.Manager so trainer.fit() picks up where it stopped.
     # Safety check: weights-only checkpoints (legacy from save_weights_only=True)
     # cause Trainer.fit(ckpt_path=...) to raise KeyError on optimizer state, which
     # submitit silently swallows. Verify optimizer_states present before resuming.

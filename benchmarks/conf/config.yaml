@@ -6,11 +6,11 @@ backbone: vit_small_patch16_224
 dataset: cifar10
 seed: null  # set to an int to run a seeded ablation (tagged "seed" in wandb)
 run_tag: null  # extra wandb tag for this run (e.g. "final_runs")
-data_dir: /oscar/home/sboughan/scratch/.stable-datasets  # override to set download/cache root
+data_dir: ${oc.env:STABLE_DATASETS_ROOT,/oscar/home/sboughan/scratch/.stable-datasets}  # set STABLE_DATASETS_ROOT in shell to relocate dataset+ckpt root
 smoke_test: false  # run 3 train + 3 val batches for 1 epoch to verify the pipeline works
 
 checkpoint:
-  dir: /oscar/home/sboughan/scratch/.stable-datasets/.pretrain_checkpoints
+  dir: ${oc.env:STABLE_DATASETS_ROOT,/oscar/home/sboughan/scratch/.stable-datasets}/.pretrain_checkpoints
   every_n_epochs: 10
   train_time_interval_hours: 2  # wall-clock save to survive SLURM timeouts
   save_last: true
