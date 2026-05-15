@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[dev,benchmarks]"
 
       # Shared timing history across branches/PRs (restore-only)
       - name: Restore pytest-split durations cache (shared)
@@ -100,7 +100,7 @@ jobs:
       - name: Install merge dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[dev,benchmarks]"
 
       - name: Download all shard artifacts
         uses: actions/download-artifact@v4
