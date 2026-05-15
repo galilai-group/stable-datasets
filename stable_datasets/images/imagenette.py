@@ -2,10 +2,18 @@ import io
 import tarfile
 from pathlib import Path
 
-import datasets
 from PIL import Image as PILImage
 
-from stable_datasets.schema import DatasetSource, DownloadInfo
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Image,
+    Version,
+)
+from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
 
 
@@ -26,7 +34,7 @@ _IN10_CLASSES = [
 class Imagenette(BaseDatasetBuilder):
     """Imagenette (ImageNet-10) from FastAI's public tarball."""
 
-    VERSION = datasets.Version("2.0.0")
+    VERSION = Version("2.0.0")
 
     SOURCE = DatasetSource(
         homepage="https://github.com/fastai/imagenette",
@@ -42,12 +50,12 @@ class Imagenette(BaseDatasetBuilder):
     )
 
     def _info(self):
-        return datasets.DatasetInfo(
+        return DatasetInfo(
             description="ImageNet-10 (Imagenette) with train/validation splits.",
-            features=datasets.Features(
+            features=Features(
                 {
-                    "image": datasets.Image(),
-                    "label": datasets.ClassLabel(names=_IN10_CLASSES),
+                    "image": Image(),
+                    "label": ClassLabel(names=_IN10_CLASSES),
                 }
             ),
             supervised_keys=("image", "label"),
@@ -68,12 +76,12 @@ class Imagenette(BaseDatasetBuilder):
         archive_path = downloaded_paths[0]
 
         return [
-            datasets.SplitGenerator(
-                name=datasets.Split.TRAIN,
+            SplitGenerator(
+                name=Split.TRAIN,
                 gen_kwargs={"data_path": archive_path, "split": "train"},
             ),
-            datasets.SplitGenerator(
-                name=datasets.Split.TEST,
+            SplitGenerator(
+                name=Split.TEST,
                 gen_kwargs={"data_path": archive_path, "split": "val"},
             ),
         ]
