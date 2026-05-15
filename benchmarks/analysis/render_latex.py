@@ -100,13 +100,14 @@ def _display(key: str) -> str:
 
 # W&B fetch (only used when selected_runs.csv is absent)
 
+
 def _retry(fn, max_retries: int = 5):
     for attempt in range(max_retries):
         try:
             return fn()
         except requests.exceptions.HTTPError as exc:
             if exc.response is not None and exc.response.status_code == 429:
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
                 continue
             raise
     return fn()
@@ -150,9 +151,15 @@ def _fetch_from_wandb(entity: str, project: str, backbones: tuple[str, ...]) -> 
         if probe is None:
             continue
 
-        rows.append({"model": model, "dataset": dataset, "probe": float(probe),
-                     "knn": float(knn) if knn is not None else None,
-                     "rankme_val": float(rankme) if rankme is not None else None})
+        rows.append(
+            {
+                "model": model,
+                "dataset": dataset,
+                "probe": float(probe),
+                "knn": float(knn) if knn is not None else None,
+                "rankme_val": float(rankme) if rankme is not None else None,
+            }
+        )
 
     df = pd.DataFrame(rows)
     if df.empty:
@@ -165,8 +172,9 @@ def _fetch_from_wandb(entity: str, project: str, backbones: tuple[str, ...]) -> 
     )
 
 
-def load_runs(selected_runs_csv: Path | None, *, entity: str, project: str,
-              backbones: tuple[str, ...]) -> pd.DataFrame:
+def load_runs(
+    selected_runs_csv: Path | None, *, entity: str, project: str, backbones: tuple[str, ...]
+) -> pd.DataFrame:
     if selected_runs_csv is not None and selected_runs_csv.exists():
         return pd.read_csv(selected_runs_csv)
     print("no selected-runs CSV found — fetching from W&B…", file=sys.stderr)
@@ -175,10 +183,7 @@ def load_runs(selected_runs_csv: Path | None, *, entity: str, project: str,
 
 def pivot_probe(runs: pd.DataFrame, metadata_csv: Path) -> pd.DataFrame:
     df = runs.dropna(subset=["probe"]).copy()
-    df = (
-        df.sort_values("probe", ascending=False)
-        .drop_duplicates(subset=["model", "dataset"], keep="first")
-    )
+    df = df.sort_values("probe", ascending=False).drop_duplicates(subset=["model", "dataset"], keep="first")
     table = df.pivot_table(index="dataset", columns="model", values="probe", aggfunc="max")
     table.columns.name = None
     table.index.name = None
@@ -186,9 +191,7 @@ def pivot_probe(runs: pd.DataFrame, metadata_csv: Path) -> pd.DataFrame:
     if metadata_csv.exists():
         meta = pd.read_csv(metadata_csv)
         meta["dataset"] = meta["dataset"].str.lower()
-        chance = meta.set_index("dataset")["num_classes"].apply(
-            lambda k: 1.0 / k if k > 0 else float("nan")
-        )
+        chance = meta.set_index("dataset")["num_classes"].apply(lambda k: 1.0 / k if k > 0 else float("nan"))
         table["Chance"] = chance.reindex(table.index)
     else:
         table["Chance"] = float("nan")
@@ -213,9 +216,7 @@ def format_latex(table: pd.DataFrame) -> str:
     lines = [
         f"\\begin{{tabular}}{{l {'c ' * n_cols}}}",
         "\\toprule",
-        "\\textbf{Dataset} & "
-        + " & ".join(_display(m) for m in method_cols)
-        + " & \\textbf{Chance} \\\\",
+        "\\textbf{Dataset} & " + " & ".join(_display(m) for m in method_cols) + " & \\textbf{Chance} \\\\",
         "\\midrule",
     ]
     for ds in all_ds:
@@ -223,11 +224,7 @@ def format_latex(table: pd.DataFrame) -> str:
         lines.append(" & ".join(cells) + " \\\\")
 
     lines.append("\\midrule")
-    avg_cells = (
-        ["\\textbf{Average}"]
-        + [_cell("Average", col) for col in method_cols]
-        + [_cell("Average", "Chance")]
-    )
+    avg_cells = ["\\textbf{Average}"] + [_cell("Average", col) for col in method_cols] + [_cell("Average", "Chance")]
     lines.append(" & ".join(avg_cells) + " \\\\")
     lines.extend(["\\bottomrule", "\\end{tabular}"])
     return "\n".join(lines) + "\n"
@@ -245,8 +242,7 @@ def main() -> None:
 
     backbones = tuple(b.strip() for b in args.backbones.split(",") if b.strip())
 
-    runs = load_runs(args.selected_runs_csv, entity=args.entity,
-                     project=args.project, backbones=backbones)
+    runs = load_runs(args.selected_runs_csv, entity=args.entity, project=args.project, backbones=backbones)
     if runs.empty:
         print("no runs found")
         return

@@ -27,11 +27,11 @@ from pathlib import Path
 import lightning as pl
 import stable_pretraining as spt
 import torch
+import wandb
 from lightning.pytorch.loggers import WandbLogger
 from stable_pretraining.data import transforms
 from torch.utils.data import DataLoader, Dataset
 
-import wandb
 from benchmarks.dataset import create_dataset, get_config
 from benchmarks.models import collate_single, create_eval_callbacks
 from benchmarks.transfer.checkpoints import BACKBONES, BackboneSpec, load_backbone
@@ -146,14 +146,21 @@ class _FeatureDataModule(pl.LightningDataModule):
     def train_dataloader(self) -> DataLoader:
         # num_workers=0: tensors are in RAM, no I/O bottleneck, forking overhead not worth it.
         return DataLoader(
-            self._train_ds, batch_size=self._bs, shuffle=True,
-            drop_last=True, num_workers=0, pin_memory=True,
+            self._train_ds,
+            batch_size=self._bs,
+            shuffle=True,
+            drop_last=True,
+            num_workers=0,
+            pin_memory=True,
         )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            self._val_ds, batch_size=self._bs, shuffle=False,
-            num_workers=0, pin_memory=True,
+            self._val_ds,
+            batch_size=self._bs,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=True,
         )
 
 
@@ -190,13 +197,22 @@ def _extract_to_disk(
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     eval_tf = _resize_for_eval(spec)
-    extract_cfg = type("Cfg", (), {
-        "batch_size": batch_size,
-        "num_workers": num_workers,
-        "prefetch_factor": 4,
-    })()
+    extract_cfg = type(
+        "Cfg",
+        (),
+        {
+            "batch_size": batch_size,
+            "num_workers": num_workers,
+            "prefetch_factor": 4,
+        },
+    )()
     extract_dm, _ = create_dataset(
-        dataset_name, eval_tf, eval_tf, collate_single, extract_cfg, data_dir=data_dir,
+        dataset_name,
+        eval_tf,
+        eval_tf,
+        collate_single,
+        extract_cfg,
+        data_dir=data_dir,
     )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -306,14 +322,19 @@ def train_offline_probe(
     ds_config = get_config(dataset_name)
     if ds_config.modality != "image":
         raise ValueError(
-            f"Dataset {dataset_name!r} has modality={ds_config.modality!r}; "
-            "offline probe only supports images."
+            f"Dataset {dataset_name!r} has modality={ds_config.modality!r}; offline probe only supports images."
         )
 
     cache_root = Path(feature_cache_dir) if feature_cache_dir else _DEFAULT_FEATURE_CACHE
     tr_embs, tr_lbls, va_embs, va_lbls = _extract_to_disk(
-        backbone, backbone_name, dataset_name, spec,
-        data_dir, cache_root, batch_size, num_workers,
+        backbone,
+        backbone_name,
+        dataset_name,
+        spec,
+        data_dir,
+        cache_root,
+        batch_size,
+        num_workers,
     )
     data = _FeatureDataModule(tr_embs, tr_lbls, va_embs, va_lbls, batch_size)
 
@@ -352,8 +373,7 @@ def train_offline_probe(
             id=wandb.util.generate_id(),
             log_model=False,
             save_dir=os.getcwd(),
-            tags=["offline_probe", "transfer"]
-            + ([f"seed:{seed}"] if seed is not None else []),
+            tags=["offline_probe", "transfer"] + ([f"seed:{seed}"] if seed is not None else []),
             config={
                 "model": "offline_probe",
                 "backbone": backbone_name,
@@ -451,8 +471,8 @@ def main() -> None:
     )
     print(
         f"\n{result.backbone} | {result.dataset} | "
-        f"top1={result.top1*100:.2f} top5={result.top5*100:.2f} "
-        f"knn1={(result.knn_top1 or 0)*100:.2f}"
+        f"top1={result.top1 * 100:.2f} top5={result.top5 * 100:.2f} "
+        f"knn1={(result.knn_top1 or 0) * 100:.2f}"
     )
 
 

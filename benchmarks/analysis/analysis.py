@@ -8,16 +8,17 @@ from __future__ import annotations
 
 import argparse
 import warnings
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 
+
 try:
     from .utils import (
-        ALL_METHODS,
+        DATASET_ALIASES,
         DEFAULT_BACKBONE,
         DEFAULT_BACKBONES,
         DEFAULT_ENTITY,
@@ -25,13 +26,12 @@ try:
         SSL_METHODS,
         SUPERVISED_METHOD,
         collect_run_metrics,
-        DATASET_ALIASES,
         normalize_backbones,
         select_best_runs,
     )
 except ImportError:  # pragma: no cover - supports direct ``python analysis.py`` use.
     from utils import (
-        ALL_METHODS,
+        DATASET_ALIASES,
         DEFAULT_BACKBONE,
         DEFAULT_BACKBONES,
         DEFAULT_ENTITY,
@@ -39,7 +39,6 @@ except ImportError:  # pragma: no cover - supports direct ``python analysis.py``
         SSL_METHODS,
         SUPERVISED_METHOD,
         collect_run_metrics,
-        DATASET_ALIASES,
         normalize_backbones,
         select_best_runs,
     )
@@ -67,9 +66,8 @@ def load_metadata(path: Path) -> pd.DataFrame:
     if "mean_pixels" in meta.columns:
         meta["height_times_width"] = pd.to_numeric(meta["mean_pixels"], errors="coerce")
     elif {"mean_height", "mean_width"}.issubset(meta.columns):
-        meta["height_times_width"] = (
-            pd.to_numeric(meta["mean_height"], errors="coerce")
-            * pd.to_numeric(meta["mean_width"], errors="coerce")
+        meta["height_times_width"] = pd.to_numeric(meta["mean_height"], errors="coerce") * pd.to_numeric(
+            meta["mean_width"], errors="coerce"
         )
     meta["chance"] = 1.0 / meta["num_classes"]
     return meta

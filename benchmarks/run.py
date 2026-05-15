@@ -14,12 +14,12 @@ import hydra
 import lightning as pl
 import stable_pretraining as spt
 import torch
+import wandb
 from hydra.core.hydra_config import HydraConfig
 from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig, open_dict
 
-import wandb
 from benchmarks.dataset import create_dataset, get_config
 from benchmarks.models import build_module, create_eval_callbacks, get_transforms
 
@@ -226,10 +226,7 @@ def main(cfg: DictConfig) -> None:
         try:
             _ckpt_peek = torch.load(resume_ckpt, map_location="cpu", weights_only=False)
             if "optimizer_states" not in _ckpt_peek:
-                log.warning(
-                    f"Skipping resume: {resume_ckpt} is weights-only (no optimizer state). "
-                    f"Starting fresh."
-                )
+                log.warning(f"Skipping resume: {resume_ckpt} is weights-only (no optimizer state). Starting fresh.")
                 resume_ckpt = None
             del _ckpt_peek
         except Exception as e:

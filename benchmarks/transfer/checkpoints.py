@@ -20,9 +20,9 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable
 from urllib.request import urlretrieve
 
 import timm
@@ -80,7 +80,7 @@ def _load_state_dict(path: Path, key: str | None = None) -> dict[str, torch.Tens
 def _strip_prefix(state: dict[str, torch.Tensor], prefix: str) -> dict[str, torch.Tensor]:
     if not prefix:
         return state
-    return {k[len(prefix):] if k.startswith(prefix) else k: v for k, v in state.items()}
+    return {k[len(prefix) :] if k.startswith(prefix) else k: v for k, v in state.items()}
 
 
 # Backbone loaders
@@ -93,10 +93,7 @@ def barlow_twins_resnet50() -> nn.Module:
     so ``strict=False`` discards the missing ``fc.*`` keys and we replace
     the head with ``Identity`` to expose pooled 2048-d features.
     """
-    url = (
-        "https://dl.fbaipublicfiles.com/barlowtwins/"
-        "ep1000_bs2048_lrw0.2_lrb0.0048_lambd0.0051/resnet50.pth"
-    )
+    url = "https://dl.fbaipublicfiles.com/barlowtwins/ep1000_bs2048_lrw0.2_lrb0.0048_lambd0.0051/resnet50.pth"
     path = _download(url, CHECKPOINT_DIR / "barlow_twins_resnet50.pth")
     state = _load_state_dict(path)
     state = _strip_prefix(state, "module.")
@@ -145,10 +142,7 @@ def dino_vit_small() -> nn.Module:
     a timm ``vit_small_patch16_224`` with ``num_classes=0`` for 384-d CLS
     features.
     """
-    url = (
-        "https://dl.fbaipublicfiles.com/dino/"
-        "dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth"
-    )
+    url = "https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth"
     path = _download(url, CHECKPOINT_DIR / "dino_vit_small.pth")
     state = _load_state_dict(path)
 
@@ -207,9 +201,7 @@ def load_backbone(name: str) -> tuple[nn.Module, BackboneSpec]:
     is responsible for freezing parameters before passing to a probe.
     """
     if name not in BACKBONES:
-        raise ValueError(
-            f"Unknown transfer backbone {name!r}. Available: {sorted(BACKBONES)}"
-        )
+        raise ValueError(f"Unknown transfer backbone {name!r}. Available: {sorted(BACKBONES)}")
     spec = BACKBONES[name]
     model = spec.loader()
     return model, spec

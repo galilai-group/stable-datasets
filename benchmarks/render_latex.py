@@ -25,10 +25,10 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+import wandb
 import yaml
 from tqdm import tqdm
 
-import wandb
 from benchmarks.dataset import (
     DATASET_CONFIGS,
     INCLUDED_IMAGE_DATASETS,
@@ -66,9 +66,9 @@ MODEL_DISPLAY_NAMES: dict[str, str] = {
 # (model, dataset) pairs confirmed to be training collapses — rendered as "---".
 # Add entries here rather than deleting rows from the CSV so the raw data is preserved.
 KNOWN_FAILURES: set[tuple[str, str]] = {
-    ("dino", "emnist_digits"),   # collapse: probe=21.3, chance=10.0
-    ("dino", "emnist_mnist"),    # collapse: probe=18.5, chance=10.0
-    ("nnclr", "emnist_mnist"),   # collapse: probe=26.2, chance=10.0
+    ("dino", "emnist_digits"),  # collapse: probe=21.3, chance=10.0
+    ("dino", "emnist_mnist"),  # collapse: probe=18.5, chance=10.0
+    ("nnclr", "emnist_mnist"),  # collapse: probe=26.2, chance=10.0
 }
 
 
@@ -387,11 +387,7 @@ def pivot_table(df: pd.DataFrame, metric: str) -> tuple[pd.DataFrame, pd.DataFra
     seed_samples = df[is_seed][["dataset", "model", metric]]
 
     # One sample per (model, dataset) for unseeded runs (best attempt).
-    unseeded_samples = (
-        df[~is_seed]
-        .groupby(["dataset", "model"], as_index=False)[metric]
-        .max()
-    )
+    unseeded_samples = df[~is_seed].groupby(["dataset", "model"], as_index=False)[metric].max()
 
     pooled = pd.concat(
         [seed_samples, unseeded_samples],
@@ -404,9 +400,7 @@ def pivot_table(df: pd.DataFrame, metric: str) -> tuple[pd.DataFrame, pd.DataFra
     # std with N=1 yields NaN; formatter falls back to bare value.
     # dropna=False keeps NaN cells so the std frame matches `table` shape even
     # when no (model, dataset) cell has more than 1 sample yet.
-    std_table = pooled.pivot_table(
-        index="dataset", columns="model", values=metric, aggfunc="std", dropna=False
-    )
+    std_table = pooled.pivot_table(index="dataset", columns="model", values=metric, aggfunc="std", dropna=False)
     std_table = std_table.reindex(index=table.index, columns=table.columns)
 
     # Mask known training collapses so they render as "---" rather than a

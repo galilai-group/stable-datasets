@@ -82,9 +82,7 @@ def build_table(results_csv: Path = DEFAULT_RESULTS_CSV) -> tuple[pd.DataFrame, 
         cells = [label]
         for method in METHOD_ORDER:
             hit = subset[
-                (subset["method"] == method)
-                & (subset["rhs_family"] == rhs_family)
-                & (subset["rhs_name"] == rhs_name)
+                (subset["method"] == method) & (subset["rhs_family"] == rhs_family) & (subset["rhs_name"] == rhs_name)
             ]
             if hit.empty:
                 row[f"{method}_rho"] = None

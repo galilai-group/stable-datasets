@@ -9,8 +9,8 @@ that same run.
 from __future__ import annotations
 
 import time
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Sequence
 
 import pandas as pd
 import requests

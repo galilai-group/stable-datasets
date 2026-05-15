@@ -51,10 +51,20 @@ def create_transforms(ds_config, model_cfg=None):
 
     bicubic = transforms.InterpolationMode.BICUBIC
     global_aug_1 = ssl_augmentation(
-        ds_config, (h, w), crop_scale=(0.4, 1.0), blur_p=1.0, solarize_p=0.0, interpolation=bicubic,
+        ds_config,
+        (h, w),
+        crop_scale=(0.4, 1.0),
+        blur_p=1.0,
+        solarize_p=0.0,
+        interpolation=bicubic,
     )
     global_aug_2 = ssl_augmentation(
-        ds_config, (h, w), crop_scale=(0.4, 1.0), blur_p=0.1, solarize_p=0.2, interpolation=bicubic,
+        ds_config,
+        (h, w),
+        crop_scale=(0.4, 1.0),
+        blur_p=0.1,
+        solarize_p=0.2,
+        interpolation=bicubic,
     )
     globals_ = [global_aug_1, global_aug_2]
 
