@@ -28,13 +28,13 @@
   <meta name="twitter:title" content="stable_datasets.images.places365_small | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=73505e79" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=979577e3" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=c54898a4" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b1d4564d" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -146,6 +146,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
@@ -198,7 +199,7 @@
 </span><span id="line-3">
 </span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 </span><span id="line-5">
-</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">DatasetInfo</span><span class="p">,</span> <span class="n">Features</span><span class="p">,</span> <span class="n">Version</span>
+</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">DatasetInfo</span><span class="p">,</span> <span class="n">DatasetSource</span><span class="p">,</span> <span class="n">DownloadInfo</span><span class="p">,</span> <span class="n">Features</span><span class="p">,</span> <span class="n">Version</span>
 </span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">ImageFeature</span>
 </span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.splits</span><span class="w"> </span><span class="kn">import</span> <span class="n">Split</span><span class="p">,</span> <span class="n">SplitGenerator</span>
 </span><span id="line-9"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span><span class="p">,</span> <span class="n">bulk_download</span>
@@ -213,19 +214,19 @@
 </span><span id="line-16">
 </span><span id="line-17">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
 </span><span id="line-18">
-</span><span id="line-19">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-20">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;http://places2.csail.mit.edu/&quot;</span><span class="p">,</span>
-</span><span id="line-21">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@article{zhou2017places,</span>
+</span><span id="line-19">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="n">DatasetSource</span><span class="p">(</span>
+</span><span id="line-20">        <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;http://places2.csail.mit.edu/&quot;</span><span class="p">,</span>
+</span><span id="line-21">        <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@article{zhou2017places,</span>
 </span><span id="line-22"><span class="s2">                         title={Places: A 10 million Image Database for Scene Recognition},</span>
 </span><span id="line-23"><span class="s2">                         author={Zhou, Bolei and Lapedriza, Agata and Khosla, Aditya and Oliva, Aude and Torralba, Antonio},</span>
 </span><span id="line-24"><span class="s2">                         year=</span><span class="si">{2017}</span><span class="s2">}</span>
 </span><span id="line-25"><span class="s2">            &quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-26">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="line-27">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;http://data.csail.mit.edu/places/places365/train_256_places365standard.tar&quot;</span><span class="p">,</span>
-</span><span id="line-28">            <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="s2">&quot;http://data.csail.mit.edu/places/places365/val_256.tar&quot;</span><span class="p">,</span>
-</span><span id="line-29">            <span class="s2">&quot;devkit&quot;</span><span class="p">:</span> <span class="s2">&quot;http://data.csail.mit.edu/places/places365/filelist_places365-standard.tar&quot;</span><span class="p">,</span>
+</span><span id="line-26">        <span class="n">assets</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-27">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/places/places365/train_256_places365standard.tar&quot;</span><span class="p">),</span>
+</span><span id="line-28">            <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/places/places365/val_256.tar&quot;</span><span class="p">),</span>
+</span><span id="line-29">            <span class="s2">&quot;devkit&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/places/places365/filelist_places365-standard.tar&quot;</span><span class="p">),</span>
 </span><span id="line-30">        <span class="p">},</span>
-</span><span id="line-31">    <span class="p">}</span>
+</span><span id="line-31">    <span class="p">)</span>
 </span><span id="line-32">
 </span><span id="line-33">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-34">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
@@ -248,8 +249,8 @@
 </span><span id="line-51">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-52">        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">()</span>
 </span><span id="line-53">        <span class="n">assets</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">]</span>
-</span><span id="line-54">        <span class="n">urls</span> <span class="o">=</span> <span class="p">[</span><span class="n">assets</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">],</span> <span class="n">assets</span><span class="p">[</span><span class="s2">&quot;val&quot;</span><span class="p">],</span> <span class="n">assets</span><span class="p">[</span><span class="s2">&quot;devkit&quot;</span><span class="p">]]</span>
-</span><span id="line-55">        <span class="n">local_paths</span> <span class="o">=</span> <span class="n">bulk_download</span><span class="p">(</span><span class="n">urls</span><span class="p">,</span> <span class="n">dest_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_download_dir</span><span class="p">)</span>
+</span><span id="line-54">        <span class="n">asset_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="s2">&quot;devkit&quot;</span><span class="p">]</span>
+</span><span id="line-55">        <span class="n">local_paths</span> <span class="o">=</span> <span class="n">bulk_download</span><span class="p">([</span><span class="n">assets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">asset_keys</span><span class="p">],</span> <span class="n">dest_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_download_dir</span><span class="p">)</span>
 </span><span id="line-56">        <span class="n">train_path</span><span class="p">,</span> <span class="n">val_path</span><span class="p">,</span> <span class="n">devkit_path</span> <span class="o">=</span> <span class="n">local_paths</span>
 </span><span id="line-57">
 </span><span id="line-58">        <span class="k">return</span> <span class="p">[</span>
@@ -709,7 +710,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=582b20c5"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=d6a9845b"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

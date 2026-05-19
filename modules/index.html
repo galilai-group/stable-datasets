@@ -26,13 +26,13 @@
 <meta content="stable_datasets | stable-datasets" name="twitter:title"/>
 <link href="../_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="../_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
-<link href="../_static/theme.css?v=73505e79" rel="stylesheet" type="text/css"/>
+<link href="../_static/theme.css?v=979577e3" rel="stylesheet" type="text/css"/>
 <link href="../_static/sphinx-design.min.css?v=95c83b7e" rel="stylesheet" type="text/css"/>
 <link href="../_static/css/custom.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" rel="stylesheet" type="text/css"/>
-<link href="../_static/awesome-sphinx-design.css?v=c54898a4" rel="stylesheet" type="text/css"/>
+<link href="../_static/awesome-sphinx-design.css?v=b1d4564d" rel="stylesheet" type="text/css"/>
 <link href="../search/" rel="search" title="Search"/>
 <link href="../genindex/" rel="index" title="Index"/>
 </head>
@@ -110,6 +110,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/linnaeus5/">Linnaeus 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/something_something_v2/">Something-Something V2</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/quickstart/">Quick Start</a></li>
@@ -143,6 +144,24 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../stable_datasets/">stable_datasets package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets.backends/">stable_datasets.backends package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.backends/#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.backends/#module-stable_datasets.backends.arrow_shards">stable_datasets.backends.arrow_shards module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.backends/#module-stable_datasets.backends.lance_rows">stable_datasets.backends.lance_rows module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.backends/#module-stable_datasets.backends.lance_video_frames">stable_datasets.backends.lance_video_frames module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.backends/#module-stable_datasets.backends.protocol">stable_datasets.backends.protocol module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.backends/#module-stable_datasets.backends">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets.features/">stable_datasets.features package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.features/#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.features/#module-stable_datasets.features.array">stable_datasets.features.array module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.features/#module-stable_datasets.features.base">stable_datasets.features.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.features/#module-stable_datasets.features.image">stable_datasets.features.image module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.features/#module-stable_datasets.features.video">stable_datasets.features.video module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.features/#module-stable_datasets.features">Module contents</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.images/">stable_datasets.images package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.arabic_characters">stable_datasets.images.arabic_characters module</a></li>
@@ -176,6 +195,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.imagenet_10">stable_datasets.images.imagenet_10 module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.imagenet_100">stable_datasets.images.imagenet_100 module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.imagenet_1k">stable_datasets.images.imagenet_1k module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.imagenette">stable_datasets.images.imagenette module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.k_mnist">stable_datasets.images.k_mnist module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.linnaeus5">stable_datasets.images.linnaeus5 module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.images/#module-stable_datasets.images.med_mnist">stable_datasets.images.med_mnist module</a></li>
@@ -195,57 +215,64 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets.timeseries/">stable_datasets.timeseries package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-catsdogs-module">stable_datasets.timeseries.CatsDogs module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-japanesevowels-module">stable_datasets.timeseries.JapaneseVowels module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-mosquitosound-module">stable_datasets.timeseries.MosquitoSound module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-phoneme-module">stable_datasets.timeseries.Phoneme module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.CatsDogs">stable_datasets.timeseries.CatsDogs module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.JapaneseVowels">stable_datasets.timeseries.JapaneseVowels module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.MosquitoSound">stable_datasets.timeseries.MosquitoSound module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.Phoneme">stable_datasets.timeseries.Phoneme module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.RightWhaleCalls">stable_datasets.timeseries.RightWhaleCalls module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-tutacousticscenes2017-module">stable_datasets.timeseries.TUTacousticscenes2017 module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-ucr-multivariate-module">stable_datasets.timeseries.UCR_multivariate module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-ucr-univariate-module">stable_datasets.timeseries.UCR_univariate module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-urbansound-module">stable_datasets.timeseries.UrbanSound module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-voicegenderdetection-module">stable_datasets.timeseries.VoiceGenderDetection module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-audiomnist-module">stable_datasets.timeseries.audiomnist module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.UrbanSound">stable_datasets.timeseries.UrbanSound module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.VoiceGenderDetection">stable_datasets.timeseries.VoiceGenderDetection module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.audiomnist">stable_datasets.timeseries.audiomnist module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-birdvox-70k-module">stable_datasets.timeseries.birdvox_70k module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-birdvox-dcase-20k-module">stable_datasets.timeseries.birdvox_dcase_20k module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.birdvox_dcase_20k">stable_datasets.timeseries.birdvox_dcase_20k module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.brain_mnist">stable_datasets.timeseries.brain_mnist module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-dcase-2019-task4-module">stable_datasets.timeseries.dcase_2019_task4 module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.dclde">stable_datasets.timeseries.dclde module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.esc">stable_datasets.timeseries.esc module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-freefield1010-module">stable_datasets.timeseries.freefield1010 module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.freefield1010">stable_datasets.timeseries.freefield1010 module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.fsd_kaggle_2018">stable_datasets.timeseries.fsd_kaggle_2018 module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-groove-midi-module">stable_datasets.timeseries.groove_MIDI module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-gtzan-module">stable_datasets.timeseries.gtzan module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.groove_MIDI">stable_datasets.timeseries.groove_MIDI module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.gtzan">stable_datasets.timeseries.gtzan module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.high_gamma">stable_datasets.timeseries.high_gamma module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-irmas-module">stable_datasets.timeseries.irmas module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-picidae-module">stable_datasets.timeseries.picidae module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-seizures-neonatal-module">stable_datasets.timeseries.seizures_neonatal module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-sonycust-module">stable_datasets.timeseries.sonycust module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-speech-commands-module">stable_datasets.timeseries.speech_commands module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-vocalset-module">stable_datasets.timeseries.vocalset module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#stable-datasets-timeseries-warblr-module">stable_datasets.timeseries.warblr module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.picidae">stable_datasets.timeseries.picidae module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.seizures_neonatal">stable_datasets.timeseries.seizures_neonatal module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.sonycust">stable_datasets.timeseries.sonycust module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.speech_commands">stable_datasets.timeseries.speech_commands module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.vocalset">stable_datasets.timeseries.vocalset module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.warblr">stable_datasets.timeseries.warblr module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets.timeseries/#module-stable_datasets.timeseries">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets.video/">stable_datasets.video package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.video/#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.video/#module-stable_datasets.video.something_something_v2">stable_datasets.video.something_something_v2 module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets.video/#module-stable_datasets.video">Module contents</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#module-stable_datasets.arrow_dataset">stable_datasets.arrow_dataset module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.arrow_dataset.StableDataset"><code class="docutils literal notranslate"><span class="pre">StableDataset</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.arrow_dataset.StableDataset.features"><code class="docutils literal notranslate"><span class="pre">StableDataset.features</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.arrow_dataset.StableDataset.info"><code class="docutils literal notranslate"><span class="pre">StableDataset.info</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.arrow_dataset.StableDataset.iter_epoch"><code class="docutils literal notranslate"><span class="pre">StableDataset.iter_epoch()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.arrow_dataset.StableDataset.table"><code class="docutils literal notranslate"><span class="pre">StableDataset.table</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.arrow_dataset.StableDataset.to_tensordict"><code class="docutils literal notranslate"><span class="pre">StableDataset.to_tensordict()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.arrow_dataset.StableDataset.train_test_split"><code class="docutils literal notranslate"><span class="pre">StableDataset.train_test_split()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.arrow_dataset.StableDatasetDict"><code class="docutils literal notranslate"><span class="pre">StableDatasetDict</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#module-stable_datasets.cache">stable_datasets.cache module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.CacheOpenResult"><code class="docutils literal notranslate"><span class="pre">CacheOpenResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.CacheOpenResult.backend"><code class="docutils literal notranslate"><span class="pre">CacheOpenResult.backend</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.CacheOpenResult.layout"><code class="docutils literal notranslate"><span class="pre">CacheOpenResult.layout</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.CacheOpenResult.metadata"><code class="docutils literal notranslate"><span class="pre">CacheOpenResult.metadata</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.CacheOpenResult.num_rows"><code class="docutils literal notranslate"><span class="pre">CacheOpenResult.num_rows</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.LanceCacheMeta"><code class="docutils literal notranslate"><span class="pre">LanceCacheMeta</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.LanceCacheMeta.cache_dir"><code class="docutils literal notranslate"><span class="pre">LanceCacheMeta.cache_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.LanceCacheMeta.num_rows"><code class="docutils literal notranslate"><span class="pre">LanceCacheMeta.num_rows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.LanceCacheMeta.schema_fingerprint"><code class="docutils literal notranslate"><span class="pre">LanceCacheMeta.schema_fingerprint</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta"><code class="docutils literal notranslate"><span class="pre">ShardedCacheMeta</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.cache_dir"><code class="docutils literal notranslate"><span class="pre">ShardedCacheMeta.cache_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.compression"><code class="docutils literal notranslate"><span class="pre">ShardedCacheMeta.compression</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.num_rows"><code class="docutils literal notranslate"><span class="pre">ShardedCacheMeta.num_rows</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.num_shards"><code class="docutils literal notranslate"><span class="pre">ShardedCacheMeta.num_shards</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.schema_fingerprint"><code class="docutils literal notranslate"><span class="pre">ShardedCacheMeta.schema_fingerprint</span></code></a></li>
@@ -255,15 +282,97 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.cache_fingerprint"><code class="docutils literal notranslate"><span class="pre">cache_fingerprint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.detect_cache_format"><code class="docutils literal notranslate"><span class="pre">detect_cache_format()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.detect_cache_layout"><code class="docutils literal notranslate"><span class="pre">detect_cache_layout()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.encode_example"><code class="docutils literal notranslate"><span class="pre">encode_example()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.open_cache"><code class="docutils literal notranslate"><span class="pre">open_cache()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.read_lance_cache_meta"><code class="docutils literal notranslate"><span class="pre">read_lance_cache_meta()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.read_shard"><code class="docutils literal notranslate"><span class="pre">read_shard()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.read_sharded_cache_meta"><code class="docutils literal notranslate"><span class="pre">read_sharded_cache_meta()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.validate_sharded_cache"><code class="docutils literal notranslate"><span class="pre">validate_sharded_cache()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.write_lance_cache"><code class="docutils literal notranslate"><span class="pre">write_lance_cache()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.write_lance_video_frames_cache"><code class="docutils literal notranslate"><span class="pre">write_lance_video_frames_cache()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.cache.write_sharded_arrow_cache"><code class="docutils literal notranslate"><span class="pre">write_sharded_arrow_cache()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#module-stable_datasets.dataset">stable_datasets.dataset module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset"><code class="docutils literal notranslate"><span class="pre">StableDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.add_column"><code class="docutils literal notranslate"><span class="pre">StableDataset.add_column()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.as_iterable"><code class="docutils literal notranslate"><span class="pre">StableDataset.as_iterable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.column_names"><code class="docutils literal notranslate"><span class="pre">StableDataset.column_names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.features"><code class="docutils literal notranslate"><span class="pre">StableDataset.features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.filter"><code class="docutils literal notranslate"><span class="pre">StableDataset.filter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.flatten_indices"><code class="docutils literal notranslate"><span class="pre">StableDataset.flatten_indices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.info"><code class="docutils literal notranslate"><span class="pre">StableDataset.info</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.iter_epoch"><code class="docutils literal notranslate"><span class="pre">StableDataset.iter_epoch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.make_sampler"><code class="docutils literal notranslate"><span class="pre">StableDataset.make_sampler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.map"><code class="docutils literal notranslate"><span class="pre">StableDataset.map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.num_rows"><code class="docutils literal notranslate"><span class="pre">StableDataset.num_rows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.remove_columns"><code class="docutils literal notranslate"><span class="pre">StableDataset.remove_columns()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.rename_column"><code class="docutils literal notranslate"><span class="pre">StableDataset.rename_column()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.rename_columns"><code class="docutils literal notranslate"><span class="pre">StableDataset.rename_columns()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.select"><code class="docutils literal notranslate"><span class="pre">StableDataset.select()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.set_decode"><code class="docutils literal notranslate"><span class="pre">StableDataset.set_decode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.set_video_decode"><code class="docutils literal notranslate"><span class="pre">StableDataset.set_video_decode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.shuffle"><code class="docutils literal notranslate"><span class="pre">StableDataset.shuffle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.table"><code class="docutils literal notranslate"><span class="pre">StableDataset.table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.train_test_split"><code class="docutils literal notranslate"><span class="pre">StableDataset.train_test_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.with_format"><code class="docutils literal notranslate"><span class="pre">StableDataset.with_format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDataset.with_transform"><code class="docutils literal notranslate"><span class="pre">StableDataset.with_transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDatasetDict"><code class="docutils literal notranslate"><span class="pre">StableDatasetDict</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.dataset.StableDatasetDict.set_video_decode"><code class="docutils literal notranslate"><span class="pre">StableDatasetDict.set_video_decode()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#module-stable_datasets.formatting">stable_datasets.formatting module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.Formatter"><code class="docutils literal notranslate"><span class="pre">Formatter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.Formatter.format_batch"><code class="docutils literal notranslate"><span class="pre">Formatter.format_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.Formatter.format_row"><code class="docutils literal notranslate"><span class="pre">Formatter.format_row()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.Formatter.format_type"><code class="docutils literal notranslate"><span class="pre">Formatter.format_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.NumpyFormatter"><code class="docutils literal notranslate"><span class="pre">NumpyFormatter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.NumpyFormatter.format_type"><code class="docutils literal notranslate"><span class="pre">NumpyFormatter.format_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.PythonFormatter"><code class="docutils literal notranslate"><span class="pre">PythonFormatter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.PythonFormatter.format_type"><code class="docutils literal notranslate"><span class="pre">PythonFormatter.format_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.RawFormatter"><code class="docutils literal notranslate"><span class="pre">RawFormatter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.RawFormatter.format_batch"><code class="docutils literal notranslate"><span class="pre">RawFormatter.format_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.RawFormatter.format_row"><code class="docutils literal notranslate"><span class="pre">RawFormatter.format_row()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.RawFormatter.format_type"><code class="docutils literal notranslate"><span class="pre">RawFormatter.format_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.TorchFormatter"><code class="docutils literal notranslate"><span class="pre">TorchFormatter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.TorchFormatter.format_type"><code class="docutils literal notranslate"><span class="pre">TorchFormatter.format_type</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.formatting.get_formatter"><code class="docutils literal notranslate"><span class="pre">get_formatter()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#module-stable_datasets.iterable">stable_datasets.iterable module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.iterable.StableIterableDataset"><code class="docutils literal notranslate"><span class="pre">StableIterableDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.iterable.StableIterableDataset.set_epoch"><code class="docutils literal notranslate"><span class="pre">StableIterableDataset.set_epoch()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#module-stable_datasets.samplers">stable_datasets.samplers module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.samplers.ShardShuffleSampler"><code class="docutils literal notranslate"><span class="pre">ShardShuffleSampler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.samplers.ShardShuffleSampler.set_epoch"><code class="docutils literal notranslate"><span class="pre">ShardShuffleSampler.set_epoch()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#module-stable_datasets.schema">stable_datasets.schema module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Array3D"><code class="docutils literal notranslate"><span class="pre">Array3D</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Array3D.encode"><code class="docutils literal notranslate"><span class="pre">Array3D.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Array3D.format"><code class="docutils literal notranslate"><span class="pre">Array3D.format()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Array3D.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Array3D.to_arrow_type()</span></code></a></li>
 </ul>
 </li>
@@ -274,9 +383,9 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.ClassLabel"><code class="docutils literal notranslate"><span class="pre">ClassLabel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.ClassLabel.encode"><code class="docutils literal notranslate"><span class="pre">ClassLabel.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.ClassLabel.format"><code class="docutils literal notranslate"><span class="pre">ClassLabel.format()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.ClassLabel.int2str"><code class="docutils literal notranslate"><span class="pre">ClassLabel.int2str()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.ClassLabel.names"><code class="docutils literal notranslate"><span class="pre">ClassLabel.names</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.ClassLabel.num_classes"><code class="docutils literal notranslate"><span class="pre">ClassLabel.num_classes</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.ClassLabel.str2int"><code class="docutils literal notranslate"><span class="pre">ClassLabel.str2int()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.ClassLabel.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">ClassLabel.to_arrow_type()</span></code></a></li>
 </ul>
@@ -291,31 +400,94 @@
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetInfo.supervised_keys"><code class="docutils literal notranslate"><span class="pre">DatasetInfo.supervised_keys</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetSource"><code class="docutils literal notranslate"><span class="pre">DatasetSource</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetSource.assets"><code class="docutils literal notranslate"><span class="pre">DatasetSource.assets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetSource.checksums"><code class="docutils literal notranslate"><span class="pre">DatasetSource.checksums</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetSource.citation"><code class="docutils literal notranslate"><span class="pre">DatasetSource.citation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetSource.get"><code class="docutils literal notranslate"><span class="pre">DatasetSource.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetSource.homepage"><code class="docutils literal notranslate"><span class="pre">DatasetSource.homepage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetSource.license"><code class="docutils literal notranslate"><span class="pre">DatasetSource.license</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DownloadInfo"><code class="docutils literal notranslate"><span class="pre">DownloadInfo</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DownloadInfo.all_urls"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.all_urls()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DownloadInfo.checksum"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.checksum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DownloadInfo.fallbacks"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.fallbacks</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DownloadInfo.filename"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.filename</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DownloadInfo.url"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.url</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.FeatureType"><code class="docutils literal notranslate"><span class="pre">FeatureType</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.FeatureType.arrow_metadata"><code class="docutils literal notranslate"><span class="pre">FeatureType.arrow_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.FeatureType.encode"><code class="docutils literal notranslate"><span class="pre">FeatureType.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.FeatureType.fingerprint_data"><code class="docutils literal notranslate"><span class="pre">FeatureType.fingerprint_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.FeatureType.format"><code class="docutils literal notranslate"><span class="pre">FeatureType.format()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.FeatureType.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">FeatureType.to_arrow_type()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Features"><code class="docutils literal notranslate"><span class="pre">Features</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Features.fingerprint_data"><code class="docutils literal notranslate"><span class="pre">Features.fingerprint_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Features.to_arrow_schema"><code class="docutils literal notranslate"><span class="pre">Features.to_arrow_schema()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Image"><code class="docutils literal notranslate"><span class="pre">Image</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Image.encode"><code class="docutils literal notranslate"><span class="pre">Image.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Image.format"><code class="docutils literal notranslate"><span class="pre">Image.format()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Image.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Image.to_arrow_type()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Sequence"><code class="docutils literal notranslate"><span class="pre">Sequence</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Sequence.encode"><code class="docutils literal notranslate"><span class="pre">Sequence.encode()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Sequence.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Sequence.to_arrow_type()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Value"><code class="docutils literal notranslate"><span class="pre">Value</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Value.format"><code class="docutils literal notranslate"><span class="pre">Value.format()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Value.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Value.to_arrow_type()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Version"><code class="docutils literal notranslate"><span class="pre">Version</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Video"><code class="docutils literal notranslate"><span class="pre">Video</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Video.arrow_metadata"><code class="docutils literal notranslate"><span class="pre">Video.arrow_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Video.encode"><code class="docutils literal notranslate"><span class="pre">Video.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Video.fingerprint_data"><code class="docutils literal notranslate"><span class="pre">Video.fingerprint_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Video.format"><code class="docutils literal notranslate"><span class="pre">Video.format()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Video.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Video.to_arrow_type()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.column"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.column</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.crop"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.crop</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decode_fn"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.decode_fn</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decode_fn_batched"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.decode_fn_batched</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decoder"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.decoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.dtype"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.dtype</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.frame_stride"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.frame_stride</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.layout"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.layout</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.num_frames"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.num_frames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.output"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.output</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.pad"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.pad</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.resize"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.resize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.sampling"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.sampling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.scale"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.seed"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.seed</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeFn"><code class="docutils literal notranslate"><span class="pre">VideoDecodeFn</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoDecodeFnBatched"><code class="docutils literal notranslate"><span class="pre">VideoDecodeFnBatched</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef"><code class="docutils literal notranslate"><span class="pre">VideoRef</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef.bytes"><code class="docutils literal notranslate"><span class="pre">VideoRef.bytes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef.cache_dir"><code class="docutils literal notranslate"><span class="pre">VideoRef.cache_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef.cell"><code class="docutils literal notranslate"><span class="pre">VideoRef.cell</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef.checksum"><code class="docutils literal notranslate"><span class="pre">VideoRef.checksum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef.extension"><code class="docutils literal notranslate"><span class="pre">VideoRef.extension</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef.media_type"><code class="docutils literal notranslate"><span class="pre">VideoRef.media_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef.mode"><code class="docutils literal notranslate"><span class="pre">VideoRef.mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef.path"><code class="docutils literal notranslate"><span class="pre">VideoRef.path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.VideoRef.size"><code class="docutils literal notranslate"><span class="pre">VideoRef.size</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.collect_dataset_citations"><code class="docutils literal notranslate"><span class="pre">collect_dataset_citations()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#module-stable_datasets.splits">stable_datasets.splits module</a><ul>
@@ -337,6 +509,7 @@
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.BUILDER_CONFIGS"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.BUILDER_CONFIGS</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.DEFAULT_CONFIG_NAME"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.DEFAULT_CONFIG_NAME</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.SOURCE"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.SOURCE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.STORAGE_FORMAT"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.STORAGE_FORMAT</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.VERSION"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.VERSION</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.__init__"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.info"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.info</span></code></a></li>
@@ -348,25 +521,154 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../stable_datasets/#module-stable_datasets">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.Array3D"><code class="docutils literal notranslate"><span class="pre">Array3D</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Array3D.encode"><code class="docutils literal notranslate"><span class="pre">Array3D.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Array3D.format"><code class="docutils literal notranslate"><span class="pre">Array3D.format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Array3D.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Array3D.to_arrow_type()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.BaseDatasetBuilder"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.BUILDER_CONFIGS"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.BUILDER_CONFIGS</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.DEFAULT_CONFIG_NAME"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.DEFAULT_CONFIG_NAME</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.SOURCE"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.SOURCE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.STORAGE_FORMAT"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.STORAGE_FORMAT</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.VERSION"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.VERSION</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.__init__"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.info"><code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder.info</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset"><code class="docutils literal notranslate"><span class="pre">StableDataset</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.features"><code class="docutils literal notranslate"><span class="pre">StableDataset.features</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.info"><code class="docutils literal notranslate"><span class="pre">StableDataset.info</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.iter_epoch"><code class="docutils literal notranslate"><span class="pre">StableDataset.iter_epoch()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.table"><code class="docutils literal notranslate"><span class="pre">StableDataset.table</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.to_tensordict"><code class="docutils literal notranslate"><span class="pre">StableDataset.to_tensordict()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.train_test_split"><code class="docutils literal notranslate"><span class="pre">StableDataset.train_test_split()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.BuilderConfig"><code class="docutils literal notranslate"><span class="pre">BuilderConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BuilderConfig.description"><code class="docutils literal notranslate"><span class="pre">BuilderConfig.description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BuilderConfig.name"><code class="docutils literal notranslate"><span class="pre">BuilderConfig.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.BuilderConfig.version"><code class="docutils literal notranslate"><span class="pre">BuilderConfig.version</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDatasetDict"><code class="docutils literal notranslate"><span class="pre">StableDatasetDict</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.ClassLabel"><code class="docutils literal notranslate"><span class="pre">ClassLabel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.ClassLabel.encode"><code class="docutils literal notranslate"><span class="pre">ClassLabel.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.ClassLabel.format"><code class="docutils literal notranslate"><span class="pre">ClassLabel.format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.ClassLabel.int2str"><code class="docutils literal notranslate"><span class="pre">ClassLabel.int2str()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.ClassLabel.str2int"><code class="docutils literal notranslate"><span class="pre">ClassLabel.str2int()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.ClassLabel.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">ClassLabel.to_arrow_type()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetInfo"><code class="docutils literal notranslate"><span class="pre">DatasetInfo</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetInfo.citation"><code class="docutils literal notranslate"><span class="pre">DatasetInfo.citation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetInfo.config_name"><code class="docutils literal notranslate"><span class="pre">DatasetInfo.config_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetInfo.description"><code class="docutils literal notranslate"><span class="pre">DatasetInfo.description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetInfo.features"><code class="docutils literal notranslate"><span class="pre">DatasetInfo.features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetInfo.homepage"><code class="docutils literal notranslate"><span class="pre">DatasetInfo.homepage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetInfo.license"><code class="docutils literal notranslate"><span class="pre">DatasetInfo.license</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetInfo.supervised_keys"><code class="docutils literal notranslate"><span class="pre">DatasetInfo.supervised_keys</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetSource"><code class="docutils literal notranslate"><span class="pre">DatasetSource</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetSource.assets"><code class="docutils literal notranslate"><span class="pre">DatasetSource.assets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetSource.checksums"><code class="docutils literal notranslate"><span class="pre">DatasetSource.checksums</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetSource.citation"><code class="docutils literal notranslate"><span class="pre">DatasetSource.citation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetSource.get"><code class="docutils literal notranslate"><span class="pre">DatasetSource.get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetSource.homepage"><code class="docutils literal notranslate"><span class="pre">DatasetSource.homepage</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DatasetSource.license"><code class="docutils literal notranslate"><span class="pre">DatasetSource.license</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.DownloadInfo"><code class="docutils literal notranslate"><span class="pre">DownloadInfo</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DownloadInfo.all_urls"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.all_urls()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DownloadInfo.checksum"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.checksum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DownloadInfo.fallbacks"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.fallbacks</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DownloadInfo.filename"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.filename</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.DownloadInfo.url"><code class="docutils literal notranslate"><span class="pre">DownloadInfo.url</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.Features"><code class="docutils literal notranslate"><span class="pre">Features</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Features.fingerprint_data"><code class="docutils literal notranslate"><span class="pre">Features.fingerprint_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Features.to_arrow_schema"><code class="docutils literal notranslate"><span class="pre">Features.to_arrow_schema()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.Image"><code class="docutils literal notranslate"><span class="pre">Image</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Image.encode"><code class="docutils literal notranslate"><span class="pre">Image.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Image.format"><code class="docutils literal notranslate"><span class="pre">Image.format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Image.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Image.to_arrow_type()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.Sequence"><code class="docutils literal notranslate"><span class="pre">Sequence</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Sequence.encode"><code class="docutils literal notranslate"><span class="pre">Sequence.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Sequence.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Sequence.to_arrow_type()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset"><code class="docutils literal notranslate"><span class="pre">StableDataset</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.add_column"><code class="docutils literal notranslate"><span class="pre">StableDataset.add_column()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.as_iterable"><code class="docutils literal notranslate"><span class="pre">StableDataset.as_iterable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.column_names"><code class="docutils literal notranslate"><span class="pre">StableDataset.column_names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.features"><code class="docutils literal notranslate"><span class="pre">StableDataset.features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.filter"><code class="docutils literal notranslate"><span class="pre">StableDataset.filter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.flatten_indices"><code class="docutils literal notranslate"><span class="pre">StableDataset.flatten_indices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.info"><code class="docutils literal notranslate"><span class="pre">StableDataset.info</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.iter_epoch"><code class="docutils literal notranslate"><span class="pre">StableDataset.iter_epoch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.make_sampler"><code class="docutils literal notranslate"><span class="pre">StableDataset.make_sampler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.map"><code class="docutils literal notranslate"><span class="pre">StableDataset.map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.num_rows"><code class="docutils literal notranslate"><span class="pre">StableDataset.num_rows</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.remove_columns"><code class="docutils literal notranslate"><span class="pre">StableDataset.remove_columns()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.rename_column"><code class="docutils literal notranslate"><span class="pre">StableDataset.rename_column()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.rename_columns"><code class="docutils literal notranslate"><span class="pre">StableDataset.rename_columns()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.select"><code class="docutils literal notranslate"><span class="pre">StableDataset.select()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.set_decode"><code class="docutils literal notranslate"><span class="pre">StableDataset.set_decode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.set_video_decode"><code class="docutils literal notranslate"><span class="pre">StableDataset.set_video_decode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.shuffle"><code class="docutils literal notranslate"><span class="pre">StableDataset.shuffle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.table"><code class="docutils literal notranslate"><span class="pre">StableDataset.table</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.train_test_split"><code class="docutils literal notranslate"><span class="pre">StableDataset.train_test_split()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.with_format"><code class="docutils literal notranslate"><span class="pre">StableDataset.with_format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDataset.with_transform"><code class="docutils literal notranslate"><span class="pre">StableDataset.with_transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDatasetDict"><code class="docutils literal notranslate"><span class="pre">StableDatasetDict</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.StableDatasetDict.set_video_decode"><code class="docutils literal notranslate"><span class="pre">StableDatasetDict.set_video_decode()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.Value"><code class="docutils literal notranslate"><span class="pre">Value</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Value.format"><code class="docutils literal notranslate"><span class="pre">Value.format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Value.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Value.to_arrow_type()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.Version"><code class="docutils literal notranslate"><span class="pre">Version</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.Video"><code class="docutils literal notranslate"><span class="pre">Video</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Video.arrow_metadata"><code class="docutils literal notranslate"><span class="pre">Video.arrow_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Video.encode"><code class="docutils literal notranslate"><span class="pre">Video.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Video.fingerprint_data"><code class="docutils literal notranslate"><span class="pre">Video.fingerprint_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Video.format"><code class="docutils literal notranslate"><span class="pre">Video.format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.Video.to_arrow_type"><code class="docutils literal notranslate"><span class="pre">Video.to_arrow_type()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.column"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.column</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.crop"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.crop</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.decode_fn"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.decode_fn</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.decode_fn_batched"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.decode_fn_batched</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.decoder"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.decoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.dtype"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.dtype</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.frame_stride"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.frame_stride</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.layout"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.layout</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.num_frames"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.num_frames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.output"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.output</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.pad"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.pad</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.resize"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.resize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.sampling"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.sampling</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.scale"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.scale</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeConfig.seed"><code class="docutils literal notranslate"><span class="pre">VideoDecodeConfig.seed</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeFn"><code class="docutils literal notranslate"><span class="pre">VideoDecodeFn</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoDecodeFnBatched"><code class="docutils literal notranslate"><span class="pre">VideoDecodeFnBatched</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef"><code class="docutils literal notranslate"><span class="pre">VideoRef</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef.bytes"><code class="docutils literal notranslate"><span class="pre">VideoRef.bytes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef.cache_dir"><code class="docutils literal notranslate"><span class="pre">VideoRef.cache_dir</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef.cell"><code class="docutils literal notranslate"><span class="pre">VideoRef.cell</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef.checksum"><code class="docutils literal notranslate"><span class="pre">VideoRef.checksum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef.extension"><code class="docutils literal notranslate"><span class="pre">VideoRef.extension</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef.media_type"><code class="docutils literal notranslate"><span class="pre">VideoRef.media_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef.mode"><code class="docutils literal notranslate"><span class="pre">VideoRef.mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef.path"><code class="docutils literal notranslate"><span class="pre">VideoRef.path</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../stable_datasets/#stable_datasets.VideoRef.size"><code class="docutils literal notranslate"><span class="pre">VideoRef.size</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -393,7 +695,7 @@
 <script src="../_static/documentation_options.js?v=c167d237"></script>
 <script src="../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-<script defer="defer" src="../_static/theme.js?v=582b20c5"></script>
+<script defer="defer" src="../_static/theme.js?v=d6a9845b"></script>
 <script src="../_static/design-tabs.js?v=f930bc37"></script>
 </body>
 </html>

@@ -28,13 +28,13 @@
   <meta name="twitter:title" content="stable_datasets.images.country211 | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=73505e79" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=979577e3" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=c54898a4" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b1d4564d" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -146,6 +146,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
@@ -199,7 +200,7 @@
 </span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
 </span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
 </span><span id="line-6">
-</span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">DatasetInfo</span><span class="p">,</span> <span class="n">Features</span><span class="p">,</span> <span class="n">Version</span>
+</span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">DatasetInfo</span><span class="p">,</span> <span class="n">DatasetSource</span><span class="p">,</span> <span class="n">DownloadInfo</span><span class="p">,</span> <span class="n">Features</span><span class="p">,</span> <span class="n">Version</span>
 </span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">ImageFeature</span>
 </span><span id="line-9"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
 </span><span id="line-10">
@@ -214,14 +215,14 @@
 </span><span id="line-17">
 </span><span id="line-18">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
 </span><span id="line-19">
-</span><span id="line-20">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-21">        <span class="s2">&quot;homepage&quot;</span><span class="p">:</span> <span class="s2">&quot;https://github.com/openai/CLIP/blob/main/data/country211.md&quot;</span><span class="p">,</span>
-</span><span id="line-22">        <span class="s2">&quot;assets&quot;</span><span class="p">:</span> <span class="p">{</span>
-</span><span id="line-23">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="s2">&quot;https://openaipublic.azureedge.net/clip/data/country211.tgz&quot;</span><span class="p">,</span>
-</span><span id="line-24">            <span class="s2">&quot;valid&quot;</span><span class="p">:</span> <span class="s2">&quot;https://openaipublic.azureedge.net/clip/data/country211.tgz&quot;</span><span class="p">,</span>
-</span><span id="line-25">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="s2">&quot;https://openaipublic.azureedge.net/clip/data/country211.tgz&quot;</span><span class="p">,</span>
+</span><span id="line-20">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="n">DatasetSource</span><span class="p">(</span>
+</span><span id="line-21">        <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://github.com/openai/CLIP/blob/main/data/country211.md&quot;</span><span class="p">,</span>
+</span><span id="line-22">        <span class="n">assets</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-23">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://openaipublic.azureedge.net/clip/data/country211.tgz&quot;</span><span class="p">),</span>
+</span><span id="line-24">            <span class="s2">&quot;valid&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://openaipublic.azureedge.net/clip/data/country211.tgz&quot;</span><span class="p">),</span>
+</span><span id="line-25">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://openaipublic.azureedge.net/clip/data/country211.tgz&quot;</span><span class="p">),</span>
 </span><span id="line-26">        <span class="p">},</span>
-</span><span id="line-27">        <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;&quot;@inproceedings{radford2021learning,</span>
+</span><span id="line-27">        <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@inproceedings{radford2021learning,</span>
 </span><span id="line-28"><span class="s2">                title     = {Learning transferable visual models from natural language supervision},</span>
 </span><span id="line-29"><span class="s2">                author    = {Radford, Alec and Kim, Jong Wook and Hallacy, Chris and Ramesh, Aditya and Goh, Gabriel and Agarwal, Sandhini and Sastry, Girish and Askell, Amanda and Mishkin, Pamela and Clark, Jack and others},</span>
 </span><span id="line-30"><span class="s2">                booktitle = {International conference on machine learning},</span>
@@ -229,7 +230,7 @@
 </span><span id="line-32"><span class="s2">                year      = </span><span class="si">{2021}</span><span class="s2">,</span>
 </span><span id="line-33"><span class="s2">                organization = </span><span class="si">{PmLR}</span><span class="s2"> }</span>
 </span><span id="line-34"><span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
-</span><span id="line-35">    <span class="p">}</span>
+</span><span id="line-35">    <span class="p">)</span>
 </span><span id="line-36">
 </span><span id="line-37">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-38">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
@@ -529,7 +530,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=582b20c5"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=d6a9845b"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

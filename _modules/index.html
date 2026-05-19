@@ -28,13 +28,13 @@
   <meta name="twitter:title" content="Overview: module code | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../_static/theme.css?v=73505e79" />
+  <link rel="stylesheet" type="text/css" href="../_static/theme.css?v=979577e3" />
   <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../_static/awesome-sphinx-design.css?v=c54898a4" />
+  <link rel="stylesheet" type="text/css" href="../_static/awesome-sphinx-design.css?v=b1d4564d" />
   <link rel="search" title="Search" href="../search/" />
   <link rel="index" title="Index" href="../genindex/" />
 </head>
@@ -146,6 +146,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/linnaeus5/">Linnaeus 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/something_something_v2/">Something-Something V2</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/quickstart/">Quick Start</a></li>
@@ -190,8 +191,17 @@
 
     <div id="content" role="main">
       <h1>All modules for which code is available</h1>
-<ul><li><a href="stable_datasets/arrow_dataset/">stable_datasets.arrow_dataset</a></li>
+<ul><li><a href="stable_datasets/backends/arrow_shards/">stable_datasets.backends.arrow_shards</a></li>
+<li><a href="stable_datasets/backends/lance_rows/">stable_datasets.backends.lance_rows</a></li>
+<li><a href="stable_datasets/backends/lance_video_frames/">stable_datasets.backends.lance_video_frames</a></li>
+<li><a href="stable_datasets/backends/protocol/">stable_datasets.backends.protocol</a></li>
 <li><a href="stable_datasets/cache/">stable_datasets.cache</a></li>
+<li><a href="stable_datasets/dataset/">stable_datasets.dataset</a></li>
+<li><a href="stable_datasets/features/array/">stable_datasets.features.array</a></li>
+<li><a href="stable_datasets/features/base/">stable_datasets.features.base</a></li>
+<li><a href="stable_datasets/features/image/">stable_datasets.features.image</a></li>
+<li><a href="stable_datasets/features/video/">stable_datasets.features.video</a></li>
+<li><a href="stable_datasets/formatting/">stable_datasets.formatting</a></li>
 <li><a href="stable_datasets/images/arabic_characters/">stable_datasets.images.arabic_characters</a></li>
 <li><a href="stable_datasets/images/arabic_digits/">stable_datasets.images.arabic_digits</a></li>
 <li><a href="stable_datasets/images/awa2/">stable_datasets.images.awa2</a></li>
@@ -223,6 +233,7 @@
 <li><a href="stable_datasets/images/imagenet_10/">stable_datasets.images.imagenet_10</a></li>
 <li><a href="stable_datasets/images/imagenet_100/">stable_datasets.images.imagenet_100</a></li>
 <li><a href="stable_datasets/images/imagenet_1k/">stable_datasets.images.imagenet_1k</a></li>
+<li><a href="stable_datasets/images/imagenette/">stable_datasets.images.imagenette</a></li>
 <li><a href="stable_datasets/images/k_mnist/">stable_datasets.images.k_mnist</a></li>
 <li><a href="stable_datasets/images/linnaeus5/">stable_datasets.images.linnaeus5</a></li>
 <li><a href="stable_datasets/images/med_mnist/">stable_datasets.images.med_mnist</a></li>
@@ -237,14 +248,34 @@
 <li><a href="stable_datasets/images/svhn/">stable_datasets.images.svhn</a></li>
 <li><a href="stable_datasets/images/tiny_imagenet/">stable_datasets.images.tiny_imagenet</a></li>
 <li><a href="stable_datasets/images/tiny_imagenet_c/">stable_datasets.images.tiny_imagenet_c</a></li>
+<li><a href="stable_datasets/iterable/">stable_datasets.iterable</a></li>
+<li><a href="stable_datasets/samplers/">stable_datasets.samplers</a></li>
 <li><a href="stable_datasets/schema/">stable_datasets.schema</a></li>
 <li><a href="stable_datasets/splits/">stable_datasets.splits</a></li>
+<li><a href="stable_datasets/timeseries/CatsDogs/">stable_datasets.timeseries.CatsDogs</a></li>
+<li><a href="stable_datasets/timeseries/JapaneseVowels/">stable_datasets.timeseries.JapaneseVowels</a></li>
+<li><a href="stable_datasets/timeseries/MosquitoSound/">stable_datasets.timeseries.MosquitoSound</a></li>
+<li><a href="stable_datasets/timeseries/Phoneme/">stable_datasets.timeseries.Phoneme</a></li>
+<li><a href="stable_datasets/timeseries/UrbanSound/">stable_datasets.timeseries.UrbanSound</a></li>
+<li><a href="stable_datasets/timeseries/VoiceGenderDetection/">stable_datasets.timeseries.VoiceGenderDetection</a></li>
+<li><a href="stable_datasets/timeseries/audiomnist/">stable_datasets.timeseries.audiomnist</a></li>
+<li><a href="stable_datasets/timeseries/birdvox_dcase_20k/">stable_datasets.timeseries.birdvox_dcase_20k</a></li>
 <li><a href="stable_datasets/timeseries/brain_mnist/">stable_datasets.timeseries.brain_mnist</a></li>
 <li><a href="stable_datasets/timeseries/dclde/">stable_datasets.timeseries.dclde</a></li>
 <li><a href="stable_datasets/timeseries/esc/">stable_datasets.timeseries.esc</a></li>
+<li><a href="stable_datasets/timeseries/freefield1010/">stable_datasets.timeseries.freefield1010</a></li>
 <li><a href="stable_datasets/timeseries/fsd_kaggle_2018/">stable_datasets.timeseries.fsd_kaggle_2018</a></li>
+<li><a href="stable_datasets/timeseries/groove_MIDI/">stable_datasets.timeseries.groove_MIDI</a></li>
+<li><a href="stable_datasets/timeseries/gtzan/">stable_datasets.timeseries.gtzan</a></li>
 <li><a href="stable_datasets/timeseries/high_gamma/">stable_datasets.timeseries.high_gamma</a></li>
+<li><a href="stable_datasets/timeseries/picidae/">stable_datasets.timeseries.picidae</a></li>
+<li><a href="stable_datasets/timeseries/seizures_neonatal/">stable_datasets.timeseries.seizures_neonatal</a></li>
+<li><a href="stable_datasets/timeseries/sonycust/">stable_datasets.timeseries.sonycust</a></li>
+<li><a href="stable_datasets/timeseries/speech_commands/">stable_datasets.timeseries.speech_commands</a></li>
+<li><a href="stable_datasets/timeseries/vocalset/">stable_datasets.timeseries.vocalset</a></li>
+<li><a href="stable_datasets/timeseries/warblr/">stable_datasets.timeseries.warblr</a></li>
 <li><a href="stable_datasets/utils/">stable_datasets.utils</a></li>
+<li><a href="stable_datasets/video/something_something_v2/">stable_datasets.video.something_something_v2</a></li>
 </ul>
     </div></div>
           </main>
@@ -278,7 +309,7 @@
     <script src="../_static/documentation_options.js?v=c167d237"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../_static/theme.js?v=582b20c5"></script>
+    <script defer="defer" src="../_static/theme.js?v=d6a9845b"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>
