@@ -1,4 +1,7 @@
+import io
 import zipfile
+
+from PIL import Image as PILImage
 
 from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
@@ -52,5 +55,7 @@ class RockPaperScissor(BaseDatasetBuilder):
                 if len(parts) < 2:
                     continue
                 label_name = parts[-2]
-                image_bytes = archive.read(name)
-                yield name, {"image": image_bytes, "label": label_name}
+                # Source PNGs are RGBA (CGI renderer artifact); the underlying
+                # content is 24-bit color per the dataset spec.
+                image = PILImage.open(io.BytesIO(archive.read(name))).convert("RGB")
+                yield name, {"image": image, "label": label_name}
