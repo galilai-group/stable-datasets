@@ -1,10 +1,9 @@
-import os
+import io
 import zipfile
-from pathlib import Path
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -15,19 +14,19 @@ class RockPaperScissor(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
-    SOURCE = {
-        "homepage": "https://laurencemoroney.com/datasets.html",
-        "assets": {
-            "train": "https://storage.googleapis.com/download.tensorflow.org/data/rps.zip",
-            "test": "https://storage.googleapis.com/download.tensorflow.org/data/rps-test-set.zip",
+    SOURCE = DatasetSource(
+        homepage="https://laurencemoroney.com/datasets.html",
+        assets={
+            "train": DownloadInfo(url="https://storage.googleapis.com/download.tensorflow.org/data/rps.zip"),
+            "test": DownloadInfo(url="https://storage.googleapis.com/download.tensorflow.org/data/rps-test-set.zip"),
         },
-        "citation": """@misc{laurence2019rock,
+        citation="""@misc{laurence2019rock,
                          title={Rock Paper Scissors Dataset},
                          author={Laurence Moroney},
                          year={2019},
                          url={https://laurencemoroney.com/datasets.html}}""",
-        "license": "CC By 2.0",
-    }
+        license="CC By 2.0",
+    )
 
     def _info(self):
         return DatasetInfo(
@@ -45,20 +44,18 @@ class RockPaperScissor(BaseDatasetBuilder):
         )
 
     def _generate_examples(self, data_path, split):
-        """Generate examples from the extracted zip archive."""
-        # Extract the zip file to a directory
-        extract_dir = Path(data_path).parent / f"rock_paper_scissor_{split}"
-        if not extract_dir.exists():
-            with zipfile.ZipFile(data_path, "r") as zip_file:
-                zip_file.extractall(extract_dir)
-
-        # Walk through the extracted directory
-        for root, _, files in os.walk(extract_dir):
-            for file_name in files:
-                if file_name.endswith(".png"):
-                    label = os.path.basename(root)  # Folder name as label
-                    file_path = os.path.join(root, file_name)
-                    # Open image and ensure it is RGB
-                    with open(file_path, "rb") as img_file:
-                        image = PILImage.open(img_file).convert("RGB")
-                        yield file_path, {"image": image, "label": label}
+        """Yield examples by streaming PNGs directly from the zip archive."""
+        with zipfile.ZipFile(data_path, "r") as archive:
+            for name in archive.namelist():
+                if not name.endswith(".png"):
+                    continue
+                # Label is the second-to-last path component
+                # (e.g. 'rps/rock/rock01-000.png' -> 'rock').
+                parts = name.rstrip("/").split("/")
+                if len(parts) < 2:
+                    continue
+                label_name = parts[-2]
+                # Source PNGs are RGBA (CGI renderer artifact); the underlying
+                # content is 24-bit color per the dataset spec.
+                image = PILImage.open(io.BytesIO(archive.read(name))).convert("RGB")
+                yield name, {"image": image, "label": label_name}

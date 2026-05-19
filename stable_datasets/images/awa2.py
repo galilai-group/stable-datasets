@@ -3,7 +3,7 @@ import zipfile
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -16,9 +16,12 @@ class AWA2(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://cvml.ista.ac.at/AwA2/",
-        "citation": """@ARTICLE{8413121,
+    SOURCE = DatasetSource(
+        homepage="https://cvml.ista.ac.at/AwA2/",
+        assets={
+            "train": DownloadInfo(url="https://cvml.ista.ac.at/AwA2/AwA2-data.zip"),
+        },
+        citation="""@ARTICLE{8413121,
                          author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},
                          journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
                          title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly},
@@ -28,28 +31,7 @@ class AWA2(BaseDatasetBuilder):
                          pages={2251-2265},
                          keywords={Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning},
                          doi={10.1109/TPAMI.2018.2857768}}""",
-        "assets": {
-            "test": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip",
-        },
-    }
-
-    # Single source-of-truth for dataset provenance + download locations.
-    SOURCE = {
-        "homepage": "https://cvml.ista.ac.at/AwA2/",
-        "assets": {
-            "test": "https://cvml.ista.ac.at/AwA2/AwA2-data.zip",
-        },
-        "citation": """@ARTICLE{8413121,
-                         author={Xian, Yongqin and Lampert, Christoph H. and Schiele, Bernt and Akata, Zeynep},
-                         journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-                         title={Zero-Shot Learning—A Comprehensive Evaluation of the Good, the Bad and the Ugly},
-                         year={2019},
-                         volume={41},
-                         number={9},
-                         pages={2251-2265},
-                         keywords={Semantics;Visualization;Task analysis;Training;Fish;Protocols;Learning systems;Generalized zero-shot learning;transductive learning;image classification;weakly-supervised learning},
-                         doi={10.1109/TPAMI.2018.2857768}}""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(
@@ -119,8 +101,8 @@ class AWA2(BaseDatasetBuilder):
         )
 
     def _generate_examples(self, data_path, split):
-        # Note: split parameter is unused as AWA2 only contains a test split.
-        # Open the zip file
+        # The upstream archive is not pre-split; benchmarks create a held-out
+        # validation set from the train split when needed.
         with zipfile.ZipFile(data_path, "r") as z:
             # Use the class names from DatasetInfo for consistent label order
             class_names = self.info.features["label"].names

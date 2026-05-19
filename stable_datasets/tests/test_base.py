@@ -1,11 +1,23 @@
+import hashlib
 from collections.abc import Mapping
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from stable_datasets import utils
-from stable_datasets.arrow_dataset import StableDataset, StableDatasetDict
-from stable_datasets.schema import DatasetInfo, Features, Value, Version
+from stable_datasets.dataset import StableDataset, StableDatasetDict
+from stable_datasets.schema import (
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Value,
+    Version,
+    Video,
+    VideoDecodeConfig,
+    collect_dataset_citations,
+)
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -57,6 +69,30 @@ class _TinyDynamicSourceBuilder(BaseDatasetBuilder):
             yield i, {"x": i}
 
 
+class _TinyVideoBuilder(BaseDatasetBuilder):
+    VERSION = Version("0.0.0")
+    SOURCE = {"homepage": "https://example.com", "citation": "TBD", "assets": {}}
+
+    def __init__(self, video_path, config_name: str | None = None, **kwargs):
+        self.video_path = Path(video_path)
+        super().__init__(config_name=config_name, **kwargs)
+
+    def _info(self):
+        return DatasetInfo(features=Features({"video": Video(storage="path"), "x": Value("int32")}))
+
+    def _candidate_splits(self):
+        return [Split.TRAIN, Split.TEST]
+
+    def _split_generators(self):
+        return [
+            SplitGenerator(name=Split.TRAIN, gen_kwargs={"x": 1}),
+            SplitGenerator(name=Split.TEST, gen_kwargs={"x": 2}),
+        ]
+
+    def _generate_examples(self, x):
+        yield x, {"video": self.video_path, "x": x}
+
+
 class _TinyBaseSplitBuilder(BaseDatasetBuilder):
     """Uses BaseDatasetBuilder's default _split_generators (SOURCE['assets'] + bulk_download)."""
 
@@ -72,6 +108,53 @@ class _TinyBaseSplitBuilder(BaseDatasetBuilder):
 
     def _generate_examples(self, data_path, split):
         # We don't touch data_path; tests monkeypatch bulk_download to avoid network.
+        yield f"{split}-0", {"x": 0}
+
+
+class _TinyFallbackSplitBuilder(BaseDatasetBuilder):
+    VERSION = Version("0.0.0")
+    SOURCE = DatasetSource(
+        homepage="https://example.com",
+        citation="TBD",
+        assets={
+            "train": DownloadInfo(
+                url="https://primary.example.com/file.bin",
+                fallbacks=["https://mirror.example.com/file.bin"],
+                filename="file.bin",
+            ),
+            "test": DownloadInfo(
+                url="https://primary.example.com/file.bin",
+                fallbacks=["https://mirror.example.com/file.bin"],
+                filename="file.bin",
+            ),
+        },
+    )
+
+    def _info(self):
+        return DatasetInfo(features=Features({"x": Value("int32")}))
+
+    def _generate_examples(self, data_path, split):
+        yield f"{split}-0", {"x": 0}
+
+
+class _TinyMixedAssetBuilder(BaseDatasetBuilder):
+    VERSION = Version("0.0.0")
+    SOURCE = DatasetSource(
+        homepage="https://example.com",
+        citation="TBD",
+        assets={
+            "train": "https://example.com/train.bin",
+            "test": DownloadInfo(
+                url="https://primary.example.com/test.bin",
+                fallbacks=["https://mirror.example.com/test.bin"],
+            ),
+        },
+    )
+
+    def _info(self):
+        return DatasetInfo(features=Features({"x": Value("int32")}))
+
+    def _generate_examples(self, data_path, split):
         yield f"{split}-0", {"x": 0}
 
 
@@ -93,6 +176,56 @@ def test_base_builder_allows_runtime_source_override(tmp_path):
     assert len(ds) == 1
 
 
+def test_base_builder_decode_video_constructor_sugar(tmp_path):
+    video_path = tmp_path / "clip.mp4"
+    video_path.write_bytes(b"builder video")
+
+    def decode_fn(ref, config, *, row=None, sample_index=None):
+        return f"{row['x']}:{ref.bytes.decode()}"
+
+    config = VideoDecodeConfig(num_frames=1, decode_fn=decode_fn)
+    via_constructor = _TinyVideoBuilder(
+        video_path,
+        split="train",
+        processed_cache_dir=tmp_path / "processed_a",
+        decode_video=config,
+    )
+    via_method = _TinyVideoBuilder(
+        video_path,
+        split="train",
+        processed_cache_dir=tmp_path / "processed_b",
+    ).set_video_decode(config)
+
+    assert via_constructor[0]["video"] == via_method[0]["video"] == "1:builder video"
+
+
+def test_base_builder_decode_video_applies_to_datasetdict(tmp_path):
+    video_path = tmp_path / "clip.mp4"
+    video_path.write_bytes(b"builder video")
+
+    def decode_fn(ref, config, *, row=None, sample_index=None):
+        return f"split-value:{row['x']}"
+
+    datasets = _TinyVideoBuilder(
+        video_path,
+        split=None,
+        processed_cache_dir=tmp_path / "processed",
+        decode_video=VideoDecodeConfig(num_frames=1, decode_fn=decode_fn),
+    )
+
+    assert datasets["train"][0]["video"] == "split-value:1"
+    assert datasets["test"][0]["video"] == "split-value:2"
+
+
+def test_base_builder_decode_video_rejects_non_video_dataset(tmp_path):
+    with pytest.raises(ValueError, match="must exist and be a Video feature"):
+        _TinyLocalBuilder(
+            split="train",
+            processed_cache_dir=tmp_path,
+            decode_video=VideoDecodeConfig(num_frames=1),
+        )
+
+
 def test_base_builder_processed_cache_dir_is_used(tmp_path):
     ds = _TinyLocalBuilder(split="train", processed_cache_dir=str(tmp_path))
     # Verify that sharded cache directories were created in the specified directory.
@@ -108,7 +241,7 @@ def test_base_builder_passes_download_dir_to_bulk_download(tmp_path, monkeypatch
 
     seen = {}
 
-    def _fake_bulk_download(urls, dest_folder):
+    def _fake_bulk_download(urls, dest_folder, checksums=None):
         seen["dest_folder"] = str(dest_folder)
         # Return fake local paths; _generate_examples ignores data_path.
         return [tmp_path / f"fake_{i}.bin" for i in range(len(list(urls)))]
@@ -122,6 +255,38 @@ def test_base_builder_passes_download_dir_to_bulk_download(tmp_path, monkeypatch
         download_dir=str(download_dir),
     )
     assert seen["dest_folder"] == str(download_dir)
+
+
+def test_normalize_download_info_from_string():
+    info = BaseDatasetBuilder._normalize_download_info("https://example.com/file.bin")
+    assert isinstance(info, DownloadInfo)
+    assert info.url == "https://example.com/file.bin"
+    assert info.fallbacks == []
+
+
+def test_normalize_download_info_preserves_explicit_downloadinfo():
+    explicit = DownloadInfo(url="https://example.com/file.bin", fallbacks=["https://mirror.example.com/file.bin"])
+    normalized = BaseDatasetBuilder._normalize_download_info(explicit)
+    assert normalized is explicit
+
+
+def test_normalize_dataset_source_from_dict():
+    source = BaseDatasetBuilder._normalize_dataset_source(
+        {"homepage": "https://example.com", "citation": "TBD", "assets": {"train": "https://example.com/train.bin"}}
+    )
+    assert isinstance(source, DatasetSource)
+    assert isinstance(source.assets["train"], DownloadInfo)
+
+
+def test_collect_dataset_citations_deduplicates_in_order():
+    citations = collect_dataset_citations(
+        [
+            DatasetSource(homepage="https://a.example", citation="cite-a", assets={}),
+            DatasetSource(homepage="https://b.example", citation="cite-b", assets={}),
+            DatasetSource(homepage="https://c.example", citation="cite-a", assets={}),
+        ]
+    )
+    assert citations == ["cite-a", "cite-b"]
 
 
 def test_base_builder_requires_version():
@@ -177,75 +342,71 @@ def test_source_is_frozen_for_static_source():
 
 
 def test_base_builder_requires_source_homepage(tmp_path):
-    class _MissingHomepage(BaseDatasetBuilder):
-        VERSION = Version("0.0.0")
-        SOURCE = {"citation": "TBD", "assets": {}}
-
-        def _info(self):
-            return DatasetInfo(features=Features({"x": Value("int32")}))
-
-        def _split_generators(self):
-            return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
-
-        def _generate_examples(self, n):
-            yield 0, {"x": 0}
-
     with pytest.raises(TypeError):
-        _MissingHomepage(split="train", processed_cache_dir=str(tmp_path))
+
+        class _MissingHomepage(BaseDatasetBuilder):
+            VERSION = Version("0.0.0")
+            SOURCE = {"citation": "TBD", "assets": {}}
+
+            def _info(self):
+                return DatasetInfo(features=Features({"x": Value("int32")}))
+
+            def _split_generators(self):
+                return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
+
+            def _generate_examples(self, n):
+                yield 0, {"x": 0}
 
 
 def test_base_builder_requires_source_citation(tmp_path):
-    class _MissingCitation(BaseDatasetBuilder):
-        VERSION = Version("0.0.0")
-        SOURCE = {"homepage": "https://example.com", "assets": {}}
-
-        def _info(self):
-            return DatasetInfo(features=Features({"x": Value("int32")}))
-
-        def _split_generators(self):
-            return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
-
-        def _generate_examples(self, n):
-            yield 0, {"x": 0}
-
     with pytest.raises(TypeError):
-        _MissingCitation(split="train", processed_cache_dir=str(tmp_path))
+
+        class _MissingCitation(BaseDatasetBuilder):
+            VERSION = Version("0.0.0")
+            SOURCE = {"homepage": "https://example.com", "assets": {}}
+
+            def _info(self):
+                return DatasetInfo(features=Features({"x": Value("int32")}))
+
+            def _split_generators(self):
+                return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
+
+            def _generate_examples(self, n):
+                yield 0, {"x": 0}
 
 
 def test_base_builder_requires_source_assets(tmp_path):
-    class _MissingDownloadUrls(BaseDatasetBuilder):
-        VERSION = Version("0.0.0")
-        SOURCE = {"homepage": "https://example.com", "citation": "TBD"}
-
-        def _info(self):
-            return DatasetInfo(features=Features({"x": Value("int32")}))
-
-        def _split_generators(self):
-            return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
-
-        def _generate_examples(self, n):
-            yield 0, {"x": 0}
-
     with pytest.raises(TypeError):
-        _MissingDownloadUrls(split="train", processed_cache_dir=str(tmp_path))
+
+        class _MissingDownloadUrls(BaseDatasetBuilder):
+            VERSION = Version("0.0.0")
+            SOURCE = {"homepage": "https://example.com", "citation": "TBD"}
+
+            def _info(self):
+                return DatasetInfo(features=Features({"x": Value("int32")}))
+
+            def _split_generators(self):
+                return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
+
+            def _generate_examples(self, n):
+                yield 0, {"x": 0}
 
 
 def test_base_builder_validates_source_field_types(tmp_path):
-    class _BadTypes(BaseDatasetBuilder):
-        VERSION = Version("0.0.0")
-        SOURCE = {"homepage": 123, "citation": object(), "assets": "not-a-dict"}
-
-        def _info(self):
-            return DatasetInfo(features=Features({"x": Value("int32")}))
-
-        def _split_generators(self):
-            return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
-
-        def _generate_examples(self, n):
-            yield 0, {"x": 0}
-
     with pytest.raises(TypeError):
-        _BadTypes(split="train", processed_cache_dir=str(tmp_path))
+
+        class _BadTypes(BaseDatasetBuilder):
+            VERSION = Version("0.0.0")
+            SOURCE = {"homepage": 123, "citation": object(), "assets": "not-a-dict"}
+
+            def _info(self):
+                return DatasetInfo(features=Features({"x": Value("int32")}))
+
+            def _split_generators(self):
+                return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
+
+            def _generate_examples(self, n):
+                yield 0, {"x": 0}
 
 
 def test_base_builder_empty_urls_raises(tmp_path):
@@ -280,7 +441,7 @@ def test_base_builder_maps_val_to_validation(monkeypatch, tmp_path):
         def _generate_examples(self, data_path, split):
             yield 0, {"x": 0}
 
-    def _fake_bulk_download(urls, dest_folder):
+    def _fake_bulk_download(urls, dest_folder, checksums=None):
         return [tmp_path / "fake.bin" for _ in list(urls)]
 
     monkeypatch.setattr(utils, "bulk_download", _fake_bulk_download)
@@ -313,7 +474,7 @@ def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
 
     seen = {}
 
-    def _fake_bulk_download(urls, dest_folder):
+    def _fake_bulk_download(urls, dest_folder, checksums=None):
         urls = list(urls)
         seen["urls"] = urls
         return [tmp_path / f"fake_{i}.bin" for i in range(len(urls))]
@@ -324,7 +485,49 @@ def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
     inst._raw_download_dir = tmp_path
     inst.__init__()
     _ = inst._split_generators()
-    assert seen["urls"] == ["https://example.com/file.bin"]
+    assert len(seen["urls"]) == 1
+    assert isinstance(seen["urls"][0], DownloadInfo)
+    assert seen["urls"][0].url == "https://example.com/file.bin"
+
+
+def test_base_builder_deduplicates_downloadinfo_specs(monkeypatch, tmp_path):
+    import stable_datasets.utils as utils
+
+    seen = {}
+
+    def _fake_bulk_download(urls, dest_folder, checksums=None):
+        urls = list(urls)
+        seen["urls"] = urls
+        return [tmp_path / f"fake_{i}.bin" for i in range(len(urls))]
+
+    monkeypatch.setattr(utils, "bulk_download", _fake_bulk_download)
+
+    inst = object.__new__(_TinyFallbackSplitBuilder)
+    inst._raw_download_dir = tmp_path
+    inst.__init__()
+    _ = inst._split_generators()
+    assert len(seen["urls"]) == 1
+    assert isinstance(seen["urls"][0], DownloadInfo)
+    assert seen["urls"][0].fallbacks == ["https://mirror.example.com/file.bin"]
+
+
+def test_base_builder_accepts_mixed_asset_specs(monkeypatch, tmp_path):
+    import stable_datasets.utils as utils
+
+    seen = {}
+
+    def _fake_bulk_download(urls, dest_folder, checksums=None):
+        urls = list(urls)
+        seen["urls"] = urls
+        return [tmp_path / f"fake_{i}.bin" for i in range(len(urls))]
+
+    monkeypatch.setattr(utils, "bulk_download", _fake_bulk_download)
+
+    inst = object.__new__(_TinyMixedAssetBuilder)
+    inst._raw_download_dir = tmp_path
+    inst.__init__()
+    _ = inst._split_generators()
+    assert [type(url).__name__ for url in seen["urls"]] == ["DownloadInfo", "DownloadInfo"]
 
 
 def test_stable_dataset_getitem(tmp_path):
@@ -392,3 +595,363 @@ def test_env_cache_dir_with_tilde_expansion(monkeypatch):
     monkeypatch.setenv(utils.CACHE_DIR_ENV_VAR, "~/my_datasets_cache")
     expected = Path.home() / "my_datasets_cache" / "downloads"
     assert utils._default_dest_folder() == expected
+
+
+def test_download_resume_sends_range_header(tmp_path, monkeypatch):
+    """When a .tmp file exists, download should send a Range header."""
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    # Pre-create a partial .tmp file
+    url = "https://example.com/file.bin"
+    p = Path("file.bin")
+    h = hashlib.sha256(url.encode("utf-8")).hexdigest()[:10]
+    tmp_file = dest_folder / f"{p.stem}.{h}{p.suffix}.tmp"
+    tmp_file.write_bytes(b"partial")
+
+    seen_headers = {}
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": "100"}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([b"x" * 100])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        def __init__(self):
+            self.headers = {}
+
+        def update(self, d):
+            self.headers.update(d)
+
+        def get(self, url, stream=True, allow_redirects=True, timeout=None, headers=None):
+            seen_headers.update(headers or {})
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    FakeSession.headers = MagicMock()
+    FakeSession.headers.update = lambda d: None
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            try:
+                download(url, dest_folder=dest_folder, progress_bar=False)
+            except Exception:
+                pass  # We only care about the Range header
+
+    assert "Range" in seen_headers
+    assert seen_headers["Range"] == f"bytes={len(b'partial')}-"
+
+
+def test_download_resume_fallback_on_200(tmp_path, monkeypatch):
+    """When server returns 200 (ignoring Range), download starts over."""
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    url = "https://example.com/file2.bin"
+    p = Path("file2.bin")
+    h = hashlib.sha256(url.encode("utf-8")).hexdigest()[:10]
+    dest = dest_folder / f"{p.stem}.{h}{p.suffix}"
+    # Ensure no leftover dest
+    if dest.exists():
+        dest.unlink()
+
+    content = b"fullcontent"
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([content])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        headers = {}
+
+        def update(self, d):
+            pass
+
+        def get(self, url, **kwargs):
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    FakeSession.headers = MagicMock()
+    FakeSession.headers.update = lambda d: None
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            result = download(url, dest_folder=dest_folder, progress_bar=False)
+
+    # File should contain the full content (not appended)
+    assert result.read_bytes() == content
+
+
+def test_download_uses_fallback_url(tmp_path):
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    primary = "https://primary.example.com/file.bin"
+    fallback = "https://mirror.example.com/file.bin"
+    content = b"fallback-content"
+    seen = []
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([content])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        def __init__(self):
+            self.headers = {}
+
+        def get(self, url, **kwargs):
+            seen.append(url)
+            if url == primary:
+                raise RuntimeError("primary down")
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            result = download(primary, dest_folder=dest_folder, progress_bar=False, fallbacks=[fallback])
+
+    assert seen == [primary, fallback]
+    assert result.read_bytes() == content
+
+
+def test_download_raises_aggregated_error_when_all_candidates_fail(tmp_path):
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    primary = "https://primary.example.com/file.bin"
+    fallback = "https://mirror.example.com/file.bin"
+
+    class FakeSession:
+        def __init__(self):
+            self.headers = {}
+
+        def get(self, url, **kwargs):
+            raise RuntimeError(f"failed: {url}")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            with pytest.raises(RuntimeError, match="Failed to download from all candidate URLs"):
+                download(primary, dest_folder=dest_folder, progress_bar=False, fallbacks=[fallback])
+
+
+def test_download_validates_checksum_on_fallback(tmp_path):
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    primary = "https://primary.example.com/file.bin"
+    fallback = "https://mirror.example.com/file.bin"
+    content = b"checksum-on-fallback"
+    expected = hashlib.sha256(content).hexdigest()
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([content])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        def __init__(self):
+            self.headers = {}
+
+        def get(self, url, **kwargs):
+            if url == primary:
+                raise RuntimeError("primary down")
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            result = download(
+                primary,
+                dest_folder=dest_folder,
+                progress_bar=False,
+                fallbacks=[fallback],
+                checksum=f"sha256:{expected}",
+            )
+
+    assert result.read_bytes() == content
+
+
+def test_checksum_validation_passes(tmp_path):
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    content = b"hello world"
+    sha = hashlib.sha256(content).hexdigest()
+    checksum = f"sha256:{sha}"
+
+    url = "https://example.com/check.bin"
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([content])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        headers = {}
+
+        def update(self, d):
+            pass
+
+        def get(self, url, **kwargs):
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    FakeSession.headers = MagicMock()
+    FakeSession.headers.update = lambda d: None
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            result = download(url, dest_folder=dest_folder, progress_bar=False, checksum=checksum)
+
+    assert result.read_bytes() == content
+
+
+def test_checksum_mismatch_deletes_and_raises(tmp_path):
+    from stable_datasets.utils import download
+
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+
+    content = b"hello world"
+    wrong_checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+
+    url = "https://example.com/bad.bin"
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": str(len(content))}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([content])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        headers = {}
+
+        def update(self, d):
+            pass
+
+        def get(self, url, **kwargs):
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    FakeSession.headers = MagicMock()
+    FakeSession.headers.update = lambda d: None
+
+    with patch("stable_datasets.utils.requests.Session", return_value=FakeSession()):
+        with patch("stable_datasets.utils.FileLock"):
+            with pytest.raises(ValueError, match="Checksum mismatch"):
+                download(url, dest_folder=dest_folder, progress_bar=False, checksum=wrong_checksum)

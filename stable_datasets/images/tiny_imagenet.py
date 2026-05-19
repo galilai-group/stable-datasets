@@ -2,7 +2,7 @@ import os
 import zipfile
 from pathlib import Path
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -16,20 +16,20 @@ class TinyImagenet(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
-    SOURCE = {
-        "homepage": "https://www.kaggle.com/c/tiny-imagenet",
-        "assets": {
-            "train": "http://cs231n.stanford.edu/tiny-imagenet-200.zip",
-            "validation": "http://cs231n.stanford.edu/tiny-imagenet-200.zip",
-            "test": "http://cs231n.stanford.edu/tiny-imagenet-200.zip",
+    SOURCE = DatasetSource(
+        homepage="https://www.kaggle.com/c/tiny-imagenet",
+        assets={
+            "train": DownloadInfo(url="http://cs231n.stanford.edu/tiny-imagenet-200.zip"),
+            "validation": DownloadInfo(url="http://cs231n.stanford.edu/tiny-imagenet-200.zip"),
+            "test": DownloadInfo(url="http://cs231n.stanford.edu/tiny-imagenet-200.zip"),
         },
-        "citation": """@inproceedings{Le2015TinyIV,
+        citation="""@inproceedings{Le2015TinyIV,
                           title={Tiny ImageNet Visual Recognition Challenge},
                           author={Ya Le and Xuan S. Yang},
                           year={2015}
                         }""",
-        "license": "MIT License",
-    }
+        license="MIT License",
+    )
 
     def _info(self):
         source = self._source()

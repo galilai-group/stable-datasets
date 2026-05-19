@@ -1,6 +1,6 @@
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.utils import (
     BaseDatasetBuilder,
     _default_dest_folder,
@@ -21,13 +21,13 @@ class KMNIST(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
-    SOURCE = {
-        "homepage": "http://codh.rois.ac.jp/kmnist/",
-        "assets": {
-            "train": "https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-train-imgs.npz",
-            "test": "https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-test-imgs.npz",
+    SOURCE = DatasetSource(
+        homepage="http://codh.rois.ac.jp/kmnist/",
+        assets={
+            "train": DownloadInfo(url="https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-train-imgs.npz"),
+            "test": DownloadInfo(url="https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-test-imgs.npz"),
         },
-        "citation": """@online{clanuwat2018deep,
+        citation="""@online{clanuwat2018deep,
                          author       = {Tarin Clanuwat and Mikel Bober-Irizar and Asanobu Kitamoto and Alex Lamb and Kazuaki Yamamoto and David Ha},
                          title        = {Deep Learning for Classical Japanese Literature},
                          date         = {2018-12-03},
@@ -35,7 +35,7 @@ class KMNIST(BaseDatasetBuilder):
                          eprintclass  = {cs.CV},
                          eprinttype   = {arXiv},
                          eprint       = {cs.CV/1812.01718}}""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(
@@ -70,7 +70,8 @@ class KMNIST(BaseDatasetBuilder):
         images = data["arr_0"]
 
         # Load labels from separate file
-        label_url = self.SOURCE["assets"][split].replace("-imgs.npz", "-labels.npz")
+        image_asset = self._normalize_download_info(self.SOURCE["assets"][split], asset_name=split)
+        label_url = image_asset.url.replace("-imgs.npz", "-labels.npz")
         download_dir = getattr(self, "_raw_download_dir", None)
         if download_dir is None:
             download_dir = _default_dest_folder()

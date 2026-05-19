@@ -4,7 +4,7 @@ import tarfile
 import pandas as pd
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -14,19 +14,21 @@ class CUB200(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://www.vision.caltech.edu/datasets/cub_200_2011/",
-        "assets": {
-            "train": "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1",
-            "test": "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1",
+    SOURCE = DatasetSource(
+        homepage="https://www.vision.caltech.edu/datasets/cub_200_2011/",
+        assets={
+            "train": DownloadInfo(
+                url="https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1"
+            ),
+            "test": DownloadInfo(url="https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz?download=1"),
         },
-        "citation": """@techreport{WahCUB_200_2011,
+        citation="""@techreport{WahCUB_200_2011,
                         Title = {The Caltech-UCSD Birds-200-2011 Dataset},
                         Author = {Wah, C. and Branson, S. and Welinder, P. and Perona, P. and Belongie, S.},
                         Year = {2011},
                         Institution = {California Institute of Technology},
                         Number = {CNS-TR-2011-001}}""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

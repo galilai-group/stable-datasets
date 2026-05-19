@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+"""BirdVox-70k avian flight-call detection loader."""
+
 __author__ = "Randall Balestriero"
 import os
 import time

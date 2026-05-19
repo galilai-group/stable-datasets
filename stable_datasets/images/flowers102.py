@@ -5,7 +5,7 @@ import tarfile
 import scipy.io
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
@@ -30,28 +30,28 @@ class Flowers102(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/",
-        "citation": r"""@inproceedings{nilsback2008flowers102,
+    SOURCE = DatasetSource(
+        homepage="https://www.robots.ox.ac.uk/~vgg/data/flowers/102/",
+        citation=r"""@inproceedings{nilsback2008flowers102,
                          title={Automated flower classification over a large number of classes},
                          author={Nilsback, Maria-Elena and Zisserman, Andrew},
                          booktitle={2008 Sixth Indian conference on computer vision, graphics \& image processing},
                          pages={722--729},
                          year={2008},
                          organization={IEEE}}""",
-        "assets": {
-            "images": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102flowers.tgz",
-            "labels": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/imagelabels.mat",
-            "setid": "https://www.robots.ox.ac.uk/~vgg/data/flowers/102/setid.mat",
+        assets={
+            "images": DownloadInfo(url="https://www.robots.ox.ac.uk/~vgg/data/flowers/102/102flowers.tgz"),
+            "labels": DownloadInfo(url="https://www.robots.ox.ac.uk/~vgg/data/flowers/102/imagelabels.mat"),
+            "setid": DownloadInfo(url="https://www.robots.ox.ac.uk/~vgg/data/flowers/102/setid.mat"),
         },
-    }
+    )
 
     def _info(self):
         return DatasetInfo(
             description="Flowers102 dataset with 102 classes.",
             features=Features(
                 {
-                    "image": ImageFeature(),
+                    "image": ImageFeature(encode_format="JPEG"),
                     "label": ClassLabel(names=self._labels()),
                 }
             ),
@@ -62,21 +62,14 @@ class Flowers102(BaseDatasetBuilder):
 
     def _split_generators(self):
         """
-        Override default splitting because we need all 3 files (images, labels, IDs)
-        to generate examples for any split.
+        Download the image, label, and split-ID assets needed to
+        generate each split.
         """
         source = self._source()
 
-        key_url_map = {
-            "images": source["assets"]["images"],
-            "labels": source["assets"]["labels"],
-            "setid": source["assets"]["setid"],
-        }
-
-        urls = list(key_url_map.values())
-        local_paths = bulk_download(urls, dest_folder=self._raw_download_dir)
-
-        path_map = dict(zip(key_url_map.keys(), local_paths))
+        asset_keys = ["images", "labels", "setid"]
+        local_paths = bulk_download([source["assets"][key] for key in asset_keys], dest_folder=self._raw_download_dir)
+        path_map = dict(zip(asset_keys, local_paths))
 
         return [
             SplitGenerator(

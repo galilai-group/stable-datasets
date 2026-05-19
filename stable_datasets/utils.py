@@ -23,25 +23,20 @@ from rich.progress import (
 )
 from tqdm import tqdm
 
-from .arrow_dataset import StableDataset, StableDatasetDict
 from .cache import (
     cache_fingerprint,
-    validate_sharded_cache,
+    detect_cache_format,
+    open_cache,
+    write_lance_cache,
+    write_lance_video_frames_cache,
     write_sharded_arrow_cache,
 )
-from .schema import BuilderConfig, Version
+from .dataset import StableDataset, StableDatasetDict
+from .schema import BuilderConfig, DatasetSource, DownloadInfo, Image, Version, Video
 from .splits import Split, SplitGenerator
 
 
 DEFAULT_CACHE_DIR = "~/.stable-datasets/"
-
-CACHE_DIR_ENV_VAR = "STABLE_DATASETS_CACHE_DIR"
-
-
-def _get_cache_dir() -> str:
-    """Return the base cache directory, respecting the environment variable."""
-    return os.environ.get(CACHE_DIR_ENV_VAR, DEFAULT_CACHE_DIR)
-
 
 CACHE_DIR_ENV_VAR = "STABLE_DATASETS_CACHE_DIR"
 
@@ -57,7 +52,7 @@ def _default_dest_folder() -> Path:
 
 
 def _default_processed_cache_dir() -> Path:
-    """Default folder where processed datasets (Arrow files) are cached."""
+    """Default folder where processed datasets are cached."""
     return Path(os.path.expanduser(_get_cache_dir())) / "processed"
 
 
@@ -72,15 +67,28 @@ class BaseDatasetBuilder:
     # Subclasses must define:
     # - VERSION: schema.Version
     #
-    # For dataset provenance / downloads, subclasses can either:
+    # For dataset source metadata and downloads, subclasses can either:
     # - define a class attribute SOURCE (static), or
     # - override _source(self) to compute it at runtime (e.g. from self.config)
     VERSION: Version
-    SOURCE: Mapping
+    SOURCE: DatasetSource | Mapping
 
     # Optional: multi-variant datasets define BUILDER_CONFIGS and optionally DEFAULT_CONFIG_NAME.
     BUILDER_CONFIGS: list = []
     DEFAULT_CONFIG_NAME: str | None = None
+
+    # Class-level default storage backend for the processed cache.
+    # "arrow" (library default) writes sharded Arrow IPC files via
+    # write_sharded_arrow_cache and reads through :class:`ArrowBackend`.
+    # "lance" writes a native Lance dataset via write_lance_cache and
+    # reads through :class:`LanceBackend`.
+    #
+    # End users can also override this per-call at load time by
+    # passing ``storage_format="arrow"`` or ``storage_format="lance"``
+    # to the builder constructor, e.g. ``CIFAR10(split="train",
+    # storage_format="lance")``. Arrow and Lance caches coexist at
+    # distinct paths; ``cache_fingerprint`` includes the format.
+    STORAGE_FORMAT: str = "arrow"
 
     @staticmethod
     def _freeze(obj):
@@ -93,6 +101,15 @@ class BaseDatasetBuilder:
         """
         if isinstance(obj, MappingProxyType):
             return obj
+        if isinstance(obj, DatasetSource):
+            return obj
+        if isinstance(obj, DownloadInfo):
+            return DownloadInfo(
+                url=obj.url,
+                fallbacks=list(obj.fallbacks),
+                checksum=obj.checksum,
+                filename=obj.filename,
+            )
         if isinstance(obj, Mapping):
             # Create a fresh dict so callers can't retain a handle to the mutable original.
             return MappingProxyType({k: BaseDatasetBuilder._freeze(v) for k, v in dict(obj).items()})
@@ -129,7 +146,7 @@ class BaseDatasetBuilder:
 
         # Freeze static SOURCE at class creation time.
         if has_static_source:
-            cls.SOURCE = cls._freeze(getattr(cls, "SOURCE"))
+            cls.SOURCE = cls._normalize_dataset_source(getattr(cls, "SOURCE"))
 
         # If subclass overrides _source(), wrap it so the returned mapping is frozen/immutable.
         if has_dynamic_source and not getattr(cls._source, "_stable_datasets_freezes_source", False):
@@ -137,7 +154,7 @@ class BaseDatasetBuilder:
 
             def _wrapped_source(self):
                 source = original(self)
-                return BaseDatasetBuilder._freeze(source)
+                return BaseDatasetBuilder._normalize_dataset_source(source)
 
             _wrapped_source._stable_datasets_freezes_source = True  # type: ignore[attr-defined]
             cls._source = _wrapped_source  # type: ignore[method-assign]
@@ -163,7 +180,7 @@ class BaseDatasetBuilder:
     def info(self):
         return self._dataset_info
 
-    def _source(self) -> Mapping:
+    def _source(self) -> DatasetSource:
         """
         Return dataset provenance / download configuration.
 
@@ -172,19 +189,46 @@ class BaseDatasetBuilder:
         """
         if not hasattr(self.__class__, "SOURCE"):
             raise TypeError(f"{self.__class__.__name__} does not define SOURCE and did not override _source().")
-        return getattr(self.__class__, "SOURCE")
+        return self._normalize_dataset_source(getattr(self.__class__, "SOURCE"))
 
     @staticmethod
-    def _validate_source(source: Mapping) -> None:
-        # Required for provenance
-        if "homepage" not in source or source["homepage"] is None or not isinstance(source["homepage"], str):
-            raise TypeError("SOURCE['homepage'] must be a string and must be present.")
-        if "citation" not in source or source["citation"] is None or not isinstance(source["citation"], str):
-            raise TypeError("SOURCE['citation'] must be a string and must be present.")
+    def _normalize_dataset_source(source) -> DatasetSource:
+        """Normalize a builder source object to DatasetSource."""
+        if isinstance(source, DatasetSource):
+            return source
+        if isinstance(source, Mapping):
+            homepage = source.get("homepage")
+            citation = source.get("citation")
+            license = source.get("license", "")
+            assets = source.get("assets")
+            checksums = source.get("checksums")
+            return DatasetSource(
+                homepage=homepage,
+                assets=assets,
+                citation=citation,
+                license=license,
+                checksums=checksums,
+            )
+        raise TypeError(f"SOURCE must be a DatasetSource or mapping, got {type(source).__name__}.")
 
-        # Required for downloads (even if a dataset overrides _split_generators).
-        if "assets" not in source or not isinstance(source["assets"], Mapping):
-            raise TypeError("SOURCE must contain a mapping-valued 'assets' key.")
+    @staticmethod
+    def _validate_source(source: DatasetSource | Mapping) -> None:
+        source = BaseDatasetBuilder._normalize_dataset_source(source)
+        for asset_name, spec in source["assets"].items():
+            BaseDatasetBuilder._normalize_download_info(spec, asset_name=asset_name)
+
+    @staticmethod
+    def _normalize_download_info(asset_spec, *, asset_name: str | None = None) -> DownloadInfo:
+        """Normalize a source asset spec to a DownloadInfo instance."""
+        if isinstance(asset_spec, str):
+            return DownloadInfo(url=asset_spec)
+        if isinstance(asset_spec, DownloadInfo):
+            return asset_spec
+        if asset_name is None:
+            raise TypeError("Asset spec must be a URL string or DownloadInfo.")
+        raise TypeError(
+            f"SOURCE['assets']['{asset_name}'] must be a URL string or DownloadInfo, got {type(asset_spec).__name__}."
+        )
 
     def _split_generators(self):
         """
@@ -194,8 +238,6 @@ class BaseDatasetBuilder:
         via `SOURCE["assets"]`. Datasets with different layouts can override this method.
         """
         source = self._source()
-        if not isinstance(source, Mapping):
-            raise TypeError(f"{self.__class__.__name__}._source() must return a mapping.")
         self._validate_source(source)
 
         assets = source["assets"]
@@ -203,16 +245,49 @@ class BaseDatasetBuilder:
             raise ValueError(f"{self.__class__.__name__}.SOURCE['assets'] is empty; cannot infer splits.")
 
         split_names = list(assets.keys())
-        ordered_urls = [assets[s] for s in split_names]
+        download_infos = {
+            split_name: self._normalize_download_info(assets[split_name], asset_name=split_name)
+            for split_name in split_names
+        }
 
-        # Deduplicate URLs to avoid redundant downloads for datasets where all splits share a single file.
-        unique_urls = list(dict.fromkeys(ordered_urls))
+        # Build primary URL -> checksum mapping from SOURCE["checksums"] if present
+        checksums_by_split = source.get("checksums") or {}
+        download_specs = []
+        for split_name in split_names:
+            cs = checksums_by_split.get(split_name) if checksums_by_split else None
+            info = download_infos[split_name]
+            if cs and info.checksum is None:
+                info = DownloadInfo(
+                    url=info.url,
+                    fallbacks=list(info.fallbacks),
+                    checksum=cs,
+                    filename=info.filename,
+                )
+            download_specs.append(info)
+
+        # Deduplicate assets by their full candidate URL set so shared mirrors only download once.
+        unique_specs = list(
+            dict.fromkeys((info.url, tuple(info.fallbacks), info.checksum, info.filename) for info in download_specs)
+        )
         download_dir = getattr(self, "_raw_download_dir", None)
         if download_dir is None:
             download_dir = _default_dest_folder()
-        unique_paths = bulk_download(unique_urls, dest_folder=download_dir)
-        url_to_path = dict(zip(unique_urls, unique_paths))
-        local_paths = [url_to_path[u] for u in ordered_urls]
+        unique_paths = bulk_download(
+            [
+                DownloadInfo(
+                    url=primary,
+                    fallbacks=list(fallbacks),
+                    checksum=checksum,
+                    filename=filename,
+                )
+                for primary, fallbacks, checksum, filename in unique_specs
+            ],
+            dest_folder=download_dir,
+        )
+        spec_to_path = dict(zip(unique_specs, unique_paths))
+        local_paths = [
+            spec_to_path[(info.url, tuple(info.fallbacks), info.checksum, info.filename)] for info in download_specs
+        ]
 
         split_to_path = dict(zip(split_names, local_paths))
 
@@ -238,24 +313,65 @@ class BaseDatasetBuilder:
         """Yield (key, example_dict) pairs. Must be overridden."""
         raise NotImplementedError
 
-    def __new__(cls, *args, split=None, processed_cache_dir=None, download_dir=None, **kwargs):
+    def _candidate_splits(self) -> list:
+        """Return split names used for cache lookup before any download occurs."""
+        source = self._source()
+        _name_map = {
+            "train": Split.TRAIN,
+            "test": Split.TEST,
+            "val": Split.VALIDATION,
+        }
+        asset_split_names = list(source["assets"].keys())
+        return [_name_map.get(s, s) for s in asset_split_names]
+
+    def __new__(
+        cls,
+        *args,
+        split=None,
+        processed_cache_dir=None,
+        download_dir=None,
+        storage_format=None,
+        backend_kwargs=None,
+        decode_video=None,
+        **kwargs,
+    ):
         """
         Automatically download, prepare, and return the dataset for the specified split.
 
         Args:
             split: Dataset split to load (e.g., "train", "test", "validation"). If None,
                 loads all available splits and returns a StableDatasetDict.
-            processed_cache_dir: Cache directory for processed datasets (Arrow cache). If None,
+            processed_cache_dir: Cache directory for processed datasets. If None,
                 defaults to ~/.stable_datasets/processed/.
             download_dir: Directory for raw downloads (ZIP/NPZ/etc). If None, defaults to
                 ~/.stable_datasets/downloads/.
+            storage_format: Load-time override for the storage backend, either
+                ``"arrow"`` or ``"lance"``. When None (default), falls back to
+                the builder class's ``STORAGE_FORMAT`` attribute, which itself
+                defaults to ``"arrow"``. Arrow and Lance caches coexist at
+                distinct directories (``cache_fingerprint`` hashes the
+                format), so switching at load time does not invalidate or
+                clobber the other cache; the first load in a new format
+                pays a cache-miss build, subsequent loads hit instantly.
+                Note this is distinct from :meth:`StableDataset.with_format`,
+                which controls the output type (torch / numpy / raw) of
+                decoded rows.
+            decode_video: Optional read-time video decode config or mapping.
+                This is applied after cache open/build and is not part of the
+                cache fingerprint.
             **kwargs: Additional arguments passed to the dataset builder (e.g. config_name).
 
         Returns:
             Union[StableDataset, StableDatasetDict]: The loaded dataset (single split)
                 or a StableDatasetDict (all splits).
         """
+        if storage_format is not None and storage_format not in ("arrow", "lance"):
+            raise ValueError(f"storage_format must be 'arrow' or 'lance', got {storage_format!r}")
+        backend_kwargs = dict(backend_kwargs or {})
+
         instance = object.__new__(cls)
+        effective_format = storage_format if storage_format is not None else cls.STORAGE_FORMAT
+        instance._effective_storage_format = effective_format
 
         # 1) Decide cache locations
         if processed_cache_dir is None:
@@ -271,40 +387,100 @@ class BaseDatasetBuilder:
 
         # 3) Validate dataset SOURCE contract early.
         source = instance._source()
-        if not isinstance(source, Mapping):
-            raise TypeError(f"{cls.__name__}._source() must return a mapping.")
         cls._validate_source(source)
 
-        # 4) Get split generators (downloads raw files)
-        split_generators = instance._split_generators()
-
-        # 5) For each split: check Arrow cache or generate + write
         features = instance._dataset_info.features
-        splits_data = {}
+        has_frame_video = any(isinstance(f, Video) and f.storage == "frames" for f in features.values())
+        if has_frame_video and effective_format != "lance":
+            raise ValueError(
+                "Video(storage='frames') requires storage_format='lance' because "
+                "it uses the specialized lance-video-frames layout."
+            )
 
-        for sg in split_generators:
+        # 4) Try to load all splits from cache without downloading.
+        candidate_splits = instance._candidate_splits()
+
+        splits_data = {}
+        all_cached = bool(candidate_splits)  # empty assets → must call _split_generators
+        for split_name in candidate_splits:
             shard_dir_name = cache_fingerprint(
                 cls.__name__,
                 str(cls.VERSION),
                 instance.config.name,
-                sg.name,
+                split_name,
+                storage_format=effective_format,
             )
             shard_dir = instance._processed_cache_dir / shard_dir_name
 
             if (shard_dir / "_metadata.json").exists():
-                meta = validate_sharded_cache(shard_dir, features)
+                on_disk_format = detect_cache_format(shard_dir)
+                if on_disk_format != effective_format:
+                    # Mismatched format metadata is treated as a cache miss.
+                    all_cached = False
+                    break
+                opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
+                splits_data[split_name] = StableDataset(
+                    features=features,
+                    info=instance._dataset_info,
+                    backend=opened.backend,
+                    num_rows=opened.num_rows,
+                )
             else:
-                generator = instance._generate_examples(**sg.gen_kwargs)
-                meta = write_sharded_arrow_cache(generator, features, shard_dir)
+                all_cached = False
+                break
 
-            splits_data[sg.name] = StableDataset(
-                features=features,
-                info=instance._dataset_info,
-                shard_dir=shard_dir,
-                shard_paths=meta.shard_paths,
-                shard_row_counts=meta.shard_row_counts,
-                num_rows=meta.num_rows,
-            )
+        # 5) Cache miss: download raw files and generate caches.
+        #    Writer and backend are chosen by effective_format.
+        if not all_cached:
+            splits_data = {}
+            split_generators = instance._split_generators()
+
+            for sg in split_generators:
+                shard_dir_name = cache_fingerprint(
+                    cls.__name__,
+                    str(cls.VERSION),
+                    instance.config.name,
+                    sg.name,
+                    storage_format=effective_format,
+                )
+                shard_dir = instance._processed_cache_dir / shard_dir_name
+
+                # Per-shard FileLock so concurrent workers (e.g. multiple SLURM
+                # jobs sharing the same scratch cache) don't all race to write
+                # the same lance/arrow shard. The first into the lock builds the
+                # cache; the rest wait and find _metadata.json present.
+                shard_dir.parent.mkdir(parents=True, exist_ok=True)
+                lock_path = shard_dir.parent / (shard_dir.name + ".build.lock")
+
+                with FileLock(str(lock_path)):
+                    if has_frame_video:
+                        if not (shard_dir / "_metadata.json").exists():
+                            generator = instance._generate_examples(**sg.gen_kwargs)
+                            write_lance_video_frames_cache(
+                                generator,
+                                features,
+                                shard_dir,
+                            )
+                    elif effective_format == "lance":
+                        if not (shard_dir / "_metadata.json").exists():
+                            generator = instance._generate_examples(**sg.gen_kwargs)
+                            write_lance_cache(generator, features, shard_dir, num_encode_workers=4)
+                    else:
+                        if not (shard_dir / "_metadata.json").exists():
+                            generator = instance._generate_examples(**sg.gen_kwargs)
+                            has_images = any(isinstance(f, Image) for f in features.values())
+                            compression = None if has_images else "zstd"
+                            write_sharded_arrow_cache(
+                                generator, features, shard_dir, compression=compression, num_encode_workers=4
+                            )
+
+                opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
+                splits_data[sg.name] = StableDataset(
+                    features=features,
+                    info=instance._dataset_info,
+                    backend=opened.backend,
+                    num_rows=opened.num_rows,
+                )
 
         # 6) Return single split or dict
         if split is not None:
@@ -314,6 +490,9 @@ class BaseDatasetBuilder:
             result = splits_data[split]
         else:
             result = StableDatasetDict(splits_data)
+
+        if decode_video is not None:
+            result = result.set_video_decode(decode_video)
 
         # Expose cache locations on the returned dataset object for convenience.
         try:
@@ -328,29 +507,45 @@ class BaseDatasetBuilder:
 
 
 def bulk_download(
-    urls: Iterable[str],
+    urls: Iterable[str | DownloadInfo],
     dest_folder: str | Path,
+    checksums: dict[str, str] | None = None,
 ) -> list[Path]:
     """
     Download multiple files concurrently and return their local paths.
 
     Args:
-        urls: Iterable of URL strings to download.
+        urls: Iterable of URL strings or DownloadInfo specs to download.
         dest_folder: Destination folder for downloads.
+        checksums: Optional dict mapping primary URL -> checksum string.
 
     Returns:
         list[Path]: Local file paths in the same order as the input URLs.
     """
-    urls = list(urls)
-    num_workers = min(len(urls), os.cpu_count() or 4, 8)
+    checksums = checksums or {}
+    download_infos = []
+    for asset_spec in urls:
+        info = BaseDatasetBuilder._normalize_download_info(asset_spec)
+        if info.checksum is None and checksums.get(info.url):
+            info = DownloadInfo(
+                url=info.url,
+                fallbacks=list(info.fallbacks),
+                checksum=checksums[info.url],
+                filename=info.filename,
+            )
+        download_infos.append(info)
+    num_workers = min(len(download_infos), os.cpu_count() or 4, 8)
     if num_workers == 0:
         return []
 
     dest_folder = Path(dest_folder)
     dest_folder.mkdir(parents=True, exist_ok=True)
 
-    filenames = [os.path.basename(urlparse(url).path) for url in urls]
-    results: list[Path] = [None] * len(urls)
+    filenames = [
+        info.filename or os.path.basename(urlparse(info.url).path) or f"download_{idx}"
+        for idx, info in enumerate(download_infos)
+    ]
+    results: list[Path] = [None] * len(download_infos)
 
     with rich.progress.Progress(
         TextColumn("[progress.description]{task.description}"),
@@ -368,15 +563,20 @@ def bulk_download(
 
             with ProcessPoolExecutor(max_workers=num_workers) as executor:
                 # submit one download task per URL
-                for i in range(len(urls)):
+                for i in range(len(download_infos)):
                     task_id = f"{i}:{filenames[i]}"
+                    info = download_infos[i]
                     future = executor.submit(
                         download,
-                        urls[i],
+                        info.url,
                         dest_folder,
                         False,  # disable per-file tqdm; Rich handles progress
                         _progress,
                         task_id,
+                        info.checksum,
+                        info.fallbacks,
+                        info.filename,
+                        info.url,
                     )
                     futures.append((i, future))
 
@@ -405,87 +605,159 @@ def bulk_download(
 
 
 def download(
-    url: str,
+    url: str | DownloadInfo,
     dest_folder: str | Path | None = None,
     progress_bar: bool = True,
     _progress_dict=None,
     _task_id=None,
+    checksum: str | None = None,
+    fallbacks: list[str] | None = None,
+    filename: str | None = None,
+    cache_key_url: str | None = None,
 ) -> Path:
+    """Download a file to *dest_folder*, returning the local path.
+
+    Supports resumable downloads: if a ``.tmp`` file exists from a
+    previous interrupted attempt, an HTTP ``Range`` header is sent.
+    The server may respond with 206 (append) or 200 (start over).
+
+    *checksum*, when provided, is an ``"algorithm:hex"`` string (e.g.
+    ``"sha256:a3f8..."``).  The downloaded file is verified after
+    completion and deleted on mismatch.
+    """
+    info = BaseDatasetBuilder._normalize_download_info(url)
+    if checksum is None:
+        checksum = info.checksum
+    if fallbacks is None:
+        fallbacks = list(info.fallbacks)
+    if filename is None:
+        filename = info.filename
+    if cache_key_url is None:
+        cache_key_url = info.url
+    url = info.url
+
     if dest_folder is None:
         dest_folder = _default_dest_folder()
     dest_folder = Path(dest_folder)
     dest_folder.mkdir(parents=True, exist_ok=True)
 
-    filename = os.path.basename(urlparse(url).path)
-    p = Path(filename)
-    h = hashlib.sha256(url.encode("utf-8")).hexdigest()[:10]
+    source_url = cache_key_url or url
+    candidate_urls = [url, *(fallbacks or [])]
+    resolved_filename = filename or os.path.basename(urlparse(source_url).path)
+    p = Path(resolved_filename)
+    h = hashlib.sha256(source_url.encode("utf-8")).hexdigest()[:10]
     # Keep original extension at the end: e.g. cars196_test.0275d128da.zip
     dest = dest_folder / f"{p.stem}.{h}{p.suffix}"
     lock = dest.with_suffix(dest.suffix + ".lock")
     tmp = dest.with_suffix(dest.suffix + ".tmp")
 
     with FileLock(lock):
-        # If you trust your pipeline never leaves a partial 'dest', this is OK.
-        # Otherwise, prefer a size/checksum validation here.
+        # Existing completed downloads are treated as cache hits.
         if dest.exists():
             return dest
 
         try:
-            with requests.Session() as session:
-                session.headers.update({"User-Agent": "stable-datasets"})
-                logging.info(f"Downloading: {url}")
+            errors = []
+            total_size = 0
+            for candidate_url in candidate_urls:
+                try:
+                    with requests.Session() as session:
+                        session.headers.update({"User-Agent": "stable-datasets"})
 
-                with session.get(
-                    url,
-                    stream=True,
-                    allow_redirects=True,
-                    timeout=(10, 300),  # you can tune this
-                ) as response:
-                    response.raise_for_status()
+                        # Resume from partial download if .tmp exists
+                        existing_size = tmp.stat().st_size if tmp.exists() else 0
+                        req_headers = {}
+                        if existing_size > 0:
+                            req_headers["Range"] = f"bytes={existing_size}-"
+                            logging.info(f"Resuming download from byte {existing_size}: {candidate_url}")
+                        else:
+                            logging.info(f"Downloading: {candidate_url}")
 
-                    total_size = int(response.headers.get("content-length", 0) or 0)
-                    logging.info(f"Total size: {total_size} bytes")
+                        with session.get(
+                            candidate_url,
+                            stream=True,
+                            allow_redirects=True,
+                            timeout=(10, 300),
+                            headers=req_headers,
+                        ) as response:
+                            response.raise_for_status()
 
-                    downloaded = 0
-                    with (
-                        open(tmp, "wb") as f,
-                        tqdm(
-                            desc=dest.name,
-                            total=total_size or None,
-                            unit="B",
-                            unit_scale=True,
-                            unit_divisor=1024,
-                            disable=not progress_bar,
-                        ) as bar,
-                    ):
-                        for chunk in response.iter_content(chunk_size=8192):
-                            if not chunk:
-                                continue
-                            f.write(chunk)
-                            downloaded += len(chunk)
-                            bar.update(len(chunk))
+                            if response.status_code == 206:
+                                mode = "ab"
+                                remaining = int(response.headers.get("content-length", 0) or 0)
+                                total_size = existing_size + remaining
+                            else:
+                                mode = "wb"
+                                existing_size = 0
+                                total_size = int(response.headers.get("content-length", 0) or 0)
 
-                            if _progress_dict is not None and _task_id is not None:
-                                _progress_dict[_task_id] = {
-                                    "progress": downloaded,
-                                    "total": total_size,
-                                }
+                            logging.info(f"Total size: {total_size} bytes")
 
-            # Validate *on disk*
+                            downloaded = existing_size
+                            with (
+                                open(tmp, mode) as f,
+                                tqdm(
+                                    desc=dest.name,
+                                    total=total_size or None,
+                                    initial=existing_size,
+                                    unit="B",
+                                    unit_scale=True,
+                                    unit_divisor=1024,
+                                    disable=not progress_bar,
+                                ) as bar,
+                            ):
+                                for chunk in response.iter_content(chunk_size=8192):
+                                    if not chunk:
+                                        continue
+                                    f.write(chunk)
+                                    downloaded += len(chunk)
+                                    bar.update(len(chunk))
+
+                                    if _progress_dict is not None and _task_id is not None:
+                                        _progress_dict[_task_id] = {
+                                            "progress": downloaded,
+                                            "total": total_size,
+                                        }
+                    break
+                except Exception as candidate_error:
+                    errors.append((candidate_url, candidate_error))
+                    continue
+            else:
+                attempted = ", ".join(url for url, _ in errors)
+                raise RuntimeError(f"Failed to download from all candidate URLs: {attempted}") from errors[-1][1]
+
+            # Validate size on disk
             if total_size and tmp.stat().st_size != total_size:
                 raise RuntimeError(f"Download incomplete for {url}: got {tmp.stat().st_size} of {total_size} bytes")
+
+            # Validate checksum if provided
+            if checksum:
+                algo, expected = checksum.split(":", 1)
+                h_check = hashlib.new(algo)
+                with open(tmp, "rb") as f:
+                    while True:
+                        block = f.read(65536)
+                        if not block:
+                            break
+                        h_check.update(block)
+                if h_check.hexdigest() != expected:
+                    tmp.unlink()
+                    raise ValueError(f"Checksum mismatch for {url}: expected {expected}, got {h_check.hexdigest()}")
 
             tmp.replace(dest)  # atomic rename
             logging.info(f"Download finished: {dest}")
             return dest
 
         except Exception as e:
-            # Clean up temp file on failure
-            try:
-                if tmp.exists():
-                    tmp.unlink()
-            except Exception:
-                pass
+            # Keep .tmp for resumable errors (network, timeout, incomplete).
+            # Only delete on checksum/validation failure (ValueError) where
+            # the data is known to be corrupt and cannot be resumed.
+            if isinstance(e, ValueError):
+                try:
+                    if tmp.exists():
+                        tmp.unlink()
+                except Exception:
+                    pass
             logging.error(f"Error downloading {url}: {e}")
             raise
         finally:

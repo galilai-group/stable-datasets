@@ -1,3 +1,5 @@
+"""DCASE 2019 task 4 synthetic sound-event detection loader."""
+
 import io
 import os
 import zipfile

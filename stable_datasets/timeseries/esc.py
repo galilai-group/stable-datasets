@@ -1,3 +1,5 @@
+"""ESC-10/ESC-50 environmental sound classification loader."""
+
 import io
 import os
 import zipfile

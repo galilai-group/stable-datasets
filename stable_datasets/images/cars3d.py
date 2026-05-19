@@ -5,7 +5,7 @@ import numpy as np
 import scipy.io
 from PIL import Image as PILImage
 
-from stable_datasets.schema import DatasetInfo, Features, Sequence, Value, Version
+from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Sequence, Value, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -17,20 +17,20 @@ class Cars3D(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://github.com/google-research/disentanglement_lib/tree/master",
-        "assets": {
-            "train": "http://www.scottreed.info/files/nips2015-analogy-data.tar.gz",
+    SOURCE = DatasetSource(
+        homepage="https://github.com/google-research/disentanglement_lib/tree/master",
+        assets={
+            "train": DownloadInfo(url="http://www.scottreed.info/files/nips2015-analogy-data.tar.gz"),
         },
-        "license": "Apache-2.0",
-        "citation": """@inproceedings{locatello2019challenging,
+        license="Apache-2.0",
+        citation="""@inproceedings{locatello2019challenging,
   title={Challenging Common Assumptions in the Unsupervised Learning of Disentangled Representations},
   author={Locatello, Francesco and Bauer, Stefan and Lucic, Mario and Raetsch, Gunnar and Gelly, Sylvain and Sch{\"o}lkopf, Bernhard and Bachem, Olivier},
   booktitle={International Conference on Machine Learning},
   pages={4114--4124},
   year={2019}
 }""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

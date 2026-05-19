@@ -121,9 +121,13 @@ Usage Example
 
 .. code-block:: python
 
-    # Access video frames (requires torchcodec)
+    # sample["video"] is a lazy VideoRef; decode it yourself or use
+    # dataset-level video decode configuration.
     video = sample["video"]
-    frame = video.get_frame_at(0)  # Get first frame
+    from torchcodec.decoders import VideoDecoder
+
+    decoder = VideoDecoder(str(video.path))
+    frame = decoder.get_frame_at(0.0)
     print(f"Frame shape: {frame.data.shape}")
 
 Requirements

@@ -8,14 +8,13 @@ import numpy as np
 import pytest
 from PIL import Image as PILImage
 
-from stable_datasets.arrow_dataset import StableDataset
 from stable_datasets.cache import (
-    _encode_image,
     read_shard,
     read_sharded_cache_meta,
     validate_sharded_cache,
     write_sharded_arrow_cache,
 )
+from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import (
     ClassLabel,
     DatasetInfo,
@@ -83,6 +82,8 @@ class TestShardedWriter:
         assert meta_path.exists()
         raw = json.loads(meta_path.read_text())
         assert raw["cache_format_version"] == 1
+        assert raw["format"] == "arrow"
+        assert raw["layout"] == "arrow-shards"
         assert raw["num_rows"] == 50
         assert raw["num_shards"] == meta.num_shards
         assert len(raw["shard_filenames"]) == meta.num_shards
@@ -113,7 +114,6 @@ class TestShardedWriter:
         ds = StableDataset(
             features=features,
             info=info,
-            shard_dir=cache_dir,
             shard_paths=meta.shard_paths,
             shard_row_counts=meta.shard_row_counts,
             num_rows=meta.num_rows,
@@ -165,7 +165,7 @@ class TestImageEncoding:
         img.save(buf, format="JPEG")
         jpeg_bytes = buf.getvalue()
 
-        result = _encode_image(jpeg_bytes)
+        result = Image().encode(jpeg_bytes)
         assert result == jpeg_bytes
         assert result[:2] == b"\xff\xd8"  # JPEG magic
 
@@ -176,18 +176,18 @@ class TestImageEncoding:
         img.save(str(path), format="JPEG")
         reopened = PILImage.open(str(path))
 
-        result = _encode_image(reopened)
+        result = Image().encode(reopened)
         assert result[:2] == b"\xff\xd8"  # JPEG magic, not PNG
 
     def test_pil_png_for_rgba(self, tmp_path):
         # RGBA images should always use PNG even if source was JPEG
         img = PILImage.new("RGBA", (4, 4), color=(128, 64, 32, 255))
-        result = _encode_image(img)
+        result = Image().encode(img)
         assert result[:4] == b"\x89PNG"
 
     def test_numpy_array_to_png(self):
         arr = np.zeros((4, 4, 3), dtype=np.uint8)
-        result = _encode_image(arr)
+        result = Image().encode(arr)
         assert result[:4] == b"\x89PNG"
 
     def test_file_path_reads_raw_bytes(self, tmp_path):
@@ -196,11 +196,11 @@ class TestImageEncoding:
         img.save(str(path))
         with open(path, "rb") as f:
             expected = f.read()
-        result = _encode_image(str(path))
+        result = Image().encode(str(path))
         assert result == expected
 
     def test_none_returns_none(self):
-        assert _encode_image(None) is None
+        assert Image().encode(None) is None
 
 
 # Cache validation tests
@@ -260,7 +260,6 @@ def _make_sharded_ds(tmp_path, n=50, shard_size_bytes=512, batch_size=10):
     return StableDataset(
         features=features,
         info=info,
-        shard_dir=cache_dir,
         shard_paths=meta.shard_paths,
         shard_row_counts=meta.shard_row_counts,
         num_rows=meta.num_rows,
@@ -289,14 +288,17 @@ class TestShardedDataset:
         with pytest.raises(IndexError):
             ds[10]
 
-    def test_getitem_loads_single_shard(self, tmp_path):
+    def test_getitem_does_not_force_full_table(self, tmp_path):
         ds, meta = _make_sharded_ds(tmp_path, n=200, shard_size_bytes=128, batch_size=5)
         assert meta.num_shards >= 2
-        # Access first row (shard 0)
+        # Table not loaded at construction
+        assert ds._backend._table is None
+        # Access first row routes through shard, does NOT force full concat
         ds[0]
-        assert 0 in ds._shard_lru
-        # Initially only shard 0 should be loaded
-        assert len(ds._shard_lru) == 1
+        assert ds._backend._table is None
+        # Only .table property forces full materialization
+        _ = ds.table
+        assert ds._backend._table is not None
 
     def test_iter_yields_all(self, tmp_path):
         ds, _ = _make_sharded_ds(tmp_path, n=30)
@@ -332,8 +334,8 @@ class TestShardedDataset:
     def test_pickle_roundtrip(self, tmp_path):
         ds, _ = _make_sharded_ds(tmp_path, n=20)
         ds2 = pickle.loads(pickle.dumps(ds))
-        assert ds2._table is None
-        assert ds2._shard_paths is not None
+        assert ds2._backend._table is None
+        assert ds2._backend._shard_paths is not None
         assert len(ds2) == 20
         for i in range(20):
             assert ds2[i]["x"] == i
@@ -344,16 +346,11 @@ class TestShardedDataset:
         assert isinstance(ds2.features["label"], ClassLabel)
         assert ds2.features["label"].names == ["a", "b"]
 
-    def test_lru_eviction(self, tmp_path):
+    def test_concat_table_covers_all_shards(self, tmp_path):
         ds, meta = _make_sharded_ds(tmp_path, n=200, shard_size_bytes=128, batch_size=5)
-        assert meta.num_shards > 4  # Need more shards than LRU size
-        # Access a row in each shard
-        for i in range(meta.num_shards):
-            offset = sum(meta.shard_row_counts[:i])
-            if offset < 100:
-                ds[offset]
-        # LRU should have capped at max_open_shards (default 4)
-        assert len(ds._shard_lru) <= 4
+        assert meta.num_shards > 4
+        # Explicit .table forces full concat of all shards
+        assert ds.table.num_rows == 200
 
 
 # Builder integration tests
@@ -378,7 +375,7 @@ class TestBuilderShardedIntegration:
     def test_builder_creates_sharded_cache(self, tmp_path):
         ds = _TinyShardedBuilder(split="train", processed_cache_dir=str(tmp_path))
         assert isinstance(ds, StableDataset)
-        assert ds._is_shard_backed
+        assert ds._backend.is_file_backed
         assert len(ds) == 20
         for i in range(20):
             assert ds[i]["x"] == i
@@ -394,3 +391,106 @@ class TestBuilderShardedIntegration:
         for f, mtime in mtimes.items():
             assert f.stat().st_mtime == mtime
         assert len(ds2) == 20
+
+
+class TestCompression:
+    def test_write_with_zstd_compression(self, tmp_path):
+        features = _simple_features()
+        cache_dir = tmp_path / "compressed_cache"
+        meta = write_sharded_arrow_cache(
+            _simple_gen(50),
+            features,
+            cache_dir,
+            batch_size=10,
+            compression="zstd",
+        )
+        assert meta.compression == "zstd"
+        assert meta.num_rows == 50
+
+    def test_compressed_shard_readable_via_mmap(self, tmp_path):
+        features = _simple_features()
+        cache_dir = tmp_path / "comp_read"
+        meta = write_sharded_arrow_cache(
+            _simple_gen(20),
+            features,
+            cache_dir,
+            batch_size=10,
+            compression="zstd",
+        )
+        # Read back through StableDataset (uses mmap)
+        info = DatasetInfo(features=features)
+        ds = StableDataset(
+            features=features,
+            info=info,
+            shard_paths=meta.shard_paths,
+            shard_row_counts=meta.shard_row_counts,
+            num_rows=meta.num_rows,
+        )
+        for i in range(20):
+            assert ds[i]["x"] == i
+
+    def test_uncompressed_cache_reports_no_compression(self, tmp_path):
+        features = _simple_features()
+        cache_dir = tmp_path / "uncompressed"
+        write_sharded_arrow_cache(
+            _simple_gen(10),
+            features,
+            cache_dir,
+            batch_size=10,
+        )
+        loaded = read_sharded_cache_meta(cache_dir)
+        assert loaded.compression is None
+        assert loaded.num_rows == 10
+
+    def test_metadata_includes_compression_key(self, tmp_path):
+        features = _simple_features()
+        cache_dir = tmp_path / "comp_meta"
+        write_sharded_arrow_cache(
+            _simple_gen(10),
+            features,
+            cache_dir,
+            batch_size=10,
+            compression="zstd",
+        )
+        raw = json.loads((cache_dir / "_metadata.json").read_text())
+        assert raw["compression"] == "zstd"
+
+    def test_parallel_encode_matches_serial(self, tmp_path):
+        features = _simple_features()
+        # Serial
+        cache_serial = tmp_path / "serial"
+        meta_s = write_sharded_arrow_cache(
+            _simple_gen(30),
+            features,
+            cache_serial,
+            batch_size=10,
+            num_encode_workers=0,
+        )
+        # Parallel
+        cache_parallel = tmp_path / "parallel"
+        meta_p = write_sharded_arrow_cache(
+            _simple_gen(30),
+            features,
+            cache_parallel,
+            batch_size=10,
+            num_encode_workers=2,
+        )
+        assert meta_s.num_rows == meta_p.num_rows
+        # Verify same data
+        info = DatasetInfo(features=features)
+        ds_s = StableDataset(
+            features=features,
+            info=info,
+            shard_paths=meta_s.shard_paths,
+            shard_row_counts=meta_s.shard_row_counts,
+            num_rows=meta_s.num_rows,
+        )
+        ds_p = StableDataset(
+            features=features,
+            info=info,
+            shard_paths=meta_p.shard_paths,
+            shard_row_counts=meta_p.shard_row_counts,
+            num_rows=meta_p.num_rows,
+        )
+        for i in range(30):
+            assert ds_s[i] == ds_p[i]

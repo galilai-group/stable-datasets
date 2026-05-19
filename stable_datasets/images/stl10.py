@@ -2,7 +2,7 @@ import tarfile
 
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -12,26 +12,26 @@ class STL10(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
-    SOURCE = {
-        "homepage": "https://cs.stanford.edu/~acoates/stl10/",
-        "assets": {
-            "train": "https://cs.stanford.edu/~acoates/stl10/stl10_binary.tar.gz",
-            "test": "https://cs.stanford.edu/~acoates/stl10/stl10_binary.tar.gz",
-            "unlabeled": "https://cs.stanford.edu/~acoates/stl10/stl10_binary.tar.gz",
+    SOURCE = DatasetSource(
+        homepage="https://cs.stanford.edu/~acoates/stl10/",
+        assets={
+            "train": DownloadInfo(url="https://cs.stanford.edu/~acoates/stl10/stl10_binary.tar.gz"),
+            "test": DownloadInfo(url="https://cs.stanford.edu/~acoates/stl10/stl10_binary.tar.gz"),
+            "unlabeled": DownloadInfo(url="https://cs.stanford.edu/~acoates/stl10/stl10_binary.tar.gz"),
         },
-        "citation": """@article{coates2011analysis,
+        citation="""@article{coates2011analysis,
                         title={An analysis of single-layer networks in unsupervised feature learning},
                         author={Coates, Adam and Ng, Andrew Y},
                         journal={AISTATS},
                         year={2011}}""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(
             description="STL-10 dataset for unsupervised feature learning. Includes labeled and unlabeled images.",
             features=Features(
                 {
-                    "image": Image(),
+                    "image": Image(encode_format="JPEG"),
                     "label": ClassLabel(
                         names=["airplane", "bird", "car", "cat", "deer", "dog", "horse", "monkey", "ship", "truck"]
                     ),

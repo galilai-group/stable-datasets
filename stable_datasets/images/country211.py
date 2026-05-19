@@ -4,7 +4,7 @@ import tarfile
 from PIL import Image as PILImage
 from tqdm import tqdm
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -17,14 +17,14 @@ class Country211(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://github.com/openai/CLIP/blob/main/data/country211.md",
-        "assets": {
-            "train": "https://openaipublic.azureedge.net/clip/data/country211.tgz",
-            "valid": "https://openaipublic.azureedge.net/clip/data/country211.tgz",
-            "test": "https://openaipublic.azureedge.net/clip/data/country211.tgz",
+    SOURCE = DatasetSource(
+        homepage="https://github.com/openai/CLIP/blob/main/data/country211.md",
+        assets={
+            "train": DownloadInfo(url="https://openaipublic.azureedge.net/clip/data/country211.tgz"),
+            "valid": DownloadInfo(url="https://openaipublic.azureedge.net/clip/data/country211.tgz"),
+            "test": DownloadInfo(url="https://openaipublic.azureedge.net/clip/data/country211.tgz"),
         },
-        "citation": """@inproceedings{radford2021learning,
+        citation="""@inproceedings{radford2021learning,
                 title     = {Learning transferable visual models from natural language supervision},
                 author    = {Radford, Alec and Kim, Jong Wook and Hallacy, Chris and Ramesh, Aditya and Goh, Gabriel and Agarwal, Sandhini and Sastry, Girish and Askell, Amanda and Mishkin, Pamela and Clark, Jack and others},
                 booktitle = {International conference on machine learning},
@@ -32,7 +32,7 @@ class Country211(BaseDatasetBuilder):
                 year      = {2021},
                 organization = {PmLR} }
         """,
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

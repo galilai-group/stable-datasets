@@ -4,7 +4,16 @@ import zipfile
 import numpy as np
 import scipy.io as sio
 
-from stable_datasets.schema import BuilderConfig, ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.schema import (
+    BuilderConfig,
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Image,
+    Version,
+)
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -34,9 +43,9 @@ class EMNIST(BaseDatasetBuilder):
     VERSION = Version("1.0.0")
 
     # Single source-of-truth for dataset provenance + download locations.
-    SOURCE = {
-        "homepage": "https://www.nist.gov/itl/iad/image-group/emnist-dataset",
-        "citation": """@misc{cohen2017emnistextensionmnisthandwritten,
+    SOURCE = DatasetSource(
+        homepage="https://www.nist.gov/itl/iad/image-group/emnist-dataset",
+        citation="""@misc{cohen2017emnistextensionmnisthandwritten,
                         title={EMNIST: an extension of MNIST to handwritten letters},
                         author={Gregory Cohen and Saeed Afshar and Jonathan Tapson and André van Schaik},
                         year={2017},
@@ -45,11 +54,11 @@ class EMNIST(BaseDatasetBuilder):
                         primaryClass={cs.CV},
                         url={https://arxiv.org/abs/1702.05373},
             }""",
-        "assets": {
-            "train": "https://biometrics.nist.gov/cs_links/EMNIST/matlab.zip",
-            "test": "https://biometrics.nist.gov/cs_links/EMNIST/matlab.zip",
+        assets={
+            "train": DownloadInfo(url="https://biometrics.nist.gov/cs_links/EMNIST/matlab.zip"),
+            "test": DownloadInfo(url="https://biometrics.nist.gov/cs_links/EMNIST/matlab.zip"),
         },
-    }
+    )
 
     BUILDER_CONFIGS = [
         EMNISTConfig(name="byclass", variant="byclass"),

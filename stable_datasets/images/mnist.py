@@ -3,7 +3,7 @@ import struct
 
 import numpy as np
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
@@ -13,21 +13,29 @@ class MNIST(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "http://yann.lecun.com/exdb/mnist/",
-        "citation": """@misc{lecun1998mnist,
+    SOURCE = DatasetSource(
+        homepage="http://yann.lecun.com/exdb/mnist/",
+        citation="""@misc{lecun1998mnist,
                           author={Yann LeCun and Corinna Cortes and Christopher J.C. Burges},
                           title={The MNIST database of handwritten digits},
                           year={1998},
                           url={http://yann.lecun.com/exdb/mnist/}
                         }""",
-        "assets": {
-            "train_images": "https://storage.googleapis.com/cvdf-datasets/mnist/train-images-idx3-ubyte.gz",
-            "train_labels": "https://storage.googleapis.com/cvdf-datasets/mnist/train-labels-idx1-ubyte.gz",
-            "test_images": "https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz",
-            "test_labels": "https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz",
+        assets={
+            "train_images": DownloadInfo(
+                url="https://storage.googleapis.com/cvdf-datasets/mnist/train-images-idx3-ubyte.gz"
+            ),
+            "train_labels": DownloadInfo(
+                url="https://storage.googleapis.com/cvdf-datasets/mnist/train-labels-idx1-ubyte.gz"
+            ),
+            "test_images": DownloadInfo(
+                url="https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz"
+            ),
+            "test_labels": DownloadInfo(
+                url="https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz"
+            ),
         },
-    }
+    )
 
     def _info(self):
         return DatasetInfo(

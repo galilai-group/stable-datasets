@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, download
 
@@ -27,18 +27,18 @@ class Imagenette(BaseDatasetBuilder):
     """Imagenette: 10 easily classified classes from ImageNet."""
 
     VERSION = Version("2.0.0")
-    SOURCE = {
-        "homepage": "https://github.com/fastai/imagenette",
-        "assets": {
-            "archive": "https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz",
+    SOURCE = DatasetSource(
+        homepage="https://github.com/fastai/imagenette",
+        assets={
+            "archive": DownloadInfo(url="https://s3.amazonaws.com/fast-ai-imageclas/imagenette2.tgz"),
         },
-        "citation": """@misc{howard2019imagenette,
+        citation="""@misc{howard2019imagenette,
             author={Jeremy Howard},
             title={Imagenette: A smaller subset of 10 easily classified classes from ImageNet},
             year={2019},
             url={https://github.com/fastai/imagenette}
         }""",
-    }
+    )
 
     def __init__(self, streaming: bool = False, **kwargs):
         self.streaming = streaming
@@ -47,7 +47,7 @@ class Imagenette(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="Imagenette with train/validation splits.",
-            features=Features({"image": Image(), "label": ClassLabel(names=_IN10_CLASSES)}),
+            features=Features({"image": Image(encode_format="JPEG"), "label": ClassLabel(names=_IN10_CLASSES)}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

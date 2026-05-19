@@ -2,9 +2,7 @@ import io
 import tarfile
 from pathlib import Path
 
-from PIL import Image as PILImage
-
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, download
 
@@ -27,8 +25,8 @@ class _ImageNetArchiveMixin:
                 if image_file is None:
                     continue
 
-                image = PILImage.open(io.BytesIO(image_file.read())).convert("RGB")
-                yield f"{class_name}/{image_member.name}", {"image": image, "label": label}
+                image_bytes = image_file.read()
+                yield f"{class_name}/{image_member.name}", {"image": image_bytes, "label": label}
 
     def _iter_train_examples(self, archive_path: Path, class_limit: int | None):
         if self.streaming:
@@ -65,16 +63,16 @@ class _ImageNetArchiveMixin:
 
 class ImageNet1K(_ImageNetArchiveMixin, BaseDatasetBuilder):
     VERSION = Version("2.0.0")
-    SOURCE = {
-        "homepage": "https://www.image-net.org/challenges/LSVRC/2012/",
-        "assets": {"train": "https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar"},
-        "citation": """@article{deng2009imagenet,
+    SOURCE = DatasetSource(
+        homepage="https://www.image-net.org/challenges/LSVRC/2012/",
+        assets={"train": DownloadInfo(url="https://image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar")},
+        citation="""@article{deng2009imagenet,
         title={ImageNet: A large-scale hierarchical image database},
         author={Deng, Jia and others},
         journal={CVPR},
         year={2009}
     }""",
-    }
+    )
 
     def __init__(self, streaming: bool = True, **kwargs):
         self.streaming = streaming
@@ -83,7 +81,9 @@ class ImageNet1K(_ImageNetArchiveMixin, BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="ImageNet-1K training split in TAR format with optional streaming.",
-            features=Features({"image": Image(), "label": ClassLabel(names=_default_class_names(1000))}),
+            features=Features(
+                {"image": Image(encode_format="JPEG"), "label": ClassLabel(names=_default_class_names(1000))}
+            ),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],

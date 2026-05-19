@@ -1,111 +1,156 @@
-"""Legacy FSDKaggle2018 loader (to be refactored into a BaseDatasetBuilder).
-
-This module was moved under `stable_datasets.timeseries` to align the repository layout.
-It still exposes the original imperative `FSDKaggle2018.load(...)` API for now.
-"""
-
+import csv
 import io
-import os
-import time
-import urllib.request
 import zipfile
 
 import numpy as np
 from scipy.io.wavfile import read as wav_read
-from tqdm import tqdm
+
+from stable_datasets.schema import (
+    ClassLabel,
+    DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
+    Features,
+    Sequence,
+    Value,
+    Version,
+)
+from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
-class FSDKaggle2018:
-    """FSDKaggle2018 Sound Classification
-    https://zenodo.org/record/2552860
-    """
+class FSDKaggle2018(BaseDatasetBuilder):
+    """FSDKaggle2018 sound classification dataset."""
 
-    def download(path):
-        # Check if directory exists
-        if not os.path.isdir(path + "FSDKaggle2018"):
-            print("\tCreating FSDKaggle2018 Directory")
-            os.mkdir(path + "FSDKaggle2018")
+    VERSION = Version("1.0.0")
+    SOURCE = DatasetSource(
+        homepage="https://zenodo.org/records/2552860",
+        assets={
+            "train_audio": DownloadInfo(
+                url="https://zenodo.org/record/2552860/files/FSDKaggle2018.audio_train.zip?download=1",
+                fallbacks=["https://zenodo.org/records/2552860/files/FSDKaggle2018.audio_train.zip"],
+                filename="FSDKaggle2018.audio_train.zip",
+            ),
+            "test_audio": DownloadInfo(
+                url="https://zenodo.org/record/2552860/files/FSDKaggle2018.audio_test.zip?download=1",
+                fallbacks=["https://zenodo.org/records/2552860/files/FSDKaggle2018.audio_test.zip"],
+                filename="FSDKaggle2018.audio_test.zip",
+            ),
+            "meta": DownloadInfo(
+                url="https://zenodo.org/record/2552860/files/FSDKaggle2018.meta.zip?download=1",
+                fallbacks=["https://zenodo.org/records/2552860/files/FSDKaggle2018.meta.zip"],
+                filename="FSDKaggle2018.meta.zip",
+            ),
+        },
+        citation="""@dataset{fonseca2019fsdkaggle2018,
+                         title={FSDKaggle2018},
+                         author={Fonseca, Eduardo and Plakal, Manoj and Font, Frederic and Ellis, Daniel P.W. and Serra, Xavier},
+                         year={2019},
+                         publisher={Zenodo},
+                         doi={10.5281/zenodo.2552860}}""",
+    )
 
-        url = "https://zenodo.org/record/2552860/files/FSDKaggle2018.audio_test.zip?download=1"
-        # Check if file exists
-        if not os.path.exists(path + "FSDKaggle2018/audio_test.zip"):
-            print("\tDownloading test set")
-            urllib.request.urlretrieve(url, path + "FSDKaggle2018/audio_test.zip")
-        url = "https://zenodo.org/record/2552860/files/FSDKaggle2018.audio_train.zip?download=1"
-        if not os.path.exists(path + "FSDKaggle2018/audio_train.zip"):
-            print("\tDownloading train set")
-            urllib.request.urlretrieve(url, path + "FSDKaggle2018/audio_train.zip")
-        url = "https://zenodo.org/record/2552860/files/FSDKaggle2018.meta.zip?download=1"
-        if not os.path.exists(path + "FSDKaggle2018/meta.zip"):
-            print("\tDownloading meta set")
-            urllib.request.urlretrieve(url, path + "FSDKaggle2018/meta.zip")
-
-    def load(path=None):
-        if path is None:
-            path = os.environ["DATASET_PATH"]
-        FSDKaggle2018.download(path)
-        t0 = time.time()
-
-        f = zipfile.ZipFile(path + "FSDKaggle2018/audio_train.zip")
-        wavs_train = []
-        names_train = []
-        for filename in tqdm(f.namelist(), ascii=True, desc="Loading train set"):
-            if ".wav" not in filename:
-                continue
-            wavfile = f.read(filename)
-            byt = io.BytesIO(wavfile)
-            wavs_train.append(wav_read(byt)[1].astype("float32"))
-            names_train.append(filename.split("/")[-1])
-
-        f = zipfile.ZipFile(path + "FSDKaggle2018/audio_test.zip")
-        wavs_test = []
-        names_test = []
-        for filename in tqdm(f.namelist(), ascii=True, desc="Loading test set"):
-            if ".wav" not in filename:
-                continue
-            wavfile = f.read(filename)
-            byt = io.BytesIO(wavfile)
-            wavs_test.append(wav_read(byt)[1].astype("float32"))
-            names_test.append(filename.split("/")[-1])
-
-        f = zipfile.ZipFile(path + "FSDKaggle2018/meta.zip")
-        meta_train = np.loadtxt(
-            io.BytesIO(f.read("FSDKaggle2018.meta/train_post_competition.csv")),
-            delimiter=",",
-            skiprows=1,
-            dtype="str",
-        )
-        meta_test = np.loadtxt(
-            io.BytesIO(f.read("FSDKaggle2018.meta/test_post_competition_scoring_clips.csv")),
-            delimiter=",",
-            skiprows=1,
-            dtype="str",
+    def _info(self):
+        return DatasetInfo(
+            description="FSDKaggle2018 audio classification dataset with official train/test splits.",
+            features=Features(
+                {
+                    "series": Sequence(Sequence(Value("float32"))),
+                    "label": ClassLabel(num_classes=41),
+                    "filename": Value("string"),
+                    "fsid": Value("string"),
+                    "verified": Value("string"),
+                    "usage": Value("string"),
+                }
+            ),
+            supervised_keys=("series", "label"),
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
         )
 
-        filenames = list(meta_train[:, 0])
-        labels_train, verified, fsid_train = [], [], []
-        for i in range(len(wavs_train)):
-            index = filenames.index(names_train[i])
-            labels_train.append(meta_train[index][1])
-            verified.append(meta_train[index][2])
-            fsid_train.append(meta_train[index][3])
+    def _split_generators(self):
+        source = self._source()
+        download_dir = getattr(self, "_raw_download_dir", None)
+        if download_dir is None:
+            raise RuntimeError("Expected _raw_download_dir to be set before split generation.")
 
-        filenames = list(meta_test[:, 0])
-        labels_test, usage, fsid_test = [], [], []
-        for i in range(len(wavs_test)):
-            index = filenames.index(names_test[i])
-            labels_test.append(meta_test[index][1])
-            usage.append(meta_test[index][2])
-            fsid_test.append(meta_test[index][3])
-        dataset = {
-            "wavs_train": wavs_train,
-            "labels_train": labels_train,
-            "verified_train": verified,
-            "fsid_train": fsid_train,
-            "wavs_test": wavs_test,
-            "labels_test": labels_test,
-            "usage_test": usage,
-            "fsid_test": fsid_test,
+        train_audio, test_audio, meta = bulk_download(
+            [
+                self._normalize_download_info(source["assets"]["train_audio"], asset_name="train_audio"),
+                self._normalize_download_info(source["assets"]["test_audio"], asset_name="test_audio"),
+                self._normalize_download_info(source["assets"]["meta"], asset_name="meta"),
+            ],
+            dest_folder=download_dir,
+        )
+        return [
+            SplitGenerator(
+                name=Split.TRAIN,
+                gen_kwargs={"audio_path": train_audio, "meta_path": meta, "split": "train"},
+            ),
+            SplitGenerator(
+                name=Split.TEST,
+                gen_kwargs={"audio_path": test_audio, "meta_path": meta, "split": "test"},
+            ),
+        ]
+
+    def _candidate_splits(self) -> list:
+        return [Split.TRAIN, Split.TEST]
+
+    def _generate_examples(self, audio_path, meta_path, split):
+        metadata = _load_metadata(meta_path)
+        label_to_id = {
+            name: idx for idx, name in enumerate(sorted({row["label"] for rows in metadata.values() for row in rows}))
         }
-        print(f"Dataset FSDKaggle2018 loaded in {time.time() - t0:.2f}s.")
-        return dataset
+        split_rows = {row["filename"]: row for row in metadata[split]}
+
+        with zipfile.ZipFile(audio_path) as archive:
+            for member in archive.namelist():
+                if not member.lower().endswith(".wav"):
+                    continue
+                filename = member.rsplit("/", 1)[-1]
+                if filename not in split_rows:
+                    continue
+                row = split_rows[filename]
+                with archive.open(member) as fh:
+                    sample_rate, wav = wav_read(io.BytesIO(fh.read()))
+                del sample_rate
+                series = np.asarray(wav, dtype="float32")
+                if series.ndim == 1:
+                    series = series[:, None]
+
+                yield (
+                    filename,
+                    {
+                        "series": series,
+                        "label": label_to_id[row["label"]],
+                        "filename": filename,
+                        "fsid": row.get("fsid", ""),
+                        "verified": row.get("verified", ""),
+                        "usage": row.get("usage", ""),
+                    },
+                )
+
+
+def _load_metadata(meta_path) -> dict[str, list[dict[str, str]]]:
+    members = {
+        "train": "FSDKaggle2018.meta/train_post_competition.csv",
+        "test": "FSDKaggle2018.meta/test_post_competition_scoring_clips.csv",
+    }
+    out = {}
+    with zipfile.ZipFile(meta_path) as archive:
+        for split, member in members.items():
+            with archive.open(member) as fh:
+                rows = list(csv.DictReader(io.TextIOWrapper(fh, encoding="utf-8")))
+            normalized = []
+            for row in rows:
+                normalized.append(
+                    {
+                        "filename": row["fname"],
+                        "label": row["label"],
+                        "verified": row.get("manually_verified", ""),
+                        "usage": row.get("usage", ""),
+                        "fsid": row.get("fsID", ""),
+                    }
+                )
+            out[split] = normalized
+    return out

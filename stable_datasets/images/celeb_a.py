@@ -6,7 +6,7 @@ import pandas as pd
 from PIL import Image
 from tqdm import tqdm
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Sequence, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Sequence, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
@@ -20,20 +20,24 @@ class CelebA(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html",
-        "citation": """@inproceedings{liu2015faceattributes,
+    SOURCE = DatasetSource(
+        homepage="http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html",
+        citation="""@inproceedings{liu2015faceattributes,
                          title = {Deep Learning Face Attributes in the Wild},
                          author = {Liu, Ziwei and Luo, Ping and Wang, Xiaogang and Tang, Xiaoou},
                          booktitle = {Proceedings of International Conference on Computer Vision (ICCV)},
                          month = {December},
                          year = {2015}}""",
-        "assets": {
-            "archive": "https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pZjFTYXZWM3FlRnM",
-            "attributes": "https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pblRyaVFSWGxPY0U",
-            "partition": "https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pY0NSMzRuSXJEVkk",
+        assets={
+            "archive": DownloadInfo(url="https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pZjFTYXZWM3FlRnM"),
+            "attributes": DownloadInfo(
+                url="https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pblRyaVFSWGxPY0U"
+            ),
+            "partition": DownloadInfo(
+                url="https://drive.google.com/uc?export=download&id=0B7EVK8r0v71pY0NSMzRuSXJEVkk"
+            ),
         },
-    }
+    )
 
     def _info(self):
         return DatasetInfo(
@@ -67,7 +71,7 @@ class CelebA(BaseDatasetBuilder):
         for key, filename in asset_filenames.items():
             dest = cache_dir / filename
             if not dest.exists():
-                gdown.download(assets[key], str(dest), quiet=False)
+                gdown.download(self._normalize_download_info(assets[key], asset_name=key).url, str(dest), quiet=False)
             paths[key] = dest
 
         archive_path = paths["archive"]

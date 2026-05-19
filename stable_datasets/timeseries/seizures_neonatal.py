@@ -1,72 +1,91 @@
-import os
+from pathlib import Path
 
-from scipy.io import loadmat
+import numpy as np
 
-# import mne
-from tqdm import tqdm
-
-from ..utils import download_dataset
-
-
-_urls = {"https://zenodo.org/record/2547147/files/annotations_2017.mat?download=1": "annotations_2017.mat"}
-_urls.update({f"https://zenodo.org/record/2547147/files/eeg{i}.edf?download=1": f"eeg{i}.edf" for i in range(1, 80)})
-
-_name = "seizures_neonatal"
+from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Sequence, Value, Version
+from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
-def load(path=None):
-    """A dataset of neonatal EEG recordings with seizures annotations
+class SeizuresNeonatal(BaseDatasetBuilder):
+    """Neonatal EEG recordings with expert seizure annotations."""
 
-    source: https://zenodo.org/record/2547147
+    VERSION = Version("1.0.0")
+    SOURCE = DatasetSource(
+        homepage="https://zenodo.org/records/2547147",
+        assets={
+            "annotations": DownloadInfo(
+                url="https://zenodo.org/record/2547147/files/annotations_2017.mat?download=1",
+                fallbacks=["https://zenodo.org/records/2547147/files/annotations_2017.mat"],
+                filename="annotations_2017.mat",
+            ),
+            **{
+                f"eeg{i}": DownloadInfo(
+                    url=f"https://zenodo.org/record/2547147/files/eeg{i}.edf?download=1",
+                    fallbacks=[f"https://zenodo.org/records/2547147/files/eeg{i}.edf"],
+                    filename=f"eeg{i}.edf",
+                )
+                for i in range(1, 80)
+            },
+        },
+        citation="See dataset homepage.",
+    )
 
-    Neonatal seizures are a common emergency in the neonatal intensive care unit
-    (NICU). There are many questions yet to be answered regarding the
-    temporal/spatial characteristics of seizures from different pathologies,
-    response to medication, effects on neurodevelopment and optimal detection.
-    This dataset contains EEG recordings from human neonates and the visual
-    interpretation of the EEG by the human expert. Multi-channel EEG was
-    recorded from 79 term neonates admitted to the neonatal intensive care unit
-    (NICU) at the Helsinki University Hospital. The median recording duration
-    was 74 minutes (IQR: 64 to 96 minutes). EEGs were annotated by three experts
-    for the presence of seizures. An average of 460 seizures were annotated per
-    expert in the dataset, 39 neonates had seizures by consensus and 22 were
-    seizure free by consensus. The dataset can be used as a reference set of
-    neonatal seizures, for the development of automated methods of seizure
-    detection and other EEG analysis, as well as for the analysis of
-    inter-observer agreement.
-    Parameters
-    ----------
+    def _info(self):
+        return DatasetInfo(
+            description="Multichannel neonatal EEG recordings with expert seizure annotations.",
+            features=Features(
+                {
+                    "series": Sequence(Sequence(Value("float32"))),
+                    "annotations": Sequence(Sequence(Value("int32"))),
+                    "subject_id": Value("int32"),
+                    "filename": Value("string"),
+                }
+            ),
+            supervised_keys=None,
+            homepage=self.SOURCE["homepage"],
+            citation=self.SOURCE["citation"],
+        )
 
-    path: str (optional)
-        a string where to load the data and download if not present
+    def _split_generators(self):
+        source = self._source()
+        asset_names = ["annotations", *[f"eeg{i}" for i in range(1, 80)]]
+        local_paths = bulk_download(
+            [self._normalize_download_info(source["assets"][name], asset_name=name) for name in asset_names],
+            dest_folder=self._raw_download_dir,
+        )
+        annotations_path = local_paths[0]
+        eeg_paths = local_paths[1:]
+        return [
+            SplitGenerator(
+                name=Split.TRAIN,
+                gen_kwargs={"annotations_path": annotations_path, "eeg_paths": eeg_paths, "split": "train"},
+            )
+        ]
 
-    Returns
-    -------
+    def _candidate_splits(self) -> list:
+        return [Split.TRAIN]
 
-    annotations: list
-        the list of multichannel binary vectors representing
-        the presence or absence of seizure, 3 channels due to
-        3 expert annotations
+    def _generate_examples(self, annotations_path, eeg_paths, split):
+        del split
+        import mne
+        from scipy.io import loadmat
 
-    waveforms: list
-        list of (channels, TIME) multichannel EEGs
-    """
-    if path is None:
-        path = os.environ["DATASET_PATH"]
-
-    download_dataset(path, _name, _urls)
-
-    # load wavs
-    annotations = loadmat(os.path.join(path, "seizures_neonatal/annotations_2017.mat"))
-    annotations = annotations["annotat_new"][0]
-
-    # init. the data array
-    waveforms = []
-    for i in tqdm(range(1, 80), ascii=True):
-        filename = os.path.join(path, f"seizures_neonatal/eeg{i}.edf")
-        mne = None
-        data = mne.io.read_raw_edf(filename)
-        waveforms.append(data.get_data())
-
-    dataset = {"wavs": waveforms, "labels": annotations}
-    return dataset
+        annotations = loadmat(annotations_path)["annotat_new"][0]
+        eeg_by_id = {int(Path(path).stem.replace("eeg", "")): path for path in eeg_paths}
+        for subject_id in range(1, 80):
+            eeg_path = eeg_by_id[subject_id]
+            raw = mne.io.read_raw_edf(str(eeg_path), preload=True, verbose="ERROR")
+            series = raw.get_data().T.astype("float32")
+            annotation = np.asarray(annotations[subject_id - 1]).astype("int32")
+            if annotation.ndim == 1:
+                annotation = annotation[:, None]
+            yield (
+                subject_id,
+                {
+                    "series": series,
+                    "annotations": annotation.tolist(),
+                    "subject_id": subject_id,
+                    "filename": Path(eeg_path).name,
+                },
+            )

@@ -1,3 +1,5 @@
+"""TUT Acoustic Scenes 2017 audio scene classification loader."""
+
 import io
 import os
 import zipfile

@@ -3,7 +3,7 @@ import os
 import zipfile
 from pathlib import Path
 
-from stable_datasets.schema import DatasetInfo, Features, Value, Version, Video
+from stable_datasets.schema import DatasetInfo, DatasetSource, DownloadInfo, Features, Value, Version, Video
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, _default_dest_folder, bulk_download
 
@@ -27,25 +27,31 @@ class CLEVRER(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "http://clevrer.csail.mit.edu/",
-        "assets": {
-            "train_videos": "http://data.csail.mit.edu/clevrer/videos/train/video_train.zip",
-            "train_annotations": "http://data.csail.mit.edu/clevrer/annotations/train/annotation_train.zip",
-            "train_questions": "http://data.csail.mit.edu/clevrer/questions/train.json",
-            "validation_videos": "http://data.csail.mit.edu/clevrer/videos/validation/video_validation.zip",
-            "validation_annotations": "http://data.csail.mit.edu/clevrer/annotations/validation/annotation_validation.zip",
-            "validation_questions": "http://data.csail.mit.edu/clevrer/questions/validation.json",
-            "test_videos": "http://data.csail.mit.edu/clevrer/videos/test/video_test.zip",
-            "test_questions": "http://data.csail.mit.edu/clevrer/questions/test.json",
+    SOURCE = DatasetSource(
+        homepage="http://clevrer.csail.mit.edu/",
+        assets={
+            "train_videos": DownloadInfo(url="http://data.csail.mit.edu/clevrer/videos/train/video_train.zip"),
+            "train_annotations": DownloadInfo(
+                url="http://data.csail.mit.edu/clevrer/annotations/train/annotation_train.zip"
+            ),
+            "train_questions": DownloadInfo(url="http://data.csail.mit.edu/clevrer/questions/train.json"),
+            "validation_videos": DownloadInfo(
+                url="http://data.csail.mit.edu/clevrer/videos/validation/video_validation.zip"
+            ),
+            "validation_annotations": DownloadInfo(
+                url="http://data.csail.mit.edu/clevrer/annotations/validation/annotation_validation.zip"
+            ),
+            "validation_questions": DownloadInfo(url="http://data.csail.mit.edu/clevrer/questions/validation.json"),
+            "test_videos": DownloadInfo(url="http://data.csail.mit.edu/clevrer/videos/test/video_test.zip"),
+            "test_questions": DownloadInfo(url="http://data.csail.mit.edu/clevrer/questions/test.json"),
         },
-        "citation": """@inproceedings{yi2020clevrer,
+        citation="""@inproceedings{yi2020clevrer,
             title={CLEVRER: CoLlision Events for Video REpresentation and Reasoning},
             author={Yi, Kexin and Gan, Chuang and Li, Yunzhu and Kohli, Pushmeet and Wu, Jiajun and Torralba, Antonio and Tenenbaum, Joshua B},
             booktitle={International Conference on Learning Representations},
             year={2020}
         }""",
-    }
+    )
 
     def _info(self):
         return DatasetInfo(
@@ -79,35 +85,35 @@ class CLEVRER(BaseDatasetBuilder):
         download_dir = Path(download_dir)
 
         # Download all files concurrently using bulk_download
-        urls = list(assets.values())
-        downloaded_paths = bulk_download(urls, dest_folder=download_dir)
-        url_to_path = dict(zip(urls, downloaded_paths))
+        asset_keys = list(assets.keys())
+        downloaded_paths = bulk_download([assets[key] for key in asset_keys], dest_folder=download_dir)
+        path_by_key = dict(zip(asset_keys, downloaded_paths))
 
         return [
             SplitGenerator(
                 name=Split.TRAIN,
                 gen_kwargs={
-                    "videos_path": url_to_path[assets["train_videos"]],
-                    "annotations_path": url_to_path[assets["train_annotations"]],
-                    "questions_path": url_to_path[assets["train_questions"]],
+                    "videos_path": path_by_key["train_videos"],
+                    "annotations_path": path_by_key["train_annotations"],
+                    "questions_path": path_by_key["train_questions"],
                     "split": "train",
                 },
             ),
             SplitGenerator(
                 name=Split.VALIDATION,
                 gen_kwargs={
-                    "videos_path": url_to_path[assets["validation_videos"]],
-                    "annotations_path": url_to_path[assets["validation_annotations"]],
-                    "questions_path": url_to_path[assets["validation_questions"]],
+                    "videos_path": path_by_key["validation_videos"],
+                    "annotations_path": path_by_key["validation_annotations"],
+                    "questions_path": path_by_key["validation_questions"],
                     "split": "validation",
                 },
             ),
             SplitGenerator(
                 name=Split.TEST,
                 gen_kwargs={
-                    "videos_path": url_to_path[assets["test_videos"]],
+                    "videos_path": path_by_key["test_videos"],
                     "annotations_path": None,  # Test split has no annotations
-                    "questions_path": url_to_path[assets["test_questions"]],
+                    "questions_path": path_by_key["test_questions"],
                     "split": "test",
                 },
             ),

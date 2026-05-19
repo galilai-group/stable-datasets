@@ -1,0 +1,160 @@
+name: mae
+
+transforms:
+  type: single
+
+mask_ratio: 0.75
+norm_pix_loss: true
+
+decoder:
+  embed_dim: 512
+  depth: 4
+  num_heads: 16
+
+
+params:
+  default:
+    batch_size: 256
+    max_epochs: 100
+    accumulate_grad_batches: 1
+  # CIFAR-scale (32x32)
+  cifar10:
+    batch_size: 256
+    max_epochs: 400
+  cifar100:
+    batch_size: 256
+    max_epochs: 400
+  svhn:
+    batch_size: 256
+    max_epochs: 300
+  # Grayscale 28x28
+  fashionmnist:
+    batch_size: 256
+    max_epochs: 300
+  emnist:
+    batch_size: 256
+    max_epochs: 300
+  kmnist:
+    batch_size: 256
+    max_epochs: 300
+  notmnist:
+    batch_size: 256
+    max_epochs: 400
+  pneumoniamnist:
+    batch_size: 256
+    max_epochs: 400
+  # Other small datasets
+  arabiccharacters:
+    batch_size: 256
+    max_epochs: 500
+  arabicdigits:
+    batch_size: 256
+    max_epochs: 500
+  # Larger resolution
+  stl10:
+    batch_size: 256
+    max_epochs: 300
+  # Small fine-grained
+  flowers102:
+    batch_size: 256
+    max_epochs: 600
+  cub200:
+    batch_size: 256
+    max_epochs: 600
+  dtd:
+    batch_size: 256
+    max_epochs: 600
+  country211:
+    batch_size: 256
+    max_epochs: 400
+  rockpaperscissor:
+    batch_size: 256
+    max_epochs: 600
+  # Large datasets
+  food101:
+    batch_size: 256
+    max_epochs: 200
+  tinyimagenet:
+    batch_size: 256
+    max_epochs: 200
+  imagenette:
+    batch_size: 256
+    max_epochs: 300
+
+  # ----- new datasets (auto-inserted, paper tier rule) -----
+  # 1× ImageNet base
+  imagenet100:
+    batch_size: 256
+    max_epochs: 100
+  # Medium-simple — ×3
+  emnist_byclass:
+    batch_size: 256
+    max_epochs: 300
+  emnist_digits:
+    batch_size: 256
+    max_epochs: 300
+  emnist_letters:
+    batch_size: 256
+    max_epochs: 300
+  emnist_mnist:
+    batch_size: 256
+    max_epochs: 300
+  hasyv2:
+    batch_size: 256
+    max_epochs: 300
+  # Medium-hard — ×4
+  awa2:
+    batch_size: 256
+    max_epochs: 400
+  galaxy10:
+    batch_size: 256
+    max_epochs: 400
+  bloodmnist:
+    batch_size: 256
+    max_epochs: 400
+  breastmnist:
+    batch_size: 256
+    max_epochs: 400
+  dermamnist:
+    batch_size: 256
+    max_epochs: 400
+  octmnist:
+    batch_size: 256
+    max_epochs: 400
+  organamnist:
+    batch_size: 256
+    max_epochs: 400
+  organcmnist:
+    batch_size: 256
+    max_epochs: 400
+  organsmnist:
+    batch_size: 256
+    max_epochs: 400
+  pathmnist:
+    batch_size: 256
+    max_epochs: 400
+  retinamnist:
+    batch_size: 256
+    max_epochs: 400
+  tissuemnist:
+    batch_size: 256
+    max_epochs: 400
+  # Fine-grained — ×6
+  cars196:
+    batch_size: 256
+    max_epochs: 600
+  fgvcaircraft_family:
+    batch_size: 256
+    max_epochs: 600
+  fgvcaircraft_manufacturer:
+    batch_size: 256
+    max_epochs: 600
+
+vit_optimizer:
+  type: AdamW
+  lr: 1.5e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.95]
+
+scheduler:
+  type: LinearWarmupCosineAnnealing

@@ -3,7 +3,7 @@ import tarfile
 
 from PIL import Image
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
@@ -16,19 +16,19 @@ class Places365Small(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "http://places2.csail.mit.edu/",
-        "citation": """@article{zhou2017places,
+    SOURCE = DatasetSource(
+        homepage="http://places2.csail.mit.edu/",
+        citation="""@article{zhou2017places,
                          title={Places: A 10 million Image Database for Scene Recognition},
                          author={Zhou, Bolei and Lapedriza, Agata and Khosla, Aditya and Oliva, Aude and Torralba, Antonio},
                          year={2017}}
             """,
-        "assets": {
-            "train": "http://data.csail.mit.edu/places/places365/train_256_places365standard.tar",
-            "val": "http://data.csail.mit.edu/places/places365/val_256.tar",
-            "devkit": "http://data.csail.mit.edu/places/places365/filelist_places365-standard.tar",
+        assets={
+            "train": DownloadInfo(url="http://data.csail.mit.edu/places/places365/train_256_places365standard.tar"),
+            "val": DownloadInfo(url="http://data.csail.mit.edu/places/places365/val_256.tar"),
+            "devkit": DownloadInfo(url="http://data.csail.mit.edu/places/places365/filelist_places365-standard.tar"),
         },
-    }
+    )
 
     def _info(self):
         return DatasetInfo(
@@ -51,8 +51,8 @@ class Places365Small(BaseDatasetBuilder):
     def _split_generators(self):
         source = self._source()
         assets = source["assets"]
-        urls = [assets["train"], assets["val"], assets["devkit"]]
-        local_paths = bulk_download(urls, dest_folder=self._raw_download_dir)
+        asset_keys = ["train", "val", "devkit"]
+        local_paths = bulk_download([assets[key] for key in asset_keys], dest_folder=self._raw_download_dir)
         train_path, val_path, devkit_path = local_paths
 
         return [

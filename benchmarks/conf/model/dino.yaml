@@ -1,0 +1,197 @@
+name: dino
+
+transforms:
+  type: multicrop
+  num_global: 2
+  num_local: 6
+
+projector:
+  hidden_dim: 2048
+  bottleneck_dim: 256
+  output_dim: 65536
+
+loss:
+  temperature_student: 0.1
+  temperature_teacher: 0.04
+  warmup_temperature_teacher: 0.04
+  warmup_epochs_temperature_teacher: 301
+
+momentum_teacher: 0.996
+center_momentum: 0.9  # DINO centering EMA; raise on small-batch/few-class datasets
+sinkhorn_knopp: false  # use Sinkhorn-Knopp instead of subtractive centering (batch-size-invariant; DINOv2-style)
+
+
+params:
+  default:
+    batch_size: 256
+    max_epochs: 63
+    # 2 global + 6 local crops at 224×224 / 112×112 OOMs a 22GB 3090 at
+    # bs=256. Keep effective batch size 256 by accumulating over 8
+    # micro-batches of 32. Per-dataset blocks inherit this unless they
+    # override.
+    accumulate_grad_batches: 8
+  # CIFAR-scale (32x32)
+  cifar10:
+    batch_size: 256
+    max_epochs: 250
+  cifar100:
+    batch_size: 256
+    max_epochs: 250
+  svhn:
+    batch_size: 256
+    max_epochs: 188
+  # Grayscale 28x28
+  fashionmnist:
+    batch_size: 256
+    max_epochs: 188
+  emnist:
+    batch_size: 256
+    max_epochs: 188
+  kmnist:
+    batch_size: 256
+    max_epochs: 188
+  notmnist:
+    batch_size: 256
+    max_epochs: 250
+  pneumoniamnist:
+    batch_size: 256
+    max_epochs: 250
+  # Other small datasets — switch to Sinkhorn-Knopp centering. Subtractive
+  # centering collapses on these because they have <30 classes and run at
+  # bs=32/step (accum=8), causing high per-batch class collision and noisy
+  # centers; SK is batch-size-invariant and avoids the failure mode.
+  arabiccharacters:
+    batch_size: 256
+    max_epochs: 313
+    accumulate_grad_batches: 1
+    sinkhorn_knopp: true
+  arabicdigits:
+    batch_size: 256
+    max_epochs: 313
+    sinkhorn_knopp: true
+  # Larger resolution
+  stl10:
+    batch_size: 256
+    max_epochs: 188
+  # Small fine-grained
+  flowers102:
+    batch_size: 256
+    max_epochs: 375
+  cub200:
+    batch_size: 256
+    max_epochs: 375
+  dtd:
+    batch_size: 256
+    max_epochs: 375
+  country211:
+    batch_size: 256
+    max_epochs: 250
+  rockpaperscissor:
+    batch_size: 256
+    max_epochs: 375
+  # Large datasets
+  food101:
+    batch_size: 256
+    max_epochs: 125
+  tinyimagenet:
+    batch_size: 256
+    max_epochs: 125
+  imagenette:
+    batch_size: 256
+    accumulate_grad_batches: 8
+    max_epochs: 188
+
+  # ----- new datasets (auto-inserted, paper tier rule) -----
+  # 1× ImageNet base
+  imagenet100:
+    batch_size: 256
+    max_epochs: 63
+  # Medium-simple — ×3
+  emnist_byclass:
+    batch_size: 256
+    max_epochs: 189
+  emnist_digits:
+    batch_size: 256
+    max_epochs: 189
+    sinkhorn_knopp: true
+  emnist_letters:
+    batch_size: 256
+    max_epochs: 189
+  emnist_mnist:
+    batch_size: 256
+    max_epochs: 189
+    sinkhorn_knopp: true
+  hasyv2:
+    batch_size: 256
+    max_epochs: 189
+  # Medium-hard — ×4
+  awa2:
+    batch_size: 256
+    max_epochs: 252
+  galaxy10:
+    batch_size: 256
+    max_epochs: 252
+  bloodmnist:
+    batch_size: 256
+    max_epochs: 252
+  breastmnist:
+    batch_size: 256
+    max_epochs: 252
+  dermamnist:
+    batch_size: 256
+    max_epochs: 252
+  octmnist:
+    batch_size: 256
+    max_epochs: 252
+  organamnist:
+    batch_size: 256
+    max_epochs: 252
+  organcmnist:
+    batch_size: 256
+    max_epochs: 252
+  organsmnist:
+    batch_size: 256
+    max_epochs: 252
+  pathmnist:
+    batch_size: 256
+    max_epochs: 252
+  retinamnist:
+    batch_size: 256
+    max_epochs: 252
+  tissuemnist:
+    batch_size: 256
+    max_epochs: 252
+  # Fine-grained — ×6
+  cars196:
+    batch_size: 256
+    max_epochs: 378
+  fgvcaircraft_family:
+    batch_size: 256
+    max_epochs: 378
+  fgvcaircraft_manufacturer:
+    batch_size: 256
+    max_epochs: 378
+
+# Per-dataset backbone overrides: patch_size and img_size for datasets whose
+# native resolution is too small for the default ViT/16 at 224×224.
+# crop sizes in create_transforms are driven by img_size; the backbone is
+# built with the matching patch_size so token count is sensible.
+per_dataset_backbone:
+  arabiccharacters:
+    patch_size: 4   # 32/4 = 8×8 = 64 tokens at native resolution
+    img_size: 32
+  emnist_digits:
+    patch_size: 4   # 28/4 = 7×7 = 49 tokens at native resolution
+    img_size: 28
+  emnist_mnist:
+    patch_size: 4   # 28/4 = 7×7 = 49 tokens at native resolution
+    img_size: 28
+
+vit_optimizer:
+  type: AdamW
+  lr: 5e-4
+  weight_decay: 0.05
+  betas: [0.9, 0.999]
+
+scheduler:
+  type: LinearWarmupCosineAnnealing

@@ -5,6 +5,8 @@ from stable_datasets.schema import (
     BuilderConfig,
     ClassLabel,
     DatasetInfo,
+    DatasetSource,
+    DownloadInfo,
     Features,
     Image,
     Sequence,
@@ -60,15 +62,19 @@ class MedMNIST(BaseDatasetBuilder):
         MedMNISTConfig(name="synapsemnist3d", description="MedMNIST SynapseMNIST3D (3D)", num_classes=2, is_3d=True),
     ]
 
-    def _source(self) -> dict:
+    def _source(self) -> DatasetSource:
         """Variant-aware source definition (computed from self.config at runtime)."""
         variant = self.config.name
         url = f"https://zenodo.org/records/10519652/files/{variant}.npz?download=1"
         # Single NPZ contains all splits; we map each split name to the same URL.
-        return {
-            "homepage": "https://medmnist.com/",
-            "assets": {"train": url, "test": url, "val": url},
-            "citation": """@article{medmnistv2,
+        return DatasetSource(
+            homepage="https://medmnist.com/",
+            assets={
+                "train": DownloadInfo(url=url),
+                "test": DownloadInfo(url=url),
+                "val": DownloadInfo(url=url),
+            },
+            citation="""@article{medmnistv2,
                         title={MedMNIST v2-A large-scale lightweight benchmark for 2D and 3D biomedical image classification},
                         author={Yang, Jiancheng and Shi, Rui and Wei, Donglai and Liu, Zequan and Zhao, Lin and Ke, Bilian and Pfister, Hanspeter and Ni, Bingbing},
                         journal={Scientific Data},
@@ -78,7 +84,7 @@ class MedMNIST(BaseDatasetBuilder):
                         year={2023},
                         publisher={Nature Publishing Group UK London}
                     }""",
-        }
+        )
 
     def _info(self):
         variant = self.config.name

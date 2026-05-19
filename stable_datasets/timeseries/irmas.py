@@ -1,3 +1,5 @@
+"""IRMAS predominant-instrument audio classification loader."""
+
 import io
 import os
 import time

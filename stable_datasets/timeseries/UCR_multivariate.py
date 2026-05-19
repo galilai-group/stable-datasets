@@ -1,3 +1,5 @@
+"""UEA/UCR multivariate time-series archive loader."""
+
 import os
 import pathlib
 from multiprocessing import Pool

@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 from PIL import Image as PILImage
 
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Version
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Value, Version
 from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -24,12 +24,12 @@ class Galaxy10Decal(BaseDatasetBuilder):
 
     VERSION = Version("1.0.0")
 
-    SOURCE = {
-        "homepage": "https://astronn.readthedocs.io/en/latest/galaxy10.html",
-        "assets": {
-            "train": "https://zenodo.org/records/10845026/files/Galaxy10_DECals.h5",
+    SOURCE = DatasetSource(
+        homepage="https://astronn.readthedocs.io/en/latest/galaxy10.html",
+        assets={
+            "train": DownloadInfo(url="https://zenodo.org/records/10845026/files/Galaxy10_DECals.h5"),
         },
-        "citation": """@article{walmsley2020galaxy,
+        citation="""@article{walmsley2020galaxy,
                         title={Galaxy Zoo: probabilistic morphology through Bayesian CNNs and active learning},
                         author={Walmsley, Mike and Smith, Lewis and Lintott, Chris and Gal, Yarin and Bamford, Steven and Dickinson, Hugh and Fortson, Lucy and Kruk, Sandor and Masters, Karen and Scarlata, Claudia and others},
                         journal={Monthly Notices of the Royal Astronomical Society},
@@ -39,8 +39,8 @@ class Galaxy10Decal(BaseDatasetBuilder):
                         year={2020},
                         publisher={Oxford University Press}
                     }""",
-        "license": "MIT",
-    }
+        license="MIT",
+    )
 
     def _info(self):
         return DatasetInfo(
