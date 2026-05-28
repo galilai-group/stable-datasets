@@ -2,13 +2,12 @@ import io
 import tarfile
 
 import numpy as np
-import pytest
 from PIL import Image
 
 from stable_datasets.images._imagenet_wnids import IN1K_CLASSES, WNID_TO_IDX
 from stable_datasets.images.imagenet_1k import ImageNet1K
 from stable_datasets.images.imagenet_10 import Imagenette
-from stable_datasets.images.imagenet_100 import ImageNet100, IN100_CLASSES
+from stable_datasets.images.imagenet_100 import IN100_CLASSES, ImageNet100
 
 
 def _jpeg_bytes(color=(255, 0, 0)):

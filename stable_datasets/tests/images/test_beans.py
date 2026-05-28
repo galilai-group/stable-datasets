@@ -1,9 +1,11 @@
 import numpy as np
+import pytest
 from PIL import Image
 
 from stable_datasets.images import Beans
 
 
+@pytest.mark.skip(reason="Beans dataset host (storage.googleapis.com/ibean/) is down")
 def test_beans_dataset():
     # Test train split
     beans_train = Beans(split="train")
