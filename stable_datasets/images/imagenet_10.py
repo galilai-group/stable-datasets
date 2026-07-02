@@ -26,7 +26,7 @@ _IN10_CLASSES = [
 class Imagenette(BaseDatasetBuilder):
     """Imagenette: 10 easily classified classes from ImageNet."""
 
-    VERSION = Version("2.0.0")
+    VERSION = Version("3.0.0")
     SOURCE = DatasetSource(
         homepage="https://github.com/fastai/imagenette",
         assets={
@@ -57,7 +57,7 @@ class Imagenette(BaseDatasetBuilder):
         archive_path = download(self.SOURCE["assets"]["archive"], dest_folder=self._raw_download_dir)
         return [
             SplitGenerator(name=Split.TRAIN, gen_kwargs={"data_path": archive_path, "split": "train"}),
-            SplitGenerator(name=Split.TEST, gen_kwargs={"data_path": archive_path, "split": "val"}),
+            SplitGenerator(name=Split.VALIDATION, gen_kwargs={"data_path": archive_path, "split": "val"}),
         ]
 
     def _generate_examples(self, data_path, split):
