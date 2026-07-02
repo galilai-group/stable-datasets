@@ -28,13 +28,13 @@
   <meta name="twitter:title" content="stable_datasets.schema | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=979577e3" />
+  <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=d6d7c91b" />
   <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
   <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../_static/awesome-sphinx-design.css?v=b1d4564d" />
+  <link rel="stylesheet" type="text/css" href="../../../_static/awesome-sphinx-design.css?v=a81faafa" />
   <link rel="search" title="Search" href="../../../search/" />
   <link rel="index" title="Index" href="../../../genindex/" />
 </head>
@@ -210,353 +210,354 @@
 </span><span id="line-14">
 </span><span id="line-15"><span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
 </span><span id="line-16">
-</span><span id="line-17"><span class="kn">from</span><span class="w"> </span><span class="nn">.features</span><span class="w"> </span><span class="kn">import</span> <span class="n">Array3D</span><span class="p">,</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">FeatureType</span><span class="p">,</span> <span class="n">Image</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Value</span><span class="p">,</span> <span class="n">Video</span><span class="p">,</span> <span class="n">VideoRef</span>
+</span><span id="line-17"><span class="kn">from</span><span class="w"> </span><span class="nn">.features</span><span class="w"> </span><span class="kn">import</span> <span class="n">Array3D</span><span class="p">,</span> <span class="n">Array4D</span><span class="p">,</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">FeatureType</span><span class="p">,</span> <span class="n">Image</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Value</span><span class="p">,</span> <span class="n">Video</span><span class="p">,</span> <span class="n">VideoRef</span>
 </span><span id="line-18">
 </span><span id="line-19">
 </span><span id="line-20"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
 </span><span id="line-21">    <span class="s2">&quot;Array3D&quot;</span><span class="p">,</span>
-</span><span id="line-22">    <span class="s2">&quot;BuilderConfig&quot;</span><span class="p">,</span>
-</span><span id="line-23">    <span class="s2">&quot;ClassLabel&quot;</span><span class="p">,</span>
-</span><span id="line-24">    <span class="s2">&quot;DatasetInfo&quot;</span><span class="p">,</span>
-</span><span id="line-25">    <span class="s2">&quot;DatasetSource&quot;</span><span class="p">,</span>
-</span><span id="line-26">    <span class="s2">&quot;DownloadInfo&quot;</span><span class="p">,</span>
-</span><span id="line-27">    <span class="s2">&quot;FeatureType&quot;</span><span class="p">,</span>
-</span><span id="line-28">    <span class="s2">&quot;Features&quot;</span><span class="p">,</span>
-</span><span id="line-29">    <span class="s2">&quot;Image&quot;</span><span class="p">,</span>
-</span><span id="line-30">    <span class="s2">&quot;Sequence&quot;</span><span class="p">,</span>
-</span><span id="line-31">    <span class="s2">&quot;URL&quot;</span><span class="p">,</span>
-</span><span id="line-32">    <span class="s2">&quot;Value&quot;</span><span class="p">,</span>
-</span><span id="line-33">    <span class="s2">&quot;Version&quot;</span><span class="p">,</span>
-</span><span id="line-34">    <span class="s2">&quot;Video&quot;</span><span class="p">,</span>
-</span><span id="line-35">    <span class="s2">&quot;VideoDecodeConfig&quot;</span><span class="p">,</span>
-</span><span id="line-36">    <span class="s2">&quot;VideoDecodeFn&quot;</span><span class="p">,</span>
-</span><span id="line-37">    <span class="s2">&quot;VideoDecodeFnBatched&quot;</span><span class="p">,</span>
-</span><span id="line-38">    <span class="s2">&quot;VideoRef&quot;</span><span class="p">,</span>
-</span><span id="line-39">    <span class="s2">&quot;collect_dataset_citations&quot;</span><span class="p">,</span>
-</span><span id="line-40"><span class="p">]</span>
-</span><span id="line-41">
+</span><span id="line-22">    <span class="s2">&quot;Array4D&quot;</span><span class="p">,</span>
+</span><span id="line-23">    <span class="s2">&quot;BuilderConfig&quot;</span><span class="p">,</span>
+</span><span id="line-24">    <span class="s2">&quot;ClassLabel&quot;</span><span class="p">,</span>
+</span><span id="line-25">    <span class="s2">&quot;DatasetInfo&quot;</span><span class="p">,</span>
+</span><span id="line-26">    <span class="s2">&quot;DatasetSource&quot;</span><span class="p">,</span>
+</span><span id="line-27">    <span class="s2">&quot;DownloadInfo&quot;</span><span class="p">,</span>
+</span><span id="line-28">    <span class="s2">&quot;FeatureType&quot;</span><span class="p">,</span>
+</span><span id="line-29">    <span class="s2">&quot;Features&quot;</span><span class="p">,</span>
+</span><span id="line-30">    <span class="s2">&quot;Image&quot;</span><span class="p">,</span>
+</span><span id="line-31">    <span class="s2">&quot;Sequence&quot;</span><span class="p">,</span>
+</span><span id="line-32">    <span class="s2">&quot;URL&quot;</span><span class="p">,</span>
+</span><span id="line-33">    <span class="s2">&quot;Value&quot;</span><span class="p">,</span>
+</span><span id="line-34">    <span class="s2">&quot;Version&quot;</span><span class="p">,</span>
+</span><span id="line-35">    <span class="s2">&quot;Video&quot;</span><span class="p">,</span>
+</span><span id="line-36">    <span class="s2">&quot;VideoDecodeConfig&quot;</span><span class="p">,</span>
+</span><span id="line-37">    <span class="s2">&quot;VideoDecodeFn&quot;</span><span class="p">,</span>
+</span><span id="line-38">    <span class="s2">&quot;VideoDecodeFnBatched&quot;</span><span class="p">,</span>
+</span><span id="line-39">    <span class="s2">&quot;VideoRef&quot;</span><span class="p">,</span>
+</span><span id="line-40">    <span class="s2">&quot;collect_dataset_citations&quot;</span><span class="p">,</span>
+</span><span id="line-41"><span class="p">]</span>
 </span><span id="line-42">
+</span><span id="line-43">
 <div class="viewcode-block" id="Version">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.Version">[docs]</a>
-</span><span id="line-43"><span class="k">class</span><span class="w"> </span><span class="nc">Version</span><span class="p">:</span>
-</span><span id="line-44"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Semantic version string (``major.minor.patch``).&quot;&quot;&quot;</span>
-</span><span id="line-45">
-</span><span id="line-46">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-47">        <span class="n">parts</span> <span class="o">=</span> <span class="n">version_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
-</span><span id="line-48">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
-</span><span id="line-49">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Version string must be &#39;major.minor.patch&#39;, got &#39;</span><span class="si">{</span><span class="n">version_str</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-</span><span id="line-50">        <span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-</span><span id="line-51">        <span class="bp">self</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="n">version_str</span>
-</span><span id="line-52">
-</span><span id="line-53">    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-54">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str</span>
-</span><span id="line-55">
-</span><span id="line-56">    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-57">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Version(&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_str</span><span class="si">}</span><span class="s2">&#39;)&quot;</span>
-</span><span id="line-58">
-</span><span id="line-59">    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="line-60">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Version</span><span class="p">):</span>
-</span><span id="line-61">            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">patch</span><span class="p">)</span>
-</span><span id="line-62">        <span class="k">return</span> <span class="bp">NotImplemented</span>
-</span><span id="line-63">
-</span><span id="line-64">    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span id="line-65">        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">))</span></div>
+</span><span id="line-44"><span class="k">class</span><span class="w"> </span><span class="nc">Version</span><span class="p">:</span>
+</span><span id="line-45"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Semantic version string (``major.minor.patch``).&quot;&quot;&quot;</span>
+</span><span id="line-46">
+</span><span id="line-47">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-48">        <span class="n">parts</span> <span class="o">=</span> <span class="n">version_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+</span><span id="line-49">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+</span><span id="line-50">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Version string must be &#39;major.minor.patch&#39;, got &#39;</span><span class="si">{</span><span class="n">version_str</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+</span><span id="line-51">        <span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+</span><span id="line-52">        <span class="bp">self</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="n">version_str</span>
+</span><span id="line-53">
+</span><span id="line-54">    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-55">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str</span>
+</span><span id="line-56">
+</span><span id="line-57">    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-58">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Version(&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_str</span><span class="si">}</span><span class="s2">&#39;)&quot;</span>
+</span><span id="line-59">
+</span><span id="line-60">    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-61">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Version</span><span class="p">):</span>
+</span><span id="line-62">            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">patch</span><span class="p">)</span>
+</span><span id="line-63">        <span class="k">return</span> <span class="bp">NotImplemented</span>
+</span><span id="line-64">
+</span><span id="line-65">    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="line-66">        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch</span><span class="p">))</span></div>
 
-</span><span id="line-66">
 </span><span id="line-67">
+</span><span id="line-68">
 <div class="viewcode-block" id="DownloadInfo">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.DownloadInfo">[docs]</a>
-</span><span id="line-68"><span class="nd">@dataclass</span>
-</span><span id="line-69"><span class="k">class</span><span class="w"> </span><span class="nc">DownloadInfo</span><span class="p">:</span>
-</span><span id="line-70"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Download source metadata for one raw asset.</span>
-</span><span id="line-71">
-</span><span id="line-72"><span class="sd">    ``url`` is attempted first. Any ``fallbacks`` are tried in order if the</span>
-</span><span id="line-73"><span class="sd">    primary URL fails.</span>
-</span><span id="line-74"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="line-75">
-</span><span id="line-76">    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="line-77">    <span class="n">fallbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-</span><span id="line-78">    <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-79">    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-80">
-</span><span id="line-81">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-82">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
-</span><span id="line-83">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DownloadInfo.url must be a non-empty string.&quot;</span><span class="p">)</span>
-</span><span id="line-84">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fallbacks</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">url</span> <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fallbacks</span><span class="p">):</span>
-</span><span id="line-85">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DownloadInfo.fallbacks must be a list of non-empty strings.&quot;</span><span class="p">)</span>
-</span><span id="line-86">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksum</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-87">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DownloadInfo.checksum must be a string when provided.&quot;</span><span class="p">)</span>
-</span><span id="line-88">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-89">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DownloadInfo.filename must be a string when provided.&quot;</span><span class="p">)</span>
-</span><span id="line-90">
+</span><span id="line-69"><span class="nd">@dataclass</span>
+</span><span id="line-70"><span class="k">class</span><span class="w"> </span><span class="nc">DownloadInfo</span><span class="p">:</span>
+</span><span id="line-71"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Download source metadata for one raw asset.</span>
+</span><span id="line-72">
+</span><span id="line-73"><span class="sd">    ``url`` is attempted first. Any ``fallbacks`` are tried in order if the</span>
+</span><span id="line-74"><span class="sd">    primary URL fails.</span>
+</span><span id="line-75"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-76">
+</span><span id="line-77">    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="line-78">    <span class="n">fallbacks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+</span><span id="line-79">    <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-80">    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-81">
+</span><span id="line-82">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-83">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+</span><span id="line-84">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DownloadInfo.url must be a non-empty string.&quot;</span><span class="p">)</span>
+</span><span id="line-85">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fallbacks</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">url</span> <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fallbacks</span><span class="p">):</span>
+</span><span id="line-86">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DownloadInfo.fallbacks must be a list of non-empty strings.&quot;</span><span class="p">)</span>
+</span><span id="line-87">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksum</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-88">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DownloadInfo.checksum must be a string when provided.&quot;</span><span class="p">)</span>
+</span><span id="line-89">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-90">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DownloadInfo.filename must be a string when provided.&quot;</span><span class="p">)</span>
+</span><span id="line-91">
 <div class="viewcode-block" id="DownloadInfo.all_urls">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.DownloadInfo.all_urls">[docs]</a>
-</span><span id="line-91">    <span class="k">def</span><span class="w"> </span><span class="nf">all_urls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span id="line-92">        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">fallbacks</span><span class="p">]</span></div>
+</span><span id="line-92">    <span class="k">def</span><span class="w"> </span><span class="nf">all_urls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span id="line-93">        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">fallbacks</span><span class="p">]</span></div>
 </div>
 
-</span><span id="line-93">
 </span><span id="line-94">
-</span><span id="line-95"><span class="n">URL</span> <span class="o">=</span> <span class="n">NewType</span><span class="p">(</span><span class="s2">&quot;URL&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-</span><span id="line-96">
+</span><span id="line-95">
+</span><span id="line-96"><span class="n">URL</span> <span class="o">=</span> <span class="n">NewType</span><span class="p">(</span><span class="s2">&quot;URL&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
 </span><span id="line-97">
+</span><span id="line-98">
 <div class="viewcode-block" id="DatasetSource">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.DatasetSource">[docs]</a>
-</span><span id="line-98"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-99"><span class="k">class</span><span class="w"> </span><span class="nc">DatasetSource</span><span class="p">(</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]):</span>
-</span><span id="line-100"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Typed source and download metadata for one dataset builder.&quot;&quot;&quot;</span>
-</span><span id="line-101">
-</span><span id="line-102">    <span class="n">homepage</span><span class="p">:</span> <span class="n">URL</span> <span class="o">|</span> <span class="nb">str</span>
-</span><span id="line-103">    <span class="n">assets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DownloadInfo</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span>
-</span><span id="line-104">    <span class="n">citation</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="line-105">    <span class="n">license</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-</span><span id="line-106">    <span class="n">checksums</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-107">
-</span><span id="line-108">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-109">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">homepage</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">homepage</span><span class="p">:</span>
-</span><span id="line-110">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.homepage must be a non-empty string.&quot;</span><span class="p">)</span>
-</span><span id="line-111">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">citation</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">citation</span><span class="p">:</span>
-</span><span id="line-112">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.citation must be a non-empty string.&quot;</span><span class="p">)</span>
-</span><span id="line-113">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-114">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.license must be a string.&quot;</span><span class="p">)</span>
-</span><span id="line-115">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-</span><span id="line-116">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.assets must be a mapping.&quot;</span><span class="p">)</span>
-</span><span id="line-117">
-</span><span id="line-118">        <span class="n">normalized_assets</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="line-119">        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="line-120">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
-</span><span id="line-121">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource asset keys must be non-empty strings.&quot;</span><span class="p">)</span>
-</span><span id="line-122">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-123">                <span class="n">normalized_assets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
-</span><span id="line-124">            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">DownloadInfo</span><span class="p">):</span>
-</span><span id="line-125">                <span class="n">normalized_assets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-</span><span id="line-126">            <span class="k">else</span><span class="p">:</span>
-</span><span id="line-127">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-</span><span id="line-128">                    <span class="sa">f</span><span class="s2">&quot;DatasetSource.assets[&#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;] must be a URL string or DownloadInfo, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
-</span><span id="line-129">                <span class="p">)</span>
-</span><span id="line-130">
-</span><span id="line-131">        <span class="n">normalized_checksums</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-132">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-133">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksums</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-</span><span id="line-134">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.checksums must be a mapping when provided.&quot;</span><span class="p">)</span>
-</span><span id="line-135">            <span class="n">normalized_checksums</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span id="line-136">            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksums</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="line-137">                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
-</span><span id="line-138">                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.checksums keys must be non-empty strings.&quot;</span><span class="p">)</span>
-</span><span id="line-139">                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
-</span><span id="line-140">                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.checksums values must be non-empty strings.&quot;</span><span class="p">)</span>
-</span><span id="line-141">                <span class="n">normalized_checksums</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
-</span><span id="line-142">
-</span><span id="line-143">        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;homepage&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">homepage</span><span class="p">))</span>
-</span><span id="line-144">        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;assets&quot;</span><span class="p">,</span> <span class="n">MappingProxyType</span><span class="p">(</span><span class="n">normalized_assets</span><span class="p">))</span>
-</span><span id="line-145">        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
-</span><span id="line-146">            <span class="bp">self</span><span class="p">,</span>
-</span><span id="line-147">            <span class="s2">&quot;checksums&quot;</span><span class="p">,</span>
-</span><span id="line-148">            <span class="kc">None</span> <span class="k">if</span> <span class="n">normalized_checksums</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">MappingProxyType</span><span class="p">(</span><span class="n">normalized_checksums</span><span class="p">),</span>
-</span><span id="line-149">        <span class="p">)</span>
-</span><span id="line-150">
-</span><span id="line-151">    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
-</span><span id="line-152">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;homepage&quot;</span><span class="p">:</span>
-</span><span id="line-153">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">homepage</span>
-</span><span id="line-154">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;assets&quot;</span><span class="p">:</span>
-</span><span id="line-155">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span>
-</span><span id="line-156">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;citation&quot;</span><span class="p">:</span>
-</span><span id="line-157">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">citation</span>
-</span><span id="line-158">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;license&quot;</span><span class="p">:</span>
-</span><span id="line-159">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span>
-</span><span id="line-160">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;checksums&quot;</span><span class="p">:</span>
-</span><span id="line-161">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksums</span>
-</span><span id="line-162">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-</span><span id="line-163">
-</span><span id="line-164">    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span id="line-165">        <span class="k">yield</span> <span class="s2">&quot;homepage&quot;</span>
-</span><span id="line-166">        <span class="k">yield</span> <span class="s2">&quot;assets&quot;</span>
-</span><span id="line-167">        <span class="k">yield</span> <span class="s2">&quot;citation&quot;</span>
-</span><span id="line-168">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">:</span>
-</span><span id="line-169">            <span class="k">yield</span> <span class="s2">&quot;license&quot;</span>
-</span><span id="line-170">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-171">            <span class="k">yield</span> <span class="s2">&quot;checksums&quot;</span>
-</span><span id="line-172">
-</span><span id="line-173">    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span id="line-174">        <span class="k">return</span> <span class="mi">3</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">))</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
-</span><span id="line-175">
+</span><span id="line-99"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-100"><span class="k">class</span><span class="w"> </span><span class="nc">DatasetSource</span><span class="p">(</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]):</span>
+</span><span id="line-101"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Typed source and download metadata for one dataset builder.&quot;&quot;&quot;</span>
+</span><span id="line-102">
+</span><span id="line-103">    <span class="n">homepage</span><span class="p">:</span> <span class="n">URL</span> <span class="o">|</span> <span class="nb">str</span>
+</span><span id="line-104">    <span class="n">assets</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">DownloadInfo</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span>
+</span><span id="line-105">    <span class="n">citation</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="line-106">    <span class="n">license</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</span><span id="line-107">    <span class="n">checksums</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-108">
+</span><span id="line-109">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-110">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">homepage</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">homepage</span><span class="p">:</span>
+</span><span id="line-111">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.homepage must be a non-empty string.&quot;</span><span class="p">)</span>
+</span><span id="line-112">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">citation</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">citation</span><span class="p">:</span>
+</span><span id="line-113">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.citation must be a non-empty string.&quot;</span><span class="p">)</span>
+</span><span id="line-114">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-115">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.license must be a string.&quot;</span><span class="p">)</span>
+</span><span id="line-116">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+</span><span id="line-117">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.assets must be a mapping.&quot;</span><span class="p">)</span>
+</span><span id="line-118">
+</span><span id="line-119">        <span class="n">normalized_assets</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="line-120">        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span id="line-121">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+</span><span id="line-122">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource asset keys must be non-empty strings.&quot;</span><span class="p">)</span>
+</span><span id="line-123">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span id="line-124">                <span class="n">normalized_assets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+</span><span id="line-125">            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">DownloadInfo</span><span class="p">):</span>
+</span><span id="line-126">                <span class="n">normalized_assets</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</span><span id="line-127">            <span class="k">else</span><span class="p">:</span>
+</span><span id="line-128">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+</span><span id="line-129">                    <span class="sa">f</span><span class="s2">&quot;DatasetSource.assets[&#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;] must be a URL string or DownloadInfo, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+</span><span id="line-130">                <span class="p">)</span>
+</span><span id="line-131">
+</span><span id="line-132">        <span class="n">normalized_checksums</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-133">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-134">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksums</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+</span><span id="line-135">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.checksums must be a mapping when provided.&quot;</span><span class="p">)</span>
+</span><span id="line-136">            <span class="n">normalized_checksums</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="line-137">            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksums</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span id="line-138">                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">key</span><span class="p">:</span>
+</span><span id="line-139">                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.checksums keys must be non-empty strings.&quot;</span><span class="p">)</span>
+</span><span id="line-140">                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+</span><span id="line-141">                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;DatasetSource.checksums values must be non-empty strings.&quot;</span><span class="p">)</span>
+</span><span id="line-142">                <span class="n">normalized_checksums</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</span><span id="line-143">
+</span><span id="line-144">        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;homepage&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">homepage</span><span class="p">))</span>
+</span><span id="line-145">        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;assets&quot;</span><span class="p">,</span> <span class="n">MappingProxyType</span><span class="p">(</span><span class="n">normalized_assets</span><span class="p">))</span>
+</span><span id="line-146">        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span>
+</span><span id="line-147">            <span class="bp">self</span><span class="p">,</span>
+</span><span id="line-148">            <span class="s2">&quot;checksums&quot;</span><span class="p">,</span>
+</span><span id="line-149">            <span class="kc">None</span> <span class="k">if</span> <span class="n">normalized_checksums</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">MappingProxyType</span><span class="p">(</span><span class="n">normalized_checksums</span><span class="p">),</span>
+</span><span id="line-150">        <span class="p">)</span>
+</span><span id="line-151">
+</span><span id="line-152">    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">object</span><span class="p">:</span>
+</span><span id="line-153">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;homepage&quot;</span><span class="p">:</span>
+</span><span id="line-154">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">homepage</span>
+</span><span id="line-155">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;assets&quot;</span><span class="p">:</span>
+</span><span id="line-156">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span>
+</span><span id="line-157">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;citation&quot;</span><span class="p">:</span>
+</span><span id="line-158">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">citation</span>
+</span><span id="line-159">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;license&quot;</span><span class="p">:</span>
+</span><span id="line-160">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span>
+</span><span id="line-161">        <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;checksums&quot;</span><span class="p">:</span>
+</span><span id="line-162">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksums</span>
+</span><span id="line-163">        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+</span><span id="line-164">
+</span><span id="line-165">    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span id="line-166">        <span class="k">yield</span> <span class="s2">&quot;homepage&quot;</span>
+</span><span id="line-167">        <span class="k">yield</span> <span class="s2">&quot;assets&quot;</span>
+</span><span id="line-168">        <span class="k">yield</span> <span class="s2">&quot;citation&quot;</span>
+</span><span id="line-169">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">:</span>
+</span><span id="line-170">            <span class="k">yield</span> <span class="s2">&quot;license&quot;</span>
+</span><span id="line-171">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-172">            <span class="k">yield</span> <span class="s2">&quot;checksums&quot;</span>
+</span><span id="line-173">
+</span><span id="line-174">    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="line-175">        <span class="k">return</span> <span class="mi">3</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">))</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">checksums</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-176">
 <div class="viewcode-block" id="DatasetSource.get">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.DatasetSource.get">[docs]</a>
-</span><span id="line-176">    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="line-177">        <span class="k">try</span><span class="p">:</span>
-</span><span id="line-178">            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-</span><span id="line-179">        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-</span><span id="line-180">            <span class="k">return</span> <span class="n">default</span></div>
+</span><span id="line-177">    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="line-178">        <span class="k">try</span><span class="p">:</span>
+</span><span id="line-179">            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+</span><span id="line-180">        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+</span><span id="line-181">            <span class="k">return</span> <span class="n">default</span></div>
 </div>
 
-</span><span id="line-181">
 </span><span id="line-182">
+</span><span id="line-183">
 <div class="viewcode-block" id="collect_dataset_citations">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.collect_dataset_citations">[docs]</a>
-</span><span id="line-183"><span class="k">def</span><span class="w"> </span><span class="nf">collect_dataset_citations</span><span class="p">(</span><span class="n">sources</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">DatasetSource</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span id="line-184"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect unique citation strings in stable first-seen order.&quot;&quot;&quot;</span>
-</span><span id="line-185">    <span class="n">citations</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="line-186">    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-</span><span id="line-187">    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
-</span><span id="line-188">        <span class="n">citation</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="n">source</span><span class="o">.</span><span class="n">citation</span>
-</span><span id="line-189">        <span class="k">if</span> <span class="n">citation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
-</span><span id="line-190">            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">citation</span><span class="p">)</span>
-</span><span id="line-191">            <span class="n">citations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">citation</span><span class="p">)</span>
-</span><span id="line-192">    <span class="k">return</span> <span class="n">citations</span></div>
+</span><span id="line-184"><span class="k">def</span><span class="w"> </span><span class="nf">collect_dataset_citations</span><span class="p">(</span><span class="n">sources</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">DatasetSource</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span id="line-185"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Collect unique citation strings in stable first-seen order.&quot;&quot;&quot;</span>
+</span><span id="line-186">    <span class="n">citations</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-187">    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</span><span id="line-188">    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">sources</span><span class="p">:</span>
+</span><span id="line-189">        <span class="n">citation</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="k">else</span> <span class="n">source</span><span class="o">.</span><span class="n">citation</span>
+</span><span id="line-190">        <span class="k">if</span> <span class="n">citation</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+</span><span id="line-191">            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">citation</span><span class="p">)</span>
+</span><span id="line-192">            <span class="n">citations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">citation</span><span class="p">)</span>
+</span><span id="line-193">    <span class="k">return</span> <span class="n">citations</span></div>
 
-</span><span id="line-193">
 </span><span id="line-194">
+</span><span id="line-195">
 <div class="viewcode-block" id="VideoDecodeFn">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.VideoDecodeFn">[docs]</a>
-</span><span id="line-195"><span class="k">class</span><span class="w"> </span><span class="nc">VideoDecodeFn</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-</span><span id="line-196"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-sample video decode callback.&quot;&quot;&quot;</span>
-</span><span id="line-197">
-</span><span id="line-198">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
-</span><span id="line-199">        <span class="bp">self</span><span class="p">,</span>
-</span><span id="line-200">        <span class="n">ref</span><span class="p">:</span> <span class="n">VideoRef</span><span class="p">,</span>
-</span><span id="line-201">        <span class="n">config</span><span class="p">:</span> <span class="n">VideoDecodeConfig</span><span class="p">,</span>
-</span><span id="line-202">        <span class="o">*</span><span class="p">,</span>
-</span><span id="line-203">        <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-204">        <span class="n">sample_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-205">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span></div>
+</span><span id="line-196"><span class="k">class</span><span class="w"> </span><span class="nc">VideoDecodeFn</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+</span><span id="line-197"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-sample video decode callback.&quot;&quot;&quot;</span>
+</span><span id="line-198">
+</span><span id="line-199">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+</span><span id="line-200">        <span class="bp">self</span><span class="p">,</span>
+</span><span id="line-201">        <span class="n">ref</span><span class="p">:</span> <span class="n">VideoRef</span><span class="p">,</span>
+</span><span id="line-202">        <span class="n">config</span><span class="p">:</span> <span class="n">VideoDecodeConfig</span><span class="p">,</span>
+</span><span id="line-203">        <span class="o">*</span><span class="p">,</span>
+</span><span id="line-204">        <span class="n">row</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-205">        <span class="n">sample_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-206">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span></div>
 
-</span><span id="line-206">
 </span><span id="line-207">
+</span><span id="line-208">
 <div class="viewcode-block" id="VideoDecodeFnBatched">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.VideoDecodeFnBatched">[docs]</a>
-</span><span id="line-208"><span class="k">class</span><span class="w"> </span><span class="nc">VideoDecodeFnBatched</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-</span><span id="line-209"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Batched video decode callback used by ``StableDataset.__getitems__``.&quot;&quot;&quot;</span>
-</span><span id="line-210">
-</span><span id="line-211">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
-</span><span id="line-212">        <span class="bp">self</span><span class="p">,</span>
-</span><span id="line-213">        <span class="n">refs</span><span class="p">:</span> <span class="n">ABCSequence</span><span class="p">[</span><span class="n">VideoRef</span><span class="p">],</span>
-</span><span id="line-214">        <span class="n">config</span><span class="p">:</span> <span class="n">VideoDecodeConfig</span><span class="p">,</span>
-</span><span id="line-215">        <span class="o">*</span><span class="p">,</span>
-</span><span id="line-216">        <span class="n">rows</span><span class="p">:</span> <span class="n">ABCSequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-217">        <span class="n">sample_indices</span><span class="p">:</span> <span class="n">ABCSequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-218">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ABCSequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span> <span class="o">...</span></div>
+</span><span id="line-209"><span class="k">class</span><span class="w"> </span><span class="nc">VideoDecodeFnBatched</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+</span><span id="line-210"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Batched video decode callback used by ``StableDataset.__getitems__``.&quot;&quot;&quot;</span>
+</span><span id="line-211">
+</span><span id="line-212">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
+</span><span id="line-213">        <span class="bp">self</span><span class="p">,</span>
+</span><span id="line-214">        <span class="n">refs</span><span class="p">:</span> <span class="n">ABCSequence</span><span class="p">[</span><span class="n">VideoRef</span><span class="p">],</span>
+</span><span id="line-215">        <span class="n">config</span><span class="p">:</span> <span class="n">VideoDecodeConfig</span><span class="p">,</span>
+</span><span id="line-216">        <span class="o">*</span><span class="p">,</span>
+</span><span id="line-217">        <span class="n">rows</span><span class="p">:</span> <span class="n">ABCSequence</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-218">        <span class="n">sample_indices</span><span class="p">:</span> <span class="n">ABCSequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-219">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ABCSequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span> <span class="o">...</span></div>
 
-</span><span id="line-219">
 </span><span id="line-220">
+</span><span id="line-221">
 <div class="viewcode-block" id="VideoDecodeConfig">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.VideoDecodeConfig">[docs]</a>
-</span><span id="line-221"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-222"><span class="k">class</span><span class="w"> </span><span class="nc">VideoDecodeConfig</span><span class="p">:</span>
-</span><span id="line-223"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Read-time video decode configuration.</span>
-</span><span id="line-224">
-</span><span id="line-225"><span class="sd">    This is retrieval policy only: it does not affect cache construction,</span>
-</span><span id="line-226"><span class="sd">    cache fingerprints, or the persisted schema.</span>
-</span><span id="line-227"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="line-228">
-</span><span id="line-229">    <span class="n">num_frames</span><span class="p">:</span> <span class="nb">int</span>
-</span><span id="line-230">    <span class="n">column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;video&quot;</span>
-</span><span id="line-231">    <span class="n">sampling</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;uniform&quot;</span>
-</span><span id="line-232">    <span class="n">frame_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
-</span><span id="line-233">    <span class="n">decoder</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;torchcodec&quot;</span><span class="p">,</span> <span class="s2">&quot;decord&quot;</span><span class="p">,</span> <span class="s2">&quot;cv2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;torchcodec&quot;</span>
-</span><span id="line-234">    <span class="n">output</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;torch&quot;</span>
-</span><span id="line-235">    <span class="n">layout</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;TCHW&quot;</span><span class="p">,</span> <span class="s2">&quot;CTHW&quot;</span><span class="p">,</span> <span class="s2">&quot;THWC&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;TCHW&quot;</span>
-</span><span id="line-236">    <span class="n">dtype</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span> <span class="s2">&quot;uint8&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;float32&quot;</span>
-</span><span id="line-237">    <span class="n">scale</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;zero_one&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;zero_one&quot;</span>
-</span><span id="line-238">    <span class="n">resize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-239">    <span class="n">crop</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
-</span><span id="line-240">    <span class="n">pad</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;repeat_last&quot;</span><span class="p">,</span> <span class="s2">&quot;loop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span>
-</span><span id="line-241">    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-242">    <span class="n">decode_fn</span><span class="p">:</span> <span class="n">VideoDecodeFn</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-243">    <span class="n">decode_fn_batched</span><span class="p">:</span> <span class="n">VideoDecodeFnBatched</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-244">
-</span><span id="line-245">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-246">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
-</span><span id="line-247">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;num_frames must be an int.&quot;</span><span class="p">)</span>
-</span><span id="line-248">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span id="line-249">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;num_frames must be &gt;= 1, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="line-250">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_stride</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_stride</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
-</span><span id="line-251">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;frame_stride must be an int.&quot;</span><span class="p">)</span>
-</span><span id="line-252">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_stride</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span id="line-253">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;frame_stride must be &gt;= 1, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_stride</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="line-254">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="p">:</span>
-</span><span id="line-255">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;column must be a non-empty string.&quot;</span><span class="p">)</span>
-</span><span id="line-256">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;sampling&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;start&quot;</span><span class="p">})</span>
-</span><span id="line-257">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;decoder&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;torchcodec&quot;</span><span class="p">,</span> <span class="s2">&quot;decord&quot;</span><span class="p">,</span> <span class="s2">&quot;cv2&quot;</span><span class="p">})</span>
-</span><span id="line-258">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">})</span>
-</span><span id="line-259">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;TCHW&quot;</span><span class="p">,</span> <span class="s2">&quot;CTHW&quot;</span><span class="p">,</span> <span class="s2">&quot;THWC&quot;</span><span class="p">})</span>
-</span><span id="line-260">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;dtype&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span> <span class="s2">&quot;uint8&quot;</span><span class="p">})</span>
-</span><span id="line-261">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;zero_one&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">})</span>
-</span><span id="line-262">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;crop&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">})</span>
-</span><span id="line-263">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;pad&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;repeat_last&quot;</span><span class="p">,</span> <span class="s2">&quot;loop&quot;</span><span class="p">})</span>
-</span><span id="line-264">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="s2">&quot;zero_one&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="s2">&quot;float32&quot;</span><span class="p">:</span>
-</span><span id="line-265">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;scale=&#39;zero_one&#39; requires dtype=&#39;float32&#39;.&quot;</span><span class="p">)</span>
-</span><span id="line-266">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-267">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-</span><span id="line-268">                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span id="line-269">                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;resize must be &gt;= 1 when provided as an int.&quot;</span><span class="p">)</span>
-</span><span id="line-270">            <span class="k">elif</span> <span class="p">(</span>
-</span><span id="line-271">                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
-</span><span id="line-272">                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span>
-</span><span id="line-273">                <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">)</span>
-</span><span id="line-274">            <span class="p">):</span>
-</span><span id="line-275">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;resize must be an int or a tuple of two positive ints.&quot;</span><span class="p">)</span></div>
+</span><span id="line-222"><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-223"><span class="k">class</span><span class="w"> </span><span class="nc">VideoDecodeConfig</span><span class="p">:</span>
+</span><span id="line-224"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Read-time video decode configuration.</span>
+</span><span id="line-225">
+</span><span id="line-226"><span class="sd">    This is retrieval policy only: it does not affect cache construction,</span>
+</span><span id="line-227"><span class="sd">    cache fingerprints, or the persisted schema.</span>
+</span><span id="line-228"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-229">
+</span><span id="line-230">    <span class="n">num_frames</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="line-231">    <span class="n">column</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;video&quot;</span>
+</span><span id="line-232">    <span class="n">sampling</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;uniform&quot;</span>
+</span><span id="line-233">    <span class="n">frame_stride</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span id="line-234">    <span class="n">decoder</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;torchcodec&quot;</span><span class="p">,</span> <span class="s2">&quot;decord&quot;</span><span class="p">,</span> <span class="s2">&quot;cv2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;torchcodec&quot;</span>
+</span><span id="line-235">    <span class="n">output</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;torch&quot;</span>
+</span><span id="line-236">    <span class="n">layout</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;TCHW&quot;</span><span class="p">,</span> <span class="s2">&quot;CTHW&quot;</span><span class="p">,</span> <span class="s2">&quot;THWC&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;TCHW&quot;</span>
+</span><span id="line-237">    <span class="n">dtype</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span> <span class="s2">&quot;uint8&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;float32&quot;</span>
+</span><span id="line-238">    <span class="n">scale</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;zero_one&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;zero_one&quot;</span>
+</span><span id="line-239">    <span class="n">resize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-240">    <span class="n">crop</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+</span><span id="line-241">    <span class="n">pad</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;repeat_last&quot;</span><span class="p">,</span> <span class="s2">&quot;loop&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;error&quot;</span>
+</span><span id="line-242">    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-243">    <span class="n">decode_fn</span><span class="p">:</span> <span class="n">VideoDecodeFn</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-244">    <span class="n">decode_fn_batched</span><span class="p">:</span> <span class="n">VideoDecodeFnBatched</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-245">
+</span><span id="line-246">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-247">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+</span><span id="line-248">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;num_frames must be an int.&quot;</span><span class="p">)</span>
+</span><span id="line-249">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="line-250">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;num_frames must be &gt;= 1, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_frames</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-251">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_stride</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_stride</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+</span><span id="line-252">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;frame_stride must be an int.&quot;</span><span class="p">)</span>
+</span><span id="line-253">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_stride</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="line-254">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;frame_stride must be &gt;= 1, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">frame_stride</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-255">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">column</span><span class="p">:</span>
+</span><span id="line-256">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;column must be a non-empty string.&quot;</span><span class="p">)</span>
+</span><span id="line-257">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;sampling&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;start&quot;</span><span class="p">})</span>
+</span><span id="line-258">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;decoder&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;torchcodec&quot;</span><span class="p">,</span> <span class="s2">&quot;decord&quot;</span><span class="p">,</span> <span class="s2">&quot;cv2&quot;</span><span class="p">})</span>
+</span><span id="line-259">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;numpy&quot;</span><span class="p">})</span>
+</span><span id="line-260">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;layout&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;TCHW&quot;</span><span class="p">,</span> <span class="s2">&quot;CTHW&quot;</span><span class="p">,</span> <span class="s2">&quot;THWC&quot;</span><span class="p">})</span>
+</span><span id="line-261">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;dtype&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;float32&quot;</span><span class="p">,</span> <span class="s2">&quot;uint8&quot;</span><span class="p">})</span>
+</span><span id="line-262">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;zero_one&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">})</span>
+</span><span id="line-263">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;crop&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">,</span> <span class="s2">&quot;random&quot;</span><span class="p">})</span>
+</span><span id="line-264">        <span class="n">_validate_literal</span><span class="p">(</span><span class="s2">&quot;pad&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="s2">&quot;repeat_last&quot;</span><span class="p">,</span> <span class="s2">&quot;loop&quot;</span><span class="p">})</span>
+</span><span id="line-265">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="s2">&quot;zero_one&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="s2">&quot;float32&quot;</span><span class="p">:</span>
+</span><span id="line-266">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;scale=&#39;zero_one&#39; requires dtype=&#39;float32&#39;.&quot;</span><span class="p">)</span>
+</span><span id="line-267">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-268">            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+</span><span id="line-269">                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="line-270">                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;resize must be &gt;= 1 when provided as an int.&quot;</span><span class="p">)</span>
+</span><span id="line-271">            <span class="k">elif</span> <span class="p">(</span>
+</span><span id="line-272">                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+</span><span id="line-273">                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span>
+</span><span id="line-274">                <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">v</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">)</span>
+</span><span id="line-275">            <span class="p">):</span>
+</span><span id="line-276">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;resize must be an int or a tuple of two positive ints.&quot;</span><span class="p">)</span></div>
 
-</span><span id="line-276">
 </span><span id="line-277">
-</span><span id="line-278"><span class="k">def</span><span class="w"> </span><span class="nf">_validate_literal</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">allowed</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-279">    <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
-</span><span id="line-280">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">allowed</span><span class="p">)</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
-</span><span id="line-281">
+</span><span id="line-278">
+</span><span id="line-279"><span class="k">def</span><span class="w"> </span><span class="nf">_validate_literal</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">allowed</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-280">    <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
+</span><span id="line-281">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be one of </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">allowed</span><span class="p">)</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
 </span><span id="line-282">
+</span><span id="line-283">
 <div class="viewcode-block" id="Features">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.Features">[docs]</a>
-</span><span id="line-283"><span class="k">class</span><span class="w"> </span><span class="nc">Features</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">):</span>
-</span><span id="line-284"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Ordered mapping of ``field_name -&gt; FeatureType``.</span>
-</span><span id="line-285">
-</span><span id="line-286"><span class="sd">    Generates a PyArrow schema via ``.to_arrow_schema()``.</span>
-</span><span id="line-287"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="line-288">
+</span><span id="line-284"><span class="k">class</span><span class="w"> </span><span class="nc">Features</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">):</span>
+</span><span id="line-285"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Ordered mapping of ``field_name -&gt; FeatureType``.</span>
+</span><span id="line-286">
+</span><span id="line-287"><span class="sd">    Generates a PyArrow schema via ``.to_arrow_schema()``.</span>
+</span><span id="line-288"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-289">
 <div class="viewcode-block" id="Features.to_arrow_schema">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.Features.to_arrow_schema">[docs]</a>
-</span><span id="line-289">    <span class="k">def</span><span class="w"> </span><span class="nf">to_arrow_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">schema</span><span class="p">:</span>
-</span><span id="line-290">        <span class="n">fields</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="line-291">        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">feat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="line-292">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">FeatureType</span><span class="p">):</span>
-</span><span id="line-293">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Feature &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; must be a FeatureType, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="line-294">            <span class="n">metadata</span> <span class="o">=</span> <span class="n">feat</span><span class="o">.</span><span class="n">arrow_metadata</span><span class="p">()</span>
-</span><span id="line-295">            <span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">feat</span><span class="o">.</span><span class="n">to_arrow_type</span><span class="p">(),</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">))</span>
-</span><span id="line-296">        <span class="k">return</span> <span class="n">pa</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span></div>
+</span><span id="line-290">    <span class="k">def</span><span class="w"> </span><span class="nf">to_arrow_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">schema</span><span class="p">:</span>
+</span><span id="line-291">        <span class="n">fields</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-292">        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">feat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span id="line-293">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">FeatureType</span><span class="p">):</span>
+</span><span id="line-294">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Feature &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; must be a FeatureType, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-295">            <span class="n">metadata</span> <span class="o">=</span> <span class="n">feat</span><span class="o">.</span><span class="n">arrow_metadata</span><span class="p">()</span>
+</span><span id="line-296">            <span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">feat</span><span class="o">.</span><span class="n">to_arrow_type</span><span class="p">(),</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">))</span>
+</span><span id="line-297">        <span class="k">return</span> <span class="n">pa</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span></div>
 
-</span><span id="line-297">
+</span><span id="line-298">
 <div class="viewcode-block" id="Features.fingerprint_data">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.Features.fingerprint_data">[docs]</a>
-</span><span id="line-298">    <span class="k">def</span><span class="w"> </span><span class="nf">fingerprint_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-299">        <span class="c1"># Preserve the historical dict-style payload so cache keys stay stable.</span>
-</span><span id="line-300">        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+</span><span id="line-299">    <span class="k">def</span><span class="w"> </span><span class="nf">fingerprint_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-300">        <span class="c1"># Preserve the historical dict-style payload so cache keys stay stable.</span>
+</span><span id="line-301">        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 </div>
 
-</span><span id="line-301">
 </span><span id="line-302">
+</span><span id="line-303">
 <div class="viewcode-block" id="DatasetInfo">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.DatasetInfo">[docs]</a>
-</span><span id="line-303"><span class="nd">@dataclass</span>
-</span><span id="line-304"><span class="k">class</span><span class="w"> </span><span class="nc">DatasetInfo</span><span class="p">:</span>
-</span><span id="line-305"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Metadata container for a dataset (description, features, citation, etc.).&quot;&quot;&quot;</span>
-</span><span id="line-306">
-</span><span id="line-307">    <span class="n">features</span><span class="p">:</span> <span class="n">Features</span>
-</span><span id="line-308">    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-</span><span id="line-309">    <span class="n">supervised_keys</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-310">    <span class="n">homepage</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-</span><span id="line-311">    <span class="n">citation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-</span><span id="line-312">    <span class="n">license</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-</span><span id="line-313">    <span class="n">config_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+</span><span id="line-304"><span class="nd">@dataclass</span>
+</span><span id="line-305"><span class="k">class</span><span class="w"> </span><span class="nc">DatasetInfo</span><span class="p">:</span>
+</span><span id="line-306"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Metadata container for a dataset (description, features, citation, etc.).&quot;&quot;&quot;</span>
+</span><span id="line-307">
+</span><span id="line-308">    <span class="n">features</span><span class="p">:</span> <span class="n">Features</span>
+</span><span id="line-309">    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</span><span id="line-310">    <span class="n">supervised_keys</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-311">    <span class="n">homepage</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</span><span id="line-312">    <span class="n">citation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</span><span id="line-313">    <span class="n">license</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</span><span id="line-314">    <span class="n">config_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
 
-</span><span id="line-314">
 </span><span id="line-315">
+</span><span id="line-316">
 <div class="viewcode-block" id="BuilderConfig">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.schema.BuilderConfig">[docs]</a>
-</span><span id="line-316"><span class="nd">@dataclass</span>
-</span><span id="line-317"><span class="k">class</span><span class="w"> </span><span class="nc">BuilderConfig</span><span class="p">:</span>
-</span><span id="line-318"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base config for multi-variant datasets.&quot;&quot;&quot;</span>
-</span><span id="line-319">
-</span><span id="line-320">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
-</span><span id="line-321">    <span class="n">version</span><span class="p">:</span> <span class="n">Version</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-322">    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+</span><span id="line-317"><span class="nd">@dataclass</span>
+</span><span id="line-318"><span class="k">class</span><span class="w"> </span><span class="nc">BuilderConfig</span><span class="p">:</span>
+</span><span id="line-319"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base config for multi-variant datasets.&quot;&quot;&quot;</span>
+</span><span id="line-320">
+</span><span id="line-321">    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
+</span><span id="line-322">    <span class="n">version</span><span class="p">:</span> <span class="n">Version</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-323">    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
 
 </span></code></pre></div>
     </div></div>
@@ -591,7 +592,7 @@
     <script src="../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../_static/theme.js?v=d6a9845b"></script>
+    <script defer="defer" src="../../../_static/theme.js?v=5db23cf8"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>
