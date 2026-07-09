@@ -46,6 +46,7 @@ Available Datasets
 
    arabic_characters
    arabic_digits
+   aid_scene
    cifar10
    cifar100
    cifar10_c
@@ -68,6 +69,7 @@ Available Datasets
    country211
    galaxy10
    hasy_v2
+   inria_aerial_image_labeling
    face_pointing
    rock_paper_scissor
    linnaeus5

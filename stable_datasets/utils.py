@@ -1,6 +1,8 @@
 import hashlib
 import multiprocessing
 import os
+import signal
+import subprocess
 import time
 from collections.abc import Iterable, Mapping
 from concurrent.futures import ProcessPoolExecutor
@@ -54,6 +56,51 @@ def _default_dest_folder() -> Path:
 def _default_processed_cache_dir() -> Path:
     """Default folder where processed datasets are cached."""
     return Path(os.path.expanduser(_get_cache_dir())) / "processed"
+
+
+# Appended to RuntimeError messages when Kaggle-based dataset downloads fail.
+KAGGLE_CLI_SETUP_INSTRUCTIONS = """
+Setup the Kaggle CLI and API credentials:
+
+  1) Install the CLI:
+       pip install kaggle
+
+  2) Authenticate (choose one):
+
+     A) Token file (recommended)
+        On https://www.kaggle.com/ open Account → API → Create New Token (downloads kaggle.json), then:
+             mkdir -p ~/.kaggle
+             mv ~/Downloads/kaggle.json ~/.kaggle/kaggle.json
+             chmod 600 ~/.kaggle/kaggle.json
+
+     B) Export for the current shell only:
+             export KAGGLE_USERNAME="<your_kaggle_username>"
+             export KAGGLE_KEY="<your_api_key>"
+"""
+
+
+def kaggle_cli_failure_message(dataset_id: str, error: subprocess.CalledProcessError) -> str:
+    """Build a user-facing message for a failed ``kaggle`` subprocess (download, etc.)."""
+    stderr = (error.stderr or "").strip() if error.stderr else ""
+    rc = error.returncode
+    if rc is not None and rc < 0:
+        sig = -rc
+        if sig == getattr(signal, "SIGKILL", 9):
+            return (
+                "[kaggle:SIGKILL] The `kaggle datasets download` subprocess was killed by the OS (SIGKILL). "
+                "For very large archives this usually means out-of-memory or resource limits—not a bad API key.\n\n"
+                "What to try:\n"
+                "  • Free RAM and disk; close other applications.\n"
+                "  • Download manually, then re-run the builder (it will reuse the zip if present):\n"
+                f"      kaggle datasets download -d {dataset_id} -p ~/.stable-datasets/downloads\n"
+                "  • Delete a partial/corrupt zip in that folder if a previous run was interrupted, then retry.\n\n"
+                f"kaggle stderr (if captured):\n{stderr}\n"
+            )
+    return (
+        "[kaggle:failed] Kaggle download failed (missing API credentials, network issues, or Kaggle errors are common).\n"
+        + KAGGLE_CLI_SETUP_INSTRUCTIONS
+        + f"\nKaggle CLI stderr:\n{stderr}\n"
+    )
 
 
 class BaseDatasetBuilder:
