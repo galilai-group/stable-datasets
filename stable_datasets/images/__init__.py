@@ -10,6 +10,7 @@ from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
 from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
+from .clevr import CLEVR
 from .clevrer import CLEVRER
 from .country211 import Country211
 from .cub200 import CUB200
@@ -58,6 +59,7 @@ __all__ = [
     "CIFAR10C",
     "CIFAR100",
     "CIFAR100C",
+    "CLEVR",
     "CLEVRER",
     "Country211",
     "CUB200",
