@@ -21,7 +21,7 @@ Each example consists of a **stereo image pair**, capturing the same object from
 - **Image resolution**: 96×96 (grayscale)
 
 Latent Factors of Variation
---------------------------
+---------------------------
 
 Each stereo pair is annotated with five discrete factors of variation:
 

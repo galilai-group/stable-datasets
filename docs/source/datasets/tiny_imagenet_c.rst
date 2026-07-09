@@ -18,6 +18,10 @@ Tiny ImageNet-C is a corruption-benchmarked variant of Tiny ImageNet created by 
 - **Corruptions**: multiple corruption types (see the original ImageNet-C paper for the canonical list)
 - **Severity levels**: multiple levels (commonly 5 severity levels)
 
+.. image:: teasers/tiny_imagenet_c_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 

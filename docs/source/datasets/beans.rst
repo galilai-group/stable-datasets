@@ -18,6 +18,10 @@ The Beans dataset (also known as IBeans) contains leaf images for classification
 - **Validation**: 133 images
 - **Test**: 128 images
 
+.. image:: teasers/beans_teaser.png
+   :align: center
+   :width: 90%
+
 This dataset is particularly valuable for developing agricultural AI applications to help farmers identify and manage crop diseases early.
 
 Data Structure

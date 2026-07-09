@@ -18,6 +18,10 @@ CIFAR-10-C is a corrupted version of the CIFAR-10 dataset designed for benchmark
 - **Test**: 950,000 images (19 corruptions × 5 severity levels × 10,000 images)
 - **Train**: N/A (test-only dataset for robustness evaluation)
 
+.. image:: teasers/cifar10_c_teaser.png
+   :align: center
+   :width: 90%
+
 The dataset includes corruptions such as noise, blur, weather effects, and digital artifacts to evaluate how well models trained on clean CIFAR-10 data generalize to corrupted inputs.
 
 Data Structure

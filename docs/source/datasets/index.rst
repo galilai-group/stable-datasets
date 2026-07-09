@@ -46,31 +46,41 @@ Available Datasets
 
    arabic_characters
    arabic_digits
-   cifar10
-   cifar100
-   cifar10_c
-   cifar100_c
-   cars196
-   dtd
-   fashion_mnist
-   k_mnist
-   medmnist
    awa2
    beans
-   stl10
-   tiny_imagenet
-   tiny_imagenet_c
+   cars196
+   cars3d
+   cifar10
+   cifar100
+   cifar100_c
+   cifar10_c
+   clevrer
+   country211
+   cub200
+   dsprites
+   dsprites_color
+   dsprites_noise
+   dsprites_scream
+   dtd
    e_mnist
+   face_pointing
+   fashion_mnist
    fgvc_aircraft
    flowers102
    food101
-   cub200
-   country211
    galaxy10
    hasy_v2
-   face_pointing
-   rock_paper_scissor
+   k_mnist
    linnaeus5
+   medmnist
+   not_mnist
+   rock_paper_scissor
+   shapes3d
+   small_norb
+   stl10
+   svhn
+   tiny_imagenet
+   tiny_imagenet_c
 
 .. toctree::
    :maxdepth: 1

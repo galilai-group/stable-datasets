@@ -18,6 +18,10 @@ The CUB-200-2011 dataset is designed for fine-grained bird species classificatio
 - **Train**: 5,994 images
 - **Test**: 5,794 images
 
+.. image:: teasers/cub200_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 

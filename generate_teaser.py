@@ -23,6 +23,7 @@ def generate_teaser(
     output_path: str | None = None,
     figsize_per_sample: float = 1.5,
     variant: str | None = None,
+    split: str = "train",
 ):
     """
     Generate a teaser figure for a dataset.
@@ -35,6 +36,7 @@ def generate_teaser(
         output_path: Path to save the figure (if None, display instead)
         figsize_per_sample: Width per sample in inches
         variant: Optional dataset variant/config name (e.g. MedMNIST variants)
+        split: Dataset split to load (default: 'train')
     """
     # Try to import the dataset
     try:
@@ -54,9 +56,9 @@ def generate_teaser(
     # Load the dataset
     print(f"Loading {dataset_name} dataset...")
     if variant is None:
-        dataset = dataset_class(split="train")
+        dataset = dataset_class(split=split)
     else:
-        dataset = dataset_class(split="train", config_name=variant)
+        dataset = dataset_class(split=split, config_name=variant)
 
     # Get samples from different classes
     samples = []
@@ -205,6 +207,12 @@ Examples:
         help='Optional dataset variant/config name (e.g., "dermamnist" for MedMNIST).',
     )
     parser.add_argument(
+        "--split",
+        type=str,
+        default="train",
+        help="Dataset split to load (default: 'train'). Use 'test' for test-only datasets.",
+    )
+    parser.add_argument(
         "--image-key",
         type=str,
         default="image",
@@ -240,6 +248,7 @@ Examples:
         output_path=args.output,
         figsize_per_sample=args.figsize,
         variant=args.variant,
+        split=args.split,
     )
 
 

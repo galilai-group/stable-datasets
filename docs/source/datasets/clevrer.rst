@@ -30,6 +30,10 @@ Split sizes:
 - **Validation**: 5,000 videos (index 10000-14999)
 - **Test**: 5,000 videos (index 15000-19999)
 
+.. image:: teasers/clevrer_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 
