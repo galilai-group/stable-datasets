@@ -35,10 +35,15 @@ from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
+from .resisc45 import RESISC45
 
 # from .mnist import MNIST
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
+
+# from .tiny_imagenet import TinyImagenet
+# from .tiny_imagenet_c import TinyImagenetC
+from .rsscn7 import RSSCN7
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
 from .stl10 import STL10
@@ -73,6 +78,11 @@ __all__ = [
     "Flowers102",
     "Galaxy10Decal",
     "Food101",
+    "SVHN",
+    "CUB200",
+    "Country211",
+    "RESISC45",
+    "RSSCN7",
     "HASYv2",
     "ImageNet1K",
     "ImageNet100",
