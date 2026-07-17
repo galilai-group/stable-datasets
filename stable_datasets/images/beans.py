@@ -14,9 +14,9 @@ class Beans(BaseDatasetBuilder):
     SOURCE = DatasetSource(
         homepage="https://github.com/AI-Lab-Makerere/ibean/",
         assets={
-            "train": DownloadInfo(url="https://storage.googleapis.com/ibeans/train.zip"),
-            "test": DownloadInfo(url="https://storage.googleapis.com/ibeans/test.zip"),
-            "validation": DownloadInfo(url="https://storage.googleapis.com/ibeans/validation.zip"),
+            "train": DownloadInfo(url="https://huggingface.co/datasets/AI-Lab-Makerere/beans/resolve/main/data/train.zip"),
+            "test": DownloadInfo(url="https://huggingface.co/datasets/AI-Lab-Makerere/beans/resolve/main/data/test.zip"),
+            "validation": DownloadInfo(url="https://huggingface.co/datasets/AI-Lab-Makerere/beans/resolve/main/data/validation.zip"),
         },
         citation="""@misc{makerere2020beans,
                          author = "{Makerere AI Lab}",
