@@ -21,7 +21,12 @@ from omegaconf import DictConfig, open_dict
 
 import wandb
 from benchmarks.dataset import create_dataset, get_config
-from benchmarks.models import build_module, create_eval_callbacks, get_transforms
+from benchmarks.models import (
+    build_module,
+    create_eval_callbacks,
+    get_transforms,
+    resolve_backbone_family,
+)
 
 
 log = logging.getLogger(__name__)
@@ -86,17 +91,29 @@ def _resolve_params(cfg: DictConfig) -> None:
 # W&B logger
 
 
-def _create_wandb_logger(cfg: DictConfig, seed: int | None) -> WandbLogger:
+def _create_wandb_logger(cfg: DictConfig, seed: int | None, n_params: int | None = None) -> WandbLogger:
     run_name = f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}"
     if seed is not None:
         run_name += f"_seed{seed}"
 
-    tags = []
+    # Family tag ("vit"/"resnet") gives one-click backbone filtering in the W&B
+    # UI, complementing the config.backbone filter that render_latex.py uses.
+    family = resolve_backbone_family(cfg.backbone)
+    tags = [family]
     if seed is not None:
         tags.append("seed")
     run_tag = cfg.get("run_tag", None)
     if run_tag is not None:
         tags.append(str(run_tag))
+
+    # Backbone-appropriate optimizer block (mirrors build_optim_config).
+    opt_key = f"{family}_optimizer"
+    if hasattr(cfg.model, opt_key):
+        lr = getattr(cfg.model, opt_key).lr
+    elif hasattr(cfg.model, "vit_optimizer"):
+        lr = cfg.model.vit_optimizer.lr
+    else:
+        lr = cfg.model.optimizer.lr
 
     return WandbLogger(
         entity=cfg.wandb.entity,
@@ -109,8 +126,10 @@ def _create_wandb_logger(cfg: DictConfig, seed: int | None) -> WandbLogger:
         config={
             "model": cfg.model.name,
             "backbone": cfg.backbone,
+            "backbone_family": family,
+            "n_params": n_params,
             "dataset": cfg.dataset,
-            "lr": cfg.model.vit_optimizer.lr if hasattr(cfg.model, "vit_optimizer") else cfg.model.optimizer.lr,
+            "lr": lr,
             "batch_size": cfg.training.batch_size,
             "accumulate_grad_batches": cfg.training.accumulate_grad_batches,
             "max_epochs": cfg.training.max_epochs,
@@ -192,6 +211,11 @@ def main(cfg: DictConfig) -> None:
     # Model
     module, embed_dim = build_module(cfg, ds_config)
 
+    # Backbone parameter count — for fair ViT-vs-ResNet capacity comparison.
+    # Headless (num_classes=0): ViT-S/16 ~21.7M vs ResNet-50 ~23.5M. Logged to W&B below.
+    n_params = sum(p.numel() for p in module.backbone.parameters())
+    log.info(f"Backbone {cfg.backbone}: {n_params:,} parameters")
+
     # Callbacks
     callbacks = create_eval_callbacks(module, ds_config, embed_dim)
     ckpt_cfg = cfg.checkpoint
@@ -242,7 +266,7 @@ def main(cfg: DictConfig) -> None:
     smoke_test = cfg.get("smoke_test", False)
     logger = True
     if cfg.wandb.enabled and not smoke_test:
-        logger = _create_wandb_logger(cfg, seed)
+        logger = _create_wandb_logger(cfg, seed, n_params=n_params)
 
     # Trainer
     has_val = data.val is not None

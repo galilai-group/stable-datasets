@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import timm
 import stable_pretraining as spt
 from stable_pretraining.data import transforms
 from stable_pretraining.methods.lejepa import LeJEPA, LeJEPAOutput
@@ -9,6 +10,7 @@ from stable_pretraining.methods.lejepa import LeJEPA, LeJEPAOutput
 from benchmarks.models import (
     build_optim_config,
     collate_multicrop,
+    resolve_backbone_family,
     resolve_backbone_name,
     val_transform,
 )
@@ -107,9 +109,36 @@ def forward(self, batch, stage):
     return out
 
 
+def _build_lejepa(**kwargs) -> LeJEPA:
+    """Construct LeJEPA, injecting ``embed_dim`` for non-ViT backbones.
+
+    ``LeJEPA.__init__`` reads ``self.backbone.embed_dim`` immediately after
+    building the backbone via ``timm.create_model`` and uses it to size the
+    projector, but timm ResNets expose ``num_features`` rather than
+    ``embed_dim``. We temporarily wrap ``timm.create_model`` so the returned
+    backbone carries an ``embed_dim`` alias — the only seam between the
+    backbone's creation and the attribute read. This keeps the vendored
+    stable_pretraining code untouched (survives reinstalls) and is reverted in
+    ``finally``.
+    """
+    orig_create_model = timm.create_model
+
+    def _with_embed_dim(name, *args, **create_kwargs):
+        model = orig_create_model(name, *args, **create_kwargs)
+        if not hasattr(model, "embed_dim"):
+            model.embed_dim = model.num_features
+        return model
+
+    timm.create_model = _with_embed_dim
+    try:
+        return LeJEPA(**kwargs)
+    finally:
+        timm.create_model = orig_create_model
+
+
 def build(cfg, ds_config) -> tuple[spt.Module, int]:
     backbone_name = resolve_backbone_name(cfg.backbone, ds_config)
-    lejepa = LeJEPA(
+    lejepa_kwargs = dict(
         encoder_name=backbone_name,
         n_slices=cfg.model.loss.num_slices,
         t_max=cfg.model.loss.t_max,
@@ -118,12 +147,16 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         pretrained=False,
         drop_path_rate=0.0,
     )
+    if resolve_backbone_family(cfg.backbone) == "resnet":
+        lejepa = _build_lejepa(**lejepa_kwargs)
+    else:
+        lejepa = LeJEPA(**lejepa_kwargs)
     embed_dim = lejepa.embed_dim
     module = spt.Module(
         model=lejepa,
         backbone=lejepa.backbone,
         projector=lejepa.projector,
         forward=forward,
-        optim=build_optim_config(cfg.model),
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim

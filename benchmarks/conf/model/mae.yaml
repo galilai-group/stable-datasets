@@ -150,11 +150,12 @@ params:
     batch_size: 256
     max_epochs: 600
 
+# MAE is ViT-only (masked-patch reconstruction reimplements ViT internals),
+# so it has no resnet_optimizer; build() rejects a non-ViT backbone.
 vit_optimizer:
   type: AdamW
   lr: 1.5e-4
   weight_decay: 0.05
   betas: [0.9, 0.95]
-
-scheduler:
-  type: LinearWarmupCosineAnnealing
+  scheduler:
+    type: LinearWarmupCosineAnnealing

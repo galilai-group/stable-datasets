@@ -10,6 +10,7 @@ from stable_pretraining.data import transforms
 from benchmarks.models import (
     build_optim_config,
     collate_single,
+    resolve_backbone_family,
     resolve_backbone_name,
     val_transform,
 )
@@ -74,6 +75,12 @@ def forward(self, batch, stage):
 
 
 def build(cfg, ds_config) -> tuple[spt.Module, int]:
+    if resolve_backbone_family(cfg.backbone) != "vit":
+        raise ValueError(
+            f"MAE requires a ViT backbone (masked-patch reconstruction reimplements "
+            f"ViT internals); got backbone={cfg.backbone!r}. MAE is excluded from the "
+            f"ResNet sweep."
+        )
     h, w = ds_config.image_size
     decoder_embed_dim = cfg.model.decoder.embed_dim
     decoder_depth = cfg.model.decoder.depth
@@ -116,6 +123,6 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         forward=forward,
         patch_size=patch_size,
         norm_pix_loss=norm_pix_loss,
-        optim=build_optim_config(cfg.model),
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, encoder_embed_dim

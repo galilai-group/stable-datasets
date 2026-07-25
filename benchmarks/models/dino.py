@@ -292,6 +292,6 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         warmup_epochs_temperature_teacher=cfg.model.loss.warmup_epochs_temperature_teacher,
         use_sinkhorn_knopp=bool(cfg.model.get("sinkhorn_knopp", False)),
         forward=forward,
-        optim=build_optim_config(cfg.model),
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim

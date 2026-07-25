@@ -21,7 +21,7 @@ from stable_pretraining.callbacks.rankme import RankMe
 from stable_pretraining.data import transforms
 from torch import nn
 
-from benchmarks.models.vit import create_vit
+from benchmarks.models.vit import create_resnet, create_vit
 
 
 log = logging.getLogger(__name__)
@@ -74,8 +74,26 @@ def resolve_backbone_name(backbone_cfg, ds_config=None) -> str:
     if backbone_type == "vit" and size and patch_size:
         image_size = 224 if ds_config is None else ds_config.image_size[0]
         return f"vit_{size}_patch{patch_size}_{image_size}"
+    if backbone_type == "resnet" and size:
+        return f"resnet{size}"
 
     raise TypeError(f"Unsupported backbone config: {backbone_cfg!r}")
+
+
+def resolve_backbone_family(backbone_cfg) -> str:
+    """Classify a backbone config/name into an architecture family.
+
+    Returns ``"vit"`` or ``"resnet"``. Mirrors the ``"vit" in name`` convention
+    used by :func:`benchmarks.models.vit.create_vit`; used to select the
+    per-backbone optimizer block and to tag/label runs.
+    """
+    name = resolve_backbone_name(backbone_cfg)
+    backbone_type = _cfg_value(backbone_cfg, "type") if not isinstance(backbone_cfg, str) else None
+    if backbone_type == "vit" or "vit" in name:
+        return "vit"
+    if backbone_type == "resnet" or "resnet" in name:
+        return "resnet"
+    raise TypeError(f"Cannot determine backbone family for: {backbone_cfg!r}")
 
 
 def create_backbone(
@@ -95,6 +113,10 @@ def create_backbone(
     (e.g. small native resolution with a finer patch grid).
     """
     name = resolve_backbone_name(backbone_cfg, ds_config)
+    if resolve_backbone_family(backbone_cfg) == "resnet":
+        # patch_size / img_size are ViT concepts; ResNets accept any input size
+        # natively, so they are ignored here.
+        return create_resnet(name, in_chans=3)
     effective_img_size = img_size if img_size is not None else ds_config.image_size
     return create_vit(name, img_size=effective_img_size, in_chans=3, patch_size=patch_size)
 
@@ -118,14 +140,25 @@ def create_projector(embed_dim: int, hidden_dim: int, output_dim: int) -> nn.Mod
 # Optimizer config
 
 
-def build_optim_config(model_cfg) -> dict:
-    """Build optimizer config dict from model config."""
-    if hasattr(model_cfg, "vit_optimizer"):
+def build_optim_config(model_cfg, backbone=None) -> dict:
+    """Build optimizer config dict from model config.
+
+    ``backbone`` selects the per-backbone optimizer block: a ResNet backbone
+    uses ``resnet_optimizer``, a ViT uses ``vit_optimizer``. The scheduler now
+    lives nested under the selected optimizer block. Falls back to
+    ``vit_optimizer``/``optimizer`` and a top-level ``scheduler`` for back-compat.
+    """
+    family = resolve_backbone_family(backbone) if backbone is not None else "vit"
+    family_key = f"{family}_optimizer"
+    if hasattr(model_cfg, family_key):
+        opt_cfg = getattr(model_cfg, family_key)
+    elif hasattr(model_cfg, "vit_optimizer"):
         opt_cfg = model_cfg.vit_optimizer
     else:
         opt_cfg = model_cfg.optimizer
 
-    scheduler_cfg = {"type": model_cfg.scheduler.type}
+    scheduler_src = opt_cfg.scheduler if hasattr(opt_cfg, "scheduler") else model_cfg.scheduler
+    scheduler_cfg = {"type": scheduler_src.type}
     if hasattr(model_cfg, "_total_steps"):
         total_steps = int(model_cfg._total_steps)
         scheduler_cfg["total_steps"] = total_steps

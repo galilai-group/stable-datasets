@@ -37,6 +37,6 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         projector=projector,
         forward=forward.simclr_forward,
         simclr_loss=spt.losses.NTXEntLoss(temperature=cfg.model.loss.temperature),
-        optim=build_optim_config(cfg.model),
+        optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim

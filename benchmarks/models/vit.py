@@ -34,3 +34,20 @@ def create_vit(
         **extra,
         **kwargs,
     )
+
+
+def create_resnet(name: str, in_chans: int = 3, **kwargs) -> nn.Module:
+    """CNN factory: timm ResNet with a global-average-pooled feature output.
+
+    ``num_classes=0`` drops the classifier so the model returns a pooled
+    ``[N, num_features]`` vector (2048 for resnet50) — the same 2D shape the
+    SSL projectors and probes expect from a ViT with ``num_classes=0``. ViT-only
+    kwargs (``img_size``/``patch_size``/``dynamic_img_size``) do not apply.
+    """
+    return timm.create_model(
+        name,
+        pretrained=False,
+        num_classes=0,
+        in_chans=in_chans,
+        **kwargs,
+    )

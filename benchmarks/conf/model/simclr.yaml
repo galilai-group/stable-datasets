@@ -156,6 +156,13 @@ vit_optimizer:
   lr: 3e-4
   weight_decay: 0.05
   betas: [0.9, 0.999]
+  scheduler:
+    type: LinearWarmupCosineAnnealing
 
-scheduler:
-  type: LinearWarmupCosineAnnealing
+resnet_optimizer:
+  type: AdamW
+  lr: 1e-3
+  weight_decay: 1e-4
+  betas: [0.9, 0.999]
+  scheduler:
+    type: LinearWarmupCosineAnnealing
