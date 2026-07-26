@@ -209,6 +209,12 @@ def create_eval_callbacks(module: spt.Module, ds_config, embed_dim: int) -> list
             input="embedding",
             target="label",
             queue_length=20000,
+            # Pin num_classes to the dataset's true count. Without it, OnlineKNN
+            # infers class count from observed labels; for many-class datasets
+            # (e.g. hasyv2, 369) the queue hasn't seen every class, so preds.shape[1]
+            # != MulticlassAccuracy(num_classes) -> crash. Explicit == inferred for
+            # datasets where all classes are seen, so no change to their results.
+            num_classes=num_classes,
             metrics={
                 "top1": torchmetrics.classification.MulticlassAccuracy(num_classes),
                 "top5": torchmetrics.classification.MulticlassAccuracy(num_classes, top_k=min(5, num_classes)),

@@ -11,6 +11,11 @@ hydra:
     cpus_per_task: 8
     mem_gb: 100
     gpus_per_node: 1
+    # resnet50 SSL at bs=256 needs ~21.7GB — OOMs on the 22.06GiB A5000/A5500
+    # nodes. Restrict to 24GB geforce3090 or 48GB l40s. ViT-S doesn't need this
+    # (memory-light). --gpus-per-node isolates co-located jobs fine, so no --gres.
+    additional_parameters:
+      constraint: geforce3090|l40s
     # Default in hydra-submitit-launcher is 0 → submitit refuses to requeue on
     # SIGUSR2 timeout. Set to 3 so a job that hits the 24h wall can be
     # auto-requeued up to 3 times. trainer.fit() resumes from last.ckpt via

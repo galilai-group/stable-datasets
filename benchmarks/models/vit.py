@@ -36,18 +36,31 @@ def create_vit(
     )
 
 
-def create_resnet(name: str, in_chans: int = 3, **kwargs) -> nn.Module:
+def create_resnet(
+    name: str,
+    in_chans: int = 3,
+    grad_checkpointing: bool = False,
+    **kwargs,
+) -> nn.Module:
     """CNN factory: timm ResNet with a global-average-pooled feature output.
 
     ``num_classes=0`` drops the classifier so the model returns a pooled
     ``[N, num_features]`` vector (2048 for resnet50) — the same 2D shape the
     SSL projectors and probes expect from a ViT with ``num_classes=0``. ViT-only
     kwargs (``img_size``/``patch_size``/``dynamic_img_size``) do not apply.
+
+    ``grad_checkpointing`` (default off): ResNet-50 at the ViT-matched batch size
+    (256, 224x224) needs ~22 GB and fits comfortably on the 24 GB RTX 3090s the
+    batch sizes were tuned on — so we schedule onto 24 GB+ nodes rather than pay
+    the ~20-30% recompute cost. Kept as an opt-in escape hatch for smaller GPUs.
     """
-    return timm.create_model(
+    model = timm.create_model(
         name,
         pretrained=False,
         num_classes=0,
         in_chans=in_chans,
         **kwargs,
     )
+    if grad_checkpointing:
+        model.set_grad_checkpointing(True)
+    return model

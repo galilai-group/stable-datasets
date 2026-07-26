@@ -159,6 +159,16 @@ def _assign_gpu():
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig) -> None:
+    """Hydra CLI entry point for SLURM/local runs. The Modal backend
+    (benchmarks.modal_app) composes a cfg and calls train(cfg) directly, so the
+    training core stays in one place across all execution backends."""
+    train(cfg)
+
+
+def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
+    # extra_callbacks lets a backend inject Lightning callbacks without run.py
+    # knowing about it — e.g. the Modal backend passes a Volume-commit callback so
+    # checkpoints persist across preemptions. The SLURM/local path passes none.
     # Disable spt's run-registry / cache_dir on the SLURM worker. Module-level
     # placement is unreliable here because hydra-submitit-launcher unpickles
     # `main` directly and the spt singleton is created during plugin discovery
@@ -238,6 +248,11 @@ def main(cfg: DictConfig) -> None:
         "save_weights_only": False,
     }
     callbacks.append(ModelCheckpoint(**ckpt_kwargs))
+    # Backend-injected callbacks are appended AFTER ModelCheckpoint so their
+    # on_validation_end fires after the checkpoint is written (e.g. the Modal
+    # Volume-commit callback persists the freshly-saved ckpt).
+    if extra_callbacks:
+        callbacks.extend(extra_callbacks)
 
     # Auto-resume: if a previous SLURM walltime-out / requeue / manual resubmit
     # left a last.ckpt at the same (model, backbone, dataset, seed) path, hand
@@ -255,6 +270,27 @@ def main(cfg: DictConfig) -> None:
                     f"Starting fresh."
                 )
                 resume_ckpt = None
+            else:
+                # Shape-compat guard. Some online eval-callback queue buffers are
+                # lazily shaped — e.g. `callbacks_modules.ordered_queue_label.out`
+                # is [N] once a forward pass has run but [N, 1] in a fresh model —
+                # and with num_sanity_val_steps=0 no forward happens before the
+                # resume load, so Trainer.fit(ckpt_path=...) raises a shape-mismatch
+                # RuntimeError mid-fit. submitit/Modal surface that as a hard job
+                # failure. Verify every checkpoint tensor matches the current
+                # model's shape; if any don't, start fresh instead of crashing.
+                _model_sd = module.state_dict()
+                _ckpt_sd = _ckpt_peek.get("state_dict", {})
+                _bad = [
+                    k for k, v in _ckpt_sd.items()
+                    if k not in _model_sd or tuple(_model_sd[k].shape) != tuple(v.shape)
+                ]
+                if _bad:
+                    log.warning(
+                        f"Skipping resume: {resume_ckpt} incompatible with current model "
+                        f"({len(_bad)} tensor(s) mismatch, e.g. {_bad[0]}). Starting fresh."
+                    )
+                    resume_ckpt = None
             del _ckpt_peek
         except Exception as e:
             log.warning(f"Skipping resume: failed to load {resume_ckpt}: {e}")
@@ -270,7 +306,12 @@ def main(cfg: DictConfig) -> None:
 
     # Trainer
     has_val = data.val is not None
-    output_dir = HydraConfig.get().runtime.output_dir or os.getcwd()
+    # Under @hydra.main the runtime output dir is set; under the Modal backend
+    # (hydra.compose, no HydraConfig singleton) it isn't — fall back to cwd.
+    try:
+        output_dir = HydraConfig.get().runtime.output_dir or os.getcwd()
+    except ValueError:
+        output_dir = os.getcwd()
 
     trainer = pl.Trainer(
         max_epochs=1 if smoke_test else cfg.training.max_epochs,

@@ -46,7 +46,7 @@ benchmarks = [
     "psutil",
     "datasets",
     "torchvision",
-    "stable-pretraining @ git+https://github.com/galilai-group/stable-pretraining",
+    "stable-pretraining @ git+https://github.com/galilai-group/stable-pretraining@4ba07974de70fc3cd171838890603a3ea6e62be7",
     "hydra-core>=1.3",
     "hydra-submitit-launcher>=1.2",
     "hydra-joblib-launcher>=1.2",

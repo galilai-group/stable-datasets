@@ -527,7 +527,17 @@ def create_dataset(
     batch_size = training_cfg.batch_size
     num_workers = training_cfg.num_workers
     prefetch_factor = getattr(training_cfg, "prefetch_factor", 2) if num_workers > 0 else None
-    mp_ctx = "fork" if num_workers > 0 else None
+    # With spawn, workers re-import per start, so respawning every epoch ~doubles
+    # wall-clock. Keeping them alive spawns once and reuses — the DIAGNOSTICS.md
+    # production config is num_workers=8 + persistent_workers=True + spawn.
+    persistent_workers = num_workers > 0
+    # Lance is NOT fork-safe: forked DataLoader workers intermittently deadlock
+    # at the epoch/eval boundary, orphaning workers that zombie the SLURM job
+    # while the main process exits "successfully" (silent 1-epoch no-op). Spawn
+    # is Lance's official recommendation and this benchmark's documented default
+    # (see results/DIAGNOSTICS.md); it re-imports cleanly per worker. run.py's
+    # `if __name__ == "__main__"` guard makes spawn safe here.
+    mp_ctx = "spawn" if num_workers > 0 else None
 
     if ds_config.modality == "timeseries":
         train_transform = train_transform or _timeseries_transform(ds_config)
@@ -551,6 +561,7 @@ def create_dataset(
         collate_fn=collate_fn,
         multiprocessing_context=mp_ctx,
         prefetch_factor=prefetch_factor,
+        persistent_workers=persistent_workers,
     )
 
     val_loader = torch.utils.data.DataLoader(
@@ -562,6 +573,7 @@ def create_dataset(
         collate_fn=val_collate_fn,
         multiprocessing_context=mp_ctx,
         prefetch_factor=prefetch_factor,
+        persistent_workers=persistent_workers,
     )
 
     return spt.data.DataModule(train=train_loader, val=val_loader), ds_config
