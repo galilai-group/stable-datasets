@@ -271,7 +271,7 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         nn.Linear(cfg.model.projector.hidden_dim, cfg.model.projector.hidden_dim),
         nn.GELU(),
         nn.Linear(cfg.model.projector.hidden_dim, cfg.model.projector.bottleneck_dim),
-        spt.utils.nn_modules.L2Norm(),
+        spt.backbone.L2Norm(),
         nn.Linear(cfg.model.projector.bottleneck_dim, cfg.model.projector.output_dim, bias=False),
     )
     projector_wrapper = spt.backbone.TeacherStudentWrapper(
