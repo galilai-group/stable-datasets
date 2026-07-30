@@ -318,6 +318,16 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
                         # Tolerate the now-missing eval buffers (module keeps its fresh
                         # ones); model/optimizer/scheduler restore as normal.
                         module.strict_loading = False
+                        # Continue the ORIGINAL W&B run rather than opening a new one:
+                        # the run id is embedded in the checkpoint. spt.Manager reads
+                        # wandb_resume.json from CWD (legacy mode) and injects the id
+                        # before wandb.init, so the epoch axis stays continuous.
+                        _wb = _ckpt_peek.get("wandb")
+                        if _wb and _wb.get("id"):
+                            import json as _json
+                            with open(os.path.join(os.getcwd(), "wandb_resume.json"), "w") as _f:
+                                _json.dump(_wb, _f)
+                            log.info(f"Wrote wandb_resume.json (id={_wb['id']}) to continue the original run.")
                         log.info(
                             f"Resume: reset {len(_bad)} online-eval callback tensor(s) and resumed "
                             f"model+optimizer+scheduler from epoch {_ckpt_peek.get('epoch')}."
