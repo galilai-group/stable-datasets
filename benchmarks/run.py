@@ -286,11 +286,42 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
                     if k not in _model_sd or tuple(_model_sd[k].shape) != tuple(v.shape)
                 ]
                 if _bad:
-                    log.warning(
-                        f"Skipping resume: {resume_ckpt} incompatible with current model "
-                        f"({len(_bad)} tensor(s) mismatch, e.g. {_bad[0]}). Starting fresh."
-                    )
-                    resume_ckpt = None
+                    # Distinguish disposable online-eval callback state (kNN/probe
+                    # queue buffers + online linear probe, under callbacks_modules.*)
+                    # from real model-weight mismatches. The eval buffers are lazily
+                    # shaped, so they always "mismatch" a fresh module on resume — but
+                    # they carry no training signal (they re-warm in a few epochs).
+                    # Resetting them lets us resume model+optimizer+scheduler+epoch,
+                    # instead of silently discarding all prior training.
+                    _bad_model = [k for k in _bad if not k.startswith("callbacks_modules.")]
+                    if _bad_model:
+                        log.warning(
+                            f"Skipping resume: {resume_ckpt} incompatible with current model "
+                            f"({len(_bad_model)} model tensor(s) mismatch, e.g. {_bad_model[0]}). "
+                            f"Starting fresh."
+                        )
+                        resume_ckpt = None
+                    else:
+                        _sd = _ckpt_peek["state_dict"]
+                        for _k in [k for k in _sd if k.startswith("callbacks_modules.")]:
+                            del _sd[_k]
+                        for _k in [
+                            k for k in _ckpt_peek.get("callbacks", {})
+                            if any(t in str(k) for t in ("Online", "Queue", "Probe", "KNN", "RankMe", "LiDAR"))
+                        ]:
+                            del _ckpt_peek["callbacks"][_k]
+                        # Name must end in ".ckpt": spt.Manager runs
+                        # Path(ckpt_path).with_suffix(".ckpt"), so a "…last.ckpt.resume-clean"
+                        # name would be rewritten to a nonexistent "…last.ckpt.ckpt".
+                        resume_ckpt = os.path.join(os.path.dirname(resume_ckpt), "last.resume-clean.ckpt")
+                        torch.save(_ckpt_peek, resume_ckpt)
+                        # Tolerate the now-missing eval buffers (module keeps its fresh
+                        # ones); model/optimizer/scheduler restore as normal.
+                        module.strict_loading = False
+                        log.info(
+                            f"Resume: reset {len(_bad)} online-eval callback tensor(s) and resumed "
+                            f"model+optimizer+scheduler from epoch {_ckpt_peek.get('epoch')}."
+                        )
             del _ckpt_peek
         except Exception as e:
             log.warning(f"Skipping resume: failed to load {resume_ckpt}: {e}")
