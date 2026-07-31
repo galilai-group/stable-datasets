@@ -238,6 +238,15 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
     if seed is not None:
         run_dir_name += f"_seed{seed}"
     run_ckpt_dir = os.path.join(ckpt_cfg.dir, run_dir_name)
+    # Run from the per-cell checkpoint dir so spt.Manager reads/writes its
+    # wandb_resume.json sidecar THERE (unique per model/backbone/dataset/seed),
+    # not in one shared file. os.getcwd() defaults to the repo root (hydra doesn't
+    # chdir), so otherwise every concurrent run clobbers a single shared
+    # wandb_resume.json and reads back another run's id — silently resuming into
+    # the WRONG W&B run (cross-dataset contamination). A per-cell cwd keeps the
+    # sidecar isolated yet stable across SLURM requeues of the same cell.
+    os.makedirs(run_ckpt_dir, exist_ok=True)
+    os.chdir(run_ckpt_dir)
     ckpt_kwargs = {
         "dirpath": run_ckpt_dir,
         "filename": "{epoch}-{step}",
@@ -336,11 +345,18 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
                         # wandb_resume.json from CWD (legacy mode) and injects the id
                         # before wandb.init, so the epoch axis stays continuous.
                         _wb = _ckpt_peek.get("wandb")
+                        _sidecar = os.path.join(os.getcwd(), "wandb_resume.json")
                         if _wb and _wb.get("id"):
                             import json as _json
-                            with open(os.path.join(os.getcwd(), "wandb_resume.json"), "w") as _f:
+                            with open(_sidecar, "w") as _f:
                                 _json.dump(_wb, _f)
                             log.info(f"Wrote wandb_resume.json (id={_wb['id']}) to continue the original run.")
+                        elif os.path.isfile(_sidecar):
+                            # Fresh-run resume (checkpoint carries no embedded wandb id): drop any
+                            # stale sidecar left in this cell's dir so the Manager opens a NEW run
+                            # instead of injecting a leftover id.
+                            os.remove(_sidecar)
+                            log.info("Removed stale wandb_resume.json — starting a fresh W&B run.")
                         log.info(
                             f"Resume: reset {len(_stripped)} eval-queue buffer(s), PRESERVED online "
                             f"linear probe, resumed model+optimizer+scheduler from epoch "
