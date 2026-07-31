@@ -115,13 +115,18 @@ def _create_wandb_logger(cfg: DictConfig, seed: int | None, n_params: int | None
     else:
         lr = cfg.model.optimizer.lr
 
+    # Keep W&B local run data on SCRATCH, not HOME: os.getcwd() is the hydra output
+    # dir under the repo (HOME, 100 GB quota), and W&B caches quickly fill it. Derive
+    # a scratch path from checkpoint.dir (already resolved to scratch).
+    wandb_save_dir = os.path.join(os.path.dirname(str(cfg.checkpoint.dir)), "wandb-local")
+    os.makedirs(wandb_save_dir, exist_ok=True)
     return WandbLogger(
         entity=cfg.wandb.entity,
         project=cfg.wandb.project,
         name=run_name,
         id=wandb.util.generate_id(),
         log_model=False,
-        save_dir=os.getcwd(),
+        save_dir=wandb_save_dir,
         tags=tags or None,
         config={
             "model": cfg.model.name,
