@@ -303,11 +303,19 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
                         resume_ckpt = None
                     else:
                         _sd = _ckpt_peek["state_dict"]
-                        for _k in [k for k in _sd if k.startswith("callbacks_modules.")]:
+                        # Strip ONLY the lazily-shaped online-eval QUEUE buffers (the kNN/probe
+                        # memory bank + RankMe/LiDAR queues), which don't exist in a fresh module
+                        # at checkpoint-restore time and so shape-mismatch. KEEP
+                        # callbacks_modules.linear_probe.* — OnlineProbe.configure_model creates
+                        # it eagerly (before Lightning restores the checkpoint), so it restores
+                        # cleanly and the reported online linear-probe metric stays CONTINUOUS
+                        # across the resume (no reset-and-rewarm dip).
+                        _stripped = [k for k in _sd if k.startswith("callbacks_modules.") and "queue" in k.lower()]
+                        for _k in _stripped:
                             del _sd[_k]
                         for _k in [
                             k for k in _ckpt_peek.get("callbacks", {})
-                            if any(t in str(k) for t in ("Online", "Queue", "Probe", "KNN", "RankMe", "LiDAR"))
+                            if any(t in str(k) for t in ("Queue", "KNN", "RankMe", "LiDAR"))
                         ]:
                             del _ckpt_peek["callbacks"][_k]
                         # Name must end in ".ckpt": spt.Manager runs
@@ -329,8 +337,9 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
                                 _json.dump(_wb, _f)
                             log.info(f"Wrote wandb_resume.json (id={_wb['id']}) to continue the original run.")
                         log.info(
-                            f"Resume: reset {len(_bad)} online-eval callback tensor(s) and resumed "
-                            f"model+optimizer+scheduler from epoch {_ckpt_peek.get('epoch')}."
+                            f"Resume: reset {len(_stripped)} eval-queue buffer(s), PRESERVED online "
+                            f"linear probe, resumed model+optimizer+scheduler from epoch "
+                            f"{_ckpt_peek.get('epoch')}."
                         )
             del _ckpt_peek
         except Exception as e:
