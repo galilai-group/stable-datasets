@@ -31,9 +31,12 @@ wandb:
   entity: samibg
   project: finalized-stable-datasets
 
+# Hydra run outputs (incl. submitit .out/.err logs) go to SCRATCH, not HOME:
+# os.getcwd() for a job is this dir, and it's also the W&B save_dir base — keeping
+# it on HOME (100 GB quota) crashes runs. STABLE_DATASETS_ROOT is set per-launch.
 hydra:
   run:
-    dir: ${oc.env:PROJECT_ROOT,/oscar/home/sboughan/scratch/.stable-datasets}/benchmark-runs/${model.name}_${backbone}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${oc.env:STABLE_DATASETS_ROOT,/oscar/scratch/sboughan/.stable-datasets}/benchmark-runs/${model.name}_${backbone}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
   sweep:
-    dir: ${oc.env:PROJECT_ROOT,/oscar/home/sboughan/scratch/.stable-datasets}/benchmark-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${oc.env:STABLE_DATASETS_ROOT,/oscar/scratch/sboughan/.stable-datasets}/benchmark-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
     subdir: ${model.name}_${backbone}_${dataset}
