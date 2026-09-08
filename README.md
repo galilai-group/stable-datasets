@@ -258,3 +258,8 @@ pytest -q
 ```
 
 For targeted work, run the relevant subset under `stable_datasets/tests/`.
+
+## Requesting a dataset
+
+To request a dataset, please fill out [this](https://docs.google.com/forms/d/e/1FAIpQLSfZ5g5y4SqEYjVvtME3siPFGHx73ZpEXy_k2txWrH23u2rnsg/viewform) survey.
+
