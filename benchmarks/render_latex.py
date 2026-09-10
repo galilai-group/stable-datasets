@@ -302,6 +302,11 @@ def collect_runs(
     skipped_excluded: dict[str, int] = {}
     skipped_transfer = 0
     skipped_short_runtime = 0
+    skipped_wrong_backbone = 0
+    # Which backbone family did the caller ask for? The W&B query also pulls
+    # legacy seed_sweep_v1/seed runs (truncated configs), which are all ViT — so
+    # without this gate a resnet request silently returns the ViT seed sweep.
+    requested_family = "resnet" if any("resnet" in b for b in backbones) else "vit"
     for run in tqdm(runs, desc="Scanning runs"):
         if run.id in KNOWN_BAD_RUNS:
             continue
@@ -319,6 +324,24 @@ def collect_runs(
 
         config = _retry(lambda: run.config)
         summary = _retry(lambda: run.summary)
+
+        # Backbone-family gate. Classify the run and drop it if it doesn't match
+        # the requested family. Priority: explicit config.backbone > family tag >
+        # legacy seed tags (those predate the ResNet work, so they're ViT).
+        _bb = config.get("backbone")
+        if _bb:
+            run_family = "resnet" if "resnet" in _bb else "vit"
+        elif "resnet" in run_tags:
+            run_family = "resnet"
+        elif "vit" in run_tags:
+            run_family = "vit"
+        elif {"seed_sweep_v1", "seed"} & run_tags:
+            run_family = "vit"
+        else:
+            run_family = None  # unknown — let name-parsing/params gate handle it
+        if run_family is not None and run_family != requested_family:
+            skipped_wrong_backbone += 1
+            continue
 
         # Filter out obvious crash artefacts (Python died before any epoch
         # completed) via a very low runtime floor. Everything above this must
@@ -422,7 +445,8 @@ def collect_runs(
         f"bad_params={skipped_bad_params}, "
         f"no_rankme_or_metric={skipped_no_metric}, "
         f"transfer={skipped_transfer}, "
-        f"short_runtime={skipped_short_runtime}"
+        f"short_runtime={skipped_short_runtime}, "
+        f"wrong_backbone={skipped_wrong_backbone}"
     )
     if skipped_excluded:
         excluded_summary = ", ".join(f"{d}={n}" for d, n in sorted(skipped_excluded.items(), key=lambda x: -x[1]))

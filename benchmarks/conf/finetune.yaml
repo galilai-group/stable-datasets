@@ -1,0 +1,66 @@
+# Finetune experiment (ViT checkpoints only).
+#
+# For a pretrained ViT checkpoint: replace the linear head with a fresh one,
+# subsample the train set (10%, uniform label distribution), and finetune the
+# WHOLE model (backbone + head) end-to-end with cross-entropy, using MAE's
+# ImageNet finetune recipe adapted to our low-data setting.
+#
+#   python -m benchmarks.finetune model=simclr backbone=vit_small_patch16_224 dataset=cifar10
+#   RUN_MODULE=benchmarks.finetune CONFIG=finetune BACKBONES=vit_small_patch16_224 \
+#     MODELS=simclr,dino,lejepa,... ./benchmarks/launch.sh cifar10,stl10,...
+defaults:
+  - config
+  - override hydra/launcher: submitit_slurm
+  - _self_
+
+# SLURM launcher (used with --multirun). ViT-S finetune is memory-light, so
+# unlike the ResNet sweep it needs NO GPU constraint — it fits any condo node.
+hydra:
+  launcher:
+    partition: ${oc.env:SLURM_PARTITION,gpu}
+    qos: ${oc.env:SLURM_QOS,normal}
+    name: finetune_${model.name}_${dataset}
+    timeout_min: 1440
+    cpus_per_task: 8
+    mem_gb: 64
+    gpus_per_node: 1
+    max_num_timeout: 3
+    array_parallelism: 32
+
+finetune:
+  # --- epochs (MAE: fixed 100). num_epochs_pct wins only if non-null. ---
+  num_epochs: 100
+  num_epochs_pct: null      # e.g. 10 => ceil(10% * that method's pretrain epochs); null => use num_epochs
+
+  # --- batch + LR (MAE recipe, adapted) ---
+  # Effective batch = min(reference_batch, subset). LR scales linearly with the
+  # effective batch off (reference_batch, base_lr). base_lr 3e-4 = MAE's 1e-3@1024
+  # scaled to batch 256 and rounded up (ViT-appropriate). ViT-S @224 fits 256 in
+  # VRAM, so no grad-accum needed.
+  reference_batch: 256
+  base_lr: 3e-4
+  weight_decay: 0.05        # MAE (ViT)
+  betas: [0.9, 0.999]
+  warmup_epochs: 5          # MAE
+  # scheduler is cosine (LinearWarmupCosineAnnealing), set in code
+
+  # --- train subsample (low-data regime) ---
+  subsample_pct: 10
+  label_balance: uniform    # equal per class (balanced)
+  subsample_seed: 42
+
+  # --- regularizers (MAE finetune; layer-decay and mixup/cutmix deliberately omitted) ---
+  label_smoothing: 0.1
+  drop_path: 0.1
+  randaug_num_ops: 2        # torchvision RandAugment(num_ops=2, magnitude=9) ~= MAE rand-m9
+  randaug_magnitude: 9
+
+  # --- which pretrained checkpoint to load ---
+  # Curated ViT checkpoint tree: {checkpoint_root}/{model}/{dataset}/last.ckpt
+  # (one per method x dataset; source seed recorded in that tree's manifest.csv).
+  checkpoint_root: /oscar/scratch/sboughan/sds_neurips_review
+  load_seed: null           # unused for this layout (seed is baked into the curated ckpt)
+  which: last               # 'last' (final pretrained weights) or 'best' (epoch=*.ckpt if present)
+
+# tag finetune runs so they filter separately in W&B
+run_tag: finetune

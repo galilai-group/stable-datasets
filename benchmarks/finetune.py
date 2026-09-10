@@ -126,6 +126,13 @@ def _load_backbone_weights(backbone: nn.Module, ckpt_path: str) -> None:
         prefix = "teacher." if any(k.startswith("teacher.") for k in bb_state) else "student."
         bb_state = {k[len(prefix) :]: v for k, v in bb_state.items() if k.startswith(prefix)}
         log.info(f"Unwrapped '{prefix}' encoder from TeacherStudentWrapper checkpoint")
+    # MAE stores its encoder as a MaskedEncoder: the ViT lives under `backbone.vit.*`
+    # (alongside a separate MaskedEncoder-level `patch_embed` used for masking). Unwrap
+    # the `vit.` encoder — those are exactly the plain-ViT weights the finetune wants —
+    # mirroring the DINO teacher/student unwrap above. No-op for every other method.
+    if any(k.startswith("vit.") for k in bb_state):
+        bb_state = {k[len("vit.") :]: v for k, v in bb_state.items() if k.startswith("vit.")}
+        log.info("Unwrapped 'vit.' encoder from MAE MaskedEncoder checkpoint")
     missing, unexpected = backbone.load_state_dict(bb_state, strict=False)
     log.info(
         f"Loaded {len(bb_state)} backbone tensors from {ckpt_path} "

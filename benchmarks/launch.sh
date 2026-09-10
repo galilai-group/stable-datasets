@@ -29,6 +29,9 @@ shift
 CONFIG=${CONFIG:-local_parallel}
 MODELS=${MODELS:-supervised,simclr,dino,mae,lejepa,nnclr,barlow_twins}
 BACKBONES=${BACKBONES:-vit_small_patch16_224}
+# Entry module: benchmarks.run (pretrain, default) or benchmarks.finetune.
+# For finetune sweeps: RUN_MODULE=benchmarks.finetune CONFIG=finetune ./launch.sh <datasets>
+RUN_MODULE=${RUN_MODULE:-benchmarks.run}
 
 echo "=== Benchmark Sweep ==="
 echo "Project:   $PROJECT_ROOT"
@@ -36,9 +39,10 @@ echo "Config:    $CONFIG"
 echo "Datasets:  $DATASETS"
 echo "Models:    $MODELS"
 echo "Backbones: $BACKBONES"
+echo "Module:    $RUN_MODULE"
 echo "=========================="
 
-"$PROJECT_ROOT/.venv/bin/python" -m benchmarks.run \
+"$PROJECT_ROOT/.venv/bin/python" -m "$RUN_MODULE" \
     --multirun \
     --config-name "$CONFIG" \
     "dataset=$DATASETS" \

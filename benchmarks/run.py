@@ -285,6 +285,30 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
                 )
                 resume_ckpt = None
             else:
+                # Library-drift key remap: paper-era MAE checkpoints name the decoder's
+                # MLP pre-norm `norm3` (older stable_pretraining reserved `norm2` for a
+                # cross-attn slot); the current release renamed it `norm2` (timm-style).
+                # Rename such keys IN PLACE so those checkpoints resume cleanly instead of
+                # being discarded as "incompatible". Guarded on an exact name+shape match
+                # against the current model, so it is a strict no-op for every other
+                # checkpoint/method. This proven equivalent (same pre-norm feeding the MLP)
+                # keeps the paper MAE backbones continuable rather than restarting fresh.
+                _msd = module.state_dict()
+                _csd = _ckpt_peek.get("state_dict", {})
+                _remap = [
+                    k for k in list(_csd)
+                    if ".norm3." in k and k not in _msd
+                    and k.replace(".norm3.", ".norm2.") in _msd
+                    and k.replace(".norm3.", ".norm2.") not in _csd
+                    and tuple(_msd[k.replace(".norm3.", ".norm2.")].shape) == tuple(_csd[k].shape)
+                ]
+                for _k in _remap:
+                    _csd[_k.replace(".norm3.", ".norm2.")] = _csd.pop(_k)
+                if _remap:
+                    log.info(
+                        f"Resume: remapped {len(_remap)} legacy decoder norm3->norm2 tensor(s) "
+                        f"for checkpoint compatibility."
+                    )
                 # Shape-compat guard. Some online eval-callback queue buffers are
                 # lazily shaped — e.g. `callbacks_modules.ordered_queue_label.out`
                 # is [N] once a forward pass has run but [N, 1] in a fresh model —
@@ -362,6 +386,18 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
                             f"linear probe, resumed model+optimizer+scheduler from epoch "
                             f"{_ckpt_peek.get('epoch')}."
                         )
+                elif _remap:
+                    # Only a legacy key rename was needed (no eval-buffer mismatch to
+                    # strip): persist the remapped state_dict so the checkpoint Trainer
+                    # actually loads carries norm2 keys, then resume from it.
+                    resume_ckpt = os.path.join(
+                        os.path.dirname(resume_ckpt), "last.resume-clean.ckpt"
+                    )
+                    torch.save(_ckpt_peek, resume_ckpt)
+                    log.info(
+                        f"Resume: saved norm3->norm2 remapped checkpoint; resumed "
+                        f"model+optimizer+scheduler from epoch {_ckpt_peek.get('epoch')}."
+                    )
             del _ckpt_peek
         except Exception as e:
             log.warning(f"Skipping resume: failed to load {resume_ckpt}: {e}")

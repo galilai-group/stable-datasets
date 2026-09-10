@@ -16,6 +16,7 @@ def create_vit(
     img_size: int | tuple[int, int] | None = None,
     in_chans: int = 3,
     patch_size: int | None = None,
+    drop_path_rate: float = 0.0,
     **kwargs,
 ) -> nn.Module:
     extra = {}
@@ -30,7 +31,7 @@ def create_vit(
         pretrained=False,
         num_classes=0,
         in_chans=in_chans,
-        drop_path_rate=0.0,
+        drop_path_rate=drop_path_rate,  # stochastic depth (finetune uses 0.1, pretrain 0.0)
         **extra,
         **kwargs,
     )

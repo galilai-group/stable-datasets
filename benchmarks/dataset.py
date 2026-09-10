@@ -483,6 +483,38 @@ def collate_timeseries(batch):
     return {"series": series, "mask": mask, "label": labels}
 
 
+def _subsample_train_indices(labels, pct: float, balance: str, seed: int) -> list[int]:
+    """Indices for a ~pct%% subsample of the train set.
+
+    balance="uniform": equal samples per class (a *balanced* subset — a class
+    with fewer than the per-class target contributes all it has). balance=
+    "stratified": pct%% of each class, preserving the original distribution.
+    Deterministic given ``seed``.
+    """
+    import math as _math
+
+    rng = np.random.default_rng(seed)
+    labels = np.asarray(labels)
+    classes = np.unique(labels)
+    target_total = max(1, _math.ceil(pct / 100.0 * len(labels)))
+    idxs: list[int] = []
+    if balance == "uniform":
+        per_class = max(1, target_total // len(classes))
+        for c in classes:
+            ci = np.where(labels == c)[0]
+            rng.shuffle(ci)
+            idxs.extend(ci[: min(per_class, len(ci))].tolist())
+    elif balance == "stratified":
+        for c in classes:
+            ci = np.where(labels == c)[0]
+            rng.shuffle(ci)
+            k = max(1, _math.ceil(pct / 100.0 * len(ci)))
+            idxs.extend(ci[:k].tolist())
+    else:
+        raise ValueError(f"unknown label_balance={balance!r} (use 'uniform' or 'stratified')")
+    return sorted(idxs)
+
+
 def create_dataset(
     name: str,
     train_transform,
@@ -490,6 +522,8 @@ def create_dataset(
     collate_fn,
     training_cfg,
     data_dir: str | None = None,
+    train_subsample: dict | None = None,
+    train_drop_last: bool = True,
 ) -> tuple[spt.data.DataModule, DatasetConfig]:
     """Load a dataset and wrap it as a DataModule.
 
@@ -549,6 +583,29 @@ def create_dataset(
 
         val_collate_fn = collate_single
 
+    # Optional train subsample (finetune experiment: low-data regime). Applied
+    # to the final train split (after any val holdout), before transforms.
+    if train_subsample is not None:
+        label_key = getattr(ds_config, "label_key", None) or "label"
+        if label_key not in train_hf.column_names:
+            label_key = "label"
+        # Read labels from the Arrow table (no image decode). `.table` is the full
+        # backend table, so map through any existing row-selection (_indices).
+        tbl_labels = train_hf.table.column(label_key).to_pylist()
+        sel = getattr(train_hf, "_indices", None)
+        labels = np.asarray(tbl_labels)[np.asarray(sel)].tolist() if sel is not None else tbl_labels
+        idx = _subsample_train_indices(
+            labels,
+            float(train_subsample.get("pct", 10)),
+            str(train_subsample.get("balance", "uniform")),
+            int(train_subsample.get("seed", 42)),
+        )
+        log.info(
+            f"Subsampling train for '{name_lower}': {len(train_hf)} -> {len(idx)} samples "
+            f"({train_subsample.get('pct', 10)}%, {train_subsample.get('balance', 'uniform')} labels)"
+        )
+        train_hf = train_hf.select(idx)
+
     train_ds = train_hf.with_transform(train_transform)
     val_ds = val_hf.with_transform(val_transform)
 
@@ -557,7 +614,7 @@ def create_dataset(
         batch_size=batch_size,
         num_workers=num_workers,
         shuffle=True,
-        drop_last=True,
+        drop_last=train_drop_last,
         collate_fn=collate_fn,
         multiprocessing_context=mp_ctx,
         prefetch_factor=prefetch_factor,

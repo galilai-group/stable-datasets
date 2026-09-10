@@ -101,6 +101,7 @@ def create_backbone(
     ds_config,
     patch_size: int | None = None,
     img_size: int | tuple[int, int] | None = None,
+    drop_path_rate: float = 0.0,
 ) -> nn.Module:
     """Create a backbone from either a timm model name or a structured config.
 
@@ -118,7 +119,10 @@ def create_backbone(
         # natively, so they are ignored here.
         return create_resnet(name, in_chans=3)
     effective_img_size = img_size if img_size is not None else ds_config.image_size
-    return create_vit(name, img_size=effective_img_size, in_chans=3, patch_size=patch_size)
+    return create_vit(
+        name, img_size=effective_img_size, in_chans=3, patch_size=patch_size,
+        drop_path_rate=drop_path_rate,
+    )
 
 
 # Projector
