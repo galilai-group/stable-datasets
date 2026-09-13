@@ -194,6 +194,8 @@ num_classes, protocol)`, so method-specific knowledge lives next to that
 method's `forward()`. Every one of them returns the common head under the
 default `protocol="common"`. `conf/config.yaml: probe_protocol` selects it.
 
+The head is fixed, but its OPTIMIZER hyperparameters are swept — see #14.
+
 Native probes (`protocol="native"`) are available as an optional **secondary**
 result. SimCLR/NNCLR/BarlowTwins natives are drop-in (bare Linear, same dim).
 DINO and LeJEPA natives raise `NotImplementedError` with instructions, because
@@ -383,3 +385,60 @@ After these fixes all 7 methods run at effective batch 256 on all 20 datasets
   `eval()` where BN uses running statistics.
 - **Multicrop OOM.** No dataset resolves DINO or LeJEPA to `accum=1`; both are
   32 x 8 across all 20.
+
+## 14. The probe's own LR and weight decay are swept, not fixed
+
+Probe accuracy depends on the probe's learning rate and weight decay, and the
+best setting is not the same for every method: SSL objectives leave embeddings
+at very different scales. Fixing one probe LR for all methods measures "how well
+does this embedding happen to suit our arbitrary probe LR" alongside linear
+separability — the exact confound the benchmark exists to remove.
+
+So `K = 3 x 3 = 9` heads train simultaneously on the same frozen embedding:
+
+```yaml
+probe_sweep:
+  enabled: true
+  lr_scales:     [0.1, 1.0, 10.0]      # multiply the probe optimizer's base LR
+  weight_decays: [0.0, 1.0e-6, 1.0e-4]
+  per_head_metrics: true
+```
+
+The head itself is unchanged and identical for every method (#7): non-affine
+BatchNorm + Linear. Only the optimizer settings vary, so probe *capacity* stays
+constant and only probe *fitting* is tuned.
+
+**How it works.** `SweepLinearProbe` stacks K heads and returns `(N, K, C)`.
+Because the embedding is detached, the heads are independent: their
+cross-entropies are summed, and one optimizer step updates all K as if each had
+been trained alone. Per-head LR/WD come from a gradient hook that scales each
+head's gradient by `lr_scale` and adds `weight_decay * param` — one optimizer,
+K effective settings. Verified: a head at `lr_scale=10` moves 108x more per step
+than one at `lr_scale=0.1` (expected ~100x, the remainder being weight decay).
+
+**Metric semantics — read this before interpreting results.** `top1` and `top5`
+keep their names and now report the **best head**, so every existing consumer of
+`eval/linear_probe_top1_epoch` keeps working without knowing a sweep happened.
+`top1_mean` is the mean across heads, and each head is also logged as
+`eval/linear_probe_lr<x>_wd<y>_top1`. Keep the per-head metrics on: they are how
+you see whether the best head sits at the EDGE of the grid, which is the signal
+that the grid needs widening.
+
+Best-of-K selected on validation is a mild optimistic bias. It is the standard
+linear-eval protocol (DINOv2 and others sweep probe LR and report the best), and
+it is applied identically to every method and backbone, so between-method
+comparisons stay fair.
+
+Cost is negligible: 9 heads add ~25-110 MB depending on backbone and class
+count, against the ~2 GB gap between a 22 GiB and a 24 GiB card.
+
+**Why not `spt.backbone.AutoLinearClassifier`.** It does almost this, but it has
+no usages or tests anywhere in spt, and three things disqualified it as a
+drop-in: it hardcodes `BatchNorm1d(d)` with `affine=True, eps=1e-5` rather than
+our `affine=False, eps=1e-6`; its default grid also sweeps normalization,
+dropout and label smoothing, which would reopen #7 by making the headline a best
+over *architectures* rather than one protocol; and its `forward(x, y, pl_module)`
+returns a summed loss rather than logits and does not detach its input, so it
+cannot go through `spt.callbacks.OnlineProbe` (which does detach for us) without
+a rewrite. `benchmarks/models/probe_sweep.py` is ~175 lines and keeps the
+arithmetic behind every probe number in this repo.
