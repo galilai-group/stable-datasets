@@ -21,6 +21,12 @@ from stable_pretraining.callbacks.rankme import RankMe
 from stable_pretraining.data import transforms
 from torch import nn
 
+from benchmarks.models.probe_sweep import (
+    SweepLinearProbe,
+    build_sweep_metrics,
+    expand_grid,
+    sweep_ce_loss,
+)
 from benchmarks.models.vit import create_resnet, create_vit
 
 
@@ -274,6 +280,7 @@ def create_eval_callbacks(
     embed_dim: int,
     model_name: str | None = None,
     probe_protocol: str = "common",
+    probe_sweep: dict | None = None,
 ) -> list:
     """Create linear probe and KNN evaluation callbacks.
 
@@ -290,18 +297,41 @@ def create_eval_callbacks(
             "top1": torchmetrics.classification.MulticlassAccuracy(num_classes),
             "top5": torchmetrics.classification.MulticlassAccuracy(num_classes, top_k=min(5, num_classes)),
         }
+        def _head_factory(d, c):
+            if model_name is not None:
+                return get_probe(model_name, d, c, probe_protocol)
+            return build_linear_probe(
+                d, c, "linear" if probe_protocol == "legacy_linear" else "bn_linear"
+            )
+
+        if probe_sweep:
+            # K heads over the same frozen embedding, each at its own (lr, wd).
+            # top1/top5 keep their names and become BEST-over-sweep, so anything
+            # reading eval/linear_probe_top1_epoch keeps working unchanged.
+            grid = expand_grid(probe_sweep["lr_scales"], probe_sweep["weight_decays"])
+            probe_module = SweepLinearProbe(_head_factory, embed_dim, num_classes, grid)
+            probe_loss = sweep_ce_loss
+            metrics = build_sweep_metrics(
+                probe_module.num_heads, num_classes, probe_module.tags(),
+                per_head=probe_sweep.get("per_head_metrics", True),
+            )
+            log.info(
+                "[probe] sweeping %d heads: lr_scales=%s weight_decays=%s "
+                "(top1/top5 report the best head)",
+                probe_module.num_heads, list(probe_sweep["lr_scales"]),
+                list(probe_sweep["weight_decays"]),
+            )
+        else:
+            probe_module = _head_factory(embed_dim, num_classes)
+            probe_loss = nn.CrossEntropyLoss()
+
         linear_probe = spt.callbacks.OnlineProbe(
             module,
             name="linear_probe",
             input="embedding",
             target="label",
-            probe=(
-                get_probe(model_name, embed_dim, num_classes, probe_protocol)
-                if model_name is not None
-                else build_linear_probe(embed_dim, num_classes,
-                                        "linear" if probe_protocol == "legacy_linear" else "bn_linear")
-            ),
-            loss=nn.CrossEntropyLoss(),
+            probe=probe_module,
+            loss=probe_loss,
             metrics=metrics,
         )
         callbacks.append(linear_probe)

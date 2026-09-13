@@ -22,7 +22,7 @@ from benchmarks.gdrive_checkpoint import (
     resolve_gdrive_cfg,
 )
 from lightning.pytorch.loggers import WandbLogger
-from omegaconf import DictConfig, open_dict
+from omegaconf import DictConfig, OmegaConf, open_dict
 
 import wandb
 from benchmarks.dataset import create_dataset, get_config
@@ -284,6 +284,11 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
         module, ds_config, embed_dim,
         model_name=cfg.model.name,
         probe_protocol=cfg.get("probe_protocol", "common"),
+        probe_sweep=(
+            OmegaConf.to_container(cfg.probe_sweep, resolve=True)
+            if cfg.get("probe_sweep", None) is not None and cfg.probe_sweep.get("enabled", False)
+            else None
+        ),
     )
     ckpt_cfg = cfg.checkpoint
     run_dir_name = f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}"

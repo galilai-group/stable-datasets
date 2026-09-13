@@ -10,6 +10,27 @@ backbone: vit_small_patch16_224
 # only a SECONDARY result; DINO/LeJEPA raise under it until forward() emits
 # their multi-layer CLS concatenation. See benchmarks/DECISION_LOG.md #7.
 probe_protocol: common
+
+# Online linear-probe hyperparameter sweep. K = len(lr_scales) x len(weight_decays)
+# heads train simultaneously on the same frozen embedding, each with its own
+# effective (lr, wd) applied via a gradient hook, and `top1`/`top5` report the
+# BEST head. Probe accuracy otherwise partly measures how well a method's
+# embedding scale happens to suit one arbitrary probe LR, which is the confound
+# this benchmark exists to remove. Applied identically to every method, so
+# between-method comparisons stay fair.
+#
+# Cost is negligible: 9 heads add ~25-110 MB depending on backbone and class
+# count, against the ~2 GB gap between a 22 GiB and 24 GiB card.
+#
+# lr_scales multiply the probe optimizer's base LR (spt default: LARS lr=0.1).
+# per_head_metrics logs each head separately as
+# eval/linear_probe_lr<x>_wd<y>_top1 — keep on: it is how you see whether the
+# best head sits at the edge of the grid, i.e. whether the grid needs widening.
+probe_sweep:
+  enabled: true
+  lr_scales: [0.1, 1.0, 10.0]
+  weight_decays: [0.0, 1.0e-6, 1.0e-4]
+  per_head_metrics: true
 dataset: cifar10
 seed: null  # set to an int to run a seeded ablation (tagged "seed" in wandb)
 run_tag: null  # extra wandb tag for this run (e.g. "final_runs")
