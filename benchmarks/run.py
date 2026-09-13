@@ -16,6 +16,11 @@ import stable_pretraining as spt
 import torch
 from hydra.core.hydra_config import HydraConfig
 from lightning.pytorch.callbacks import ModelCheckpoint
+
+from benchmarks.gdrive_checkpoint import (
+    GoogleDriveModelCheckpoint,
+    resolve_gdrive_cfg,
+)
 from lightning.pytorch.loggers import WandbLogger
 from omegaconf import DictConfig, open_dict
 
@@ -33,6 +38,25 @@ log = logging.getLogger(__name__)
 
 
 # Param resolution
+
+
+def _assert_supported_combo(cfg: DictConfig) -> None:
+    """Reject method/backbone pairs the grid does not define.
+
+    MAE reconstructs masked *patch tokens*, so it is meaningful only on a ViT
+    encoder — there is no ResNet MAE in this benchmark. Without this guard a
+    `MODELS=mae BACKBONES=resnet50` sweep launches, burns a GPU slot, and dies
+    somewhere inside the decoder with an opaque shape error hours later (or
+    worse, submitit swallows it and the job reports success with no metrics).
+    """
+    from benchmarks.models import resolve_backbone_family, resolve_backbone_name
+
+    if cfg.model.name == "mae" and resolve_backbone_family(cfg.backbone) == "resnet":
+        raise ValueError(
+            f"mae + {resolve_backbone_name(cfg.backbone)!r} is not a supported combination: "
+            "MAE needs patch tokens from a ViT encoder. The ResNet-50 half of the grid "
+            "runs the other 6 methods (supervised, simclr, dino, lejepa, nnclr, barlow_twins)."
+        )
 
 
 def _resolve_params(cfg: DictConfig) -> None:
@@ -68,6 +92,27 @@ def _resolve_params(cfg: DictConfig) -> None:
         accum = cfg.training.accumulate_grad_batches
         if accum > 1:
             cfg.training.batch_size = cfg.training.batch_size // accum
+
+        # Central benchmark epoch table wins over the per-model params block
+        # (but never over an explicit CLI override) so all 7 methods share one
+        # citation-pinned budget per dataset. See conf/config.yaml.
+        _be = cfg.get("benchmark_epochs", None)
+        if _be is not None and _be.get("enabled", False) and "training.max_epochs" not in cli_overrides:
+            _base = (_be.get("base", {}) or {}).get(cfg.dataset, None)
+            if _base is not None:
+                _mult = int(_be.get("mae_multiplier", 4)) if cfg.model.name == "mae" else 1
+                cfg.training.max_epochs = int(_base) * _mult
+            else:
+                # Loud, because the fallback is silent and wrong-looking: a dataset
+                # absent from the table drops through to the model's params block and
+                # ultimately to config.yaml's training.max_epochs (50) — which would
+                # quietly produce a 50-epoch "benchmark" run next to 400-epoch ones.
+                log.warning(
+                    "[epochs] %r is NOT in benchmark_epochs.base — falling back to "
+                    "max_epochs=%d. Add it to conf/config.yaml if this is a benchmark "
+                    "dataset; ignore if it is an ad-hoc run.",
+                    cfg.dataset, cfg.training.max_epochs,
+                )
 
         lr_override = ds_params.get("lr", default_params.get("lr", None))
         if lr_override is not None:
@@ -192,6 +237,7 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
     if seed is not None:
         pl.seed_everything(int(seed), workers=True)
 
+    _assert_supported_combo(cfg)
     _resolve_params(cfg)
 
     log.info(
@@ -232,7 +278,13 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
     log.info(f"Backbone {cfg.backbone}: {n_params:,} parameters")
 
     # Callbacks
-    callbacks = create_eval_callbacks(module, ds_config, embed_dim)
+    # model_name routes the probe head through that model's own build_probe();
+    # every model returns the same common protocol by default (DECISION_LOG #7).
+    callbacks = create_eval_callbacks(
+        module, ds_config, embed_dim,
+        model_name=cfg.model.name,
+        probe_protocol=cfg.get("probe_protocol", "common"),
+    )
     ckpt_cfg = cfg.checkpoint
     run_dir_name = f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}"
     if seed is not None:
@@ -261,7 +313,39 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
         # without actually training. Discovered the hard way; see git log.
         "save_weights_only": False,
     }
-    callbacks.append(ModelCheckpoint(**ckpt_kwargs))
+    # EMA teacher update. TeacherStudentWrapper's teacher parameters ONLY move
+    # when something calls update_teacher() -- the wrapper does not self-update on
+    # forward. Without this callback the teacher stays frozen at its warm-init
+    # copy of the student's RANDOM initial weights for the entire run, and DINO
+    # silently degenerates into distilling a fixed random target. It trains, it
+    # logs a falling loss, and the probe numbers look plausible, which is exactly
+    # why this went unnoticed. Duck-typed on update_teacher so any future EMA
+    # method picks it up automatically.
+    #
+    # Defaults are correct under gradient accumulation: update_after_backward is
+    # False, so it fires on_train_batch_end guarded by trainer.global_step, which
+    # advances once per OPTIMIZER step -- one EMA update per optimizer step, not
+    # one per micro-batch (DINO/LeJEPA run accumulate_grad_batches=8).
+    if any(hasattr(m, "update_teacher") and callable(m.update_teacher) for m in module.modules()):
+        callbacks.append(spt.TeacherStudentCallback())
+        log.info("[ema] registered TeacherStudentCallback (EMA teacher will be updated)")
+
+    # Drive offload: when checkpoint.gdrive is configured for $SDS_WHOAMI we
+    # REPLACE ModelCheckpoint rather than adding alongside it — two checkpoint
+    # callbacks on the same dirpath would both write {epoch}-{step}.ckpt and
+    # fight over top-k rotation, and the stock one would keep re-filling the
+    # disk we are trying to drain. resolve_gdrive_cfg() returns None (and logs
+    # why) whenever the config, $SDS_WHOAMI, or the rclone binary is missing,
+    # so an unconfigured collaborator silently gets the normal local behaviour.
+    _gd = resolve_gdrive_cfg(cfg)
+    if _gd is not None:
+        log.info(
+            "[gdrive] checkpoints -> %s:%s (user=%s)",
+            _gd["remote"], _gd.get("remote_dir", "checkpoints"), os.environ.get("SDS_WHOAMI"),
+        )
+        callbacks.append(GoogleDriveModelCheckpoint(**_gd, **ckpt_kwargs))
+    else:
+        callbacks.append(ModelCheckpoint(**ckpt_kwargs))
     # Backend-injected callbacks are appended AFTER ModelCheckpoint so their
     # on_validation_end fires after the checkpoint is written (e.g. the Modal
     # Volume-commit callback persists the freshly-saved ckpt).

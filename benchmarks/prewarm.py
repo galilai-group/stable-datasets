@@ -14,6 +14,7 @@ Usage:
 from __future__ import annotations
 
 import logging
+import os
 import sys
 import time
 import traceback
@@ -25,10 +26,49 @@ from benchmarks.dataset import (
     get_config,
 )
 
-DATA_DIR = "./.anonymous-datasets-cache"
+# Must resolve to the SAME root training uses, or prewarming is a no-op: run.py
+# passes cfg.data_dir (conf/config.yaml -> $STABLE_DATASETS_ROOT, default
+# ~/scratch/stable-datasets-iclr) down to _with_data_dirs(). This script used to
+# default to a repo-relative "./.anonymous-datasets-cache", which populated a
+# cache under HOME that no training run ever read -- and HOME is a 100 GB quota
+# you do not want several hundred GB of datasets in. ~/scratch is a symlink to
+# /oscar/scratch/$USER, so both spellings are the same directory.
+DATA_DIR = os.environ.get(
+    "STABLE_DATASETS_ROOT", os.path.expanduser("~/scratch/stable-datasets-iclr")
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 log = logging.getLogger("prewarm")
+
+
+def _dir_size(path: str) -> int:
+    total = 0
+    for root, _dirs, files in os.walk(path, onerror=lambda _e: None):
+        for f in files:
+            try:
+                total += os.path.getsize(os.path.join(root, f))
+            except OSError:
+                pass
+    return total
+
+
+def _report_existing() -> None:
+    """Show what is already cached so a re-run is visibly incremental.
+
+    Prewarm is idempotent -- BaseDatasetBuilder.__new__ short-circuits on a
+    cache hit -- so re-running only fetches what is missing. This just makes
+    that legible instead of leaving you wondering if it is re-downloading.
+    """
+    for sub in ("downloads", "processed"):
+        d = os.path.join(DATA_DIR, sub)
+        if not os.path.isdir(d):
+            log.info(f"  {sub}/: (absent -- will be created)")
+            continue
+        entries = sorted(e for e in os.listdir(d) if not e.startswith("."))
+        size = _dir_size(d)
+        log.info(f"  {sub}/: {len(entries)} entries, {size / 1e9:.1f} GB")
+        if entries:
+            log.info(f"    {', '.join(entries[:12])}{' ...' if len(entries) > 12 else ''}")
 
 
 def prewarm(name: str) -> tuple[str, float, str]:
@@ -58,6 +98,7 @@ def main():
         names = sorted(INCLUDED_IMAGE_DATASETS)
 
     log.info(f"prewarming {len(names)} datasets to {DATA_DIR}")
+    _report_existing()
     results = []
     for i, name in enumerate(names, 1):
         log.info(f"[{i}/{len(names)}] {name}")

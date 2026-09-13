@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import timm
 import stable_pretraining as spt
+from torch import nn
 from stable_pretraining.data import transforms
 from stable_pretraining.methods.lejepa import LeJEPA, LeJEPAOutput
 
@@ -160,3 +161,26 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim
+
+
+def build_probe(embed_dim: int, num_classes: int, protocol: str = "common") -> nn.Module:
+    """LeJEPA's probe head.
+
+    Native: LayerNorm over the CONCATENATION of the last two CLS tokens, then a
+    linear layer (the paper also reports a BN variant). That needs a 2*d feature,
+    so it is not a drop-in: forward() currently emits a single d-dim CLS token,
+    and building a 2*d probe over it would silently mis-shape the head. The
+    headline benchmark uses the common protocol on the final CLS token so LeJEPA
+    does not get 2x the probe input features that MAE gets.
+    """
+    from benchmarks.models import common_probe
+
+    if protocol == "common":
+        return common_probe(embed_dim, num_classes)
+    if protocol == "native":
+        raise NotImplementedError(
+            "lejepa native probe = LayerNorm over concat(CLS[-2:]) -> Linear, which needs "
+            "forward() to emit a 2*embed_dim feature. Change forward() to concatenate the "
+            "last two layers' CLS tokens and pass the doubled embed_dim before using this."
+        )
+    raise ValueError(f"lejepa: unknown probe protocol {protocol!r}")

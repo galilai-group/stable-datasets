@@ -330,7 +330,7 @@ def _peek_train_size(dataset: str) -> int:
     import glob as _glob
     import json as _json
 
-    root = os.environ.get("STABLE_DATASETS_ROOT", os.path.expanduser("~/scratch/.stable-datasets"))
+    root = os.environ.get("STABLE_DATASETS_ROOT", os.path.expanduser("~/scratch/stable-datasets-iclr"))
     for meta in _glob.glob(f"{root}/processed/*{dataset}*_train_*/_metadata.json") + _glob.glob(
         f"{root}/processed/*{dataset}*train*/_metadata.json"
     ):

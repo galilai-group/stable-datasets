@@ -3,14 +3,26 @@ defaults:
   - _self_
 
 backbone: vit_small_patch16_224
+# Online linear-probe protocol. "common" (default) is the headline benchmark
+# head — non-affine BN + Linear on one representation (ViT: final CLS;
+# ResNet: final pooled), identical for every method so probe capacity is
+# constant. "native" asks each model for its published probe instead and is
+# only a SECONDARY result; DINO/LeJEPA raise under it until forward() emits
+# their multi-layer CLS concatenation. See benchmarks/DECISION_LOG.md #7.
+probe_protocol: common
 dataset: cifar10
 seed: null  # set to an int to run a seeded ablation (tagged "seed" in wandb)
 run_tag: null  # extra wandb tag for this run (e.g. "final_runs")
-data_dir: ${oc.env:STABLE_DATASETS_ROOT,/oscar/home/sboughan/scratch/.stable-datasets}  # set STABLE_DATASETS_ROOT in shell to relocate dataset+ckpt root
+data_dir: ${oc.env:STABLE_DATASETS_ROOT,${oc.env:HOME}/scratch/stable-datasets-iclr}  # set STABLE_DATASETS_ROOT in shell to relocate dataset+ckpt root
+# ^ ICLR root. Everything this benchmark writes -- dataset cache, checkpoints,
+# hydra/submitit run dirs, local W&B files -- lives under one directory so the
+# whole effort can be moved, quota'd, or deleted as a unit. Resolved from $HOME
+# rather than a hardcoded username so ian/leyang get their own root for free.
+# ~/scratch is a symlink to /oscar/scratch/$USER; both spellings are one dir.
 smoke_test: false  # run 3 train + 3 val batches for 1 epoch to verify the pipeline works
 
 checkpoint:
-  dir: ${oc.env:STABLE_DATASETS_ROOT,/oscar/home/sboughan/scratch/.stable-datasets}/.pretrain_checkpoints
+  dir: ${data_dir}/checkpoints
   every_n_epochs: 10
   train_time_interval_hours: 2  # wall-clock save to survive SLURM timeouts
   save_last: true
@@ -18,7 +30,110 @@ checkpoint:
   mode: "max"
   save_top_k: 1
 
+  # ---------------------------------------------------------------- Drive offload
+  # The full grid is several TB of optimizer-bearing checkpoints, which fits in
+  # neither HOME (100 GB) nor scratch (512 GB soft). When enabled, run.py swaps
+  # Lightning's ModelCheckpoint for GoogleDriveModelCheckpoint, which uploads
+  # each checkpoint to Drive on a background thread and unlinks the local copy
+  # once the upload is byte-verified. last.ckpt is always kept on disk until the
+  # run ends so SLURM preemption can still resume.
+  #
+  # Per-collaborator settings are keyed by $SDS_WHOAMI (exported from ~/.bashrc)
+  # so the same config works for everyone with no local edits. A user whose
+  # block still contains "..." is skipped with a warning and falls back to
+  # ordinary local checkpointing.
+  #
+  # Prereqs, once per machine:
+  #   rclone config reconnect <remote>:     # refresh the OAuth token
+  #   rclone lsd <remote>:                  # smoke test
+  gdrive:
+    enabled: false          # OFF by design -- see DECISION_LOG #8. Checkpoints for
+                            # this grid are ~211 GB (1 seed), which fits on scratch,
+                            # so Drive is reserved for post-deadline archival.
+    rclone_binary: ${oc.env:RCLONE_BINARY,rclone}   # absolute path or just `rclone` if on PATH
+    max_upload_workers: 2
+    delete_local_after_upload: true
+    keep_best_local: false  # true if something in-job reloads best_model_path
+    upload_timeout_s: 3600
+    users:
+      sami:
+        remote: samibg-drive
+        remote_dir: checkpoints
+        # https://drive.google.com/drive/folders/1UKmQOFFuCKt9QZOAvG15SV8I1CF0TxCT
+        folder_id: 1UKmQOFFuCKt9QZOAvG15SV8I1CF0TxCT
+      ian:
+        remote: "..."
+        remote_dir: "..."
+        folder_id: "..."
+      leyang:
+        remote: "..."
+        remote_dir: "..."
+        folder_id: "..."
+
+# ---------------------------------------------------------------------------
+# Benchmark epoch budgets (ICLR grid).
+#
+# One table for the whole grid, applied in run.py::_resolve_params AFTER the
+# per-model `params:` blocks, so it is the single source of truth for the 20
+# benchmark datasets regardless of method. A CLI `training.max_epochs=N`
+# override still wins. Datasets absent from `base` fall back to the model's own
+# params block (keeps older/ablation datasets working unchanged).
+#
+# Every count is pinned to a published protocol rather than chosen by us:
+#   imagenet100  400   LeJEPA, Balestriero & LeCun 2025  arxiv.org/html/2511.08544v3
+#   imagenette   800   Lightly SSL Imagenette benchmark
+#   cifar10      400   LeJEPA 2025
+#   cifar100     400   LeJEPA 2025
+#   stl10       1000   Contrastive Learning with Synthetic Positives 2024  arxiv 2408.16965v2
+#   svhn         400   CoViews, Bendib et al. 2024  arxiv 2406.12847
+#   food101      400   LeJEPA 2025
+#   country211  1000   Our choice of a high-epoch linear-probe budget, matching
+#                      the CLIP linear-probe setup (Radford et al. 2021) the
+#                      dataset was introduced in -- NOT a reproduced epoch count.
+#   cub200       800   Parametric Contrastive Learning 2021  arxiv 2103.13559
+#   fgvcaircraft 200   Self-Supervised Fine-Grained Image Classification (ACM 3503161.3547909)
+#   flowers102   400   LeJEPA 2025
+#   dtd         1000   GPS-SSL, Feizi et al. 2024  arxiv 2401.01990
+#   galaxy10     400   LeJEPA 2025
+#   *mnist       400   Sharma et al. 2026  arxiv.org/pdf/2604.01947
+#
+# MAE gets mae_multiplier x these counts: it only reconstructs from the 25% of
+# patches left visible after 75% masking, so one MAE epoch sees a quarter of the
+# signal a contrastive epoch does.
+benchmark_epochs:
+  enabled: true
+  mae_multiplier: 4
+  base:
+    imagenet100: 400
+    imagenette: 800
+    cifar10: 400
+    cifar100: 400
+    stl10: 1000
+    svhn: 400
+    food101: 400
+    country211: 1000
+    cub200: 800
+    fgvcaircraft: 200
+    flowers102: 400
+    dtd: 1000
+    galaxy10: 400
+    pathmnist: 400
+    octmnist: 400
+    tissuemnist: 400
+    bloodmnist: 400
+    dermamnist: 400
+    organamnist: 400
+    pneumoniamnist: 400
+
 training:
+  # LAST-RESORT fallback only. Resolution order, lowest priority first:
+  #   1. this value (50)
+  #   2. conf/model/<model>.yaml  params.default.max_epochs
+  #   3. conf/model/<model>.yaml  params.<dataset>.max_epochs
+  #   4. benchmark_epochs.base[<dataset>]  (x mae_multiplier for MAE)
+  #   5. CLI override, e.g. training.max_epochs=100
+  # Every one of the 20 benchmark datasets is covered by (4), so this 50 is never
+  # what a benchmark run uses — run.py logs a warning if a dataset falls through.
   max_epochs: 50
   precision: "16-mixed"
   batch_size: 256
@@ -28,15 +143,25 @@ training:
 
 wandb:
   enabled: true
-  entity: samibg
-  project: finalized-stable-datasets
+  entity: ${oc.env:SDS_WANDB_ENTITY,samibg}
+  # All collaborators should log HERE so one project holds the whole grid and the
+  # analysis scripts need no cross-entity merging (the previous ResNet sweep had
+  # to be reconciled by hand from two entities via CSV — avoid repeating that).
+  # That requires samibg to be a W&B TEAM with ian/leyang invited; a personal
+  # entity cannot take collaborators. If you have not been invited yet, set
+  # SDS_WANDB_ENTITY=<your-entity> in your shell and tell Sami, so the merge is a
+  # known gap rather than a surprise at analysis time.
+  project: ${oc.env:SDS_WANDB_PROJECT,stable-datasets-iclr}
+  # New project for the ICLR grid. The whole benchmark restarts here: the
+  # previous project (finalized-stable-datasets) holds the older, partly
+  # contaminated runs and is no longer read by anything in this tree.
 
 # Hydra run outputs (incl. submitit .out/.err logs) go to SCRATCH, not HOME:
 # os.getcwd() for a job is this dir, and it's also the W&B save_dir base — keeping
 # it on HOME (100 GB quota) crashes runs. STABLE_DATASETS_ROOT is set per-launch.
 hydra:
   run:
-    dir: ${oc.env:STABLE_DATASETS_ROOT,/oscar/scratch/sboughan/.stable-datasets}/benchmark-runs/${model.name}_${backbone}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${data_dir}/benchmark-runs/${model.name}_${backbone}_${dataset}/${now:%Y-%m-%d_%H-%M-%S}
   sweep:
-    dir: ${oc.env:STABLE_DATASETS_ROOT,/oscar/scratch/sboughan/.stable-datasets}/benchmark-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${data_dir}/benchmark-runs/sweep/${now:%Y-%m-%d_%H-%M-%S}
     subdir: ${model.name}_${backbone}_${dataset}

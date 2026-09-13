@@ -17,11 +17,22 @@ hydra:
     additional_parameters:
       constraint: geforce3090|l40s
     # Default in hydra-submitit-launcher is 0 → submitit refuses to requeue on
-    # SIGUSR2 timeout. Set to 3 so a job that hits the 24h wall can be
-    # auto-requeued up to 3 times. trainer.fit() resumes from last.ckpt via
-    # benchmarks/run.py's auto-resume logic.
-    max_num_timeout: 3
+    # SIGUSR2 timeout. Each requeue buys another timeout_min (24h), so the hard
+    # wall on a single cell is timeout_min * (1 + max_num_timeout).
+    #
+    # At 3 this capped a cell at 96h, which silently KILLED the two longest cells
+    # of the ICLR grid mid-run: imagenet100/dino needs ~116h and tissuemnist/dino
+    # ~103h at 400 epochs (DINO/LeJEPA use 8-view multicrop at bs=32 x accum=8,
+    # ~3.3x supervised). Raised to 8 → 216h wall, which covers the longest cell
+    # with margin AND leaves room for preemption-driven requeues on the condo
+    # partition, which draw from the same budget.
+    # trainer.fit() resumes from last.ckpt via benchmarks/run.py's auto-resume.
+    max_num_timeout: 8
     # Cap concurrent SLURM array tasks. Sized for the seed sweep (~600 jobs):
     # large enough to make progress, small enough to leave 3090-gcondo headroom
     # for other users. Override per-launch with hydra.launcher.array_parallelism=N.
+    #
+    # NOTE: raising this past ~32 does not shorten the ICLR grid — its makespan is
+    # pinned by the single longest cell (imagenet100/dino, ~4.8 days on one GPU),
+    # not by total throughput. Spend extra capacity on seeds, not parallelism.
     array_parallelism: 32

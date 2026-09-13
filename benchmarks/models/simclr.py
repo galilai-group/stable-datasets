@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import stable_pretraining as spt
+from torch import nn
 from stable_pretraining import forward
 from stable_pretraining.data import transforms
 
@@ -40,3 +41,21 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim
+
+
+def build_probe(embed_dim: int, num_classes: int, protocol: str = "common") -> nn.Module:
+    """SimCLR's probe head.
+
+    Native: a bare linear layer on the backbone's final global-average-pooled
+    feature, with NO extra probe-side BatchNorm. SimCLR does use BatchNorm inside
+    its projector, but the projector is discarded before probing — that is a
+    different thing from MAE's BN on the frozen embedding. Same feature
+    dimension as the common protocol, so this one is a genuine drop-in.
+    """
+    from benchmarks.models import bare_linear_probe, common_probe
+
+    if protocol == "common":
+        return common_probe(embed_dim, num_classes)
+    if protocol == "native":
+        return bare_linear_probe(embed_dim, num_classes)
+    raise ValueError(f"simclr: unknown probe protocol {{protocol!r}}")

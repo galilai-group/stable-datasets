@@ -53,3 +53,18 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim
+
+
+def build_probe(embed_dim: int, num_classes: int, protocol: str = "common") -> nn.Module:
+    """Supervised baseline's probe head.
+
+    The supervised model trains its own classifier; this online probe exists only
+    so the baseline is measured through the SAME instrument as the SSL methods.
+    It therefore has no meaningful "native" variant — both protocols return the
+    common head.
+    """
+    from benchmarks.models import common_probe
+
+    if protocol in ("common", "native"):
+        return common_probe(embed_dim, num_classes)
+    raise ValueError(f"supervised: unknown probe protocol {protocol!r}")

@@ -261,8 +261,11 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
     img_size_override = int(ds_bb.img_size) if ds_bb is not None and hasattr(ds_bb, "img_size") else None
     backbone = create_backbone(cfg.backbone, ds_config, patch_size=patch_size_override, img_size=img_size_override)
     embed_dim = get_embedding_dim(backbone)
+    _final_ema = float(cfg.model.get("final_momentum_teacher", 1.0))
     backbone_wrapper = spt.backbone.TeacherStudentWrapper(
-        student=backbone, base_ema_coefficient=cfg.model.momentum_teacher
+        student=backbone,
+        base_ema_coefficient=cfg.model.momentum_teacher,
+        final_ema_coefficient=_final_ema,
     )
 
     projector = nn.Sequential(
@@ -275,7 +278,9 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         nn.Linear(cfg.model.projector.bottleneck_dim, cfg.model.projector.output_dim, bias=False),
     )
     projector_wrapper = spt.backbone.TeacherStudentWrapper(
-        student=projector, base_ema_coefficient=cfg.model.momentum_teacher
+        student=projector,
+        base_ema_coefficient=cfg.model.momentum_teacher,
+        final_ema_coefficient=_final_ema,
     )
 
     dino_loss = spt.losses.DINOv1Loss(
@@ -295,3 +300,24 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, embed_dim
+
+
+def build_probe(embed_dim: int, num_classes: int, protocol: str = "common") -> nn.Module:
+    """DINO's probe head.
+
+    Native: a bare linear layer (no extra BN) over the CONCATENATION of the last
+    four CLS tokens — a 4*d feature. Not a drop-in for the same reason as LeJEPA,
+    and the capacity gap is the largest of any method here, which is precisely why
+    the headline protocol fixes one CLS token for everyone.
+    """
+    from benchmarks.models import common_probe
+
+    if protocol == "common":
+        return common_probe(embed_dim, num_classes)
+    if protocol == "native":
+        raise NotImplementedError(
+            "dino native probe = Linear over concat(CLS[-4:]) with no extra BN, which needs "
+            "forward() to emit a 4*embed_dim feature. Change forward() to concatenate the "
+            "last four layers' CLS tokens and pass the quadrupled embed_dim before using this."
+        )
+    raise ValueError(f"dino: unknown probe protocol {protocol!r}")

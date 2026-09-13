@@ -187,8 +187,101 @@ def build_optim_config(model_cfg, backbone=None) -> dict:
 # Evaluation callbacks
 
 
-def create_eval_callbacks(module: spt.Module, ds_config, embed_dim: int) -> list:
-    """Create linear probe and KNN evaluation callbacks."""
+# Linear probes
+#
+# HEADLINE PROTOCOL (benchmarks/DECISION_LOG.md #7): every method, on both
+# backbones, is probed with the SAME head on the SAME single representation:
+#
+#     ViT-S      -> final-layer CLS token          (embed_dim = d)
+#     ResNet-50  -> final global-average-pooled    (embed_dim = d)
+#     probe      -> Linear(BN_non-affine(z))
+#
+# Methods DO differ in their published probes -- MAE normalises with a non-affine
+# BN, LeJEPA concatenates the last two CLS tokens under a LayerNorm, DINO
+# concatenates the last four with no extra BN, and the ResNet-native contrastive
+# methods (SimCLR/NNCLR/BarlowTwins) probe the bare pooled feature. Adopting each
+# method's native probe would hand DINO 4d and LeJEPA 2d input features against
+# MAE's 1d, i.e. different probe CAPACITY per method, which would confound the
+# very comparison this benchmark exists to make. So the headline number fixes the
+# representation and the head, and native probes are a separate opt-in.
+#
+# Each model file owns its own probe constructor (``build_probe``) so that the
+# method-specific knowledge lives with the method, next to its forward(); the
+# common protocol is simply what every one of them returns by default.
+
+
+def common_probe(embed_dim: int, num_classes: int) -> nn.Module:
+    """The shared benchmark probe head: non-affine BN then a linear layer.
+
+    affine=False keeps this a pure whitening step -- no learnable scale/shift --
+    so the only trained parameters are the linear layer's, and probe capacity is
+    identical across methods. The BN matters because each SSL objective leaves an
+    arbitrary per-feature scale in the embedding; without it, probe accuracy
+    partly measures that scale rather than linear separability.
+    """
+    return nn.Sequential(
+        nn.BatchNorm1d(embed_dim, affine=False, eps=1e-6),
+        nn.Linear(embed_dim, num_classes),
+    )
+
+
+def bare_linear_probe(embed_dim: int, num_classes: int) -> nn.Module:
+    """Unnormalised linear head — the native probe for SimCLR/NNCLR/BarlowTwins/DINO."""
+    return nn.Linear(embed_dim, num_classes)
+
+
+def build_linear_probe(embed_dim: int, num_classes: int, arch: str = "bn_linear") -> nn.Module:
+    """Back-compat shim for the pre-per-model-probe API.
+
+    ``arch="linear"`` reproduces the flat ``nn.Linear`` head used by every
+    checkpoint written before 2026-09. recover_online_probe.py needs it: those
+    state_dicts carry ``linear_probe.{weight,bias}``, whereas the common head
+    produces ``linear_probe.{0,1}.*``, and loading one into the other under
+    ``strict_loading = False`` does NOT raise -- it silently leaves the probe at
+    random init and reports garbage accuracy.
+    """
+    if arch == "linear":
+        return bare_linear_probe(embed_dim, num_classes)
+    if arch == "bn_linear":
+        return common_probe(embed_dim, num_classes)
+    raise ValueError(f"unknown probe arch {arch!r} (expected 'bn_linear' or 'linear')")
+
+
+def get_probe(model_name: str, embed_dim: int, num_classes: int, protocol: str = "common") -> nn.Module:
+    """Build the online-probe head by delegating to the model's own constructor.
+
+    ``protocol``:
+      ``common``        the headline protocol (default) — identical for all methods.
+      ``native``        the method's published probe. Only meaningful as a
+                        SECONDARY result; for DINO/LeJEPA it additionally requires
+                        forward() to emit a multi-layer CLS concatenation, and
+                        those constructors raise unless ``embed_dim`` reflects it.
+      ``legacy_linear`` bare nn.Linear, for reloading pre-2026-09 checkpoints.
+    """
+    if protocol == "legacy_linear":
+        return bare_linear_probe(embed_dim, num_classes)
+    module = _get_model_module(model_name)
+    builder = getattr(module, "build_probe", None)
+    if builder is None:
+        log.warning("[probe] %s has no build_probe(); falling back to the common protocol", model_name)
+        return common_probe(embed_dim, num_classes)
+    return builder(embed_dim, num_classes, protocol)
+
+
+def create_eval_callbacks(
+    module: spt.Module,
+    ds_config,
+    embed_dim: int,
+    model_name: str | None = None,
+    probe_protocol: str = "common",
+) -> list:
+    """Create linear probe and KNN evaluation callbacks.
+
+    ``model_name`` routes to that model's ``build_probe``; when omitted the
+    common protocol is used directly (the two agree by construction for every
+    model shipped here, so this only matters for ``protocol="native"``).
+    ``probe_protocol`` is passed through — see :func:`get_probe`.
+    """
     num_classes = ds_config.num_classes
     callbacks = []
 
@@ -202,7 +295,12 @@ def create_eval_callbacks(module: spt.Module, ds_config, embed_dim: int) -> list
             name="linear_probe",
             input="embedding",
             target="label",
-            probe=nn.Linear(embed_dim, num_classes),
+            probe=(
+                get_probe(model_name, embed_dim, num_classes, probe_protocol)
+                if model_name is not None
+                else build_linear_probe(embed_dim, num_classes,
+                                        "linear" if probe_protocol == "legacy_linear" else "bn_linear")
+            ),
             loss=nn.CrossEntropyLoss(),
             metrics=metrics,
         )

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 import stable_pretraining as spt
+from torch import nn
 from stable_pretraining.data import transforms
 
 from benchmarks.models import (
@@ -126,3 +127,18 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         optim=build_optim_config(cfg.model, cfg.backbone),
     )
     return module, encoder_embed_dim
+
+
+def build_probe(embed_dim: int, num_classes: int, protocol: str = "common") -> nn.Module:
+    """MAE's probe head.
+
+    Native == common here: the official MAE linear-probe recipe is exactly a
+    non-affine BatchNorm on the final CLS token followed by a linear layer, which
+    is what this benchmark standardised on. forward() already emits
+    ``encoder_out.encoded[:, 0]`` (the CLS token), so nothing else is needed.
+    """
+    from benchmarks.models import common_probe
+
+    if protocol in ("common", "native"):
+        return common_probe(embed_dim, num_classes)
+    raise ValueError(f"mae: unknown probe protocol {protocol!r}")

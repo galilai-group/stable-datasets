@@ -17,7 +17,11 @@ import requests
 
 
 DEFAULT_ENTITY = "samibg"
-DEFAULT_PROJECT = "finalized-stable-datasets"
+# The ICLR grid logs to stable-datasets-iclr. Override with $SDS_WANDB_PROJECT or
+# --project to point any analysis at a different project.
+import os
+
+DEFAULT_PROJECT = os.environ.get("SDS_WANDB_PROJECT", "stable-datasets-iclr")
 DEFAULT_BACKBONE = "vit_small_patch16_224"
 DEFAULT_BACKBONES: tuple[str, ...] = (DEFAULT_BACKBONE, "vit_small")
 

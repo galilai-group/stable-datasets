@@ -1,72 +1,77 @@
 name: supervised
+# Batch size is pinned to 256 for EVERY dataset, matching the effective batch of
+# all six SSL methods (256 = 256x1, or 32x8 for DINO/LeJEPA). It used to be 128
+# on some datasets and 256 on others, which meant the BASELINE -- the reference
+# every method is measured against -- was the one thing in the grid not held
+# constant, and its LR-per-sample silently varied by dataset.
 
 params:
   default:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 50
     accumulate_grad_batches: 1
   # CIFAR-scale (32x32) — tier 4 (×4)
   cifar10:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 200
   cifar100:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 200
   svhn:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 150
   # Grayscale 28x28
   fashionmnist:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 150
   emnist:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 150
   kmnist:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 150
   notmnist:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 200
   pneumoniamnist:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 200
   # Other small datasets — tier 3 (×3)
   arabiccharacters:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 250
   arabicdigits:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 250
   # Larger resolution — tier 3 (×3)
   stl10:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 150
   # Small fine-grained — tier 6 (×6)
   flowers102:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 300
   cub200:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 300
   dtd:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 300
   country211:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 200
   rockpaperscissor:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 300
   # Large datasets
   food101:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 100
   tinyimagenet:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 100
   imagenette:
-    batch_size: 128
+    batch_size: 256
     max_epochs: 150
 
   # ----- new datasets (auto-inserted, paper tier rule) -----

@@ -58,7 +58,7 @@ finetune:
   # --- which pretrained checkpoint to load ---
   # Curated ViT checkpoint tree: {checkpoint_root}/{model}/{dataset}/last.ckpt
   # (one per method x dataset; source seed recorded in that tree's manifest.csv).
-  checkpoint_root: /oscar/scratch/sboughan/sds_neurips_review
+  checkpoint_root: ${oc.env:SDS_FINETUNE_CKPT_ROOT,${data_dir}/checkpoints}
   load_seed: null           # unused for this layout (seed is baked into the curated ckpt)
   which: last               # 'last' (final pretrained weights) or 'best' (epoch=*.ckpt if present)
 

@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+import os
 
 
 HERE = Path(__file__).resolve().parent
@@ -29,7 +30,7 @@ DEFAULT_METADATA_CSV = HERE / "dataset_metadata.csv"
 DEFAULT_OUTPUT_TEX = HERE / "benchmark_table_probe.tex"
 
 DEFAULT_ENTITY = ""
-DEFAULT_PROJECT = "finalized-anonymous-datasets"
+DEFAULT_PROJECT = os.environ.get("SDS_WANDB_PROJECT", "stable-datasets-iclr")
 DEFAULT_BACKBONES = ("vit_small_patch16_224", "vit_small")
 
 SSL_METHODS = ("simclr", "barlow_twins", "nnclr", "dino", "lejepa", "mae")

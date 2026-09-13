@@ -43,7 +43,7 @@ RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
 RESULTS_CSV = RESULTS_DIR / "transfer_results.csv"
 
 # Features land on scratch to stay off the 125 GB home quota.
-_DEFAULT_FEATURE_CACHE = Path.home() / "scratch" / ".stable-datasets" / "probe_features"
+_DEFAULT_FEATURE_CACHE = Path.home() / "scratch" / "stable-datasets-iclr" / "probe_features"
 
 # spt's CSVLogger can receive None as a metric key (e.g. from OnlineProbe on
 # certain datasets), which then crashes _rewrite_with_new_header. Patch it out
@@ -280,7 +280,7 @@ def train_offline_probe(
     feature_cache_dir: str | None = None,
     wandb_enabled: bool = True,
     wandb_entity: str = "samibg",
-    wandb_project: str = "finalized-stable-datasets",
+    wandb_project: str = "stable-datasets-iclr",
     seed: int | None = None,
     smoke_test: bool = False,
 ) -> ProbeResult:
@@ -417,16 +417,21 @@ def _parse_args() -> argparse.Namespace:
     # main optimizer over the frozen backbone never sees a grad, so GradScaler
     # crashes. bf16 has no scaler.
     parser.add_argument("--precision", default="bf16-mixed")
-    parser.add_argument("--data-dir", default="/oscar/home/sboughan/scratch/.stable-datasets")
+    parser.add_argument(
+        "--data-dir",
+        default=os.environ.get(
+            "STABLE_DATASETS_ROOT", os.path.expanduser("~/scratch/stable-datasets-iclr")
+        ),
+    )
     parser.add_argument(
         "--feature-cache-dir",
         default=None,
-        help="Directory for pre-extracted backbone features (default: ~/scratch/.stable-datasets/probe_features).",
+        help="Directory for pre-extracted backbone features (default: ~/scratch/stable-datasets-iclr/probe_features).",
     )
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--no-wandb", action="store_true")
     parser.add_argument("--wandb-entity", default="samibg")
-    parser.add_argument("--wandb-project", default="finalized-stable-datasets")
+    parser.add_argument("--wandb-project", default="stable-datasets-iclr")
     parser.add_argument("--smoke-test", action="store_true")
     return parser.parse_args()
 

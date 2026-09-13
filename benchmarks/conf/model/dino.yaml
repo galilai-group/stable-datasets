@@ -12,11 +12,23 @@ projector:
 
 loss:
   temperature_student: 0.1
-  temperature_teacher: 0.04
+  # DINO warms the TEACHER temperature up from 0.04 to 0.07 over the first
+  # warmup_epochs_temperature_teacher epochs: a soft teacher early on is what
+  # keeps the run from collapsing. This block previously read 0.04 -> 0.04 over
+  # 301 epochs, i.e. the schedule was a no-op (start == end) AND its duration
+  # exceeded the total epoch count of several datasets (fgvcaircraft runs 200).
+  # 30 is the reference value and is shorter than our shortest schedule, so the
+  # warmup always completes.
+  temperature_teacher: 0.07
   warmup_temperature_teacher: 0.04
-  warmup_epochs_temperature_teacher: 301
+  warmup_epochs_temperature_teacher: 30
 
+# Teacher EMA, cosine-scheduled from momentum_teacher -> final_momentum_teacher
+# across training (DINO's m: 0.996 -> 1.0). A teacher that keeps moving at 0.996
+# for all 400-1000 epochs never stabilises; annealing to 1.0 freezes it as the
+# student converges. Driven by TeacherStudentCallback, registered in run.py.
 momentum_teacher: 0.996
+final_momentum_teacher: 1.0
 center_momentum: 0.9  # DINO centering EMA; raise on small-batch/few-class datasets
 sinkhorn_knopp: false  # use Sinkhorn-Knopp instead of subtractive centering (batch-size-invariant; DINOv2-style)
 

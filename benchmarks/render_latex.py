@@ -25,6 +25,8 @@ from pathlib import Path
 
 import pandas as pd
 import requests
+import os
+
 import yaml
 from tqdm import tqdm
 
@@ -828,7 +830,7 @@ METRIC_TITLES: dict[str, str] = {
 def main():
     parser = argparse.ArgumentParser(description="Render benchmark results from W&B to LaTeX")
     parser.add_argument("--entity", default="samibg")
-    parser.add_argument("--project", default="finalized-stable-datasets")
+    parser.add_argument("--project", default=os.environ.get("SDS_WANDB_PROJECT", "stable-datasets-iclr"))
     parser.add_argument(
         "--backbone",
         choices=sorted(BACKBONE_SETS),
