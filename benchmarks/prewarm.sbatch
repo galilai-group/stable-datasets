@@ -16,5 +16,17 @@
 # there) and is liable to get killed by CCV.
 
 set -euo pipefail
-cd "$(dirname "$(readlink -f "$0")")/.."
+
+# Resolve the repo root. NOT from "$0": SLURM executes a COPY of this script at
+# /var/spool/slurmd/job<id>/slurm_script, so $0-relative paths resolve to
+# /var/spool/slurmd and the venv lookup fails with exit 127 one second in.
+# SLURM_SUBMIT_DIR is the directory sbatch was invoked from; $SDS_REPO overrides
+# it if you submit from somewhere else.
+REPO="${SDS_REPO:-${SLURM_SUBMIT_DIR:-$PWD}}"
+cd "$REPO"
+if [ ! -x ./.venv/bin/python ]; then
+    echo "ERROR: no ./.venv/bin/python under REPO=$REPO" >&2
+    echo "       submit from the repo root, or set SDS_REPO=/path/to/stable-datasets-pyarrow" >&2
+    exit 1
+fi
 exec ./.venv/bin/python -m benchmarks.prewarm "$@"
