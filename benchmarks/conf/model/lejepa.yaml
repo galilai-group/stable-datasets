@@ -6,16 +6,13 @@ transforms:
   num_global: 2
   num_local: 6
 
-# Stochastic depth. The rest of this benchmark pretrains at 0.0 (see
-# models/vit.py: "finetune uses 0.1, pretrain 0.0"), but LeJEPA's reference
-# config leaves timm's 0.1 in place for ViT and reaches 65.9% on imagenet100 at
-# epoch 100 where we reach 62.5%. Split by backbone family so enabling it for
-# ViT does not silently also change ResNet-50, whose problem is conditioning,
-# not under-regularisation.
-drop_path_rate:
-  vit: 0.1
-  resnet: 0.0
-
+# NOTE: deliberately NO drop_path_rate here. spt's LeJEPA defaults to 0.1 and
+# the le-wm-collapse reference keeps it, but this benchmark pretrains every
+# method at 0.0 (models/vit.py: "finetune uses 0.1, pretrain 0.0"). Enabling it
+# for LeJEPA alone would make it the only method with stochastic depth -- an
+# uncontrolled difference of exactly the kind the supervised batch-size fix
+# removed. The build() plumbing below reads this key if present, so turning it
+# on for ALL ViT methods later is a one-line change per model.
 loss:
   lamb: 0.02
   t_max: 3.0
