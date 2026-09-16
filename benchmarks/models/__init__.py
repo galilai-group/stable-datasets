@@ -342,7 +342,7 @@ def create_eval_callbacks(
                 "[probe] sweeping %d heads: archs=%s lr_scales=%s weight_decays=%s "
                 "(top1/top5 report the best head)",
                 probe_module.num_heads,
-                list(_archs) if _archs else ["bn_linear (default)"],
+                list(_archs) if _archs else f"per-model ({model_name}.build_probe)",
                 list(probe_sweep["lr_scales"]),
                 list(probe_sweep["weight_decays"]),
             )
