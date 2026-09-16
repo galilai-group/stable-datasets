@@ -168,19 +168,32 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
 
 
 def build_probe(embed_dim: int, num_classes: int, protocol: str = "common") -> nn.Module:
-    """LeJEPA's probe head.
+    """LeJEPA's probe head: a BARE nn.Linear, no BatchNorm.
+
+    This is the one method whose head departs from the shared BN-then-Linear
+    protocol, and the departure is deliberate. The non-affine BatchNorm rescales
+    every feature dimension to unit variance, which helps an embedding whose
+    dimensions sit at wildly different scales but HURTS a badly-conditioned one,
+    because it lifts near-null directions -- noise -- up to the same scale as
+    the informative ones. LeJEPA's embedding is by far the worst-conditioned in
+    the benchmark (condition number ~5e3 on imagenet100 against ~3.4e3 for
+    simclr/barlow_twins ViT), and the reference implementation this method is
+    calibrated against (le-wm-collapse) probes with a bare Linear and reaches
+    65.9% where our BN head reached 62.5%.
+
+    Note for the writeup: this makes LeJEPA's probe non-identical to the other
+    six methods', so the probe protocol is no longer a fully controlled variable
+    across the grid and should be stated as such. DECISION_LOG #7.
 
     Native: LayerNorm over the CONCATENATION of the last two CLS tokens, then a
-    linear layer (the paper also reports a BN variant). That needs a 2*d feature,
-    so it is not a drop-in: forward() currently emits a single d-dim CLS token,
-    and building a 2*d probe over it would silently mis-shape the head. The
-    headline benchmark uses the common protocol on the final CLS token so LeJEPA
-    does not get 2x the probe input features that MAE gets.
+    linear layer. That needs a 2*d feature, so it is not a drop-in: forward()
+    currently emits a single d-dim CLS token, and building a 2*d probe over it
+    would silently mis-shape the head.
     """
-    from benchmarks.models import common_probe
+    from benchmarks.models import bare_linear_probe
 
     if protocol == "common":
-        return common_probe(embed_dim, num_classes)
+        return bare_linear_probe(embed_dim, num_classes)
     if protocol == "native":
         raise NotImplementedError(
             "lejepa native probe = LayerNorm over concat(CLS[-2:]) -> Linear, which needs "
