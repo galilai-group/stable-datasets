@@ -24,11 +24,16 @@ params:
   default:
     batch_size: 256
     max_epochs: 63
-    # 8 views per sample (2 global + 6 local) at 224×224 OOMs a 22GB
-    # 3090 with bs=256. Keep effective batch size 256 by accumulating
-    # over 8 micro-batches of 32. Per-dataset blocks inherit this unless
-    # they override.
-    accumulate_grad_batches: 8
+    # Micro-batch for multicrop. Measured on a 24GB card at the paper's 96px
+    # local crops (2x224 + 6x96): bs=128 peaks at 14.5GB, bs=192 at 21.6GB.
+    # The previous value of 8 (micro-batch 32, 3.9GB) came from an unrelated
+    # video refactor and was never validated for this view shape -- it cited a
+    # "22GB 3090", but 3090s are 24GB and we already constrain to those.
+    # 2 keeps the EFFECTIVE batch at 256, so the LR stays calibrated, while
+    # SIGReg -- a distributional statistic estimated per micro-batch from
+    # n_views x bs samples -- goes from 256 samples to 1024, matching the
+    # reference implementation exactly.
+    accumulate_grad_batches: 2
   # CIFAR-scale (32x32)
   cifar10:
     batch_size: 256
@@ -91,7 +96,7 @@ params:
     max_epochs: 125
   imagenette:
     batch_size: 256
-    accumulate_grad_batches: 8
+    accumulate_grad_batches: 2
     max_epochs: 188
 
   # ----- new datasets (auto-inserted, paper tier rule) -----

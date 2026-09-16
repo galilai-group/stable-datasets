@@ -14,6 +14,7 @@ from benchmarks.models import (
     collate_multicrop,
     create_backbone,
     get_embedding_dim,
+    local_crop_size,
     ssl_augmentation,
     val_transform,
 )
