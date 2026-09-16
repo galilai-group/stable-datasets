@@ -190,6 +190,35 @@ def _create_wandb_logger(cfg: DictConfig, seed: int | None, n_params: int | None
 
 # GPU assignment for local parallel runs
 
+def _ckpt_probe_head_count(ckpt_path: str) -> int | None:
+    """Number of swept probe heads stored in a checkpoint, or None if unreadable.
+
+    Resume is strict about OPTIMIZER param groups even when the module itself
+    loads non-strictly, so changing the probe grid between a checkpoint and its
+    resume raises "loaded state dict contains a parameter group that doesn't
+    match the size of optimizer's group" -- and submitit reports that as a
+    successful job. The checkpoint therefore PINS the probe geometry: a run
+    finishes with the grid it started with, and a widened grid only applies to
+    runs started fresh.
+    """
+    try:
+        try:
+            ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False, mmap=True)
+        except (RuntimeError, TypeError, ValueError):
+            ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+        sd = ckpt.get("state_dict", {})
+        idx = {
+            int(k.split("linear_probe.heads.")[1].split(".")[0])
+            for k in sd
+            if "linear_probe.heads." in k
+        }
+        return max(idx) + 1 if idx else None
+    except Exception as exc:  # a corrupt/partial checkpoint must not block startup
+        log.warning("[probe] could not peek at %s (%s); leaving the grid as configured", ckpt_path, exc)
+        return None
+
+
+
 
 def _assign_gpu():
     num_gpus = torch.cuda.device_count()
@@ -280,21 +309,44 @@ def train(cfg: DictConfig, extra_callbacks: list | None = None) -> None:
     # Callbacks
     # model_name routes the probe head through that model's own build_probe();
     # every model returns the same common protocol by default (DECISION_LOG #7).
-    callbacks = create_eval_callbacks(
-        module, ds_config, embed_dim,
-        model_name=cfg.model.name,
-        probe_protocol=cfg.get("probe_protocol", "common"),
-        probe_sweep=(
-            OmegaConf.to_container(cfg.probe_sweep, resolve=True)
-            if cfg.get("probe_sweep", None) is not None and cfg.probe_sweep.get("enabled", False)
-            else None
-        ),
+    _probe_sweep = (
+        OmegaConf.to_container(cfg.probe_sweep, resolve=True)
+        if cfg.get("probe_sweep", None) is not None and cfg.probe_sweep.get("enabled", False)
+        else None
     )
     ckpt_cfg = cfg.checkpoint
     run_dir_name = f"{cfg.model.name}_{cfg.backbone}_{cfg.dataset}"
     if seed is not None:
         run_dir_name += f"_seed{seed}"
     run_ckpt_dir = os.path.join(ckpt_cfg.dir, run_dir_name)
+
+    # A checkpoint pins the probe geometry it was written with -- see
+    # _ckpt_probe_head_count. Widening the grid mid-run is not resumable, so a
+    # resuming run keeps its original grid and only fresh runs get the new one.
+    if _probe_sweep and _probe_sweep.get("archs"):
+        _last_ckpt = os.path.join(run_ckpt_dir, "last.ckpt")
+        if os.path.isfile(_last_ckpt):
+            _n_cfg = (
+                len(_probe_sweep["archs"])
+                * len(_probe_sweep["lr_scales"])
+                * len(_probe_sweep["weight_decays"])
+            )
+            _n_ckpt = _ckpt_probe_head_count(_last_ckpt)
+            if _n_ckpt is not None and _n_ckpt != _n_cfg:
+                log.warning(
+                    "[probe] %s holds %d probe heads but the config asks for %d; "
+                    "dropping archs=%s so this run resumes with the grid it started "
+                    "with. Delete the checkpoint to start fresh on the wider grid.",
+                    _last_ckpt, _n_ckpt, _n_cfg, _probe_sweep["archs"],
+                )
+                _probe_sweep = {k: v for k, v in _probe_sweep.items() if k != "archs"}
+
+    callbacks = create_eval_callbacks(
+        module, ds_config, embed_dim,
+        model_name=cfg.model.name,
+        probe_protocol=cfg.get("probe_protocol", "common"),
+        probe_sweep=_probe_sweep,
+    )
     # Run from the per-cell checkpoint dir so spt.Manager reads/writes its
     # wandb_resume.json sidecar THERE (unique per model/backbone/dataset/seed),
     # not in one shared file. os.getcwd() defaults to the repo root (hydra doesn't

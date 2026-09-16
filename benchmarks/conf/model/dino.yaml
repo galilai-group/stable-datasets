@@ -37,11 +37,12 @@ params:
   default:
     batch_size: 256
     max_epochs: 63
-    # 2 global + 6 local crops at 224×224 / 112×112 OOMs a 22GB 3090 at
-    # bs=256. Keep effective batch size 256 by accumulating over 8
-    # micro-batches of 32. Per-dataset blocks inherit this unless they
-    # override.
-    accumulate_grad_batches: 8
+    # Micro-batch for multicrop -- see the note in lejepa.yaml. bs=128 at the
+    # paper's 96px local crops peaks at 14.5GB on a 24GB card. 2 keeps the
+    # effective batch at 256 so the LR and teacher-momentum schedules are
+    # unchanged; DINO's centering is per-micro-batch too, so it benefits from
+    # the larger sample for the same reason LeJEPA's SIGReg does.
+    accumulate_grad_batches: 2
   # CIFAR-scale (32x32)
   cifar10:
     batch_size: 256
@@ -110,7 +111,7 @@ params:
     max_epochs: 125
   imagenette:
     batch_size: 256
-    accumulate_grad_batches: 8
+    accumulate_grad_batches: 2
     max_epochs: 188
 
   # ----- new datasets (auto-inserted, paper tier rule) -----
