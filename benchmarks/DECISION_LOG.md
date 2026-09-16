@@ -151,7 +151,7 @@ Eight views at 224px also OOMs a 24 GB card at batch 256, so both run
 optimizer steps and kernel launches per epoch. This is inherent to multi-crop,
 not a misconfiguration.
 
-## 7. Linear probe: one common protocol for all methods
+## 7. Linear probe: one common protocol for all methods — with one exception (LeJEPA)
 
 **Headline result uses an identical probe everywhere:**
 
@@ -166,6 +166,33 @@ probe = nn.Sequential(
     nn.Linear(embed_dim, num_classes),
 )
 ```
+
+### Exception: LeJEPA probes with a bare `nn.Linear` (2026-09-16)
+
+Six of the seven methods use the head above. LeJEPA uses `nn.Linear(embed_dim,
+num_classes)` with **no BatchNorm**, supplied by its own `build_probe()` in
+`benchmarks/models/lejepa.py`.
+
+The non-affine BN is a pure whitening step. It helps an embedding whose
+dimensions sit at very different scales, but it hurts a badly *conditioned* one,
+because it lifts near-null directions — noise — to the same scale as
+informative ones. LeJEPA's embedding is the worst-conditioned in the grid:
+
+| Cell (imagenet100, ViT-S) | RankMe | Condition number |
+| --- | ---: | ---: |
+| lejepa | 134 | 4971 |
+| simclr | 192 | 3377 |
+| barlow_twins | 264 | 3419 |
+| dino | 199 | 62088 |
+
+The reference implementation this method was calibrated against probes with a
+bare Linear and reached 65.9% top1 at epoch 100 where our BN head reached 62.5%.
+
+**This makes the probe protocol no longer a fully controlled variable across the
+grid, and the paper must say so.** It was chosen over the alternative — sweeping
+head architecture as a third axis for every method — because `SweepLinearProbe`
+evaluates its heads serially, so a 2x grid doubles probe wall-clock on every step
+of every run in the benchmark to answer a question about one method.
 
 The methods' *published* probes genuinely differ:
 
@@ -442,3 +469,86 @@ returns a summed loss rather than logits and does not detach its input, so it
 cannot go through `spt.callbacks.OnlineProbe` (which does detach for us) without
 a rewrite. `benchmarks/models/probe_sweep.py` is ~175 lines and keeps the
 arithmetic behind every probe number in this repo.
+
+## 15. LeJEPA's SIGReg hyperparameters follow the paper, not the library (2026-09-16)
+
+`stable_pretraining`'s `LeJEPA` defaults are not the values the LeJEPA paper
+recommends. Two were wrong and are now pinned in `conf/model/lejepa.yaml`:
+
+| Knob | spt default (was ours) | Paper | Now |
+| --- | --- | --- | --- |
+| `lamb` (SIGReg weight) | 0.02 | **0.05** | 0.05 |
+| `t_max` (EP integration) | 3.0 → domain [-3,3] | **[-5,5]** | 5.0 |
+| `n_points` | 17 | 17 | 17 (unchanged) |
+| `num_slices` | 1024 | 1024 | 1024 (unchanged) |
+
+Paper (arXiv:2511.08544 §6.1): *"We thus recommend to use 17 integration points,
+an integration domain of [-5,5], and 1024 slices as starting points"* and *"we
+recommend lambda=0.05, Vg=2, Vl=8, and batch size >=128 as starting points."*
+Table 1a ablates [-1,1] / [-3,3] / [-5,5] with [-5,5] best.
+
+`t_max` is the half-width of a *symmetric* domain, not an upper bound on a
+one-sided one: `EppsPulley` builds `t = linspace(0, t_max, n_points)` and doubles
+the interior trapezoid weights, which integrates the even integrand over
+[-t_max, t_max]. So 3.0 was the paper's second-best setting, not its best.
+
+### What still diverges from the paper, deliberately
+
+- **Weight decay.** The paper searches {1e-1, 1e-2, 1e-5}; we use 0.05 (ViT) and
+  1e-4 (ResNet-50), which are this benchmark's cross-method values. Changing them
+  for LeJEPA alone would reintroduce an uncontrolled variable.
+- **Local views.** We use 6; the paper's recommendation line says `Vl=8`, but its
+  own ImageNet configuration uses eight views total (2 global + 6 local at 96px),
+  which is what we match.
+- **Learning rate.** The paper uses lr in {5e-3, 5e-4}; we use 5e-4 for ViT-S. It
+  never specifies ViT-S separately. 5e-3 is untried here.
+
+## 16. Multicrop micro-batch: 32 -> 128 (2026-09-16)
+
+DINO and LeJEPA are the only methods using gradient accumulation, because 8
+multicrop views do not fit at batch 256. The accumulation factor was 8
+(micro-batch 32); it is now 2 (micro-batch 128). Effective batch stays 256, so
+every method still trains at the same optimizer-level batch and the LRs remain
+comparable.
+
+The old value came from an unrelated video refactor (`33a425e`), cited a "22GB
+3090" (3090s are 24GB; 22GB is the A5000 the `constraint` already excludes), and
+was never validated for this view shape. Measured on an RTX 3090 (25.3GB) at
+96px local crops:
+
+| micro-batch | LeJEPA peak | DINO peak |
+| ---: | ---: | ---: |
+| 32 | 3.9 GB | 4.5 GB |
+| 64 | 7.5 GB | 8.3 GB |
+| **128** | **14.5 GB** | **15.8 GB** |
+| 192 | 21.6 GB | 23.3 GB |
+
+This matters beyond throughput for LeJEPA specifically: SIGReg is a
+*distributional* statistic estimated per micro-batch from `n_views x bs` samples.
+At micro-batch 32 that is 256 samples in a 512-d projector space — fewer samples
+than dimensions, so the estimate is rank-deficient. At 128 it is 1024 > 512.
+Gradient accumulation cannot fix this; it averages 8 gradients of an
+under-sampled statistic. The paper's own recommendation is batch size >= 128.
+
+DINO is less affected — its centering is already accumulation-aware
+(`models/dino.py`) — but it shares the default and the local-crop fix, so its
+cells were re-run too.
+
+## 17. Multicrop local crops: 112 -> 96 px (2026-09-16)
+
+`local_size` was `max(h // 2, 32)`, giving 112 against a 224 global. Both DINO
+(Caron et al. 2021) and LeJEPA specify **96**. Now expressed as a ratio
+(`LOCAL_CROP_RATIO = 96/224`) so datasets scale sensibly. Every dataset in this
+benchmark is resized to 224x224, so this changed all of them, not just the
+natively-224 ones.
+
+## 18. Runs superseded by 15-17
+
+All 44 DINO and LeJEPA cells (11 datasets x 2 backbones x 2 methods) predating
+these changes were renamed `old_*` in W&B and tagged `superseded-bs32-crop112`;
+their checkpoints are archived as `<cell>.old-bs32-crop112`. They are kept as a
+record of the bs=32 / 112px configuration, not reported.
+
+The 14 LeJEPA runs launched between the batch fix and the SIGReg fix were deleted
+outright rather than archived: they were 5-94 epochs in, superseded within hours,
+and would have collided by name with their replacements.

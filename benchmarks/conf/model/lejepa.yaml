@@ -13,9 +13,20 @@ transforms:
 # uncontrolled difference of exactly the kind the supervised batch-size fix
 # removed. The build() plumbing below reads this key if present, so turning it
 # on for ALL ViT methods later is a one-line change per model.
+# SIGReg hyperparameters, aligned to the LeJEPA paper (arXiv:2511.08544 §6.1)
+# rather than to stable_pretraining's library defaults, which differ on two
+# counts:
+#   lamb  -- spt defaults to 0.02; the paper says "We thus recommend lambda=0.05
+#            as a robust default" and repeats it in its starting-point recipe
+#            ("lambda=0.05, Vg=2, Vl=8, batch size >=128").
+#   t_max -- spt defaults to 3.0. EppsPulley builds t = linspace(0, t_max, n)
+#            with doubled interior weights, so t_max IS the half-width of a
+#            symmetric domain: 3.0 means [-3,3]. The paper's Table 1a ablates
+#            [-1,1] / [-3,3] / [-5,5] and recommends [-5,5].
+# n_points=17 and num_slices=1024 already match the paper's recommendation.
 loss:
-  lamb: 0.02
-  t_max: 3.0
+  lamb: 0.05
+  t_max: 5.0
   n_points: 17
   num_slices: 1024
 
