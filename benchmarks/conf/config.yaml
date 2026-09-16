@@ -28,15 +28,11 @@ probe_protocol: common
 # best head sits at the edge of the grid, i.e. whether the grid needs widening.
 probe_sweep:
   enabled: true
-  # Head architecture is swept alongside (lr, wd). bn_linear is BatchNorm1d(
-  # affine=False) -> Linear; linear is a bare nn.Linear. BN whitening helps when
-  # an objective leaves features at wildly different per-dimension scales, but
-  # HURTS a badly-conditioned embedding, because it amplifies low-variance noise
-  # directions to unit scale. Both are standard linear-eval protocols, so we
-  # sweep both and report the best -- identically for every method.
-  # 2 archs x 3 lr x 3 wd = 18 heads; heads are (embed_dim x num_classes) over a
-  # detached embedding, so the cost is negligible next to the backbone forward.
-  archs: [bn_linear, linear]
+  # NOTE: head architecture is deliberately NOT swept. expand_grid() accepts an
+  # `archs` axis, but the heads run SERIALLY inside SweepLinearProbe.forward, so
+  # doubling the grid to 18 doubles probe wall-clock on every step of every run.
+  # A method that wants a different head supplies it from its own build_probe()
+  # instead -- see models/lejepa.py.
   lr_scales: [0.1, 1.0, 10.0]
   weight_decays: [0.0, 1.0e-6, 1.0e-4]
   per_head_metrics: true
