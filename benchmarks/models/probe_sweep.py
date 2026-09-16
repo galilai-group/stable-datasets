@@ -58,9 +58,13 @@ def register_lr_scale_hook(module: nn.Module, lr_scale: float, weight_decay: flo
 class SweepLinearProbe(nn.Module):
     """K independent probe heads over one frozen embedding.
 
-    ``head_factory(embed_dim, num_classes)`` supplies the head, so the sweep is
-    orthogonal to WHICH head a method uses — each model's ``build_probe`` still
-    owns that choice (see benchmarks/models/__init__.py).
+    ``head_factory(embed_dim, num_classes, arch)`` supplies the head. When a grid
+    entry carries an ``arch``, the sweep also spans head ARCHITECTURE, not just
+    (lr, wd) — the point being that BatchNorm-then-Linear and a bare Linear are
+    both defensible linear-probe protocols, and which one wins depends on how
+    well-conditioned the embedding is. Sweeping both and reporting the best
+    removes that choice from the result, and does so identically for every
+    method, so between-method comparisons stay controlled.
     """
 
     def __init__(self, head_factory, embed_dim: int, num_classes: int, grid: list[dict]):
@@ -70,7 +74,7 @@ class SweepLinearProbe(nn.Module):
         self.grid = list(grid)
         self.heads = nn.ModuleList()
         for cfg in self.grid:
-            head = head_factory(embed_dim, num_classes)
+            head = head_factory(embed_dim, num_classes, cfg.get("arch"))
             register_lr_scale_hook(head, float(cfg["lr_scale"]), float(cfg["weight_decay"]))
             self.heads.append(head)
 
@@ -90,8 +94,15 @@ def _fmt(v: float) -> str:
     return f"{v:g}".replace(".", "p").replace("-", "m")
 
 
+_ARCH_TAG = {"bn_linear": "bn", "linear": "bare"}
+
+
 def _tag(cfg: dict) -> str:
-    return f"lr{_fmt(cfg['lr_scale'])}_wd{_fmt(cfg['weight_decay'])}"
+    base = f"lr{_fmt(cfg['lr_scale'])}_wd{_fmt(cfg['weight_decay'])}"
+    arch = cfg.get("arch")
+    if arch is None:
+        return base
+    return f"{_ARCH_TAG.get(arch, arch)}_{base}"
 
 
 def sweep_ce_loss(preds: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -166,10 +177,23 @@ def build_sweep_metrics(num_heads: int, num_classes: int, tags: list[str],
     return metrics
 
 
-def expand_grid(lr_scales, weight_decays) -> list[dict]:
-    """Cartesian product, in a stable order so head i means the same thing across runs."""
+def expand_grid(lr_scales, weight_decays, archs=None) -> list[dict]:
+    """Cartesian product, in a stable order so head i means the same thing across runs.
+
+    ``archs`` is optional for back-compat: without it the grid is the original
+    (lr_scale, weight_decay) product and head tags keep their old names, so a
+    checkpoint written before the arch axis existed still maps onto the same
+    heads. With it, arch is the OUTER loop, so heads stay grouped by protocol.
+    """
+    if archs is None:
+        return [
+            {"lr_scale": float(lr), "weight_decay": float(wd)}
+            for lr in lr_scales
+            for wd in weight_decays
+        ]
     return [
-        {"lr_scale": float(lr), "weight_decay": float(wd)}
+        {"arch": str(a), "lr_scale": float(lr), "weight_decay": float(wd)}
+        for a in archs
         for lr in lr_scales
         for wd in weight_decays
     ]
