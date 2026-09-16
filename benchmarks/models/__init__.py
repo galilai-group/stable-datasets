@@ -216,6 +216,21 @@ def build_optim_config(model_cfg, backbone=None) -> dict:
 # common protocol is simply what every one of them returns by default.
 
 
+# DINO and LeJEPA both specify local crops at 96px against a 224px global crop
+# (Caron et al. 2021 §3; LeJEPA's reference config uses local_size=96). Expressed
+# as a ratio so non-224 datasets scale sensibly instead of inheriting a constant
+# that is larger than their own images. The previous rule was h // 2, which gives
+# 112 at 224 -- 1.36x the tokens per local view, and the reason multicrop needed
+# a micro-batch of 32 to fit in 22GB.
+LOCAL_CROP_RATIO = 96 / 224
+
+
+def local_crop_size(ds_config, ratio: float = LOCAL_CROP_RATIO, min_size: int = 32):
+    """Local-view size for multicrop, as a fraction of the dataset's image size."""
+    h, w = ds_config.image_size
+    return (max(int(round(h * ratio)), min_size), max(int(round(w * ratio)), min_size))
+
+
 def common_probe(embed_dim: int, num_classes: int) -> nn.Module:
     """The shared benchmark probe head: non-affine BN then a linear layer.
 
@@ -297,7 +312,12 @@ def create_eval_callbacks(
             "top1": torchmetrics.classification.MulticlassAccuracy(num_classes),
             "top5": torchmetrics.classification.MulticlassAccuracy(num_classes, top_k=min(5, num_classes)),
         }
-        def _head_factory(d, c):
+        def _head_factory(d, c, arch=None):
+            # An explicit arch comes from the sweep and is uniform across methods,
+            # so it deliberately bypasses the per-model build_probe: the whole
+            # point of sweeping the head is that no method gets to pick its own.
+            if arch is not None:
+                return build_linear_probe(d, c, arch)
             if model_name is not None:
                 return get_probe(model_name, d, c, probe_protocol)
             return build_linear_probe(
@@ -308,7 +328,10 @@ def create_eval_callbacks(
             # K heads over the same frozen embedding, each at its own (lr, wd).
             # top1/top5 keep their names and become BEST-over-sweep, so anything
             # reading eval/linear_probe_top1_epoch keeps working unchanged.
-            grid = expand_grid(probe_sweep["lr_scales"], probe_sweep["weight_decays"])
+            _archs = probe_sweep.get("archs", None)
+            grid = expand_grid(
+                probe_sweep["lr_scales"], probe_sweep["weight_decays"], _archs
+            )
             probe_module = SweepLinearProbe(_head_factory, embed_dim, num_classes, grid)
             probe_loss = sweep_ce_loss
             metrics = build_sweep_metrics(
@@ -316,9 +339,11 @@ def create_eval_callbacks(
                 per_head=probe_sweep.get("per_head_metrics", True),
             )
             log.info(
-                "[probe] sweeping %d heads: lr_scales=%s weight_decays=%s "
+                "[probe] sweeping %d heads: archs=%s lr_scales=%s weight_decays=%s "
                 "(top1/top5 report the best head)",
-                probe_module.num_heads, list(probe_sweep["lr_scales"]),
+                probe_module.num_heads,
+                list(_archs) if _archs else ["bn_linear (default)"],
+                list(probe_sweep["lr_scales"]),
                 list(probe_sweep["weight_decays"]),
             )
         else:

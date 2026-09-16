@@ -11,6 +11,7 @@ from stable_pretraining.methods.lejepa import LeJEPA, LeJEPAOutput
 from benchmarks.models import (
     build_optim_config,
     collate_multicrop,
+    local_crop_size,
     resolve_backbone_family,
     resolve_backbone_name,
     val_transform,
@@ -47,7 +48,7 @@ def _crop_transform(ds_config, size, scale):
 
 def create_transforms(ds_config, model_cfg=None):
     h, w = ds_config.image_size
-    local_size = (max(h // 2, 32), max(w // 2, 32))
+    local_size = local_crop_size(ds_config)
 
     global_aug = _crop_transform(ds_config, (h, w), scale=(0.3, 1.0))
     local_aug = _crop_transform(ds_config, local_size, scale=(0.05, 0.3))
@@ -139,6 +140,9 @@ def _build_lejepa(**kwargs) -> LeJEPA:
 
 def build(cfg, ds_config) -> tuple[spt.Module, int]:
     backbone_name = resolve_backbone_name(cfg.backbone, ds_config)
+    family = resolve_backbone_family(cfg.backbone)
+    _dpr = cfg.model.get("drop_path_rate", None)
+    drop_path_rate = 0.0 if _dpr is None else float(_dpr.get(family, 0.0))
     lejepa_kwargs = dict(
         encoder_name=backbone_name,
         n_slices=cfg.model.loss.num_slices,
@@ -146,9 +150,9 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
         n_points=cfg.model.loss.n_points,
         lamb=cfg.model.loss.lamb,
         pretrained=False,
-        drop_path_rate=0.0,
+        drop_path_rate=drop_path_rate,
     )
-    if resolve_backbone_family(cfg.backbone) == "resnet":
+    if family == "resnet":
         lejepa = _build_lejepa(**lejepa_kwargs)
     else:
         lejepa = LeJEPA(**lejepa_kwargs)

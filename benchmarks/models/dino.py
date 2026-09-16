@@ -63,7 +63,7 @@ def create_transforms(ds_config, model_cfg=None):
         # If num_global > 2 (non-canonical), cycle through the asymmetric pair.
         transform_dict[f"global_{i + 1}"] = globals_[i % 2]
 
-    local_size = (max(h // 2, 32), max(w // 2, 32))
+    local_size = local_crop_size(ds_config)
     local_aug = ssl_augmentation(ds_config, local_size, crop_scale=(0.05, 0.4), blur_p=0.5, interpolation=bicubic)
     for i in range(num_local):
         transform_dict[f"local_{i + 1}"] = local_aug

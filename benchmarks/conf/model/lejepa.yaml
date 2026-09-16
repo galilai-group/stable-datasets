@@ -6,6 +6,16 @@ transforms:
   num_global: 2
   num_local: 6
 
+# Stochastic depth. The rest of this benchmark pretrains at 0.0 (see
+# models/vit.py: "finetune uses 0.1, pretrain 0.0"), but LeJEPA's reference
+# config leaves timm's 0.1 in place for ViT and reaches 65.9% on imagenet100 at
+# epoch 100 where we reach 62.5%. Split by backbone family so enabling it for
+# ViT does not silently also change ResNet-50, whose problem is conditioning,
+# not under-regularisation.
+drop_path_rate:
+  vit: 0.1
+  resnet: 0.0
+
 loss:
   lamb: 0.02
   t_max: 3.0
