@@ -54,7 +54,10 @@ Available Datasets
    oxford_pet
    plant_village
    eurosat
+   aid
+   resisc45
    stanford_dogs
+   ip102
    dtd
    fashion_mnist
    k_mnist
@@ -67,6 +70,8 @@ Available Datasets
    e_mnist
    fgvc_aircraft
    flowers102
+   jena_flowers30
+   flavia
    food101
    cub200
    country211

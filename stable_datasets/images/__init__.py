@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from .aid import AID
 from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
 from .awa2 import AWA2
@@ -22,6 +23,7 @@ from .fashion_mnist import FashionMNIST
 
 # from .celeb_a import CelebA
 from .fgvc_aircraft import FGVCAircraft
+from .flavia import Flavia
 from .flowers102 import Flowers102
 from .food101 import Food101
 from .galaxy10 import Galaxy10Decal
@@ -29,6 +31,8 @@ from .hasy_v2 import HASYv2
 from .imagenet_1k import ImageNet1K
 from .imagenet_10 import Imagenette
 from .imagenet_100 import ImageNet100
+from .ip102 import IP102
+from .jena_flowers30 import JenaFlowers30
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
@@ -38,6 +42,7 @@ from .plant_village import PlantVillage
 
 # from .mnist import MNIST
 # from .places365_small import Places365Small
+from .resisc45 import RESISC45
 from .rock_paper_scissor import RockPaperScissor
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
@@ -49,6 +54,7 @@ from .tiny_imagenet_c import TinyImagenetC
 
 
 __all__ = [
+    "AID",
     "ArabicCharacters",
     "ArabicDigits",
     "AWA2",
@@ -69,6 +75,7 @@ __all__ = [
     "FacePointing",
     "FashionMNIST",
     "FGVCAircraft",
+    "Flavia",
     "Flowers102",
     "Galaxy10Decal",
     "Food101",
@@ -76,12 +83,15 @@ __all__ = [
     "ImageNet1K",
     "ImageNet100",
     "Imagenette",
+    "IP102",
+    "JenaFlowers30",
     "KMNIST",
     "Linnaeus5",
     "MedMNIST",
     "NotMNIST",
     "OxfordPet",
     "PlantVillage",
+    "RESISC45",
     "RockPaperScissor",
     "Shapes3D",
     "SmallNORB",
