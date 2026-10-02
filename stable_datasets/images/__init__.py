@@ -34,17 +34,21 @@ from .imagenet_100 import ImageNet100
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
+from .medianomaly import MedIAnomaly
+from .mvtec_ad import MVTecAD
 from .not_mnist import NotMNIST
 
 # from .mnist import MNIST
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
+from .sewer_ml import SewerML
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
 from .stl10 import STL10
 from .svhn import SVHN
 from .tiny_imagenet import TinyImagenet
 from .tiny_imagenet_c import TinyImagenetC
+from .visa import VisA
 
 
 __all__ = [
@@ -79,9 +83,13 @@ __all__ = [
     "Imagenette",
     "KMNIST",
     "Linnaeus5",
+    "MVTecAD",
+    "VisA",
+    "MedIAnomaly",
     "MedMNIST",
     "NotMNIST",
     "RockPaperScissor",
+    "SewerML",
     "Shapes3D",
     "SmallNORB",
     "STL10",

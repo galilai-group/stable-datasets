@@ -20,9 +20,37 @@ if str(project_root) not in sys.path:
 
 
 def _stable_datasets_cache_dirs():
-    """Default cache dirs used by dataset builders (downloads + processed)."""
-    base = Path(os.path.expanduser("~/.stable_datasets"))
+    """Cache dirs used by dataset builders (downloads + processed).
+
+    Resolved through the library rather than hard-coded: the default is
+    ``~/.stable-datasets`` (hyphen) and ``STABLE_DATASETS_CACHE_DIR`` overrides it,
+    so spelling the path here by hand silently pointed the cleanup below at a
+    directory that never exists.
+    """
+    from stable_datasets.utils import _get_cache_dir
+
+    base = Path(os.path.expanduser(_get_cache_dir()))
     return [base / "downloads", base / "processed"]
+
+
+@pytest.fixture(scope="module")
+def shared_download_dir(tmp_path_factory, request):
+    """A raw-download directory shared by every test in one module.
+
+    The autouse cleanup below wipes the *default* download directory after each
+    test, so a test file with several functions would otherwise re-fetch the same
+    archive once per test -- MVTec-AD's smallest category archive is ~109 MB and
+    MedIAnomaly's smallest subset ~42 MB, so that adds up quickly in CI.
+
+    Anchoring downloads here keeps one copy per module. It sits outside
+    ``~/.stable_datasets`` so the cleanup does not touch it, and pytest reclaims
+    it with the rest of the session's temporary directories.
+
+    Pass it as ``download_dir=`` alongside a per-test ``processed_cache_dir=``,
+    so each test still builds its cache from scratch while reusing the download.
+    """
+    module_name = request.module.__name__.rsplit(".", 1)[-1]
+    return str(tmp_path_factory.mktemp(f"dl_{module_name}_"))
 
 
 @pytest.fixture(autouse=True, scope="function")

@@ -339,8 +339,10 @@ class BaseDatasetBuilder:
         Automatically download, prepare, and return the dataset for the specified split.
 
         Args:
-            split: Dataset split to load (e.g., "train", "test", "validation"). If None,
-                loads all available splits and returns a StableDatasetDict.
+            split: Dataset split to load (e.g., "train", "test", "validation"). Only
+                this split's cache is built, so builders that download per split
+                fetch only its files. If None, loads all available splits and
+                returns a StableDatasetDict.
             processed_cache_dir: Cache directory for processed datasets. If None,
                 defaults to ~/.stable_datasets/processed/.
             download_dir: Directory for raw downloads (ZIP/NPZ/etc). If None, defaults to
@@ -397,12 +399,14 @@ class BaseDatasetBuilder:
                 "it uses the specialized lance-video-frames layout."
             )
 
-        # 4) Try to load all splits from cache without downloading.
+        # 4) Try to load the requested split(s) from cache without downloading.
+        #    A specific split only needs its own cache; split=None needs all of them.
         candidate_splits = instance._candidate_splits()
+        lookup_splits = [split] if split is not None and split in candidate_splits else candidate_splits
 
         splits_data = {}
-        all_cached = bool(candidate_splits)  # empty assets → must call _split_generators
-        for split_name in candidate_splits:
+        all_cached = bool(lookup_splits)  # empty assets → must call _split_generators
+        for split_name in lookup_splits:
             shard_dir_name = cache_fingerprint(
                 cls.__name__,
                 str(cls.VERSION),
@@ -434,6 +438,14 @@ class BaseDatasetBuilder:
         if not all_cached:
             splits_data = {}
             split_generators = instance._split_generators()
+
+            # Build only the requested split. Builders that download lazily inside
+            # _generate_examples (e.g. SewerML) then fetch only that split's files.
+            if split is not None:
+                available = [sg.name for sg in split_generators]
+                if split not in available:
+                    raise ValueError(f"Split '{split}' not found. Available: {available}")
+                split_generators = [sg for sg in split_generators if sg.name == split]
 
             for sg in split_generators:
                 shard_dir_name = cache_fingerprint(
@@ -604,6 +616,21 @@ def bulk_download(
     return results
 
 
+def _caused_by_decode_error(error: BaseException) -> bool:
+    """True when *error*, or anything it was raised from, is a content-decoding failure.
+
+    ``download`` re-raises the original exception wrapped in a ``RuntimeError`` once
+    every candidate URL has been tried, so the cause chain has to be walked.
+    """
+    seen = set()
+    while error is not None and id(error) not in seen:
+        seen.add(id(error))
+        if isinstance(error, requests.exceptions.ContentDecodingError):
+            return True
+        error = error.__cause__ or error.__context__
+    return False
+
+
 def download(
     url: str | DownloadInfo,
     dest_folder: str | Path | None = None,
@@ -659,6 +686,7 @@ def download(
         try:
             errors = []
             total_size = 0
+            encoded = False
             for candidate_url in candidate_urls:
                 try:
                     with requests.Session() as session:
@@ -669,7 +697,36 @@ def download(
                         req_headers = {}
                         if existing_size > 0:
                             req_headers["Range"] = f"bytes={existing_size}-"
+                            # Byte offsets in Range refer to the encoded stream while
+                            # the partial file holds decoded bytes, so ask the server
+                            # not to encode -- otherwise the two disagree and the
+                            # resumed bytes are garbage.
+                            req_headers["Accept-Encoding"] = "identity"
                             logging.info(f"Resuming download from byte {existing_size}: {candidate_url}")
+
+                            # A partial file at or past the resource size answers 416.
+                            # That happens when an earlier run was killed between the
+                            # last chunk and the atomic rename, and without this the
+                            # .tmp wedges every later attempt. stream=True means the
+                            # probe reads headers only and never pulls the body, so
+                            # this costs one round trip and only when resuming.
+                            with session.get(
+                                candidate_url,
+                                stream=True,
+                                allow_redirects=True,
+                                timeout=(10, 300),
+                                headers=req_headers,
+                            ) as probe:
+                                unsatisfiable = probe.status_code == 416
+                            if unsatisfiable:
+                                logging.warning(
+                                    f"Discarding stale partial download for {candidate_url}: "
+                                    "server reports the requested range is unsatisfiable."
+                                )
+                                tmp.unlink(missing_ok=True)
+                                existing_size = 0
+                                req_headers = {}
+                                logging.info(f"Downloading: {candidate_url}")
                         else:
                             logging.info(f"Downloading: {candidate_url}")
 
@@ -682,7 +739,25 @@ def download(
                         ) as response:
                             response.raise_for_status()
 
-                            if response.status_code == 206:
+                            # When the server applies a transfer encoding (e.g.
+                            # GitHub serves text files gzipped), content-length
+                            # counts the *encoded* bytes while iter_content yields
+                            # decoded ones, so the two are not comparable and the
+                            # size check below must be skipped.
+                            encoded = bool(response.headers.get("content-encoding"))
+
+                            if response.status_code == 206 and encoded:
+                                # The server honoured Range but still encoded the
+                                # body, so the partial file cannot be appended to.
+                                # Start over rather than writing corrupt bytes.
+                                logging.warning(
+                                    f"Discarding partial download for {candidate_url}: "
+                                    "server returned an encoded range response."
+                                )
+                                mode = "wb"
+                                existing_size = 0
+                                total_size = 0
+                            elif response.status_code == 206:
                                 mode = "ab"
                                 remaining = int(response.headers.get("content-length", 0) or 0)
                                 total_size = existing_size + remaining
@@ -691,7 +766,10 @@ def download(
                                 existing_size = 0
                                 total_size = int(response.headers.get("content-length", 0) or 0)
 
-                            logging.info(f"Total size: {total_size} bytes")
+                            if encoded:
+                                logging.info(f"Total size: {total_size} bytes (encoded; size check skipped)")
+                            else:
+                                logging.info(f"Total size: {total_size} bytes")
 
                             downloaded = existing_size
                             with (
@@ -726,8 +804,10 @@ def download(
                 attempted = ", ".join(url for url, _ in errors)
                 raise RuntimeError(f"Failed to download from all candidate URLs: {attempted}") from errors[-1][1]
 
-            # Validate size on disk
-            if total_size and tmp.stat().st_size != total_size:
+            # Validate size on disk. Skipped when the response was transfer-encoded,
+            # since content-length then describes the encoded stream rather than the
+            # decoded bytes written to disk.
+            if total_size and not encoded and tmp.stat().st_size != total_size:
                 raise RuntimeError(f"Download incomplete for {url}: got {tmp.stat().st_size} of {total_size} bytes")
 
             # Validate checksum if provided
@@ -750,9 +830,11 @@ def download(
 
         except Exception as e:
             # Keep .tmp for resumable errors (network, timeout, incomplete).
-            # Only delete on checksum/validation failure (ValueError) where
-            # the data is known to be corrupt and cannot be resumed.
-            if isinstance(e, ValueError):
+            # Delete it on checksum/validation failure (ValueError) where the data
+            # is known to be corrupt, and on a decoding failure, which means the
+            # partial file and the server's encoding disagree -- retrying with the
+            # same .tmp in place would fail identically and wedge the download.
+            if isinstance(e, ValueError) or _caused_by_decode_error(e):
                 try:
                     if tmp.exists():
                         tmp.unlink()

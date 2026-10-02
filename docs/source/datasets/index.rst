@@ -74,6 +74,15 @@ Available Datasets
 
 .. toctree::
    :maxdepth: 1
+   :caption: Anomaly Detection Datasets
+
+   mvtec_ad
+   visa
+   medianomaly
+   sewer_ml
+
+.. toctree::
+   :maxdepth: 1
    :caption: Video Datasets
 
    something_something_v2
