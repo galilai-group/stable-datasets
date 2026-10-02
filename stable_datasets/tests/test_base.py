@@ -170,6 +170,24 @@ def test_base_builder_returns_dataset_when_split_is_set(tmp_path):
     assert len(ds) == 3
 
 
+def test_base_builder_builds_only_the_requested_split(tmp_path):
+    _TinyLocalBuilder(split="train", processed_cache_dir=str(tmp_path))
+    shard_dirs = [d.name for d in tmp_path.iterdir() if d.is_dir()]
+    assert len(shard_dirs) == 1
+    assert "_train_" in shard_dirs[0]
+
+    # A later split=None load builds the missing split and reuses the cached one.
+    ds = _TinyLocalBuilder(split=None, processed_cache_dir=str(tmp_path))
+    assert set(ds.keys()) == {"train", "test"}
+
+
+def test_base_builder_rejects_unknown_split_before_generating(tmp_path):
+    with patch.object(_TinyLocalBuilder, "_generate_examples") as generate:
+        with pytest.raises(ValueError, match=r"Split 'val' not found. Available: \['train', 'test'\]"):
+            _TinyLocalBuilder(split="val", processed_cache_dir=str(tmp_path))
+    generate.assert_not_called()
+
+
 def test_base_builder_allows_runtime_source_override(tmp_path):
     ds = _TinyDynamicSourceBuilder(split="train", processed_cache_dir=str(tmp_path))
     assert isinstance(ds, StableDataset)

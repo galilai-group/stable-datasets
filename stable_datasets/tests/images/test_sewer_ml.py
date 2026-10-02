@@ -102,6 +102,18 @@ def test_sewer_ml_reads_images_from_every_archive(sewer_ml_tree, tmp_path):
     assert filenames == {f"train_{i:04d}.png" for i in range(6)}
 
 
+def test_sewer_ml_single_split_needs_only_its_own_files(sewer_ml_tree, tmp_path):
+    """split="validation" must not touch train/test files, so it works as a cheap access check."""
+    csv_name, archive_names = _SPLIT_LAYOUT["val"]
+    val_only = tmp_path / "val-only"
+    val_only.mkdir()
+    for name in (csv_name, *archive_names):
+        (val_only / name).write_bytes((sewer_ml_tree / name).read_bytes())
+
+    ds = _load(val_only, tmp_path, split="validation")
+    assert len(ds) == 6
+
+
 def test_sewer_ml_test_split_is_unlabeled(sewer_ml_tree, tmp_path):
     """The benchmark withholds test annotations; the CSV carries only Filename."""
     ds = _load(sewer_ml_tree, tmp_path, split="test")

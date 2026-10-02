@@ -339,8 +339,10 @@ class BaseDatasetBuilder:
         Automatically download, prepare, and return the dataset for the specified split.
 
         Args:
-            split: Dataset split to load (e.g., "train", "test", "validation"). If None,
-                loads all available splits and returns a StableDatasetDict.
+            split: Dataset split to load (e.g., "train", "test", "validation"). Only
+                this split's cache is built, so builders that download per split
+                fetch only its files. If None, loads all available splits and
+                returns a StableDatasetDict.
             processed_cache_dir: Cache directory for processed datasets. If None,
                 defaults to ~/.stable_datasets/processed/.
             download_dir: Directory for raw downloads (ZIP/NPZ/etc). If None, defaults to
@@ -397,12 +399,14 @@ class BaseDatasetBuilder:
                 "it uses the specialized lance-video-frames layout."
             )
 
-        # 4) Try to load all splits from cache without downloading.
+        # 4) Try to load the requested split(s) from cache without downloading.
+        #    A specific split only needs its own cache; split=None needs all of them.
         candidate_splits = instance._candidate_splits()
+        lookup_splits = [split] if split is not None and split in candidate_splits else candidate_splits
 
         splits_data = {}
-        all_cached = bool(candidate_splits)  # empty assets → must call _split_generators
-        for split_name in candidate_splits:
+        all_cached = bool(lookup_splits)  # empty assets → must call _split_generators
+        for split_name in lookup_splits:
             shard_dir_name = cache_fingerprint(
                 cls.__name__,
                 str(cls.VERSION),
@@ -434,6 +438,14 @@ class BaseDatasetBuilder:
         if not all_cached:
             splits_data = {}
             split_generators = instance._split_generators()
+
+            # Build only the requested split. Builders that download lazily inside
+            # _generate_examples (e.g. SewerML) then fetch only that split's files.
+            if split is not None:
+                available = [sg.name for sg in split_generators]
+                if split not in available:
+                    raise ValueError(f"Split '{split}' not found. Available: {available}")
+                split_generators = [sg for sg in split_generators if sg.name == split]
 
             for sg in split_generators:
                 shard_dir_name = cache_fingerprint(

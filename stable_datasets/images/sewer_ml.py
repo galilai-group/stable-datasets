@@ -102,6 +102,12 @@ class SewerML(BaseDatasetBuilder):
        committed before the next archive starts. Point ``download_dir=`` and
        ``processed_cache_dir=`` at a volume with room before loading.
 
+    Loading one split downloads only that split's annotation CSV and archives, so
+    ``SewerML(split="validation")`` (2 archives, ~33 GB) is the cheapest way to
+    check that the password and host work before committing to the full download.
+    Split names are ``"train"``, ``"validation"`` and ``"test"``; ``split=None``
+    builds all three.
+
     Access requires the share password (no username); a refused download raises
     ``PermissionError`` carrying the setup steps. Images are read straight out of
     the zip archives, so no extracted copy is written to disk.
