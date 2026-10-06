@@ -47,7 +47,13 @@ class LanceBackend:
     #: reads. Batching amortizes Lance's Python/Rust call boundary.
     prefer_batched_take: bool = True
 
-    def __init__(self, *, uri: str | Path, batch_readahead: int = 8):
+    def __init__(
+        self,
+        *,
+        uri: str | Path,
+        batch_readahead: int = 8,
+        shard_row_counts: list[int] | None = None,
+    ):
         """
         Parameters
         ----------
@@ -60,11 +66,18 @@ class LanceBackend:
             ``batch_readahead=8``. Higher values increase memory use
             during iteration but improve throughput on high-latency
             storage. Ignored by ``take``/``get_row``/``slice``.
+        shard_row_counts : list of int, optional
+            Row count of each fragment, from the cache metadata. With
+            this value, the shape properties do not open the dataset.
         """
         self._uri = Path(uri)
         self._ds = None  # opened lazily so DataLoader workers re-open after fork
+        self._shard_row_counts = list(shard_row_counts) if shard_row_counts is not None else None
         self._cached_num_rows: int | None = None
         self._cached_num_shards: int | None = None
+        if self._shard_row_counts is not None:
+            self._cached_num_rows = sum(self._shard_row_counts)
+            self._cached_num_shards = len(self._shard_row_counts)
         self._batch_readahead = int(batch_readahead)
 
     # -- Lazy open ------------------------------------------------------------
@@ -98,7 +111,9 @@ class LanceBackend:
     @property
     def shard_row_counts(self) -> list[int]:
         """Row count of each fragment, in fragment order."""
-        return [fragment.count_rows() for fragment in self._dataset.get_fragments()]
+        if self._shard_row_counts is None:
+            self._shard_row_counts = [fragment.count_rows() for fragment in self._dataset.get_fragments()]
+        return list(self._shard_row_counts)
 
     @property
     def is_file_backed(self) -> bool:
@@ -183,6 +198,7 @@ class LanceBackend:
             "uri": str(self._uri),
             "num_rows": self._cached_num_rows,
             "num_shards": self._cached_num_shards,
+            "shard_row_counts": self._shard_row_counts,
             "batch_readahead": self._batch_readahead,
         }
 
@@ -191,4 +207,5 @@ class LanceBackend:
         self._ds = None
         self._cached_num_rows = state.get("num_rows")
         self._cached_num_shards = state.get("num_shards")
+        self._shard_row_counts = state.get("shard_row_counts")
         self._batch_readahead = state.get("batch_readahead", 8)
