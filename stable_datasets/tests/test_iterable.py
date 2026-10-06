@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from stable_datasets.cache import write_sharded_arrow_cache
 from stable_datasets.dataset import StableDataset
 from stable_datasets.iterable import StableIterableDataset
-from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value
+from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Video
 
 
 def _make_ds(tmp_path, n=20, shard_size_bytes=512, batch_size=5):
@@ -94,3 +94,54 @@ class TestIterableDataset:
         assert isinstance(iterable, StableIterableDataset)
         rows = list(iterable)
         assert len(rows) == 10
+
+
+class TestIterableRespectsView:
+    def test_indexed_view_yields_only_view_rows(self, tmp_path):
+        ds, _ = _make_ds(tmp_path, n=100)
+        test = ds.train_test_split(test_size=0.1, seed=0)["test"]
+        rows = list(test.as_iterable())
+        assert [r["x"] for r in rows] == [r["x"] for r in test]
+        assert len(rows) == 10
+
+    def test_indexed_view_worker_sharding_covers_view_once(self, tmp_path):
+        ds, _ = _make_ds(tmp_path, n=50)
+        view = ds.select(list(range(49, -1, -2)))
+        xs = []
+        for worker_id in range(3):
+            worker_info = MagicMock(id=worker_id, num_workers=3)
+            with patch("torch.utils.data.get_worker_info", return_value=worker_info):
+                xs.extend(r["x"] for r in view.as_iterable())
+        assert sorted(xs) == sorted(range(1, 50, 2))
+
+    def test_dataset_transform_and_format_apply(self, tmp_path):
+        ds, _ = _make_ds(tmp_path, n=5)
+        view = ds.with_format("numpy").with_transform(lambda row: {"x": row["x"] * 10})
+        assert [r["x"] for r in view.as_iterable()] == [r["x"] for r in view] == [0, 10, 20, 30, 40]
+
+    def test_video_decode_applies_with_map_style_sample_index(self, tmp_path):
+        features = Features({"video": Video(storage="bytes"), "x": Value("int32")})
+        meta = write_sharded_arrow_cache(
+            ((i, {"video": b"clip", "x": i}) for i in range(12)),
+            features,
+            tmp_path / "video_cache",
+            shard_size_bytes=64,
+            batch_size=4,
+        )
+        assert meta.num_shards > 1
+        ds = StableDataset(
+            features=features,
+            info=DatasetInfo(features=features),
+            shard_paths=meta.shard_paths,
+            shard_row_counts=meta.shard_row_counts,
+        )
+
+        def decode_fn(ref, config, *, row=None, sample_index=None):
+            return (row["x"], sample_index)
+
+        decoded = ds.set_video_decode(num_frames=1, decode_fn=decode_fn)
+        expected = [decoded[i]["video"] for i in range(len(decoded))]
+        assert [r["video"] for r in decoded.as_iterable()] == expected
+
+        view = decoded.select([7, 2, 9])
+        assert [r["video"] for r in view.as_iterable()] == [(7, 0), (2, 1), (9, 2)]
