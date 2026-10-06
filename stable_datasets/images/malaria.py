@@ -25,13 +25,15 @@ from stable_datasets.utils import (
 
 
 class Malaria(BaseDatasetBuilder):
-    """Balanced classification of parasitized and uninfected red blood cells.
+    """
+    Balanced classification of parasitized and uninfected red blood cells.
 
-    The NIH dataset contains 27,558 variable-resolution RGB cell crops and
-    has no official train/test split. `patient_id` preserves the identifier
-    from NIH's patient-to-cell mappings; `source_image_id` identifies the
-    microscopy image before individual cells were cropped. Group by patient
-    when constructing splits to avoid sharing a patient's cells across them.
+    The NIH Malaria Cell Images dataset contains 27,558 variable-resolution
+    RGB cell crops and has no official train/test split.
+    `patient_id` preserves the identifier from NIH's patient-to-cell mappings;
+    `source_image_id` identifies the microscopy image before individual cells
+    were cropped. Group by patient when constructing splits to avoid sharing a
+    patient's cells across them.
     """
 
     VERSION = Version("1.0.0")

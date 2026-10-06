@@ -32,6 +32,7 @@ from .imagenet_1k import ImageNet1K
 from .imagenet_10 import Imagenette
 from .imagenet_100 import ImageNet100
 from .k_mnist import KMNIST
+from .kather_colorectal_histology import KatherColorectalHistology
 from .linnaeus5 import Linnaeus5
 from .malaria import Malaria
 from .med_mnist import MedMNIST
@@ -79,6 +80,7 @@ __all__ = [
     "ImageNet100",
     "Imagenette",
     "KMNIST",
+    "KatherColorectalHistology",
     "Linnaeus5",
     "Malaria",
     "MedMNIST",

@@ -18,7 +18,6 @@ from stable_datasets.schema import ClassLabel, DatasetSource, DownloadInfo
 
 def _png_bytes(mode="RGB", size=(8, 6)):
     """Create a PNG bytes object for a PIL image."""
-
     with Image.new(mode, size) as image:
         buffer = io.BytesIO()
         image.save(buffer, format="PNG")
@@ -38,7 +37,6 @@ def _write_mapping(path, rows, *, quoted=False):
 
 def _require_dataset(value: object) -> StableDataset:
     """Narrow a builder result to the single split it returns."""
-
     if not isinstance(value, StableDataset):
         raise TypeError("Expected a StableDataset")
     # Lookup keeps Pylint from treating the result as the Malaria builder.
@@ -47,7 +45,6 @@ def _require_dataset(value: object) -> StableDataset:
 
 def _assert_rgb_image(image: object, size: tuple[int, int]) -> None:
     """Check that a decoded cell crop is an RGB image of the expected size."""
-
     # Grayscale and RGBA archive bytes are decoded to a PIL image.
     assert isinstance(image, Image.Image)
     # Every cell is stored as RGB, including crops that were not RGB on disk.
@@ -58,7 +55,6 @@ def _assert_rgb_image(image: object, size: tuple[int, int]) -> None:
 
 def _require_dataset_dict(value: object) -> StableDatasetDict:
     """Narrow a builder result to the split mapping it returns."""
-
     if not isinstance(value, StableDatasetDict):
         raise TypeError("Expected a StableDatasetDict")
     # Lookup keeps Pylint from treating the result as the Malaria builder.
@@ -68,7 +64,6 @@ def _require_dataset_dict(value: object) -> StableDatasetDict:
 @pytest.fixture(name="malaria_assets")
 def malaria_asset_paths(tmp_path):
     """Build a tiny cell-image archive and the two patient-mapping files."""
-
     parasitized = "C33P1thinF_IMG_20150619_114756a_cell_179.png"
     uninfected = "C33P1thinF_IMG_20150619_114756a_cell_180.png"
     other_parasitized = "C100P61ThinF_IMG_20150918_144104_cell_162.png"
@@ -106,8 +101,7 @@ def malaria_asset_paths(tmp_path):
 
 
 def _builder():
-    """Create a Malaria builder instance."""
-
+    """Create a `Malaria` builder instance."""
     builder = object.__new__(Malaria)
     Malaria.__init__(builder)
     return builder
@@ -115,7 +109,6 @@ def _builder():
 
 def test_malaria_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, malaria_assets):
     """Load the fixture once, then reuse the processed cache with no second download."""
-
     cache_dir = tmp_path / "processed"
     download_dir = tmp_path / "downloads"
     calls = []
@@ -165,7 +158,7 @@ def test_malaria_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, malaria_a
     # Within each class, C100 sorts before C33, and that order repeats for uninfected.
     assert [row["patient_id"] for row in rows] == ["C100P61ThinF", "C33P1thinF"] * 2
     for row, size in zip(rows, [(8, 6), (11, 5), (8, 6), (9, 7)]):
-        # Every example carries the image, its class, and the NIH identity fields.
+        # Every example carries the image, its class, and the `Malaria` identity fields.
         assert set(row) == {
             "image",
             "label",
@@ -187,7 +180,7 @@ def test_malaria_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, malaria_a
 
     def unexpected_download(*_args, **_kwargs):
         pytest.fail(
-            "A cached Malaria dataset must not download its auxiliary assets again"
+            "A cached `Malaria` dataset must not download its auxiliary assets again"
         )
 
     monkeypatch.setattr(
@@ -210,7 +203,6 @@ def test_malaria_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, malaria_a
 
 def test_malaria_order_is_independent_of_zip_order(tmp_path, malaria_assets):
     """Yield the same examples when the zip member order is reversed."""
-
     builder = _builder()
     original = list(builder._generate_examples(malaria_assets, "train"))
     reversed_path = tmp_path / "reversed.zip"
@@ -241,8 +233,7 @@ def test_malaria_order_is_independent_of_zip_order(tmp_path, malaria_assets):
 
 @pytest.mark.parametrize("quoted", [False, True])
 def test_malaria_mapping_reads_padded_lists_and_preserves_ids(tmp_path, quoted):
-    """Read padded and quoted NIH filename lists without changing patient ids."""
-
+    """Read padded and quoted `Malaria` filename lists without changing patient ids."""
     path = tmp_path / "mapping.csv"
     _write_mapping(
         path,
@@ -270,8 +261,7 @@ def test_malaria_mapping_reads_padded_lists_and_preserves_ids(tmp_path, quoted):
 def test_malaria_mapping_rejects_invalid_or_conflicting_rows(
     tmp_path, content, message
 ):
-    """Reject filename lists, patient ids, and duplicate cells that NIH would not emit."""
-
+    """Reject filename lists, patient ids, and duplicate cells that `Malaria` would not emit."""
     path = tmp_path / "mapping.csv"
     path.write_text(content, encoding="utf-8")
     # Malformed lists, empty ids, non-string filenames, and conflicting ids are rejected.
@@ -280,8 +270,7 @@ def test_malaria_mapping_rejects_invalid_or_conflicting_rows(
 
 
 def test_malaria_rejects_missing_patient_mapping(malaria_assets):
-    """Fail when a cell image has no patient id in the mapping file."""
-
+    """Fail when a cell image has no patient id in the mapping file for `Malaria`."""
     _write_mapping(malaria_assets["patient_mapping_parasitized"], [])
     # A parasitized crop with no mapping row cannot be assigned a patient id.
     with pytest.raises(ValueError, match="Missing patient mapping.*cell_162.png"):
@@ -302,12 +291,11 @@ def test_malaria_rejects_missing_patient_mapping(malaria_assets):
 def test_malaria_rejects_invalid_images(
     tmp_path, malaria_assets, filename, content, message
 ):
-    """Reject cell filenames and image bytes that do not match the NIH archive."""
-
+    """Reject cell filenames and image bytes that do not match the `Malaria` archive."""
     archive_path = tmp_path / "invalid.zip"
     with ZipFile(archive_path, "w") as archive:
         archive.writestr(f"cell_images/Parasitized/{filename}", content)
-    # Names that are not NIH cell crops, and PNGs that do not decode, are rejected.
+    # Names that are not `Malaria` cell crops, and PNGs that do not decode, are rejected.
     with pytest.raises(ValueError, match=message):
         list(
             _builder()._generate_examples(
@@ -319,19 +307,18 @@ def test_malaria_rejects_invalid_images(
 
 @pytest.mark.large
 def test_malaria_dataset(tmp_path):
-    """Test the Malaria dataset.
+    """Test the `Malaria` dataset.
 
     This test is large and should be skipped in the CI.
     """
-
     ds_all = StableDatasetDict(
         Malaria(
             processed_cache_dir=tmp_path / "processed",
             download_dir=tmp_path / "downloads",
         )
     )
-    # NIH publishes no official train/test split. The patient-mapping CSVs are
-    # metadata, so loading every split exposes only "train".
+    # The data source publishes no official train/test split.
+    # The patient-mapping CSVs are metadata, so loading every split exposes only "train".
     assert list(ds_all) == [
         "train"
     ], f"Expected only a train split, got {list(ds_all)}."
