@@ -33,6 +33,7 @@ from .imagenet_10 import Imagenette
 from .imagenet_100 import ImageNet100
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
+from .malaria import Malaria
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
 
@@ -79,6 +80,7 @@ __all__ = [
     "Imagenette",
     "KMNIST",
     "Linnaeus5",
+    "Malaria",
     "MedMNIST",
     "NotMNIST",
     "RockPaperScissor",
