@@ -280,10 +280,10 @@ class TestShardDefaults:
         gen = ((i, {"blob": bytes(1000), "x": i}) for i in range(300))
         meta = write_lance_cache(gen, features, tmp_path / "lance", batch_size=50, max_bytes_per_file=50_000)
 
-        fragment_counts = [f.count_rows() for f in lance.dataset(str(meta.cache_dir)).get_fragments()]
+        fragment_counts = [f.count_rows() for f in lance.dataset(meta.cache_dir).get_fragments()]
         assert len(fragment_counts) > 1
         assert sum(fragment_counts) == 300
-        assert json.loads((meta.cache_dir / "_metadata.json").read_text())["shard_row_counts"] == fragment_counts
+        assert json.loads((tmp_path / "lance" / "_metadata.json").read_text())["shard_row_counts"] == fragment_counts
         assert meta.shard_row_counts == fragment_counts
 
     def test_fewer_shards_than_workers_reads_contiguous_ranges(self, tmp_path):

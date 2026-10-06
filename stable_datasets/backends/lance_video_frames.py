@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pyarrow as pa
+
+from .. import _uri
 
 
 _LANCE_CACHE: dict[str, Any] = {}
@@ -16,13 +19,13 @@ _LANCE_CACHE: dict[str, Any] = {}
 _WINDOWS_PER_BATCH = 64
 
 
-def _open_dataset(path: str):
-    ds = _LANCE_CACHE.get(path)
+def _open_dataset(uri: str, storage_options: dict | None):
+    ds = _LANCE_CACHE.get(uri)
     if ds is None:
         import lance
 
-        ds = lance.dataset(path)
-        _LANCE_CACHE[path] = ds
+        ds = lance.dataset(uri, storage_options=storage_options)
+        _LANCE_CACHE[uri] = ds
     return ds
 
 
@@ -95,18 +98,20 @@ class LanceVideoFramesBackend:
         hop_size: int = 1,
         min_video_frames: int | None = None,
         batch_readahead: int = 8,
+        storage_options: dict | None = None,
     ):
-        meta_path = Path(uri) / "_metadata.json"
-        if not meta_path.exists():
+        meta_path = _uri.join(uri, "_metadata.json")
+        if not _uri.exists(meta_path, storage_options):
             raise FileNotFoundError(f"No metadata file at {meta_path}")
         self._configure(
             uri=uri,
-            metadata=json.loads(meta_path.read_text()),
+            metadata=json.loads(_uri.read_text(meta_path, storage_options)),
             window_length=window_length,
             frame_skip=frame_skip,
             hop_size=hop_size,
             min_video_frames=min_video_frames,
             batch_readahead=batch_readahead,
+            storage_options=storage_options,
         )
 
     def _configure(
@@ -119,9 +124,11 @@ class LanceVideoFramesBackend:
         hop_size: int,
         min_video_frames: int | None,
         batch_readahead: int,
+        storage_options: dict | None,
         plan: tuple[np.ndarray, np.ndarray, list[int]] | None = None,
     ) -> None:
-        self._uri = Path(uri)
+        self._uri = os.fspath(uri)
+        self._storage_options = storage_options
         self._batch_readahead = int(batch_readahead)
         self.window_length = int(window_length)
         self.frame_skip = int(frame_skip)
@@ -134,7 +141,7 @@ class LanceVideoFramesBackend:
         self._column = metadata["video_column"]
         self._videos = list(metadata.get("videos", []))
         if not self._videos:
-            raise ValueError(f"no videos recorded in {self._uri / '_metadata.json'}")
+            raise ValueError(f"no videos recorded in {_uri.join(self._uri, '_metadata.json')}")
         self._start_rows = np.asarray([video["start_row"] for video in self._videos], dtype=np.int64)
         self._metadata_keys = list(dict.fromkeys(k for video in self._videos for k in video.get("metadata") or {}))
 
@@ -165,13 +172,14 @@ class LanceVideoFramesBackend:
             hop_size=self.hop_size,
             min_video_frames=self.min_video_frames,
             batch_readahead=self._batch_readahead,
+            storage_options=self._storage_options,
         )
         return backend
 
     @property
     def _dataset(self):
         if self._ds is None:
-            self._ds = _open_dataset(str(self._uri))
+            self._ds = _open_dataset(self._uri, self._storage_options)
         return self._ds
 
     @property
@@ -191,8 +199,9 @@ class LanceVideoFramesBackend:
         return True
 
     @property
-    def cache_dir(self) -> Path:
-        return self._uri
+    def cache_dir(self) -> Path | None:
+        """Local cache directory, or ``None`` for a remote URI."""
+        return _uri.local_path(self._uri)
 
     @property
     def schema(self) -> pa.Schema:
@@ -297,7 +306,8 @@ class LanceVideoFramesBackend:
 
     def __getstate__(self) -> dict:
         return {
-            "uri": str(self._uri),
+            "uri": self._uri,
+            "storage_options": self._storage_options,
             "metadata": self.metadata,
             "window_length": self.window_length,
             "frame_skip": self.frame_skip,
