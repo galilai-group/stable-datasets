@@ -363,7 +363,7 @@ def _make_lance_builder_class():
         def _split_generators(self):
             return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 15})]
 
-        def _generate_examples(self, n):
+        def _iter_examples(self, n):
             for i in range(n):
                 yield i, {"x": i, "label": i % 3}
 
@@ -416,7 +416,7 @@ class TestBuilderStorageFormat:
         assert len(ds1) == 15
 
         # Second call with the same cache dir must hit the metadata-driven
-        # cache path without running _generate_examples.
+        # cache path without running _iter_examples.
         ds2 = Builder(processed_cache_dir=tmp_path, download_dir=tmp_path / "dl", split="train")
         assert len(ds2) == 15
         # Sanity: both datasets produce identical contents.
@@ -498,7 +498,7 @@ class TestBuilderStorageFormat:
             def _split_generators(self):
                 return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 5})]
 
-            def _generate_examples(self, n):
+            def _iter_examples(self, n):
                 for i in range(n):
                     yield i, {"x": i}
 

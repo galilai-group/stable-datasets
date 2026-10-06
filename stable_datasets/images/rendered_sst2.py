@@ -55,7 +55,7 @@ class RenderedSST2(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         folder = {"train": "train", "validation": "valid", "test": "test"}[split]
         label_feature = self.info.features["label"]
         with tarfile.open(data_path, "r|gz") as archive:

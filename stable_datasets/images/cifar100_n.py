@@ -141,7 +141,7 @@ class CIFAR100N(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, cifar_path, split, annotations_path=None):
+    def _iter_examples(self, cifar_path, split, annotations_path=None):
         with tarfile.open(cifar_path, "r:gz") as tar:
             train = split == "train"
             split_file = "cifar-100-python/train" if train else "cifar-100-python/test"

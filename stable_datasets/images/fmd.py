@@ -136,7 +136,7 @@ class FMD(BaseDatasetBuilder):
             license=self.SOURCE.license,
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         with zipfile.ZipFile(data_path) as archive:
             photos, masks = _index_members(archive)
             for image_id in sorted(photos):

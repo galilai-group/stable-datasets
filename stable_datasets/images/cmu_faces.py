@@ -110,7 +110,7 @@ class CMUFaces(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         if split not in _SPLIT_SUBJECTS:
             raise ValueError(f"Unknown CMUFaces split: {split!r}")
 

@@ -191,7 +191,7 @@ def test_malaria_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, malaria_a
 def test_malaria_order_is_independent_of_zip_order(tmp_path, malaria_assets):
     """Yield the same examples when the zip member order is reversed."""
     builder = _builder()
-    original = list(builder._generate_examples(path_map=malaria_assets, split="train"))
+    original = list(builder._iter_examples(path_map=malaria_assets, split="train"))
     reversed_path = tmp_path / "reversed.zip"
     with (
         ZipFile(malaria_assets["images"]) as source,
@@ -200,7 +200,7 @@ def test_malaria_order_is_independent_of_zip_order(tmp_path, malaria_assets):
         for member in reversed(source.infolist()):
             target.writestr(member, source.read(member))
     reversed_examples = list(
-        builder._generate_examples(
+        builder._iter_examples(
             path_map={**malaria_assets, "images": reversed_path},
             split="train",
         )
@@ -259,7 +259,7 @@ def test_malaria_rejects_missing_patient_mapping(malaria_assets):
     _write_mapping(malaria_assets["patient_mapping_parasitized"], [])
     # A parasitized crop with no mapping row cannot be assigned a patient id.
     with pytest.raises(ValueError, match="Missing patient mapping.*cell_162.png"):
-        list(_builder()._generate_examples(path_map=malaria_assets, split="train"))
+        list(_builder()._iter_examples(path_map=malaria_assets, split="train"))
 
 
 @pytest.mark.parametrize(
@@ -281,7 +281,7 @@ def test_malaria_rejects_invalid_images(tmp_path, malaria_assets, filename, cont
     # Names that are not `Malaria` cell crops, and PNGs that do not decode, are rejected.
     with pytest.raises(ValueError, match=message):
         list(
-            _builder()._generate_examples(
+            _builder()._iter_examples(
                 path_map={**malaria_assets, "images": archive_path},
                 split="train",
             )

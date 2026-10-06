@@ -273,7 +273,7 @@ class ImageNetR(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # Archive layout: imagenet-r/<wnid>/<style>_<n>.jpg (plus README.txt and folder entries).
         # The style in a file name is only the search query used to collect the image (a noisy
         # hint, per the official README), so the label comes only from the folder.

@@ -54,7 +54,7 @@ def _make_archive(path, names=("forest_a", "coast_b")):
 def test_scene8_parser_preserves_bytes(tmp_path):
     path = tmp_path / "source.zip"
     payloads = _make_archive(path)
-    rows = [row for _, row in object.__new__(Scene8)._generate_examples(path, "train")]
+    rows = [row for _, row in object.__new__(Scene8)._iter_examples(path, "train")]
     assert [r["image_id"] for r in rows] == ["coast_b", "forest_a"]
     assert [r["label"] for r in rows] == [0, 1]
     for row in rows:
@@ -66,7 +66,7 @@ def test_scene8_rejects_invalid_collection(tmp_path, names, message):
     path = tmp_path / "bad.zip"
     _make_archive(path, names)
     with pytest.raises(ValueError, match=message):
-        list(object.__new__(Scene8)._generate_examples(path, "train"))
+        list(object.__new__(Scene8)._iter_examples(path, "train"))
 
 
 def test_scene8_rejects_repeated_ids(tmp_path):
@@ -75,4 +75,4 @@ def test_scene8_rejects_repeated_ids(tmp_path):
         archive.writestr("a/coast_a.jpg", b"first")
         archive.writestr("b/coast_a.jpg", b"second")
     with pytest.raises(ValueError, match="Duplicate Scene8 image ID"):
-        list(object.__new__(Scene8)._generate_examples(path, "train"))
+        list(object.__new__(Scene8)._iter_examples(path, "train"))

@@ -40,7 +40,7 @@ def _builder():
 
 
 def test_dense_samples(archives):
-    rows = list(_builder()._generate_examples(archives[0], "train"))
+    rows = list(_builder()._iter_examples(archives[0], "train"))
     assert [key for key, _ in rows] == [0, 1]
     assert [sample["label"] for _, sample in rows] == [0, 9]
 
@@ -56,7 +56,7 @@ def test_dense_samples(archives):
 
 def test_sparse_and_unordered_features(tmp_path):
     path = _write_bz2(tmp_path / "sparse.bz2", "2 256:1 17:-1 1:0.5\n")
-    rows = list(_builder()._generate_examples(path, "train"))
+    rows = list(_builder()._iter_examples(path, "train"))
     assert len(rows) == 1
     assert rows[0][1]["label"] == 1
     # Omitted LIBSVM features are zero before scaling (127 after scaling).
@@ -70,7 +70,7 @@ def test_sparse_and_unordered_features(tmp_path):
 @pytest.mark.parametrize("source_label", range(1, 11))
 def test_label_mapping(tmp_path, source_label):
     path = _write_bz2(tmp_path / "labels.bz2", f"{source_label} 1:-1\n")
-    rows = list(_builder()._generate_examples(path, "train"))
+    rows = list(_builder()._iter_examples(path, "train"))
     assert rows[0][1]["label"] == source_label - 1
 
 
@@ -96,7 +96,7 @@ def test_invalid_samples(tmp_path, bad_row):
     # Put the error on line 2 to verify the diagnostic identifies its location.
     path = _write_bz2(tmp_path / "bad.bz2", "1 1:0\n" + bad_row + "\n")
     with pytest.raises(ValueError, match="Invalid USPS sample at line 2"):
-        list(_builder()._generate_examples(path, "train"))
+        list(_builder()._iter_examples(path, "train"))
 
 
 def test_loading_and_cache_reuse(archives, tmp_path, monkeypatch):

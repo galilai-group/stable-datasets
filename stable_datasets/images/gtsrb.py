@@ -82,7 +82,7 @@ class GTSRB(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, data_path, split, ground_truth_path=None):
+    def _iter_examples(self, data_path, split, ground_truth_path=None):
         if split == Split.TRAIN:
             prefix = _TRAIN_PREFIX
         else:

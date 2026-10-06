@@ -36,7 +36,7 @@ def fake_build(tmp_path):
         archive.writestr("Training/glioma/notes.txt", b"not an image")
 
     builder = object.__new__(BrainTumorMRI)
-    examples = {split: dict(builder._generate_examples(archive_path, split)) for split in ["train", "test"]}
+    examples = {split: dict(builder._iter_examples(archive_path, split)) for split in ["train", "test"]}
     return examples, source_bytes
 
 

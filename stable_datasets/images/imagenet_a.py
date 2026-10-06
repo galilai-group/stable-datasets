@@ -271,7 +271,7 @@ class ImageNetA(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # Archive layout: imagenet-a/<wnid>/<file>.jpg (plus README.txt and folder entries).
         # File names encode a model's wrong predictions, so the label comes only from the folder.
         with tarfile.open(data_path, "r:*") as archive:

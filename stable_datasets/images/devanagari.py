@@ -85,7 +85,7 @@ class Devanagari(BaseDatasetBuilder):
             license=self.SOURCE.license,
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         if split not in ("train", "test"):
             raise ValueError(f"Unknown Devanagari split: {split!r}")
         prefix = f"DevanagariHandwrittenCharacterDataset/{split.title()}/"

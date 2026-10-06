@@ -42,7 +42,7 @@ class STL10(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the tar.gz archive."""
         with tarfile.open(data_path, "r:gz") as tar:
             if split == "train":

@@ -167,7 +167,7 @@ def test_kather_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, kather_arc
 def test_kather_png_preserves_pixels(kather_archive):
     """RGB, grayscale, and RGBA TIFFs retain their RGB pixels without resizing."""
     with ZipFile(kather_archive) as archive:
-        for key, example in _builder()._generate_examples(data_path=kather_archive, split="train"):
+        for key, example in _builder()._iter_examples(data_path=kather_archive, split="train"):
             with (
                 Image.open(io.BytesIO(archive.read(key))) as original,
                 Image.open(io.BytesIO(example["image"])) as encoded,
@@ -188,7 +188,7 @@ def test_kather_requires_archive_path():
     """A missing archive path must fail explicitly."""
     # Calling the generator without an archive reports the missing argument clearly.
     with pytest.raises(TypeError, match="data_path is required"):
-        list(_builder()._generate_examples())
+        list(_builder()._iter_examples())
 
 
 @pytest.mark.parametrize(
@@ -207,7 +207,7 @@ def test_kather_source_filename_variants(tmp_path, source_image_id, slide_id):
     archive_path = tmp_path / "source_variant.zip"
     with ZipFile(archive_path, "w") as archive:
         archive.writestr(f"{ROOT}/01_TUMOR/{filename}", _tiff_bytes())
-    examples = list(_builder()._generate_examples(data_path=archive_path, split="train"))
+    examples = list(_builder()._iter_examples(data_path=archive_path, split="train"))
     # Each supported filename variant yields exactly one tile instead of being skipped.
     assert len(examples) == 1
     _, example = examples[0]
@@ -225,8 +225,8 @@ def test_kather_order_is_independent_of_zip_order(tmp_path, kather_archive):
     with ZipFile(kather_archive) as source, ZipFile(reversed_path, "w") as target:
         for member in reversed(source.infolist()):
             target.writestr(member, source.read(member))
-    original = list(_builder()._generate_examples(data_path=kather_archive, split="train"))
-    reversed_examples = list(_builder()._generate_examples(data_path=reversed_path, split="train"))
+    original = list(_builder()._iter_examples(data_path=kather_archive, split="train"))
+    reversed_examples = list(_builder()._iter_examples(data_path=reversed_path, split="train"))
     # Reversing ZIP insertion order leaves example keys, PNG bytes, labels, and metadata unchanged.
     assert original == reversed_examples
     # Examples are emitted in sorted archive-path order, independent of ZIP insertion order.
@@ -257,7 +257,7 @@ def test_kather_rejects_invalid_tiles(tmp_path, filename, content, message):
         archive.writestr(f"{ROOT}/01_TUMOR/{filename}", content)
     # Bad names, corrupt TIFFs, and wrong-sized tiles each raise their expected validation error.
     with pytest.raises(ValueError, match=message):
-        list(_builder()._generate_examples(data_path=archive_path, split="train"))
+        list(_builder()._iter_examples(data_path=archive_path, split="train"))
 
 
 def test_kather_colorectal_histology_dataset(tmp_path):

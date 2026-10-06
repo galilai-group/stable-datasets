@@ -57,7 +57,7 @@ class DSprites(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # Load npz
         data = np.load(data_path, allow_pickle=True)
         images = data["imgs"]  # shape: (737280, 64, 64), uint8

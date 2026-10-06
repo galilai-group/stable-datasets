@@ -52,7 +52,7 @@ class _TinyBuilder(BaseDatasetBuilder):
     def _split_generators(self):
         return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 5})]
 
-    def _generate_examples(self, n):
+    def _iter_examples(self, n):
         for i in range(n):
             yield i, {"x": i}
 

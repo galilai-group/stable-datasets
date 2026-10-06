@@ -43,7 +43,7 @@ class CatsDogs(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         with zipfile.ZipFile(data_path) as archive:
             member = _find_member(archive, f"CatsDogs_{split.upper()}.arff")
             with archive.open(member) as fh:

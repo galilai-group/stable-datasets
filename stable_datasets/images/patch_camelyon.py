@@ -143,7 +143,7 @@ class PatchCamelyon(BaseDatasetBuilder):
             for split in self._SPLIT_TAGS
         ]
 
-    def _generate_examples(self, x_path, y_path, meta_path, split):
+    def _iter_examples(self, x_path, y_path, meta_path, split):
         with gzip.open(y_path, "rb") as f, h5py.File(io.BytesIO(f.read()), "r") as h5:
             labels = h5["y"][:].reshape(-1)
         meta = pd.read_csv(meta_path, index_col=0)

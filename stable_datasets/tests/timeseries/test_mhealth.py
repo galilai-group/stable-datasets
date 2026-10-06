@@ -102,4 +102,4 @@ def test_mhealth_rejects_invalid_data(tmp_path, problem):
         rows[0, 23] = 1.5
     archive = _archive(tmp_path, rows)
     with pytest.raises(ValueError, match="columns|finite|labels"):
-        list(_builder()._generate_examples(archive, "train"))
+        list(_builder()._iter_examples(archive, "train"))

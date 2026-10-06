@@ -117,7 +117,7 @@ class KITTIDistance(BaseDatasetBuilder):
             for name, key in ((Split.TRAIN, "train"), (Split.VALIDATION, "val"), (Split.TEST, "test"))
         ]
 
-    def _generate_examples(self, path_map, image_ids, split):
+    def _iter_examples(self, path_map, image_ids, split):
         distances = _read_closest_vehicle_distances(path_map["labels"])
 
         with zipfile.ZipFile(path_map["images"], "r") as archive:

@@ -130,7 +130,7 @@ class DeFungi(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         if split not in _SPLITS:
             raise ValueError(f"Unknown DeFungi split: {split!r}")
         with zipfile.ZipFile(data_path) as archive:

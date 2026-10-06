@@ -39,7 +39,7 @@ class CUB200(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the extracted directory."""
         with tarfile.open(data_path, "r:gz") as archive:
             # Read metadata files from inside the archive

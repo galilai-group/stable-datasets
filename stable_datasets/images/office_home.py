@@ -124,7 +124,7 @@ class OfficeHome(BaseDatasetBuilder):
                 raise ValueError(f"OfficeHome: unexpected class folder {class_name!r} in {member}.")
             yield key, member, label_feature.str2int(class_name), domain_feature.str2int(domain)
 
-    def _generate_examples(self, archive_path, split):
+    def _iter_examples(self, archive_path, split):
         with zipfile.ZipFile(archive_path) as archive:
             if self.config.name == _RANDOM:
                 # Both splits need the same test set, so hash the images once per builder.

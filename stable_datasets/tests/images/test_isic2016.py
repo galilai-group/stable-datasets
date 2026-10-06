@@ -58,7 +58,7 @@ def test_isic2016_rejects_image_label_mismatch(original_assets):
     labels.write_text("ISIC_0000001,benign\nISIC_9999999,malignant\n")
     with pytest.raises(ValueError, match="missing images=.*9999999.*unlabelled images=.*0000002"):
         list(
-            object.__new__(ISIC2016)._generate_examples(
+            object.__new__(ISIC2016)._iter_examples(
                 root / "ISBI2016_ISIC_Part3_Training_Data.zip", labels, "train"
             )
         )

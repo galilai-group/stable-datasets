@@ -60,7 +60,7 @@ class FashionMNIST(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the gzip archive."""
         # Fashion-MNIST has separate files for images and labels
         # The data_path will be the images file, we need to construct the labels path

@@ -73,7 +73,7 @@ class ETH80(BaseDatasetBuilder):
             license=self.SOURCE.license,
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         if split not in self.SPLIT_SLICES:
             raise ValueError(f"Unknown ETH80 split: {split!r}")
         pattern = re.compile(r"([a-z]+)([1-9]\d*)-(\d{3}-\d{3})\.png")

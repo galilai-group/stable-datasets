@@ -96,7 +96,7 @@ class FGVCAircraft(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the tar.gz archive."""
         # Map validation to val for internal tar.gz file structure
         internal_split = "val" if split == "validation" else split

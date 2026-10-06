@@ -138,7 +138,7 @@ def test_freiburg_bad_partitions(tmp_path, problem):
 def test_freiburg_missing_image(groceries_archives):
     builder = object.__new__(FreiburgGroceries)
     with pytest.raises(ValueError, match="Missing regular"):
-        list(builder._generate_examples(groceries_archives[0], [("CANDY/CANDY9999.png", 0)]))
+        list(builder._iter_examples(groceries_archives[0], [("CANDY/CANDY9999.png", 0)]))
 
 
 def test_freiburg_released_folds(tmp_path):

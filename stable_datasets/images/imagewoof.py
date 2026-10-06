@@ -65,7 +65,7 @@ class Imagewoof(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path: str | Path, split: str) -> Iterator[tuple[str, dict[str, object]]]:
+    def _iter_examples(self, data_path: str | Path, split: str) -> Iterator[tuple[str, dict[str, object]]]:
         """Read image members in place, convert to RGB, and map directory labels."""
         with tarfile.open(data_path, "r:*") as archive:
             for member in archive:

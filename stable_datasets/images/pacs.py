@@ -143,7 +143,7 @@ class PACS(BaseDatasetBuilder):
             for split, files in self._split_files().items()
         ]
 
-    def _generate_examples(self, archive_path, split_paths):
+    def _iter_examples(self, archive_path, split_paths):
         label_feature = self.info.features["label"]
         domain_feature = self.info.features["domain"]
         with zipfile.ZipFile(archive_path) as archive:

@@ -84,7 +84,7 @@ def test_cifar10_2_rejects_missing_required_arrays(tmp_path: Path, missing: str)
 
     instance = object.__new__(CIFAR10_2)
     with pytest.raises(ValueError, match="must contain 'images' and 'labels'"):
-        list(instance._generate_examples(path, "test"))
+        list(instance._iter_examples(path, "test"))
 
 
 @pytest.mark.parametrize(
@@ -101,4 +101,4 @@ def test_cifar10_2_rejects_invalid_arrays(tmp_path: Path, images: np.ndarray, la
 
     instance = object.__new__(CIFAR10_2)
     with pytest.raises(ValueError, match=message):
-        list(instance._generate_examples(path, "test"))
+        list(instance._iter_examples(path, "test"))

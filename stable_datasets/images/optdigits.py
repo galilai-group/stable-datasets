@@ -66,7 +66,7 @@ class Optdigits(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate 8x8 grayscale images and digit labels."""
 
         data = np.loadtxt(

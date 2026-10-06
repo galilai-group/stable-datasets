@@ -53,7 +53,7 @@ class Linnaeus5(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Iterate over the RAR archive and yield images matching the split."""
 
         with rarfile.RarFile(data_path) as rf:

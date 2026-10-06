@@ -81,7 +81,7 @@ class OxfordIIITPet(BaseDatasetBuilder):
         # SOURCE assets are keyed by archive ("images"/"annotations"), not by split.
         return [Split.TRAIN, Split.TEST]
 
-    def _generate_examples(self, path_map, split):
+    def _iter_examples(self, path_map, split):
         images_path = path_map["images"]
         annotations_path = path_map["annotations"]
 

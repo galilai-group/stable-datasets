@@ -70,7 +70,7 @@ class KTHTIPS(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         with tarfile.open(data_path, "r:*") as archive:
             for member in archive:
                 if not member.isfile():

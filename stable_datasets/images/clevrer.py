@@ -119,7 +119,7 @@ class CLEVRER(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, videos_path, annotations_path, questions_path, split):
+    def _iter_examples(self, videos_path, annotations_path, questions_path, split):
         # Load questions
         with open(questions_path) as f:
             questions_data = json.load(f)

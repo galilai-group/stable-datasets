@@ -46,7 +46,7 @@ class CIFAR100C(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split, corruptions=None):
+    def _iter_examples(self, data_path, split, corruptions=None):
         """Generate examples from the tar archive.
 
         Note: split parameter is unused as CIFAR-100-C only contains a test split.

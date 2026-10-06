@@ -163,7 +163,7 @@ class FreiburgGroceries(BaseDatasetBuilder):
             raise ValueError("Empty Freiburg split manifest.")
         return rows
 
-    def _generate_examples(self, data_path, rows):
+    def _iter_examples(self, data_path, rows):
         # The official .tar.gz asset is actually an uncompressed tar archive.
         with tarfile.open(data_path, "r:*") as archive:
             members = {}
