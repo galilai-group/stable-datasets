@@ -10,15 +10,10 @@ import numpy as np
 import pyarrow as pa
 
 
-_FRAME_SCHEMA = pa.schema(
-    [
-        ("video_id", pa.int32()),
-        ("frame_idx", pa.int32()),
-        ("bytes", pa.large_binary()),
-    ]
-)
-
 _LANCE_CACHE: dict[str, Any] = {}
+
+# Windows per record batch in iter_batches. One Lance take reads all frames of a batch.
+_WINDOWS_PER_BATCH = 64
 
 
 def _open_dataset(path: str):
@@ -83,9 +78,13 @@ class LanceVideoFramesBackend:
 
     The physical Lance dataset stores one WebP-encoded frame per row. The
     logical dataset exposes deterministic frame windows as samples.
+
+    Each row holds the encoded frames of one window in the video column.
+    The ``Video(storage="frames")`` feature decodes them. Each video with
+    at least one window is one shard.
     """
 
-    prefer_batched_take: bool = False
+    prefer_batched_take: bool = True
 
     def __init__(
         self,
@@ -97,32 +96,77 @@ class LanceVideoFramesBackend:
         min_video_frames: int | None = None,
         batch_readahead: int = 8,
     ):
+        meta_path = Path(uri) / "_metadata.json"
+        if not meta_path.exists():
+            raise FileNotFoundError(f"No metadata file at {meta_path}")
+        self._configure(
+            uri=uri,
+            metadata=json.loads(meta_path.read_text()),
+            window_length=window_length,
+            frame_skip=frame_skip,
+            hop_size=hop_size,
+            min_video_frames=min_video_frames,
+            batch_readahead=batch_readahead,
+        )
+
+    def _configure(
+        self,
+        *,
+        uri: str | Path,
+        metadata: dict,
+        window_length: int,
+        frame_skip: int,
+        hop_size: int,
+        min_video_frames: int | None,
+        batch_readahead: int,
+        plan: tuple[np.ndarray, np.ndarray, list[int]] | None = None,
+    ) -> None:
         self._uri = Path(uri)
         self._batch_readahead = int(batch_readahead)
         self.window_length = int(window_length)
         self.frame_skip = int(frame_skip)
         self.hop_size = int(hop_size)
+        self.min_video_frames = min_video_frames
         self._stride = self.frame_skip + 1
         self._span = (self.window_length - 1) * self._stride + 1
 
-        meta_path = self._uri / "_metadata.json"
-        if not meta_path.exists():
-            raise FileNotFoundError(f"No metadata file at {meta_path}")
-        self.metadata = json.loads(meta_path.read_text())
-        self._videos = list(self.metadata.get("videos", []))
+        self.metadata = metadata
+        self._column = metadata["video_column"]
+        self._videos = list(metadata.get("videos", []))
         if not self._videos:
-            raise ValueError(f"no videos recorded in {meta_path}")
+            raise ValueError(f"no videos recorded in {self._uri / '_metadata.json'}")
+        self._start_rows = np.asarray([video["start_row"] for video in self._videos], dtype=np.int64)
+        self._metadata_keys = list(dict.fromkeys(k for video in self._videos for k in video.get("metadata") or {}))
 
-        self._seg_vid, self._seg_start, self._per_video = _compute_segment_plan(
-            self._videos,
-            self.window_length,
-            self.frame_skip,
-            self.hop_size,
-            min_video_frames,
-        )
+        if plan is None:
+            plan = _compute_segment_plan(
+                self._videos,
+                self.window_length,
+                self.frame_skip,
+                self.hop_size,
+                min_video_frames,
+            )
+        self._seg_vid, self._seg_start, self._per_video = plan
         if self._seg_vid.size == 0:
             raise ValueError(f"no valid segments: every video has fewer than span={self._span} frames")
+        self._shard_row_counts = [n for n in self._per_video if n > 0]
+        self._shard_starts = np.cumsum([0, *self._shard_row_counts])
+        self._schema: pa.Schema | None = None
         self._ds = None
+
+    def with_window(self, *, window_length: int, frame_skip: int) -> LanceVideoFramesBackend:
+        """Return a copy that uses a different window length and frame skip."""
+        backend = object.__new__(type(self))
+        backend._configure(
+            uri=self._uri,
+            metadata=self.metadata,
+            window_length=window_length,
+            frame_skip=frame_skip,
+            hop_size=self.hop_size,
+            min_video_frames=self.min_video_frames,
+            batch_readahead=self._batch_readahead,
+        )
+        return backend
 
     @property
     def _dataset(self):
@@ -136,11 +180,11 @@ class LanceVideoFramesBackend:
 
     @property
     def num_shards(self) -> int:
-        return 1
+        return len(self._shard_row_counts)
 
     @property
     def shard_row_counts(self) -> list[int]:
-        return [self.num_rows]
+        return list(self._shard_row_counts)
 
     @property
     def is_file_backed(self) -> bool:
@@ -152,11 +196,25 @@ class LanceVideoFramesBackend:
 
     @property
     def schema(self) -> pa.Schema:
-        return _FRAME_SCHEMA
+        """Schema of the window rows. Build it from the metadata, not from Lance."""
+        if self._schema is None:
+            fields = [
+                pa.field(self._column, pa.list_(pa.large_binary())),
+                pa.field("video_idx", pa.int64()),
+                pa.field("filename", pa.string()),
+                pa.field("start_frame", pa.int64()),
+                pa.field("frame_indices", pa.list_(pa.int64())),
+                pa.field("sample_idx", pa.int64()),
+            ]
+            for key in self._metadata_keys:
+                values = [(video.get("metadata") or {}).get(key) for video in self._videos]
+                fields.append(pa.field(key, pa.array(values).type))
+            self._schema = pa.schema(fields)
+        return self._schema
 
     @property
     def table(self) -> pa.Table:
-        return self._dataset.to_table()
+        return self.take(np.arange(self.num_rows))
 
     @property
     def video_paths(self) -> list[str]:
@@ -185,42 +243,38 @@ class LanceVideoFramesBackend:
             idx += self.num_rows
         if idx < 0 or idx >= self.num_rows:
             raise IndexError(idx)
-
-        vi = int(self._seg_vid[idx])
-        start = int(self._seg_start[idx])
-        video = self._videos[vi]
-        frame_indices = [start + j * self._stride for j in range(self.window_length)]
-        row0 = int(video["start_row"])
-        rows = [row0 + frame_idx for frame_idx in frame_indices]
-
-        blobs = self._dataset.take(rows, columns=["bytes"]).column("bytes").to_pylist()
-        frames = self._decode_blobs(blobs, int(video["H"]), int(video["W"]))
-
-        sample = {
-            "video": frames,
-            "video_idx": vi,
-            "filename": video["path"],
-            "start_frame": start,
-            "frame_indices": frame_indices,
-            "sample_idx": int(idx),
-        }
-        metadata = video.get("metadata")
-        if isinstance(metadata, dict):
-            sample.update(metadata)
-        return sample
+        return self.take([idx]).to_pylist()[0]
 
     def take(self, indices: np.ndarray | list[int]) -> pa.Table:
-        rows = [self.get_row(int(i)) for i in list(indices)]
-        serializable = []
-        for row in rows:
-            converted = dict(row)
-            if hasattr(converted.get("video"), "tolist"):
-                converted["video"] = converted["video"].tolist()
-            serializable.append(converted)
-        return pa.Table.from_pylist(serializable) if serializable else pa.table({})
+        """Return the windows at ``indices``. Read all their frames with one Lance take."""
+        segments = np.asarray(indices, dtype=np.int64)
+        video_ids = self._seg_vid[segments]
+        starts = self._seg_start[segments]
+        frame_indices = starts[:, None] + np.arange(self.window_length, dtype=np.int64) * self._stride
+        frame_rows = (self._start_rows[video_ids][:, None] + frame_indices).ravel()
+
+        unique_rows, positions = np.unique(frame_rows, return_inverse=True)
+        if unique_rows.size:
+            blobs = self._dataset.take(unique_rows.tolist(), columns=["bytes"]).column("bytes").combine_chunks()
+        else:
+            blobs = pa.array([], type=pa.large_binary())
+        offsets = pa.array(np.arange(0, frame_rows.size + 1, self.window_length, dtype=np.int32))
+
+        columns = {
+            self._column: pa.ListArray.from_arrays(offsets, blobs.take(pa.array(positions))),
+            "video_idx": pa.array(video_ids),
+            "filename": pa.array([self._videos[vi]["path"] for vi in video_ids.tolist()], type=pa.string()),
+            "start_frame": pa.array(starts),
+            "frame_indices": pa.ListArray.from_arrays(offsets, pa.array(frame_indices.ravel())),
+            "sample_idx": pa.array(segments),
+        }
+        for key in self._metadata_keys:
+            values = [(self._videos[vi].get("metadata") or {}).get(key) for vi in video_ids.tolist()]
+            columns[key] = pa.array(values, type=self.schema.field(key).type)
+        return pa.table(columns, schema=self.schema)
 
     def slice(self, start: int, length: int) -> pa.Table:
-        return self.take(list(range(start, start + length)))
+        return self.take(np.arange(start, start + length))
 
     def iter_batches(
         self,
@@ -228,49 +282,38 @@ class LanceVideoFramesBackend:
         shuffle: bool = False,
         seed: int | None = None,
     ):
-        if shard_indices is not None and 0 not in shard_indices:
-            return
-        indices = np.arange(self.num_rows, dtype=np.int64)
+        """Yield the windows of each shard (video) in record batches.
+
+        With ``shuffle=True``, shuffle the shard order. A ``seed`` of
+        ``None`` gives a different order on each call.
+        """
+        shards = list(range(self.num_shards)) if shard_indices is None else list(shard_indices)
         if shuffle:
-            rng = np.random.default_rng(seed)
-            rng.shuffle(indices)
-        for idx in indices:
-            yield from self.take([int(idx)]).to_batches()
+            np.random.default_rng(seed).shuffle(shards)
+        for shard_id in shards:
+            lo, hi = int(self._shard_starts[shard_id]), int(self._shard_starts[shard_id + 1])
+            for start in range(lo, hi, _WINDOWS_PER_BATCH):
+                yield from self.take(np.arange(start, min(start + _WINDOWS_PER_BATCH, hi))).to_batches()
 
     def __getstate__(self) -> dict:
         return {
             "uri": str(self._uri),
+            "metadata": self.metadata,
             "window_length": self.window_length,
             "frame_skip": self.frame_skip,
             "hop_size": self.hop_size,
+            "min_video_frames": self.min_video_frames,
             "batch_readahead": self._batch_readahead,
+            "plan": (self._seg_vid, self._seg_start, self._per_video),
         }
 
     def __setstate__(self, state: dict) -> None:
-        self.__init__(
-            uri=state["uri"],
-            window_length=state["window_length"],
-            frame_skip=state.get("frame_skip", 0),
-            hop_size=state.get("hop_size", 1),
-            batch_readahead=state.get("batch_readahead", 8),
-        )
+        self._configure(**state)
 
     @staticmethod
     def worker_init(worker_id: int) -> None:
         del worker_id
         reset_worker_state()
-
-    @staticmethod
-    def _decode_blobs(blobs: list[bytes], height: int, width: int) -> np.ndarray:
-        import cv2
-
-        out = np.empty((len(blobs), height, width, 3), dtype=np.uint8)
-        for idx, blob in enumerate(blobs):
-            bgr = cv2.imdecode(np.frombuffer(blob, dtype=np.uint8), cv2.IMREAD_COLOR)
-            if bgr is None:
-                raise ValueError(f"Failed to decode video frame blob at position {idx}")
-            out[idx] = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
-        return out
 
 
 __all__ = ["LanceVideoFramesBackend", "reset_worker_state"]
