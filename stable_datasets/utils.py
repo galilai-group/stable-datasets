@@ -396,6 +396,7 @@ class BaseDatasetBuilder:
                 instance.config.name,
                 split_name,
                 storage_format=effective_format,
+                features=features,
             )
             return instance._processed_cache_dir / name
 

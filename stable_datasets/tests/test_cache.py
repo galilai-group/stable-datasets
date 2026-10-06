@@ -500,3 +500,76 @@ class TestCompression:
         )
         for i in range(30):
             assert ds_s[i] == ds_p[i]
+
+
+class _SchemaBuilder(BaseDatasetBuilder):
+    VERSION = Version("0.0.0")
+    SOURCE = {"homepage": "https://example.com", "citation": "TBD", "assets": {}}
+    names = [f"class_{i}" for i in range(6)]
+
+    def _info(self):
+        return DatasetInfo(features=Features({"y": ClassLabel(names=self.names)}))
+
+    def _split_generators(self):
+        return [SplitGenerator(name=Split.TRAIN, gen_kwargs={})]
+
+    def _generate_examples(self):
+        for i, name in enumerate(self.names):
+            yield i, {"y": name}
+
+
+class TestSchemaChanges:
+    @pytest.mark.parametrize("storage_format", ["arrow", "lance"])
+    def test_feature_change_rebuilds_cache(self, tmp_path, storage_format, monkeypatch):
+        first = _SchemaBuilder(split="train", processed_cache_dir=tmp_path, storage_format=storage_format)
+        monkeypatch.setattr(_SchemaBuilder, "names", [*_SchemaBuilder.names[:-1], "renamed"])
+        second = _SchemaBuilder(split="train", processed_cache_dir=tmp_path, storage_format=storage_format)
+
+        assert first.features["y"].names[-1] == "class_5"
+        assert second.features["y"].names[-1] == "renamed"
+        assert len([p for p in tmp_path.iterdir() if p.is_dir()]) == 2
+
+    def test_lance_cache_rejects_other_features(self, tmp_path):
+        from stable_datasets.cache import open_cache, write_lance_cache
+
+        written = Features({"y": ClassLabel(names=[f"c{i}" for i in range(6)])})
+        write_lance_cache(((i, {"y": i}) for i in range(3)), written, tmp_path / "lance")
+        other = Features({"y": ClassLabel(names=[f"d{i}" for i in range(6)])})
+
+        with pytest.raises(ValueError, match="Schema fingerprint mismatch"):
+            open_cache(tmp_path / "lance", other)
+        assert open_cache(tmp_path / "lance", written).num_rows == 3
+
+    def test_video_frames_cache_rejects_other_features(self, tmp_path, monkeypatch):
+        pytest.importorskip("lance")
+        import stable_datasets.cache as cache
+        from stable_datasets.cache import open_cache, write_lance_video_frames_cache
+        from stable_datasets.schema import Video
+
+        monkeypatch.setattr(
+            cache, "_encode_one_video_frames", lambda task: ("ok", task[0], task[1], 1, 4, 4, [b"frame"])
+        )
+        video = tmp_path / "clip.mp4"
+        video.write_bytes(b"video")
+        written = Features({"video": Video(storage="frames"), "label": Value("int32")})
+        write_lance_video_frames_cache(
+            iter([(0, {"video": video, "label": 1})]), written, tmp_path / "frames", workers=1
+        )
+
+        with pytest.raises(ValueError, match="Schema fingerprint mismatch"):
+            open_cache(tmp_path / "frames", Features({"video": Video(storage="frames"), "label": Value("int64")}))
+        assert open_cache(tmp_path / "frames", written).num_rows == 1
+
+        meta_path = tmp_path / "frames" / "_metadata.json"
+        meta_path.write_text(json.dumps({**json.loads(meta_path.read_text()), "cache_format_version": 0}))
+        with pytest.raises(ValueError, match="Unsupported cache format version 0"):
+            open_cache(tmp_path / "frames", written)
+
+    def test_flatten_indices_output_opens_with_open_cache(self, tmp_path):
+        from stable_datasets.cache import open_cache
+
+        ds, _ = _make_sharded_ds(tmp_path)
+        flat = ds.select([4, 2, 0]).flatten_indices(cache_dir=tmp_path / "flat")
+        opened = open_cache(tmp_path / "flat", flat.features)
+        assert opened.num_rows == 3
+        assert opened.backend.get_row(0)["x"] == ds[4]["x"]
