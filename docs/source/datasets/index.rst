@@ -71,6 +71,8 @@ Available Datasets
    face_pointing
    rock_paper_scissor
    linnaeus5
+   malaria
+   kather_colorectal_histology
 
 .. toctree::
    :maxdepth: 1
