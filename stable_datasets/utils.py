@@ -597,7 +597,14 @@ def download(
 
     Supports resumable downloads: if a ``.tmp`` file exists from a
     previous interrupted attempt, an HTTP ``Range`` header is sent.
-    The server may respond with 206 (append) or 200 (start over).
+    The server may respond with 206 (append) or 200 (start over). A 416
+    response means that the ``.tmp`` file is complete, unless its
+    ``Content-Range`` total is a different size. Then the download starts
+    again from byte 0. The checksum validates a complete ``.tmp`` file.
+
+    Each URL gets up to ``_DOWNLOAD_ATTEMPTS`` attempts with exponential
+    backoff for connection errors, timeouts, 5xx and 429 responses, and
+    truncated bodies.
 
     *checksum*, when provided, is an ``"algorithm:hex"`` string (e.g.
     ``"sha256:a3f8..."``).  The downloaded file is verified after
@@ -636,66 +643,16 @@ def download(
 
         try:
             errors = []
-            total_size = 0
             for candidate_url in candidate_urls:
                 try:
-                    with requests.Session() as session:
-                        session.headers.update({"User-Agent": "stable-datasets"})
-
-                        # Resume from partial download if .tmp exists
-                        existing_size = tmp.stat().st_size if tmp.exists() else 0
-                        req_headers = {}
-                        if existing_size > 0:
-                            req_headers["Range"] = f"bytes={existing_size}-"
-                            logging.info(f"Resuming download from byte {existing_size}: {candidate_url}")
-                        else:
-                            logging.info(f"Downloading: {candidate_url}")
-
-                        with session.get(
-                            candidate_url,
-                            stream=True,
-                            allow_redirects=True,
-                            timeout=(10, 300),
-                            headers=req_headers,
-                        ) as response:
-                            response.raise_for_status()
-
-                            if response.status_code == 206:
-                                mode = "ab"
-                                remaining = int(response.headers.get("content-length", 0) or 0)
-                                total_size = existing_size + remaining
-                            else:
-                                mode = "wb"
-                                existing_size = 0
-                                total_size = int(response.headers.get("content-length", 0) or 0)
-
-                            logging.info(f"Total size: {total_size} bytes")
-
-                            downloaded = existing_size
-                            with (
-                                open(tmp, mode) as f,
-                                tqdm(
-                                    desc=dest.name,
-                                    total=total_size or None,
-                                    initial=existing_size,
-                                    unit="B",
-                                    unit_scale=True,
-                                    unit_divisor=1024,
-                                    disable=not progress_bar,
-                                ) as bar,
-                            ):
-                                for chunk in response.iter_content(chunk_size=8192):
-                                    if not chunk:
-                                        continue
-                                    f.write(chunk)
-                                    downloaded += len(chunk)
-                                    bar.update(len(chunk))
-
-                                    if _progress_dict is not None and _task_id is not None:
-                                        _progress_dict[_task_id] = {
-                                            "progress": downloaded,
-                                            "total": total_size,
-                                        }
+                    _fetch_with_retries(
+                        candidate_url,
+                        tmp,
+                        desc=dest.name,
+                        progress_bar=progress_bar,
+                        progress_dict=_progress_dict,
+                        task_id=_task_id,
+                    )
                     break
                 except Exception as candidate_error:
                     errors.append((candidate_url, candidate_error))
@@ -703,10 +660,6 @@ def download(
             else:
                 attempted = ", ".join(url for url, _ in errors)
                 raise RuntimeError(f"Failed to download from all candidate URLs: {attempted}") from errors[-1][1]
-
-            # Validate size on disk
-            if total_size and tmp.stat().st_size != total_size:
-                raise RuntimeError(f"Download incomplete for {url}: got {tmp.stat().st_size} of {total_size} bytes")
 
             # Validate checksum if provided
             if checksum:
@@ -745,6 +698,122 @@ def download(
                     lock.unlink()
             except Exception:
                 pass
+
+
+_DOWNLOAD_ATTEMPTS = 3
+_RETRY_BACKOFF_SECONDS = 1.0
+
+
+class _IncompleteDownloadError(RuntimeError):
+    """The server sent fewer bytes than expected. A retry can resume."""
+
+
+def _is_transient(error: Exception) -> bool:
+    """Return True if a new attempt can succeed after ``error``."""
+    if isinstance(error, requests.HTTPError):
+        status = error.response.status_code if error.response is not None else None
+        return status is not None and (status >= 500 or status == 429)
+    return isinstance(
+        error,
+        requests.ConnectionError
+        | requests.Timeout
+        | requests.exceptions.ChunkedEncodingError
+        | _IncompleteDownloadError,
+    )
+
+
+def _content_range_total(headers) -> int | None:
+    """Return the total size in a ``Content-Range`` header, or None."""
+    total = (headers.get("content-range") or "").rsplit("/", 1)[-1]
+    return int(total) if total.isdigit() else None
+
+
+def _fetch_with_retries(url: str, tmp: Path, **kwargs) -> None:
+    """Call ``_fetch`` until it succeeds, with exponential backoff for transient errors."""
+    for attempt in range(_DOWNLOAD_ATTEMPTS):
+        try:
+            _fetch(url, tmp, **kwargs)
+            return
+        except Exception as error:
+            if attempt + 1 == _DOWNLOAD_ATTEMPTS or not _is_transient(error):
+                raise
+            delay = _RETRY_BACKOFF_SECONDS * 2**attempt
+            logging.warning(f"Download attempt {attempt + 1} failed for {url}: {error}. Retry in {delay:.0f} s.")
+            time.sleep(delay)
+
+
+def _fetch(url: str, tmp: Path, *, desc: str, progress_bar: bool, progress_dict, task_id) -> None:
+    """Fetch ``url`` into ``tmp``. Resume after the bytes that ``tmp`` already holds."""
+    existing_size = tmp.stat().st_size if tmp.exists() else 0
+    req_headers = {}
+    if existing_size > 0:
+        req_headers["Range"] = f"bytes={existing_size}-"
+        logging.info(f"Resuming download from byte {existing_size}: {url}")
+    else:
+        logging.info(f"Downloading: {url}")
+
+    with requests.Session() as session:
+        session.headers.update({"User-Agent": "stable-datasets"})
+        with session.get(
+            url,
+            stream=True,
+            allow_redirects=True,
+            timeout=(10, 300),
+            headers=req_headers,
+        ) as response:
+            content_range_total = _content_range_total(response.headers)
+            if existing_size > 0 and (
+                content_range_total == existing_size or (response.status_code == 416 and content_range_total is None)
+            ):
+                # The server has no bytes after the end of tmp. The caller validates tmp.
+                logging.info(f"Partial file already holds all {existing_size} bytes: {url}")
+                return
+            if response.status_code == 416:
+                tmp.unlink()
+                raise _IncompleteDownloadError(f"Server rejected the resume of {url} at byte {existing_size}.")
+            response.raise_for_status()
+
+            if response.status_code == 206:
+                mode = "ab"
+                remaining = int(response.headers.get("content-length", 0) or 0)
+                total_size = content_range_total or existing_size + remaining
+            else:
+                mode = "wb"
+                existing_size = 0
+                total_size = int(response.headers.get("content-length", 0) or 0)
+
+            logging.info(f"Total size: {total_size} bytes")
+
+            downloaded = existing_size
+            with (
+                open(tmp, mode) as f,
+                tqdm(
+                    desc=desc,
+                    total=total_size or None,
+                    initial=existing_size,
+                    unit="B",
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    disable=not progress_bar,
+                ) as bar,
+            ):
+                for chunk in response.iter_content(chunk_size=8192):
+                    if not chunk:
+                        continue
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    bar.update(len(chunk))
+
+                    if progress_dict is not None and task_id is not None:
+                        progress_dict[task_id] = {
+                            "progress": downloaded,
+                            "total": total_size,
+                        }
+
+    if total_size and tmp.stat().st_size != total_size:
+        raise _IncompleteDownloadError(
+            f"Download incomplete for {url}: got {tmp.stat().st_size} of {total_size} bytes"
+        )
 
 
 def load_from_tsfile_to_dataframe(

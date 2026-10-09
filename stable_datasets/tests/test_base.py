@@ -1023,3 +1023,139 @@ def test_split_manifest_rejects_unknown_split_without_download(tmp_path, archive
     with pytest.raises(ValueError, match="Split 'validation' not found.*splits.json"):
         _TinyArchiveBuilder(split="validation", processed_cache_dir=tmp_path)
     assert _TinyArchiveBuilder.split_generator_calls == 1
+
+
+class _ScriptedResponse:
+    def __init__(self, status_code, body=b"", headers=None):
+        self.status_code = status_code
+        self.body = body
+        self.headers = {"content-length": str(len(body)), **(headers or {})}
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            import requests
+
+            raise requests.HTTPError(f"{self.status_code}", response=self)
+
+    def iter_content(self, chunk_size=8192):
+        return iter([self.body])
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        pass
+
+
+class _ScriptedSession:
+    """Return the scripted responses in order and record the request headers."""
+
+    def __init__(self, script):
+        self.script = list(script)
+        self.requests = []
+        self.headers = {}
+
+    def get(self, url, headers=None, **kwargs):
+        self.requests.append(dict(headers or {}))
+        step = self.script.pop(0)
+        if isinstance(step, Exception):
+            raise step
+        return step
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        pass
+
+
+def _partial_download(tmp_path, content):
+    from stable_datasets.utils import download
+
+    url = "https://example.com/file.bin"
+    dest_folder = tmp_path / "downloads"
+    dest_folder.mkdir()
+    h = hashlib.sha256(url.encode("utf-8")).hexdigest()[:10]
+    tmp_file = dest_folder / f"file.{h}.bin.tmp"
+    tmp_file.write_bytes(content)
+
+    def run(session):
+        with patch("stable_datasets.utils.requests.Session", return_value=session):
+            return download(
+                url,
+                dest_folder=dest_folder,
+                progress_bar=False,
+                checksum=f"sha256:{hashlib.sha256(b'complete-file').hexdigest()}",
+            )
+
+    return tmp_file, run
+
+
+def test_download_416_on_complete_tmp_validates_and_renames(tmp_path):
+    tmp_file, run = _partial_download(tmp_path, b"complete-file")
+    session = _ScriptedSession([_ScriptedResponse(416, headers={"content-range": "bytes */13"})])
+
+    result = run(session)
+
+    assert result.read_bytes() == b"complete-file"
+    assert not tmp_file.exists()
+    assert session.requests == [{"Range": "bytes=13-"}]
+
+
+def test_download_416_without_total_validates_checksum(tmp_path):
+    tmp_file, run = _partial_download(tmp_path, b"complete-file")
+    assert run(_ScriptedSession([_ScriptedResponse(416)])).read_bytes() == b"complete-file"
+    assert not tmp_file.exists()
+
+
+def test_download_416_without_total_rejects_bad_checksum(tmp_path):
+    tmp_file, run = _partial_download(tmp_path, b"corrupt-bytes")
+    with pytest.raises(ValueError, match="Checksum mismatch"):
+        run(_ScriptedSession([_ScriptedResponse(416)]))
+    assert not tmp_file.exists()
+
+
+def test_download_416_on_stale_tmp_restarts(tmp_path, monkeypatch):
+    monkeypatch.setattr(utils.time, "sleep", lambda _: None)
+    _, run = _partial_download(tmp_path, b"stale-bytes-longer-than-file")
+    session = _ScriptedSession(
+        [
+            _ScriptedResponse(416, headers={"content-range": "bytes */13"}),
+            _ScriptedResponse(200, body=b"complete-file"),
+        ]
+    )
+
+    assert run(session).read_bytes() == b"complete-file"
+    assert session.requests == [{"Range": "bytes=28-"}, {}]
+
+
+def test_download_retries_transient_errors_with_backoff(tmp_path, monkeypatch):
+    import requests
+
+    from stable_datasets.utils import download
+
+    sleeps = []
+    monkeypatch.setattr(utils.time, "sleep", sleeps.append)
+    session = _ScriptedSession(
+        [
+            requests.ConnectionError("reset"),
+            _ScriptedResponse(503),
+            _ScriptedResponse(200, body=b"payload"),
+        ]
+    )
+    with patch("stable_datasets.utils.requests.Session", return_value=session):
+        result = download("https://example.com/f.bin", dest_folder=tmp_path, progress_bar=False)
+
+    assert result.read_bytes() == b"payload"
+    assert sleeps == [1.0, 2.0]
+
+
+def test_download_does_not_retry_client_errors(tmp_path, monkeypatch):
+    from stable_datasets.utils import download
+
+    monkeypatch.setattr(utils.time, "sleep", lambda _: pytest.fail("unexpected retry"))
+    session = _ScriptedSession([_ScriptedResponse(404)])
+    with patch("stable_datasets.utils.requests.Session", return_value=session):
+        with pytest.raises(RuntimeError, match="Failed to download from all candidate URLs"):
+            download("https://example.com/f.bin", dest_folder=tmp_path, progress_bar=False)
+    assert len(session.requests) == 1
