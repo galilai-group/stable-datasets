@@ -7,6 +7,7 @@ layout supports efficient sequential reads for training workloads.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import itertools
 import json
@@ -568,16 +569,9 @@ def write_lance_video_frames_cache(
             raise ValueError("Cannot build a lance-video-frames cache from an empty generator.")
 
         n_workers = int(workers) if workers else max(1, os.cpu_count() or 1)
-        if n_workers <= 1:
-            results = [_encode_one_video_frames(task) for task in tasks]
-        else:
-            ctx = mp.get_context("spawn")
-            with ctx.Pool(n_workers) as pool:
-                results = list(pool.imap(_encode_one_video_frames, tasks, chunksize=1))
-
         video_records: list[dict] = []
 
-        def batch_stream():
+        def batch_stream(results):
             row = 0
             for result in results:
                 tag = result[0]
@@ -612,8 +606,14 @@ def write_lance_video_frames_cache(
                 )
                 row += frames
 
-        with FileLock(str(lock_path)):
-            reader = pa.RecordBatchReader.from_batches(_VIDEO_FRAME_SCHEMA, batch_stream())
+        with FileLock(str(lock_path)), contextlib.ExitStack() as stack:
+            # Write each video when it is encoded. Do not keep all encoded videos in memory.
+            if n_workers <= 1:
+                results = map(_encode_one_video_frames, tasks)
+            else:
+                pool = stack.enter_context(mp.get_context("spawn").Pool(n_workers))
+                results = pool.imap(_encode_one_video_frames, tasks, chunksize=1)
+            reader = pa.RecordBatchReader.from_batches(_VIDEO_FRAME_SCHEMA, batch_stream(results))
             lance.write_dataset(reader, str(tmp_dir), mode="create")
 
             total_frames = sum(int(video["T"]) for video in video_records)

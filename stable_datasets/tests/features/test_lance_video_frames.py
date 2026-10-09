@@ -206,3 +206,50 @@ def test_schema_comes_from_metadata_with_stable_metadata_types(tmp_path):
     assert backend._ds is None
     assert schema.field("note").type == pa.string()
     assert backend.take([0]).schema == backend.take([3]).schema == schema
+
+
+def test_video_frames_writer_writes_each_video_when_encoded(tmp_path, monkeypatch):
+    lance = pytest.importorskip("lance")
+    import stable_datasets.cache as cache
+
+    encoded = []
+
+    def fake_encode(task):
+        video_id, path_str, _, _ = task
+        encoded.append(video_id)
+        return ("ok", video_id, path_str, 2, 4, 4, [b"a", b"b"])
+
+    encoded_at_write = []
+
+    def fake_write_dataset(reader, uri, **kwargs):
+        for _ in reader:
+            encoded_at_write.append(len(encoded))
+
+    monkeypatch.setattr(cache, "_encode_one_video_frames", fake_encode)
+    monkeypatch.setattr(lance, "write_dataset", fake_write_dataset)
+
+    paths = []
+    for i in range(3):
+        path = tmp_path / f"clip{i}.mp4"
+        path.write_bytes(b"video")
+        paths.append(path)
+    features = Features({"video": Video(storage="frames")})
+    gen = ((i, {"video": path}) for i, path in enumerate(paths))
+    meta = write_lance_video_frames_cache(gen, features, tmp_path / "frames", workers=1)
+
+    assert encoded_at_write == [1, 2, 3]
+    assert meta.num_rows == 6
+
+
+def test_video_frames_writer_with_worker_pool(tmp_path):
+    pytest.importorskip("lance")
+    pytest.importorskip("cv2")
+    paths = []
+    for i, frames in enumerate((3, 4)):
+        path = tmp_path / f"clip{i}.mp4"
+        _write_tiny_video(path, frames=frames, size=12)
+        paths.append(path)
+    features = Features({"video": Video(storage="frames")})
+    gen = ((i, {"video": path}) for i, path in enumerate(paths))
+    meta = write_lance_video_frames_cache(gen, features, tmp_path / "frames", workers=2)
+    assert meta.num_rows == 7
