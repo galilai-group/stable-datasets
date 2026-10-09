@@ -619,6 +619,8 @@ class StableDataset:
         seed: int = 0,
         buffer_size: int = 10_000,
         transform: Callable | None = None,
+        rank: int | None = None,
+        world_size: int | None = None,
     ):
         """Return a ``StableIterableDataset`` wrapping this dataset."""
         from .iterable import StableIterableDataset
@@ -629,6 +631,8 @@ class StableDataset:
             seed=seed,
             buffer_size=buffer_size,
             transform=transform,
+            rank=rank,
+            world_size=world_size,
         )
 
     def flatten_indices(self, cache_dir: Path | None = None) -> StableDataset:

@@ -65,7 +65,13 @@ class StorageBackend(Protocol):
         shard_indices: list[int] | None = None,
         shuffle: bool = False,
         seed: int | None = None,
-    ) -> Iterator[pa.RecordBatch]: ...
+    ) -> Iterator[pa.RecordBatch]:
+        """Yield record batches.
+
+        With ``shuffle=True``, shuffle the shard order. A ``seed`` of
+        ``None`` gives a different order on each call.
+        """
+        ...
 
     # -- Pickle contract ------------------------------------------------------
     # Backends must survive DataLoader worker forks. State should reference
