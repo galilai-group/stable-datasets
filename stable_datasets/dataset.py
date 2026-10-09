@@ -19,6 +19,7 @@ protocol, never on a concrete implementation or on-disk layout.
 
 from __future__ import annotations
 
+import operator
 import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import replace
@@ -43,6 +44,10 @@ from .schema import (
     VideoDecodeConfig,
     VideoRef,
 )
+
+
+# Rows per batched take when a view or a per-row operation reads rows in order.
+_ROW_CHUNK_SIZE = 1024
 
 
 class StableDataset:
@@ -190,26 +195,22 @@ class StableDataset:
 
     def __getitem__(self, idx):
         """Return a decoded row dict (int index) or a new indexed view (slice)."""
-        if isinstance(idx, int):
-            n = len(self)
-            if idx < 0:
-                idx += n
-            if idx < 0 or idx >= n:
-                raise IndexError(f"Index {idx} out of range for dataset of length {n}")
-            physical = int(self._indices[idx]) if self._indices is not None else idx
-            row = self._backend.get_row(physical)
-            row = self._formatter.format_row(row)
-            row = self._apply_video_decode_row(row, sample_index=idx)
-            if self._transform is not None:
-                row = self._transform(row)
-            return row
-
         if isinstance(idx, slice):
             indices = np.arange(*idx.indices(len(self)), dtype=np.int64)
             if self._indices is not None:
                 indices = self._indices[indices]
             return self._view_with_indices(indices)
-        raise TypeError(f"Unsupported index type: {type(idx)}")
+        try:
+            idx = self._normalize_index(operator.index(idx))
+        except TypeError:
+            raise TypeError(f"Unsupported index type: {type(idx)}") from None
+        physical = int(self._indices[idx]) if self._indices is not None else idx
+        row = self._backend.get_row(physical)
+        row = self._formatter.format_row(row)
+        row = self._apply_video_decode_row(row, sample_index=idx)
+        if self._transform is not None:
+            row = self._transform(row)
+        return row
 
     def __getitems__(self, indices: list[int]) -> list[dict]:
         """Batched sample loading (called by PyTorch DataLoader).
@@ -252,14 +253,12 @@ class StableDataset:
         if self._backend.is_file_backed and self._indices is None:
             yield from self._iter_batches_formatted(self._backend.iter_batches())
         else:
-            for i in range(len(self)):
-                yield self[i]
+            yield from self._iter_positions(range(len(self)))
 
     def iter_epoch(self, *, shuffle_shards: bool = True, seed: int | None = None):
         """Iterate with optional shard-level shuffling."""
         if self._indices is not None:
-            for i in range(len(self)):
-                yield self[i]
+            yield from self._iter_positions(range(len(self)))
         elif self._backend.is_file_backed:
             yield from self._iter_batches_formatted(self._backend.iter_batches(shuffle=shuffle_shards, seed=seed))
         else:
@@ -273,7 +272,7 @@ class StableDataset:
             sample_offset += batch.num_rows
             yield from self._format_table(batch, sample_indices)
 
-    def _iter_positions(self, positions, chunk_size: int = 1024):
+    def _iter_positions(self, positions, chunk_size: int = _ROW_CHUNK_SIZE):
         """Yield the rows at the logical ``positions``.
 
         Read each chunk of rows with one batched ``take``. Apply the same
@@ -323,7 +322,7 @@ class StableDataset:
         Returns an indexed view — no data is materialized.
         """
         if not batched:
-            matching = [i for i in range(len(self)) if fn(self[i])]
+            matching = [i for i, row in enumerate(self._iter_positions(range(len(self)))) if fn(row)]
         elif self._backend.is_file_backed and self._indices is None:
             # Sequential scan via iter_batches — avoids take() overhead
             matching = []
@@ -431,14 +430,15 @@ class StableDataset:
         def _map_gen():
             out_idx = 0
             if not batched:
-                for i in range(len(self)):
-                    physical = int(self._indices[i]) if self._indices is not None else i
-                    row = self._backend.get_row(physical)
-                    out = fn(row, i) if with_indices else fn(row)
-                    if remove_set:
-                        out = {k: v for k, v in out.items() if k not in remove_set}
-                    yield out_idx, out
-                    out_idx += 1
+                for start in range(0, len(self), _ROW_CHUNK_SIZE):
+                    positions = np.arange(start, min(start + _ROW_CHUNK_SIZE, len(self)), dtype=np.int64)
+                    physical = self._indices[positions] if self._indices is not None else positions
+                    for i, row in zip(positions.tolist(), self._backend.take(physical).to_pylist()):
+                        out = fn(row, i) if with_indices else fn(row)
+                        if remove_set:
+                            out = {k: v for k, v in out.items() if k not in remove_set}
+                        yield out_idx, out
+                        out_idx += 1
             else:
                 for start in range(0, len(self), batch_size):
                     end = min(start + batch_size, len(self))

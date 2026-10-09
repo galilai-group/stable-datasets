@@ -144,6 +144,57 @@ class TestIteration:
         assert sorted(xs) == list(range(10))
 
 
+class TestBatchedRowAccess:
+    def test_numpy_integer_index(self, make_ds):
+        ds = make_ds(n=10)
+        assert ds[np.int64(3)]["x"] == 3
+        assert ds[np.int32(-1)]["x"] == 9
+        assert ds.select([5, 1])[np.uint8(1)]["x"] == 1
+        with pytest.raises(TypeError, match="Unsupported index type"):
+            ds[1.0]
+
+    def _count_reads(self, ds, monkeypatch):
+        calls = {"get_row": 0, "take": 0}
+        backend = ds._backend
+        get_row, take = backend.get_row, backend.take
+
+        def counting_get_row(idx):
+            calls["get_row"] += 1
+            return get_row(idx)
+
+        def counting_take(indices):
+            calls["take"] += 1
+            return take(indices)
+
+        monkeypatch.setattr(backend, "get_row", counting_get_row)
+        monkeypatch.setattr(backend, "take", counting_take)
+        return calls
+
+    def test_indexed_view_iteration_reads_chunks(self, make_ds, monkeypatch):
+        view = make_ds(n=2100).select(np.arange(2099, -1, -1))
+        calls = self._count_reads(view, monkeypatch)
+        assert [r["x"] for r in view] == list(range(2099, -1, -1))
+        assert [r["x"] for r in view.iter_epoch()] == list(range(2099, -1, -1))
+        assert calls == {"get_row": 0, "take": 6}
+
+    def test_unbatched_filter_reads_chunks(self, make_ds, monkeypatch):
+        view = make_ds(n=2100).select(np.arange(2099, -1, -1))
+        calls = self._count_reads(view, monkeypatch)
+        kept = view.filter(lambda row: row["x"] % 3 == 0)
+        assert calls == {"get_row": 0, "take": 3}
+        assert [r["x"] for r in kept][:3] == [2097, 2094, 2091]
+
+    def test_unbatched_map_reads_chunks(self, make_ds, monkeypatch, tmp_path):
+        view = make_ds(n=2100).select(np.arange(2099, -1, -1))
+        calls = self._count_reads(view, monkeypatch)
+        mapped = view.map(
+            lambda row, i: {"x": row["x"] + i, "label": row["label"]}, with_indices=True, cache_dir=tmp_path / "mapped"
+        )
+        assert calls["get_row"] == 1  # one probe row infers the output features
+        assert calls["take"] == 3
+        assert {r["x"] for r in mapped} == {2099}
+
+
 # ── Pickle (DataLoader worker fork simulation) ───────────────────────────────
 
 
