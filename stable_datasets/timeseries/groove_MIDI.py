@@ -64,9 +64,6 @@ class GrooveMIDI(BaseDatasetBuilder):
             SplitGenerator(name=Split.TEST, gen_kwargs={"data_path": archive_path, "split": "test"}),
         ]
 
-    def _candidate_splits(self) -> list:
-        return [Split.TRAIN, Split.VALIDATION, Split.TEST]
-
     def _generate_examples(self, data_path, split):
         with zipfile.ZipFile(data_path) as archive:
             with archive.open("groove/info.csv") as fh:

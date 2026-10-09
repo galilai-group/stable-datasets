@@ -63,6 +63,34 @@ def cache_fingerprint(
     return f"{cls_name.lower()}_{config_name}_{split}_{digest}"
 
 
+def split_manifest_name(cls_name: str, version: str, config_name: str, storage_format: str) -> str:
+    """File name of the split manifest of a dataset variant.
+
+    The manifest lists the split names of the variant. A builder reads it
+    before any download to find the cached splits.
+    """
+    key = f"{cls_name}:{version}:{config_name}:{storage_format}"
+    digest = hashlib.sha256(key.encode()).hexdigest()[:16]
+    return f"{cls_name.lower()}_{config_name}_{digest}.splits.json"
+
+
+def read_split_manifest(path: Path) -> list[str] | None:
+    """Return the split names in a split manifest, or ``None`` if it does not exist."""
+    path = Path(path)
+    if not path.exists():
+        return None
+    return json.loads(path.read_text())["splits"]
+
+
+def write_split_manifest(path: Path, split_names: list[str]) -> None:
+    """Write a split manifest atomically."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(json.dumps({"splits": list(split_names)}, indent=2))
+    os.replace(tmp, path)
+
+
 # Sharded readers/writers
 
 _CACHE_FORMAT_VERSION = 1

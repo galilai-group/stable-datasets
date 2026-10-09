@@ -93,9 +93,6 @@ class SomethingSomethingV2(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _candidate_splits(self) -> list:
-        return [Split.TRAIN, Split.VALIDATION, Split.TEST]
-
     def _split_generators(self) -> list[SplitGenerator]:
         work_dir = Path(getattr(self, "_raw_download_dir", _default_dest_folder()))
         work_dir.mkdir(parents=True, exist_ok=True)

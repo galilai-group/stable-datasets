@@ -25,11 +25,13 @@ from tqdm import tqdm
 
 from .cache import (
     cache_fingerprint,
-    detect_cache_format,
     open_cache,
+    read_split_manifest,
+    split_manifest_name,
     write_lance_cache,
     write_lance_video_frames_cache,
     write_sharded_arrow_cache,
+    write_split_manifest,
 )
 from .dataset import StableDataset, StableDatasetDict
 from .schema import BuilderConfig, DatasetSource, DownloadInfo, Image, Version, Video
@@ -313,17 +315,6 @@ class BaseDatasetBuilder:
         """Yield (key, example_dict) pairs. Must be overridden."""
         raise NotImplementedError
 
-    def _candidate_splits(self) -> list:
-        """Return split names used for cache lookup before any download occurs."""
-        source = self._source()
-        _name_map = {
-            "train": Split.TRAIN,
-            "test": Split.TEST,
-            "val": Split.VALIDATION,
-        }
-        asset_split_names = list(source["assets"].keys())
-        return [_name_map.get(s, s) for s in asset_split_names]
-
     def __new__(
         cls,
         *args,
@@ -397,53 +388,52 @@ class BaseDatasetBuilder:
                 "it uses the specialized lance-video-frames layout."
             )
 
-        # 4) Try to load all splits from cache without downloading.
-        candidate_splits = instance._candidate_splits()
-
-        splits_data = {}
-        all_cached = bool(candidate_splits)  # empty assets → must call _split_generators
-        for split_name in candidate_splits:
-            shard_dir_name = cache_fingerprint(
+        # 4) Read the split manifest. When every wanted split is cached, do not download.
+        def _shard_dir(split_name) -> Path:
+            name = cache_fingerprint(
                 cls.__name__,
                 str(cls.VERSION),
                 instance.config.name,
                 split_name,
                 storage_format=effective_format,
             )
-            shard_dir = instance._processed_cache_dir / shard_dir_name
+            return instance._processed_cache_dir / name
 
-            if (shard_dir / "_metadata.json").exists():
-                on_disk_format = detect_cache_format(shard_dir)
-                if on_disk_format != effective_format:
-                    # Mismatched format metadata is treated as a cache miss.
-                    all_cached = False
-                    break
-                opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
-                splits_data[split_name] = StableDataset(
-                    features=features,
-                    info=instance._dataset_info,
-                    backend=opened.backend,
-                    num_rows=opened.num_rows,
-                )
-            else:
-                all_cached = False
-                break
+        def _open_split(split_name) -> StableDataset:
+            opened = open_cache(_shard_dir(split_name), features, backend_kwargs=backend_kwargs)
+            return StableDataset(
+                features=features,
+                info=instance._dataset_info,
+                backend=opened.backend,
+                num_rows=opened.num_rows,
+            )
 
-        # 5) Cache miss: download raw files and generate caches.
-        #    Writer and backend are chosen by effective_format.
-        if not all_cached:
-            splits_data = {}
+        manifest_path = instance._processed_cache_dir / split_manifest_name(
+            cls.__name__, str(cls.VERSION), instance.config.name, effective_format
+        )
+        split_names = read_split_manifest(manifest_path)
+        if split is not None and split_names is not None and split not in split_names:
+            raise ValueError(
+                f"Split '{split}' not found. Available: {split_names}. "
+                f"If the builder has new splits, delete {manifest_path}."
+            )
+        wanted = split_names if split is None or split_names is None else [split]
+        if wanted is not None and all((_shard_dir(name) / "_metadata.json").exists() for name in wanted):
+            splits_data = {name: _open_split(name) for name in wanted}
+        else:
+            # 5) Cache miss: download raw files and build the wanted splits.
+            #    Writer and backend are chosen by effective_format.
             split_generators = instance._split_generators()
+            split_names = [sg.name for sg in split_generators]
+            write_split_manifest(manifest_path, split_names)
+            if split is not None and split not in split_names:
+                raise ValueError(f"Split '{split}' not found. Available: {split_names}")
 
+            splits_data = {}
             for sg in split_generators:
-                shard_dir_name = cache_fingerprint(
-                    cls.__name__,
-                    str(cls.VERSION),
-                    instance.config.name,
-                    sg.name,
-                    storage_format=effective_format,
-                )
-                shard_dir = instance._processed_cache_dir / shard_dir_name
+                if split is not None and sg.name != split:
+                    continue
+                shard_dir = _shard_dir(sg.name)
 
                 # Per-shard FileLock so concurrent workers (e.g. multiple SLURM
                 # jobs sharing the same scratch cache) don't all race to write
@@ -474,22 +464,10 @@ class BaseDatasetBuilder:
                                 generator, features, shard_dir, compression=compression, num_encode_workers=4
                             )
 
-                opened = open_cache(shard_dir, features, backend_kwargs=backend_kwargs)
-                splits_data[sg.name] = StableDataset(
-                    features=features,
-                    info=instance._dataset_info,
-                    backend=opened.backend,
-                    num_rows=opened.num_rows,
-                )
+                splits_data[sg.name] = _open_split(sg.name)
 
         # 6) Return single split or dict
-        if split is not None:
-            if split not in splits_data:
-                available = list(splits_data.keys())
-                raise ValueError(f"Split '{split}' not found. Available: {available}")
-            result = splits_data[split]
-        else:
-            result = StableDatasetDict(splits_data)
+        result = splits_data[split] if split is not None else StableDatasetDict(splits_data)
 
         if decode_video is not None:
             result = result.set_video_decode(decode_video)

@@ -80,9 +80,6 @@ class _TinyVideoBuilder(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(features=Features({"video": Video(storage="path"), "x": Value("int32")}))
 
-    def _candidate_splits(self):
-        return [Split.TRAIN, Split.TEST]
-
     def _split_generators(self):
         return [
             SplitGenerator(name=Split.TRAIN, gen_kwargs={"x": 1}),
@@ -156,6 +153,29 @@ class _TinyMixedAssetBuilder(BaseDatasetBuilder):
 
     def _generate_examples(self, data_path, split):
         yield f"{split}-0", {"x": 0}
+
+
+class _TinyArchiveBuilder(BaseDatasetBuilder):
+    """One archive asset holds several splits, so asset keys are not split names."""
+
+    VERSION = Version("0.0.0")
+    SOURCE = {"homepage": "https://example.com", "citation": "TBD", "assets": {"archive": "https://example.com/a.zip"}}
+    split_generator_calls = 0
+
+    def _info(self):
+        return DatasetInfo(features=Features({"x": Value("int32")}))
+
+    def _split_generators(self):
+        type(self).split_generator_calls += 1
+        archive = utils.bulk_download([self._source()["assets"]["archive"]], dest_folder=self._raw_download_dir)[0]
+        return [
+            SplitGenerator(name=Split.TRAIN, gen_kwargs={"archive": archive, "n": 3}),
+            SplitGenerator(name=Split.TEST, gen_kwargs={"archive": archive, "n": 2}),
+        ]
+
+    def _generate_examples(self, archive, n):
+        for i in range(n):
+            yield i, {"x": i}
 
 
 def test_base_builder_returns_datasetdict_when_split_is_none(tmp_path):
@@ -955,3 +975,51 @@ def test_checksum_mismatch_deletes_and_raises(tmp_path):
         with patch("stable_datasets.utils.FileLock"):
             with pytest.raises(ValueError, match="Checksum mismatch"):
                 download(url, dest_folder=dest_folder, progress_bar=False, checksum=wrong_checksum)
+
+
+@pytest.fixture
+def archive_builder(tmp_path, monkeypatch):
+    downloads = []
+
+    def _fake_bulk_download(urls, dest_folder, checksums=None):
+        urls = list(urls)
+        downloads.extend(urls)
+        return [tmp_path / "a.zip" for _ in urls]
+
+    monkeypatch.setattr(utils, "bulk_download", _fake_bulk_download)
+    monkeypatch.setattr(_TinyArchiveBuilder, "split_generator_calls", 0)
+    return downloads
+
+
+def test_split_manifest_skips_download_on_cached_load(tmp_path, archive_builder):
+    first = _TinyArchiveBuilder(split=None, processed_cache_dir=tmp_path)
+    assert set(first) == {"train", "test"}
+    assert _TinyArchiveBuilder.split_generator_calls == 1
+
+    second = _TinyArchiveBuilder(split=None, processed_cache_dir=tmp_path)
+    assert _TinyArchiveBuilder.split_generator_calls == 1
+    assert len(archive_builder) == 1
+    assert len(second["train"]) == 3
+    assert len(_TinyArchiveBuilder(split="test", processed_cache_dir=tmp_path)) == 2
+    assert _TinyArchiveBuilder.split_generator_calls == 1
+
+
+def test_split_manifest_builds_only_requested_split(tmp_path, archive_builder):
+    train = _TinyArchiveBuilder(split="train", processed_cache_dir=tmp_path)
+    assert len(train) == 3
+    cache_dirs = sorted(p.name for p in tmp_path.iterdir() if p.is_dir())
+    assert len(cache_dirs) == 1 and "_train_" in cache_dirs[0]
+
+    _TinyArchiveBuilder(split="train", processed_cache_dir=tmp_path)
+    assert _TinyArchiveBuilder.split_generator_calls == 1
+    _TinyArchiveBuilder(split="test", processed_cache_dir=tmp_path)
+    assert _TinyArchiveBuilder.split_generator_calls == 2
+    _TinyArchiveBuilder(split=None, processed_cache_dir=tmp_path)
+    assert _TinyArchiveBuilder.split_generator_calls == 2
+
+
+def test_split_manifest_rejects_unknown_split_without_download(tmp_path, archive_builder):
+    _TinyArchiveBuilder(split="train", processed_cache_dir=tmp_path)
+    with pytest.raises(ValueError, match="Split 'validation' not found.*splits.json"):
+        _TinyArchiveBuilder(split="validation", processed_cache_dir=tmp_path)
+    assert _TinyArchiveBuilder.split_generator_calls == 1
