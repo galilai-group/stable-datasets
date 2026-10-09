@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pyarrow as pa
 
 from .base import FeatureType
@@ -135,15 +136,14 @@ class Video(FeatureType):
         if value is None:
             return None
         if self.storage == "frames":
-            if not hasattr(value, "shape") and isinstance(value, list):
-                import numpy as np
-
-                value = np.asarray(value, dtype=np.uint8)
-            if format_type == "torch" and hasattr(value, "shape"):
+            if format_type == "raw":
+                return value
+            frames = decode_frame_blobs(value)
+            if format_type == "torch":
                 import torch
 
-                return value if isinstance(value, torch.Tensor) else torch.from_numpy(value)
-            return value
+                return torch.from_numpy(frames)
+            return frames
         if format_type == "raw":
             return value
         return VideoRef(value, cache_dir=cache_dir)
@@ -241,6 +241,19 @@ class Video(FeatureType):
         if self.storage == "path" and self.allowed_extensions == self._DEFAULT_EXTENSIONS:
             return "Video(storage='path')"
         return f"Video(storage={self.storage!r}, allowed_extensions={self.allowed_extensions!r})"
+
+
+def decode_frame_blobs(blobs) -> np.ndarray:
+    """Decode encoded frame blobs to a ``(T, H, W, 3)`` RGB ``uint8`` array."""
+    import cv2
+
+    frames = []
+    for idx, blob in enumerate(blobs):
+        bgr = cv2.imdecode(np.frombuffer(blob, dtype=np.uint8), cv2.IMREAD_COLOR)
+        if bgr is None:
+            raise ValueError(f"Failed to decode video frame blob at position {idx}")
+        frames.append(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+    return np.stack(frames)
 
 
 def _sha256_file(path: Path) -> str:

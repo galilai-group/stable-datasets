@@ -235,6 +235,8 @@ start = sample["start_frame"]
 indices = sample["frame_indices"]
 ```
 
+`set_video_decode(...)` also works on `frames` datasets. `num_frames` sets the window length and `frame_stride` sets the step between frames in a window. The output fields (`resize`, `crop`, `dtype`, `scale`, `layout`, `output`) apply to each window.
+
 This layout is aimed at workloads like video SSL or action recognition where repeated short-window random access is more important than preserving the original compressed video as the primary read unit. However, `Video(storage="frames")` has a larger upfront preparation cost than path or bytes, because the cache writer decodes each source video, optionally resizes frames, and re-encodes them as WebP. The payoff is much faster random access to short temporal windows at training time.
 
 

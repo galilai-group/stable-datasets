@@ -31,6 +31,7 @@ import pyarrow.ipc as ipc
 from .backends.arrow_shards import ArrowBackend
 from .backends.protocol import StorageBackend
 from .cache import _CACHE_FORMAT_VERSION, _features_fingerprint
+from .features.video import decode_frame_blobs
 from .formatting import get_formatter
 from .schema import (
     Array3D,
@@ -565,6 +566,13 @@ class StableDataset:
 
         Passing ``None`` with no keyword arguments disables video decoding on
         the returned view.
+
+        For a ``Video(storage="frames")`` column, each sample is a frame
+        window. ``num_frames`` sets the window length and ``frame_stride``
+        sets the step between frames in a window. The output fields
+        (``resize``, ``crop``, ``dtype``, ``scale``, ``layout``,
+        ``output``) apply to the decoded window. ``None`` keeps the
+        current window.
         """
         if config is None and not kwargs:
             return self._shallow_copy(_video_decode_config=None)
@@ -582,7 +590,15 @@ class StableDataset:
                 f"or keyword arguments, got {type(config).__name__}."
             )
         self._validate_video_decode_config(next_config)
-        return self._shallow_copy(_video_decode_config=next_config)
+        if self._features[next_config.column].storage != "frames":
+            return self._shallow_copy(_video_decode_config=next_config)
+        if self._indices is not None:
+            raise ValueError("Set the video decode of a Video(storage='frames') dataset before you select rows.")
+        backend = self._backend.with_window(
+            window_length=next_config.num_frames,
+            frame_skip=next_config.frame_stride - 1,
+        )
+        return self._shallow_copy(_video_decode_config=next_config, backend=backend, num_rows=backend.num_rows)
 
     def make_sampler(self, kind: str = "shard_shuffle", **kwargs):
         """Return a backend-aware ``torch.utils.data.Sampler`` for this dataset.
@@ -751,6 +767,13 @@ class StableDataset:
         feat = self._features.get(config.column)
         if not isinstance(feat, Video):
             raise ValueError(f"Video decode column {config.column!r} must exist and be a Video feature.")
+        if feat.storage == "frames":
+            if config.decode_fn is not None or config.decode_fn_batched is not None:
+                raise ValueError("Video(storage='frames') decodes its own frames. Do not set decode_fn.")
+            if config.sampling != "uniform" or config.pad != "error":
+                raise ValueError(
+                    "Video(storage='frames') yields each frame window as a sample. Use the default sampling and pad."
+                )
 
     def _apply_video_decode_row(self, row: dict, *, sample_index: int | None) -> dict:
         config = self._video_decode_config
@@ -799,6 +822,10 @@ class StableDataset:
         *,
         sample_index: int | None,
     ):
+        if self._features[config.column].storage == "frames":
+            value = row[config.column]
+            frames = decode_frame_blobs(value) if isinstance(value, list) else np.asarray(value)
+            return _format_decoded_video_frames(frames, config, sample_index=sample_index)
         ref = self._coerce_video_ref(row[config.column], config)
         if config.decode_fn is not None:
             return config.decode_fn(
