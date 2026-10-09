@@ -76,6 +76,12 @@ Available Datasets
    :maxdepth: 1
    :caption: Video Datasets
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Image Segmentation Datasets
+
+   bsds500
+
    something_something_v2
 
 .. note::
