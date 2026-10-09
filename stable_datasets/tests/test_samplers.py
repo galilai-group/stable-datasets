@@ -246,3 +246,19 @@ class TestFactoryMethod:
         ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=10)
         with pytest.raises(ValueError, match="Unknown sampler kind"):
             ds.make_sampler("nonexistent")
+
+
+def test_lance_sampler_reads_fragment_counts_from_metadata(tmp_path):
+    from stable_datasets.cache import open_cache
+
+    features = Features({"x": Value("int32")})
+    write_lance_cache(((i, {"x": i}) for i in range(30)), features, tmp_path / "lance", max_rows_per_file=8)
+    opened = open_cache(tmp_path / "lance", features)
+    ds = StableDataset(
+        features=features, info=DatasetInfo(features=features), backend=opened.backend, num_rows=opened.num_rows
+    )
+
+    sampler = ShardShuffleSampler(ds, seed=0)
+
+    assert sampler._shard_ranges == [(0, 8), (8, 16), (16, 24), (24, 30)]
+    assert opened.backend._ds is None

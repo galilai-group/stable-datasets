@@ -10,7 +10,6 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import numpy as np
-import pyarrow as pa
 
 
 try:
@@ -138,7 +137,7 @@ class StableIterableDataset(_IterableBase):
             if len(shards) >= num_partitions:
                 row_gen = self._iter_shard_rows(shards[partition::num_partitions])
             else:
-                row_gen = self._iter_shard_rows(shards, partition=partition, num_partitions=num_partitions)
+                row_gen = self._iter_row_range(shards, partition, num_partitions)
 
         if self._shuffle and self._buffer_size > 0:
             yield from self._buffered_shuffle(row_gen, row_rng)
@@ -173,24 +172,37 @@ class StableIterableDataset(_IterableBase):
                 worker_id, num_workers = worker_info.id, worker_info.num_workers
         return rank * num_workers + worker_id, world_size * num_workers
 
-    def _iter_shard_rows(self, shard_indices, *, partition: int = 0, num_partitions: int = 1):
-        """Yield the dataset rows of the given shards.
-
-        Keep only the rows whose logical index is ``partition`` modulo
-        ``num_partitions``. Each row goes through the dataset row pipeline.
-        """
+    def _iter_shard_rows(self, shard_indices):
+        """Yield the dataset rows of the given shards through the dataset row pipeline."""
         ds = self._dataset
         shard_starts = np.cumsum([0, *ds._backend.shard_row_counts])
         for shard_id in shard_indices:
             offset = int(shard_starts[shard_id])
             for batch in ds._backend.iter_batches(shard_indices=[int(shard_id)]):
-                positions = np.arange(offset, offset + batch.num_rows)
+                yield from ds._format_table(batch, list(range(offset, offset + batch.num_rows)))
                 offset += batch.num_rows
-                if num_partitions > 1:
-                    keep = positions % num_partitions == partition
-                    batch = batch.filter(pa.array(keep))
-                    positions = positions[keep]
-                yield from ds._format_table(batch, positions.tolist())
+
+    def _iter_row_range(self, shard_indices, partition: int, num_partitions: int, chunk_size: int = 1024):
+        """Yield one contiguous block of rows when there are fewer shards than partitions.
+
+        Put the shards in the given order and split their rows into
+        ``num_partitions`` contiguous blocks. Read block ``partition`` with
+        batched slices.
+        """
+        ds = self._dataset
+        counts = ds._backend.shard_row_counts
+        shard_starts = np.cumsum([0, *counts])
+        total = int(shard_starts[-1])
+        lo, hi = total * partition // num_partitions, total * (partition + 1) // num_partitions
+        offset = 0
+        for shard_id in shard_indices:
+            start = int(shard_starts[shard_id]) + max(lo - offset, 0)
+            stop = int(shard_starts[shard_id]) + min(hi - offset, counts[shard_id])
+            offset += counts[shard_id]
+            for chunk_start in range(start, stop, chunk_size):
+                length = min(chunk_size, stop - chunk_start)
+                table = ds._backend.slice(chunk_start, length)
+                yield from ds._format_table(table, list(range(chunk_start, chunk_start + length)))
 
     def _buffered_shuffle(self, row_gen, rng):
         """Reservoir-based buffered shuffle (Fisher-Yates).

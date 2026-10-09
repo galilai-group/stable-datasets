@@ -8,6 +8,7 @@ layout supports efficient sequential reads for training workloads.
 from __future__ import annotations
 
 import hashlib
+import itertools
 import json
 import multiprocessing as mp
 import os
@@ -68,9 +69,10 @@ _CACHE_FORMAT_VERSION = 1
 _SHARD_NAME_FMT = "shard-{:05d}.arrow"
 _METADATA_FILE = "_metadata.json"
 
-# Default: single file per split (matches HuggingFace Datasets).
-# Override with shard_size_bytes= for multi-shard writes.
-DEFAULT_SHARD_SIZE_BYTES = float("inf")
+# Target size of one Arrow shard or one Lance fragment. More shards let
+# DataLoader workers read disjoint files.
+DEFAULT_SHARD_SIZE_BYTES = 256 * 1024 * 1024
+DEFAULT_MAX_ROWS_PER_FILE = 1024 * 1024
 
 
 def _encode_gen(generator, features, batch_size, num_workers, *, cache_dir: Path | None = None):
@@ -297,6 +299,8 @@ def write_lance_cache(
     *,
     batch_size: int = 1000,
     num_encode_workers: int = 0,
+    max_rows_per_file: int = DEFAULT_MAX_ROWS_PER_FILE,
+    max_bytes_per_file: int = DEFAULT_SHARD_SIZE_BYTES,
     lineage: dict | None = None,
 ) -> LanceCacheMeta:
     """Consume a generator and write directly to a Lance dataset.
@@ -314,7 +318,8 @@ def write_lance_cache(
     completed cache directory contains:
 
     * Lance dataset files (``_versions/``, ``data/``, manifest)
-    * ``_metadata.json`` -- row count, format marker, schema fingerprint
+    * ``_metadata.json`` -- row count, row count of each fragment, format
+      marker, schema fingerprint
 
     Parameters
     ----------
@@ -325,6 +330,11 @@ def write_lance_cache(
     num_encode_workers : int
         When > 0, encode examples in parallel using a thread pool
         (same contract as the Arrow writer).
+    max_rows_per_file : int
+        Maximum number of rows in one Lance fragment.
+    max_bytes_per_file : int
+        Approximate target size of one Lance fragment. The writer
+        converts it to a row limit from the size of the first batch.
     lineage : dict, optional
         Optional metadata blob written into ``_metadata.json``.
     """
@@ -359,8 +369,21 @@ def write_lance_cache(
 
     try:
         with FileLock(str(lock_path)):
-            rbr = pa.RecordBatchReader.from_batches(schema, batch_stream())
-            lance.write_dataset(rbr, str(tmp_dir))
+            batches = batch_stream()
+            first = next(batches, None)
+            rows_per_file = max_rows_per_file
+            if first is not None:
+                batches = itertools.chain([first], batches)
+                if first.nbytes > 0:
+                    # Lance v2 files do not apply max_bytes_per_file. Derive a row limit instead.
+                    rows_per_file = min(rows_per_file, max(1, max_bytes_per_file * first.num_rows // first.nbytes))
+            rbr = pa.RecordBatchReader.from_batches(schema, batches)
+            dataset = lance.write_dataset(
+                rbr,
+                str(tmp_dir),
+                max_rows_per_file=rows_per_file,
+                max_bytes_per_file=max_bytes_per_file,
+            )
 
             meta = {
                 "cache_format_version": _CACHE_FORMAT_VERSION,
@@ -368,6 +391,7 @@ def write_lance_cache(
                 "layout": "lance-rows",
                 "schema_fingerprint": _features_fingerprint(features),
                 "num_rows": counter["rows"],
+                "shard_row_counts": [fragment.count_rows() for fragment in dataset.get_fragments()],
             }
             if lineage:
                 meta["lineage"] = lineage
@@ -389,6 +413,7 @@ def write_lance_cache(
         cache_dir=cache_dir,
         num_rows=counter["rows"],
         schema_fingerprint=meta["schema_fingerprint"],
+        shard_row_counts=meta["shard_row_counts"],
     )
 
 
@@ -633,12 +658,19 @@ def write_lance_video_frames_cache(
 class LanceCacheMeta:
     """Lightweight descriptor for a Lance-format cache on disk."""
 
-    __slots__ = ("cache_dir", "num_rows", "schema_fingerprint")
+    __slots__ = ("cache_dir", "num_rows", "schema_fingerprint", "shard_row_counts")
 
-    def __init__(self, cache_dir: Path, num_rows: int, schema_fingerprint: str):
+    def __init__(
+        self,
+        cache_dir: Path,
+        num_rows: int,
+        schema_fingerprint: str,
+        shard_row_counts: list[int] | None = None,
+    ):
         self.cache_dir = Path(cache_dir)
         self.num_rows = num_rows
         self.schema_fingerprint = schema_fingerprint
+        self.shard_row_counts = shard_row_counts
 
 
 def detect_cache_format(cache_dir: Path) -> str:
@@ -710,7 +742,7 @@ def open_cache(
         lance_kwargs = {}
         if "batch_readahead" in backend_kwargs:
             lance_kwargs["batch_readahead"] = backend_kwargs["batch_readahead"]
-        backend = LanceBackend(uri=cache_dir, **lance_kwargs)
+        backend = LanceBackend(uri=cache_dir, shard_row_counts=meta.shard_row_counts, **lance_kwargs)
         return CacheOpenResult(backend=backend, num_rows=meta.num_rows, layout=layout, metadata=meta)
 
     if layout == "lance-video-frames":
@@ -743,6 +775,7 @@ def read_lance_cache_meta(cache_dir: Path) -> LanceCacheMeta:
         cache_dir=cache_dir,
         num_rows=raw["num_rows"],
         schema_fingerprint=raw.get("schema_fingerprint", ""),
+        shard_row_counts=raw.get("shard_row_counts"),
     )
 
 

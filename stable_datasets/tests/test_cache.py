@@ -9,6 +9,7 @@ import pytest
 from PIL import Image as PILImage
 
 from stable_datasets.cache import (
+    DEFAULT_SHARD_SIZE_BYTES,
     read_shard,
     read_sharded_cache_meta,
     validate_sharded_cache,
@@ -391,6 +392,11 @@ class TestBuilderShardedIntegration:
         for f, mtime in mtimes.items():
             assert f.stat().st_mtime == mtime
         assert len(ds2) == 20
+
+    def test_builder_writes_finite_shard_target(self, tmp_path):
+        ds = _TinyShardedBuilder(split="train", processed_cache_dir=str(tmp_path))
+        meta = json.loads((ds._backend.cache_dir / "_metadata.json").read_text())
+        assert meta["shard_size_target_bytes"] == DEFAULT_SHARD_SIZE_BYTES == 256 * 1024 * 1024
 
 
 class TestCompression:

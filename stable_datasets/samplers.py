@@ -114,19 +114,10 @@ class ShardShuffleSampler(Sampler[int]):
         if backend is None or not getattr(backend, "is_file_backed", False):
             return [(0, n)]
 
-        # Accept both public and private per-shard row-count attributes.
-        shard_row_counts = getattr(backend, "shard_row_counts", None) or getattr(backend, "_shard_row_counts", None)
-        if shard_row_counts is None:
-            # Lance fragments provide shard row counts when available.
-            try:
-                fragments = backend._dataset.get_fragments()
-                shard_row_counts = [f.count_rows() for f in fragments]
-            except Exception:
-                return [(0, n)]
-
+        # Cache metadata gives the counts, so the parent does not open Lance before fork.
         ranges: list[tuple[int, int]] = []
         start = 0
-        for c in shard_row_counts:
+        for c in backend.shard_row_counts:
             ranges.append((start, start + int(c)))
             start += int(c)
         if start != n:
