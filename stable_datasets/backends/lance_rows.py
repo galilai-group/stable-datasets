@@ -28,8 +28,13 @@ here use plain ``take`` / ``to_batches``, which work for any Lance
 dataset regardless of whether the column was blob-encoded.
 
 **Pickling is URI-based.** ``__getstate__`` serializes only the dataset
-URI, the storage options and cached row/shard counts; ``__setstate__``
-reopens by URI via ``lance.dataset(...)``.
+URI, the storage options, the Lance version and cached row/shard
+counts; ``__setstate__`` reopens by URI via ``lance.dataset(...)``.
+
+**Versions are pinned.** The backend reads one Lance version: the
+``version`` argument, else the version that it opens first. Pickled
+copies in DataLoader workers read the same version as the parent. Call
+:meth:`LanceBackend.refresh` to move to the latest version.
 
 **URIs stay strings.** ``uri`` is a local path or a URI such as
 ``s3://bucket/prefix``. ``storage_options`` go to ``lance.dataset``.
@@ -60,6 +65,7 @@ class LanceBackend:
         batch_readahead: int = 8,
         shard_row_counts: list[int] | None = None,
         storage_options: dict | None = None,
+        version: int | None = None,
     ):
         """
         Parameters
@@ -78,9 +84,13 @@ class LanceBackend:
             this value, the shape properties do not open the dataset.
         storage_options : dict, optional
             Object store options for ``lance.dataset``.
+        version : int, optional
+            Lance version to read. ``None`` pins the version that the
+            backend opens first.
         """
         self._uri = os.fspath(uri)
         self._storage_options = storage_options
+        self._version = version
         self._ds = None  # opened lazily so DataLoader workers re-open after fork
         self._shard_row_counts = list(shard_row_counts) if shard_row_counts is not None else None
         self._cached_num_rows: int | None = None
@@ -101,8 +111,26 @@ class LanceBackend:
         if self._ds is None:
             import lance
 
-            self._ds = lance.dataset(self._uri, storage_options=self._storage_options)
+            self._ds = lance.dataset(self._uri, version=self._version, storage_options=self._storage_options)
+            self._version = self._ds.version
         return self._ds
+
+    @property
+    def version(self) -> int:
+        """Lance version that this backend reads."""
+        return self._dataset.version
+
+    def refresh(self) -> None:
+        """Check out the latest Lance version and reset the cached counts.
+
+        A ``StableDataset`` keeps its row count. Make a new dataset from
+        this backend to get the new count.
+        """
+        self._ds = None
+        self._version = None
+        self._shard_row_counts = None
+        self._cached_num_rows = None
+        self._cached_num_shards = None
 
     # -- Shape ----------------------------------------------------------------
 
@@ -208,6 +236,7 @@ class LanceBackend:
         return {
             "uri": self._uri,
             "storage_options": self._storage_options,
+            "version": self._version,
             "num_rows": self._cached_num_rows,
             "num_shards": self._cached_num_shards,
             "shard_row_counts": self._shard_row_counts,
@@ -217,6 +246,7 @@ class LanceBackend:
     def __setstate__(self, state: dict) -> None:
         self._uri = state["uri"]
         self._storage_options = state["storage_options"]
+        self._version = state["version"]
         self._ds = None
         self._cached_num_rows = state.get("num_rows")
         self._cached_num_shards = state.get("num_shards")

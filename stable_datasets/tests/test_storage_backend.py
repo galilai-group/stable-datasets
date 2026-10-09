@@ -515,3 +515,54 @@ class TestBuilderStorageFormat:
         # The two caches live at different directories.
         cache_dirs = sorted(p.name for p in tmp_path.iterdir() if p.is_dir() and (p / "_metadata.json").exists())
         assert len(cache_dirs) == 2, f"expected two cache dirs (one per format), got {cache_dirs}"
+
+
+class TestLanceVersionPinning:
+    def _write_two_versions(self, tmp_path):
+        import lance
+
+        features = Features({"x": Value("int32")})
+        write_lance_cache(((i, {"x": i}) for i in range(4)), features, tmp_path / "lance")
+        lance.write_dataset(pa.table({"x": pa.array([7, 8], type=pa.int32())}), str(tmp_path / "lance"), mode="append")
+        return features
+
+    def test_open_cache_pins_metadata_version_without_opening(self, tmp_path):
+        from stable_datasets.cache import open_cache
+
+        features = self._write_two_versions(tmp_path)
+        backend = open_cache(tmp_path / "lance", features).backend
+        worker_copy = pickle.loads(pickle.dumps(backend))
+
+        assert backend._ds is None
+        assert worker_copy.num_rows == 4
+        assert worker_copy.version == 1
+        assert worker_copy.table.column("x").to_pylist() == [0, 1, 2, 3]
+
+    def test_pickled_copy_reads_the_version_the_parent_opened(self, tmp_path):
+        import lance
+
+        features = Features({"x": Value("int32")})
+        write_lance_cache(((i, {"x": i}) for i in range(4)), features, tmp_path / "lance")
+        backend = LanceBackend(uri=tmp_path / "lance")
+        assert backend.num_rows == 4
+        lance.write_dataset(pa.table({"x": pa.array([7], type=pa.int32())}), str(tmp_path / "lance"), mode="append")
+
+        worker_copy = pickle.loads(pickle.dumps(backend))
+        assert worker_copy.version == backend.version == 1
+        assert worker_copy.num_rows == worker_copy._dataset.count_rows() == 4
+
+    def test_refresh_checks_out_latest_version(self, tmp_path):
+        from stable_datasets.cache import open_cache
+
+        features = self._write_two_versions(tmp_path)
+        backend = open_cache(tmp_path / "lance", features).backend
+        assert backend.num_rows == 4
+
+        latest = open_cache(tmp_path / "lance", features, backend_kwargs={"version": 2})
+        assert latest.num_rows == latest.backend.num_rows == 6
+
+        backend.refresh()
+        assert backend.version == 2
+        assert backend.num_rows == 6
+        assert backend.shard_row_counts == [4, 2]
+        assert pickle.loads(pickle.dumps(backend)).version == 2

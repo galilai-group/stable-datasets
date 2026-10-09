@@ -433,6 +433,7 @@ def write_lance_cache(
             "schema_fingerprint": _features_fingerprint(features),
             "num_rows": counter["rows"],
             "shard_row_counts": [fragment.count_rows() for fragment in dataset.get_fragments()],
+            "version": dataset.version,
         }
         if lineage:
             meta["lineage"] = lineage
@@ -445,6 +446,7 @@ def write_lance_cache(
         num_rows=counter["rows"],
         schema_fingerprint=meta["schema_fingerprint"],
         shard_row_counts=meta["shard_row_counts"],
+        version=meta["version"],
     )
 
 
@@ -650,7 +652,7 @@ def write_lance_video_frames_cache(
                 pool = stack.enter_context(mp.get_context("spawn").Pool(n_workers))
                 results = pool.imap(_encode_one_video_frames, tasks, chunksize=1)
             reader = pa.RecordBatchReader.from_batches(_VIDEO_FRAME_SCHEMA, batch_stream(results))
-            lance.write_dataset(reader, cache_dir, mode="overwrite", storage_options=storage_options)
+            dataset = lance.write_dataset(reader, cache_dir, mode="overwrite", storage_options=storage_options)
 
             total_frames = sum(int(video["T"]) for video in video_records)
             meta = {
@@ -667,6 +669,7 @@ def write_lance_video_frames_cache(
                 "resize": int(resize) if resize is not None else None,
                 "video_column": video_column,
                 "videos": video_records,
+                "version": dataset.version,
             }
             if lineage:
                 meta["lineage"] = lineage
@@ -681,13 +684,14 @@ def write_lance_video_frames_cache(
         cache_dir=cache_dir,
         num_rows=meta["total_rows"],
         schema_fingerprint=meta["schema_fingerprint"],
+        version=meta["version"],
     )
 
 
 class LanceCacheMeta:
     """Lightweight descriptor for a Lance-format cache on disk."""
 
-    __slots__ = ("cache_dir", "num_rows", "schema_fingerprint", "shard_row_counts")
+    __slots__ = ("cache_dir", "num_rows", "schema_fingerprint", "shard_row_counts", "version")
 
     def __init__(
         self,
@@ -695,11 +699,13 @@ class LanceCacheMeta:
         num_rows: int,
         schema_fingerprint: str,
         shard_row_counts: list[int] | None = None,
+        version: int | None = None,
     ):
         self.cache_dir = os.fspath(cache_dir)
         self.num_rows = num_rows
         self.schema_fingerprint = schema_fingerprint
         self.shard_row_counts = shard_row_counts
+        self.version = version
 
 
 def _read_metadata(cache_dir: str | Path, storage_options: dict | None = None) -> dict:
@@ -775,9 +781,18 @@ def open_cache(
 
         meta = read_lance_cache_meta(cache_dir, storage_options)
         _check_schema_fingerprint(meta.schema_fingerprint, features, cache_dir)
-        defaults = {"shard_row_counts": meta.shard_row_counts, "storage_options": storage_options}
+        defaults = {
+            "shard_row_counts": meta.shard_row_counts,
+            "storage_options": storage_options,
+            "version": meta.version,
+        }
+        other_version = backend_kwargs.get("version", meta.version) != meta.version
+        if other_version:
+            # The row counts in the metadata belong to the metadata version.
+            defaults["shard_row_counts"] = None
         backend = LanceBackend(uri=cache_dir, **{**defaults, **backend_kwargs})
-        return CacheOpenResult(backend=backend, num_rows=meta.num_rows, layout=layout, metadata=meta)
+        num_rows = backend.num_rows if other_version else meta.num_rows
+        return CacheOpenResult(backend=backend, num_rows=num_rows, layout=layout, metadata=meta)
 
     if layout == "lance-video-frames":
         from .backends.lance_video_frames import LanceVideoFramesBackend
@@ -809,6 +824,7 @@ def read_lance_cache_meta(cache_dir: str | Path, storage_options: dict | None = 
         num_rows=raw["num_rows"],
         schema_fingerprint=raw.get("schema_fingerprint", ""),
         shard_row_counts=raw.get("shard_row_counts"),
+        version=raw["version"],
     )
 
 

@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import numpy as np
 import pyarrow as pa
 import pytest
@@ -224,6 +226,7 @@ def test_video_frames_writer_writes_each_video_when_encoded(tmp_path, monkeypatc
     def fake_write_dataset(reader, uri, **kwargs):
         for _ in reader:
             encoded_at_write.append(len(encoded))
+        return SimpleNamespace(version=1)
 
     monkeypatch.setattr(cache, "_encode_one_video_frames", fake_encode)
     monkeypatch.setattr(lance, "write_dataset", fake_write_dataset)

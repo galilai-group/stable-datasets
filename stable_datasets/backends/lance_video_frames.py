@@ -13,19 +13,19 @@ import pyarrow as pa
 from .. import _uri
 
 
-_LANCE_CACHE: dict[str, Any] = {}
+_LANCE_CACHE: dict[tuple[str, int], Any] = {}
 
 # Windows per record batch in iter_batches. One Lance take reads all frames of a batch.
 _WINDOWS_PER_BATCH = 64
 
 
-def _open_dataset(uri: str, storage_options: dict | None):
-    ds = _LANCE_CACHE.get(uri)
+def _open_dataset(uri: str, version: int, storage_options: dict | None):
+    ds = _LANCE_CACHE.get((uri, version))
     if ds is None:
         import lance
 
-        ds = lance.dataset(uri, storage_options=storage_options)
-        _LANCE_CACHE[uri] = ds
+        ds = lance.dataset(uri, version=version, storage_options=storage_options)
+        _LANCE_CACHE[(uri, version)] = ds
     return ds
 
 
@@ -179,7 +179,8 @@ class LanceVideoFramesBackend:
     @property
     def _dataset(self):
         if self._ds is None:
-            self._ds = _open_dataset(self._uri, self._storage_options)
+            # Read the Lance version that the metadata describes.
+            self._ds = _open_dataset(self._uri, self.metadata["version"], self._storage_options)
         return self._ds
 
     @property
