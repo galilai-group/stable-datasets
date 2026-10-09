@@ -131,6 +131,9 @@ class ClassLabel(FeatureType):
             return f"ClassLabel(names={self.names})"
         return f"ClassLabel(num_classes={self.num_classes})"
 
+    def fingerprint_data(self) -> str:
+        return f"ClassLabel(names={self.names!r})"
+
 
 class Sequence(FeatureType):
     """Variable-length list of a sub-feature."""
@@ -150,3 +153,6 @@ class Sequence(FeatureType):
 
     def __repr__(self) -> str:
         return f"Sequence({self.feature!r})"
+
+    def fingerprint_data(self) -> str:
+        return f"Sequence({self.feature.fingerprint_data()})"

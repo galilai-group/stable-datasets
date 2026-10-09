@@ -297,8 +297,12 @@ class Features(OrderedDict):
         return pa.schema(fields)
 
     def fingerprint_data(self) -> str:
-        # Preserve the historical dict-style payload so cache keys stay stable.
-        return repr(dict(self))
+        """Return a string that changes when any feature changes.
+
+        Use the ``fingerprint_data`` of each feature, not its short ``repr``.
+        """
+        fields = ", ".join(f"{name!r}: {feat.fingerprint_data()}" for name, feat in self.items())
+        return f"{{{fields}}}"
 
 
 @dataclass

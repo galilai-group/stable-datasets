@@ -52,13 +52,16 @@ def cache_fingerprint(
     config_name: str,
     split: str,
     storage_format: str = "arrow",
+    *,
+    features: Features,
 ) -> str:
     """Deterministic cache directory name for a dataset variant + split.
 
     ``storage_format`` is always included in the hash so Arrow and Lance
-    caches for the same dataset coexist at different paths.
+    caches for the same dataset coexist at different paths. The features
+    fingerprint is in the hash too, so a schema change gives a new cache.
     """
-    key = f"{cls_name}:{version}:{config_name}:{split}:{storage_format}"
+    key = f"{cls_name}:{version}:{config_name}:{split}:{storage_format}:{_features_fingerprint(features)}"
     digest = hashlib.sha256(key.encode()).hexdigest()[:16]
     return f"{cls_name.lower()}_{config_name}_{split}_{digest}"
 
@@ -767,6 +770,7 @@ def open_cache(
         from .backends.lance_rows import LanceBackend
 
         meta = read_lance_cache_meta(cache_dir)
+        _check_schema_fingerprint(meta.schema_fingerprint, features, cache_dir)
         lance_kwargs = {}
         if "batch_readahead" in backend_kwargs:
             lance_kwargs["batch_readahead"] = backend_kwargs["batch_readahead"]
@@ -777,6 +781,8 @@ def open_cache(
         from .backends.lance_video_frames import LanceVideoFramesBackend
 
         backend = LanceVideoFramesBackend(uri=cache_dir, **backend_kwargs)
+        _check_format_version(backend.metadata)
+        _check_schema_fingerprint(backend.metadata["schema_fingerprint"], features, cache_dir)
         return CacheOpenResult(backend=backend, num_rows=backend.num_rows, layout=layout, metadata=backend.metadata)
 
     raise ValueError(f"Unknown cache layout {layout!r} in {cache_dir}")
@@ -799,6 +805,7 @@ def read_lance_cache_meta(cache_dir: Path) -> LanceCacheMeta:
     raw = json.loads(meta_path.read_text())
     if raw.get("format") != "lance":
         raise ValueError(f"Not a Lance cache: {cache_dir} (format={raw.get('format')!r})")
+    _check_format_version(raw)
     return LanceCacheMeta(
         cache_dir=cache_dir,
         num_rows=raw["num_rows"],
@@ -862,10 +869,7 @@ def read_sharded_cache_meta(cache_dir: Path) -> ShardedCacheMeta:
     if raw.get("layout") != "arrow-shards":
         raise ValueError(f"Not an Arrow sharded cache: {cache_dir} (layout={raw.get('layout')!r})")
 
-    # Version check
-    fmt_version = raw.get("cache_format_version")
-    if fmt_version != _CACHE_FORMAT_VERSION:
-        raise ValueError(f"Unsupported cache format version {fmt_version} (expected {_CACHE_FORMAT_VERSION})")
+    _check_format_version(raw)
 
     shard_filenames = raw["shard_filenames"]
     shard_row_counts = raw["shard_row_counts"]
@@ -902,13 +906,25 @@ def validate_sharded_cache(cache_dir: Path, features: Features) -> ShardedCacheM
     Raises ``ValueError`` if the cache is inconsistent or the schema has changed.
     """
     meta = read_sharded_cache_meta(cache_dir)
-    expected_fp = _features_fingerprint(features)
-    if meta.schema_fingerprint and meta.schema_fingerprint != expected_fp:
-        raise ValueError(
-            f"Schema fingerprint mismatch: cache has {meta.schema_fingerprint}, "
-            f"expected {expected_fp}.  Delete the cache and rebuild."
-        )
+    _check_schema_fingerprint(meta.schema_fingerprint, features, cache_dir)
     return meta
+
+
+def _check_format_version(raw: dict) -> None:
+    """Raise ``ValueError`` if cache metadata has a different format version."""
+    fmt_version = raw.get("cache_format_version")
+    if fmt_version != _CACHE_FORMAT_VERSION:
+        raise ValueError(f"Unsupported cache format version {fmt_version} (expected {_CACHE_FORMAT_VERSION})")
+
+
+def _check_schema_fingerprint(found: str, features: Features, cache_dir: Path) -> None:
+    """Raise ``ValueError`` if a cache was written with different features."""
+    expected_fp = _features_fingerprint(features)
+    if found != expected_fp:
+        raise ValueError(
+            f"Schema fingerprint mismatch in {cache_dir}: cache has {found!r}, "
+            f"expected {expected_fp!r}.  Delete the cache and rebuild."
+        )
 
 
 def read_shard(shard_path: Path) -> pa.Table:

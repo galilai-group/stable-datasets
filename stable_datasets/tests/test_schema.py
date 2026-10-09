@@ -21,3 +21,20 @@ def test_features_arrow_schema_preserves_insertion_order():
     schema = features.to_arrow_schema()
 
     assert schema.names == ["image", "label"]
+
+
+def test_class_label_fingerprint_keeps_every_name():
+    from stable_datasets.schema import ClassLabel, Sequence
+
+    names = [f"class_{i}" for i in range(10)]
+    renamed = [*names[:-1], "other"]
+
+    assert repr(ClassLabel(names=names)) == repr(ClassLabel(names=renamed))
+    assert (
+        Features({"y": ClassLabel(names=names)}).fingerprint_data()
+        != Features({"y": ClassLabel(names=renamed)}).fingerprint_data()
+    )
+    assert (
+        Features({"y": Sequence(ClassLabel(names=names))}).fingerprint_data()
+        != Features({"y": Sequence(ClassLabel(names=renamed))}).fingerprint_data()
+    )
