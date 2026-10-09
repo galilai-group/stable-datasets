@@ -45,6 +45,7 @@ from .stl10 import STL10
 from .svhn import SVHN
 from .tiny_imagenet import TinyImagenet
 from .tiny_imagenet_c import TinyImagenetC
+from .weizmann_seg import WeizmannSegmentation
 
 
 __all__ = [
@@ -88,4 +89,5 @@ __all__ = [
     "SVHN",
     "TinyImagenet",
     "TinyImagenetC",
+    "WeizmannSegmentation",
 ]
