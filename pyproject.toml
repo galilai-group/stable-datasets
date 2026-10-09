@@ -12,9 +12,9 @@ requires-python = ">=3.10"
 license = {text = "MIT"}
 readme = {file = "README.md", content-type = "text/markdown"}
 dependencies = [
-    "numpy",
+    "numpy>=1.22",
     "loguru",
-    "pyarrow",
+    "pyarrow>=14",
     "tqdm",
     "pillow",
     "pandas",
@@ -23,10 +23,9 @@ dependencies = [
     "requests",
     "gdown",
     "scikit-learn",
+    "scipy",
     "rarfile",
-    "torch",
     "h5py",
-    "pre-commit>=4.5.0",
 ]
 
 dynamic = ["version"]
@@ -39,7 +38,14 @@ version = {attr = "stable_datasets.__version__"}
 
 [project.optional-dependencies]
 
-video = ["torchcodec"]
+# PyTorch DataLoader integration, samplers and torch output formats
+torch = ["torch"]
+
+# Lance caches (storage_format="lance")
+lance = ["pylance"]
+
+# Video decoding and Video(storage="frames") caches
+video = ["opencv-python-headless", "torch", "torchcodec"]
 
 # Benchmark dependencies (profiling + SSL evaluation suite)
 benchmarks = [
@@ -54,8 +60,9 @@ benchmarks = [
     "tabulate",
 ]
 
-# Development tools
+# Development tools. The tests also need every optional runtime extra.
 dev = [
+    "stable-datasets[all]",
     "pytest",
     "coverage",
     "pytest-cov",
@@ -81,7 +88,7 @@ docs = [
 ]
 
 all = [
-
+    "stable-datasets[lance,torch,video]",
 ]
 
 # =======================
@@ -93,7 +100,6 @@ all = [
 ###################
 
 [tool.pytest.ini_options]
-pythonpath = "stable_datasets"
 testpaths = ["stable_datasets/tests"]
 
 # Test discovery patterns
@@ -162,7 +168,7 @@ extend-safe-fixes = ["UP006"]
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
-known-first-party = ["stable_worldmodel"]
+known-first-party = ["stable_datasets"]
 
 [tool.ruff.format]
 # Like Black, use double quotes for strings.

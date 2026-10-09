@@ -23,6 +23,8 @@ pip install -e .
 pip install -e ".[dev,docs]"
 ```
 
+Optional extras: `torch` (DataLoader integration and torch outputs), `lance` (Lance caches), `video` (video decoding and frame caches), or `all`.
+
 By default, downloads and processed caches live under `~/.stable_datasets/`. You can override the root with:
 
 ```bash
