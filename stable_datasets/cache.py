@@ -140,7 +140,8 @@ def _writer_lock(cache_dir: str | os.PathLike):
     if path is None:
         return contextlib.nullcontext()
     path.parent.mkdir(parents=True, exist_ok=True)
-    return FileLock(str(path.with_suffix(".lock")))
+    # Append to the full name. with_suffix() cuts a config name with a dot.
+    return FileLock(str(path.parent / f"{path.name}.lock"))
 
 
 def write_sharded_arrow_cache(
@@ -174,12 +175,16 @@ def write_sharded_arrow_cache(
 
     The completed cache directory contains:
 
-    * ``shard-NNNNN.arrow`` — zero or more IPC files
+    * ``data-XXXXXXXX/shard-NNNNN.arrow`` — zero or more IPC files
     * ``_metadata.json`` — row counts, shard list, format version,
       schema fingerprint
 
-    Writing is atomic: shards are first written to a temporary directory
-    and renamed into place on success.
+    Publishing is atomic for readers. The writer puts the shards in a new
+    ``data-*`` directory, then replaces ``_metadata.json``, which lists
+    them. The cache directory always exists, and a reader sees the old or
+    the new shard list. The writer keeps the previous ``data-*``
+    directory, so a reader that opened the previous cache can still read
+    its shards. It removes older ``data-*`` directories.
 
     Parameters
     ----------
@@ -192,8 +197,7 @@ def write_sharded_arrow_cache(
     Returns a :class:`ShardedCacheMeta` describing the cache.
     """
     cache_dir = Path(cache_dir)
-    cache_dir.parent.mkdir(parents=True, exist_ok=True)
-    lock_path = cache_dir.with_suffix(".lock")
+    created_cache_dir = not cache_dir.exists()
     schema = features.to_arrow_schema()
 
     if single_file:
@@ -201,9 +205,7 @@ def write_sharded_arrow_cache(
 
     ipc_options = ipc.IpcWriteOptions(compression=compression) if compression else None
 
-    # Work in a temp dir next to the final location; rename on success.
-    tmp_dir = Path(tempfile.mkdtemp(dir=cache_dir.parent, prefix=f".{cache_dir.name}_tmp_"))
-
+    data_dir: Path | None = None
     batch_rows: dict[str, list] = {name: [] for name in features}
 
     # Per-shard bookkeeping
@@ -221,8 +223,8 @@ def write_sharded_arrow_cache(
         if writer is not None:
             return
         fname = _SHARD_NAME_FMT.format(shard_idx)
-        shard_filenames.append(fname)
-        sink = pa.OSFile(str(tmp_dir / fname), "wb")
+        shard_filenames.append(f"{data_dir.name}/{fname}")
+        sink = pa.OSFile(str(data_dir / fname), "wb")
         if ipc_options:
             writer = ipc.new_file(sink, schema, options=ipc_options)
         else:
@@ -264,11 +266,13 @@ def write_sharded_arrow_cache(
 
     total_count = 0
 
-    # Wrap generator with optional parallel encoding
-    encoded_gen = _encode_gen(generator, features, batch_size, num_encode_workers, cache_dir=tmp_dir)
-
     try:
-        with FileLock(str(lock_path)):
+        with _writer_lock(cache_dir):
+            # Make the data directory under the lock, so another writer cannot remove it.
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            data_dir = Path(tempfile.mkdtemp(dir=cache_dir, prefix="data-"))
+            # Wrap generator with optional parallel encoding
+            encoded_gen = _encode_gen(generator, features, batch_size, num_encode_workers, cache_dir=data_dir)
             for _key, encoded in encoded_gen:
                 for col_name in features:
                     batch_rows[col_name].append(encoded.get(col_name))
@@ -305,16 +309,24 @@ def write_sharded_arrow_cache(
                 meta["compression"] = compression
             if lineage:
                 meta["lineage"] = lineage
-            (tmp_dir / _METADATA_FILE).write_text(json.dumps(meta, indent=2))
-
-            # Atomic publish: rename temp dir -> final cache dir
-            if cache_dir.exists():
-                shutil.rmtree(cache_dir)
-            os.rename(str(tmp_dir), str(cache_dir))
+            # Atomic publish: replace the metadata, then remove the data directories
+            # that neither the new nor the previous metadata lists.
+            meta_path = cache_dir / _METADATA_FILE
+            keep = {data_dir.name}
+            try:
+                keep.update(name.split("/")[0] for name in json.loads(meta_path.read_text())["shard_filenames"])
+            except (OSError, ValueError, KeyError):
+                pass  # No readable previous cache: keep only the new data directory.
+            _uri.write_text(str(meta_path), json.dumps(meta, indent=2))
+            for old_dir in cache_dir.glob("data-*"):
+                if old_dir.name not in keep:
+                    shutil.rmtree(old_dir, ignore_errors=True)
 
     except BaseException:
-        # Clean up temp dir on failure
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        if data_dir is not None:
+            shutil.rmtree(data_dir, ignore_errors=True)
+        if created_cache_dir and cache_dir.is_dir() and not any(cache_dir.iterdir()):
+            cache_dir.rmdir()
         raise
 
     logging.info(f"Cached {total_count} examples in {len(shard_filenames)} shard(s) to {cache_dir}")

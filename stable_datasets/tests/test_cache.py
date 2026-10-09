@@ -394,8 +394,9 @@ class TestBuilderShardedIntegration:
         assert len(ds2) == 20
 
     def test_builder_writes_finite_shard_target(self, tmp_path):
-        ds = _TinyShardedBuilder(split="train", processed_cache_dir=str(tmp_path))
-        meta = json.loads((ds._backend.cache_dir / "_metadata.json").read_text())
+        _TinyShardedBuilder(split="train", processed_cache_dir=str(tmp_path))
+        (meta_path,) = tmp_path.glob("*/_metadata.json")
+        meta = json.loads(meta_path.read_text())
         assert meta["shard_size_target_bytes"] == DEFAULT_SHARD_SIZE_BYTES == 256 * 1024 * 1024
 
 
@@ -573,3 +574,94 @@ class TestSchemaChanges:
         opened = open_cache(tmp_path / "flat", flat.features)
         assert opened.num_rows == 3
         assert opened.backend.get_row(0)["x"] == ds[4]["x"]
+
+
+class TestLockingAndPublish:
+    def test_lock_name_keeps_dotted_config_names(self, tmp_path):
+        from stable_datasets.cache import _writer_lock
+
+        a = _writer_lock(str(tmp_path / "cifar_v1.0_train_abc")).lock_file
+        b = _writer_lock(str(tmp_path / "cifar_v1.5_train_abc")).lock_file
+        assert a == str(tmp_path / "cifar_v1.0_train_abc.lock")
+        assert a != b
+
+    def test_rewrite_keeps_previous_generation_readable(self, tmp_path, monkeypatch):
+        import shutil
+
+        import stable_datasets.cache as cache
+        from stable_datasets.cache import open_cache
+
+        features = _simple_features()
+        cache_dir = tmp_path / "cache"
+        write_sharded_arrow_cache(_simple_gen(40), features, cache_dir, shard_size_bytes=64, batch_size=8)
+        first = open_cache(cache_dir, features).backend
+        assert first.num_shards > 1
+
+        seen = []
+        real_rmtree = shutil.rmtree
+
+        def checking_rmtree(path, *args, **kwargs):
+            real_rmtree(path, *args, **kwargs)
+            seen.append(open_cache(cache_dir, features).num_rows)
+
+        monkeypatch.setattr(cache.shutil, "rmtree", checking_rmtree)
+        write_sharded_arrow_cache(_simple_gen(4), features, cache_dir)
+        second = open_cache(cache_dir, features).backend
+        assert [first.get_row(i)["x"] for i in range(40)] == list(range(40))
+        assert seen == []
+
+        write_sharded_arrow_cache(_simple_gen(2), features, cache_dir)
+        assert seen == [2]
+        assert len(list(cache_dir.glob("data-*"))) == 2
+        assert [second.get_row(i)["x"] for i in range(4)] == list(range(4))
+        assert open_cache(cache_dir, features).num_rows == 2
+
+    def test_rewrite_over_corrupt_metadata(self, tmp_path):
+        from stable_datasets.cache import open_cache
+
+        features = _simple_features()
+        cache_dir = tmp_path / "cache"
+        write_sharded_arrow_cache(_simple_gen(5), features, cache_dir)
+        (cache_dir / "_metadata.json").write_text("{")
+        write_sharded_arrow_cache(_simple_gen(3), features, cache_dir)
+        assert open_cache(cache_dir, features).num_rows == 3
+        assert len(list(cache_dir.glob("data-*"))) == 1
+
+
+def test_download_keeps_lock_file(tmp_path):
+    from unittest.mock import patch
+
+    from stable_datasets.utils import download
+
+    class _Response:
+        status_code = 200
+        headers = {"content-length": "4"}
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            return iter([b"data"])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class _Session:
+        headers = {}
+
+        def get(self, url, **kwargs):
+            return _Response()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    with patch("stable_datasets.utils.requests.Session", return_value=_Session()):
+        dest = download("https://example.com/f.bin", dest_folder=tmp_path, progress_bar=False)
+    assert dest.read_bytes() == b"data"
+    assert dest.with_suffix(dest.suffix + ".lock").exists()

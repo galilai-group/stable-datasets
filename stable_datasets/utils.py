@@ -714,13 +714,6 @@ def download(
                     pass
             logging.error(f"Error downloading {url}: {e}")
             raise
-        finally:
-            # Remove lock file so download dir stays clean (FileLock may leave it on some platforms / crash)
-            try:
-                if lock.exists():
-                    lock.unlink()
-            except Exception:
-                pass
 
 
 _DOWNLOAD_ATTEMPTS = 3
