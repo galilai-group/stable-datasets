@@ -85,7 +85,7 @@ class NotMNIST(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, images_path, labels_path, split):
+    def _iter_examples(self, images_path, labels_path, split):
         # Read and parse the gzipped IDX files
         with gzip.open(images_path, "rb") as img_file:
             _, num_images, rows, cols = struct.unpack(">IIII", img_file.read(16))

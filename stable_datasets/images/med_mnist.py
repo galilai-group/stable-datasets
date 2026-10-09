@@ -111,7 +111,7 @@ class MedMNIST(BaseDatasetBuilder):
             citation=source["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         data = np.load(data_path)
         images = data[f"{split}_images"]
         labels = data[f"{split}_labels"].squeeze()

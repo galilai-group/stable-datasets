@@ -44,7 +44,7 @@ class FacePointing(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the tar.gz archive.
 
         Each archive contains images with filenames encoding person_id and angles.

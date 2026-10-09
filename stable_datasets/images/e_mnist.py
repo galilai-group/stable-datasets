@@ -94,7 +94,7 @@ class EMNIST(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the ZIP archives of images and labels."""
         variant = self.config.variant
         mat_filename = f"matlab/emnist-{variant}.mat"

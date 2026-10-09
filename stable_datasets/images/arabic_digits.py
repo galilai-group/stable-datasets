@@ -47,7 +47,7 @@ class ArabicDigits(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the CSV zip archive."""
         # File names inside the zip
         if split == "train":

@@ -162,7 +162,7 @@ class ImageNet1K(_ImageNetArchiveMixin, BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, split, data_path=None, val_tar=None, devkit_tar_gz=None):
+    def _iter_examples(self, split, data_path=None, val_tar=None, devkit_tar_gz=None):
         label_map = self._label_map()
         if split == "train":
             yield from self._iter_train_examples(Path(data_path), label_map=label_map)

@@ -43,7 +43,7 @@ class RockPaperScissor(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Yield examples by streaming PNGs directly from the zip archive."""
         with zipfile.ZipFile(data_path, "r") as archive:
             for name in archive.namelist():

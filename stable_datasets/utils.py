@@ -64,7 +64,7 @@ class BaseDatasetBuilder:
     Base class for stable-datasets builders.
 
     Handles downloading, Arrow caching, and split generation. Subclasses
-    implement ``_info``, ``_split_generators``, and ``_generate_examples``.
+    implement ``_info``, ``_split_generators``, and ``_iter_examples``.
     """
 
     # Subclasses must define:
@@ -175,7 +175,7 @@ class BaseDatasetBuilder:
         else:
             self.config = BuilderConfig(name=config_name or "default")
 
-        # Populate self.info / self._dataset_info so _generate_examples can use it
+        # Populate self.info / self._dataset_info so _iter_examples can use it
         self._dataset_info = self._info()
         self._dataset_info.config_name = self.config.name
 
@@ -312,7 +312,7 @@ class BaseDatasetBuilder:
         """Return a DatasetInfo describing this dataset's schema. Must be overridden."""
         raise NotImplementedError
 
-    def _generate_examples(self, **kwargs):
+    def _iter_examples(self, **kwargs):
         """Yield (key, example_dict) pairs. Must be overridden."""
         raise NotImplementedError
 
@@ -470,7 +470,7 @@ class BaseDatasetBuilder:
 
                 with build_lock:
                     if not _is_built(sg.name):
-                        generator = instance._generate_examples(**sg.gen_kwargs)
+                        generator = instance._iter_examples(**sg.gen_kwargs)
                         if has_frame_video:
                             write_lance_video_frames_cache(
                                 generator, features, shard_dir, storage_options=storage_options

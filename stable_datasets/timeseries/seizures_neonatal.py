@@ -63,7 +63,7 @@ class SeizuresNeonatal(BaseDatasetBuilder):
             )
         ]
 
-    def _generate_examples(self, annotations_path, eeg_paths, split):
+    def _iter_examples(self, annotations_path, eeg_paths, split):
         del split
         import mne
         from scipy.io import loadmat

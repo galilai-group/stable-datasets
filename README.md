@@ -263,10 +263,10 @@ To add a new dataset:
 2. subclass `BaseDatasetBuilder`
 3. define `VERSION` and `SOURCE`
 4. implement `_info()`
-5. implement `_generate_examples(...)`
+5. implement `_iter_examples(...)`
 6. add tests that cover metadata and at least one smoke path
 
-The main contract is that `_info()` and `_generate_examples(...)` must agree exactly on field names and types.
+The main contract is that `_info()` and `_iter_examples(...)` must agree exactly on field names and types.
 
 ## Running tests
 

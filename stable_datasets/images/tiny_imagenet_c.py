@@ -46,7 +46,7 @@ class TinyImagenetC(BaseDatasetBuilder):
             license=source.get("license", None),
         )
 
-    def _generate_examples(self, data_path, split=None):
+    def _iter_examples(self, data_path, split=None):
         data_path = Path(data_path)
 
         # Default BaseDatasetBuilder flow: data_path is the downloaded .tar asset.

@@ -43,7 +43,7 @@ class Beans(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         with zipfile.ZipFile(data_path, "r") as archive:
             for file_name in archive.namelist():
                 if not file_name.endswith(".jpg"):

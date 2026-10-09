@@ -40,7 +40,7 @@ class VocalSet(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         del split
         with zipfile.ZipFile(data_path) as archive:
             for filename in sorted(archive.namelist()):

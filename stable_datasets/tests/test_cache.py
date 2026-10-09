@@ -367,7 +367,7 @@ class _TinyShardedBuilder(BaseDatasetBuilder):
     def _split_generators(self):
         return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 20})]
 
-    def _generate_examples(self, n):
+    def _iter_examples(self, n):
         for i in range(n):
             yield i, {"x": i}
 
@@ -514,7 +514,7 @@ class _SchemaBuilder(BaseDatasetBuilder):
     def _split_generators(self):
         return [SplitGenerator(name=Split.TRAIN, gen_kwargs={})]
 
-    def _generate_examples(self):
+    def _iter_examples(self):
         for i, name in enumerate(self.names):
             yield i, {"y": name}
 

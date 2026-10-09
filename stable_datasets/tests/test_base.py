@@ -37,7 +37,7 @@ class _TinyLocalBuilder(BaseDatasetBuilder):
             SplitGenerator(name=Split.TEST, gen_kwargs={"n": 2}),
         ]
 
-    def _generate_examples(self, n):
+    def _iter_examples(self, n):
         for i in range(n):
             yield i, {"x": i}
 
@@ -64,7 +64,7 @@ class _TinyDynamicSourceBuilder(BaseDatasetBuilder):
             SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1}),
         ]
 
-    def _generate_examples(self, n):
+    def _iter_examples(self, n):
         for i in range(n):
             yield i, {"x": i}
 
@@ -86,7 +86,7 @@ class _TinyVideoBuilder(BaseDatasetBuilder):
             SplitGenerator(name=Split.TEST, gen_kwargs={"x": 2}),
         ]
 
-    def _generate_examples(self, x):
+    def _iter_examples(self, x):
         yield x, {"video": self.video_path, "x": x}
 
 
@@ -103,7 +103,7 @@ class _TinyBaseSplitBuilder(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(features=Features({"x": Value("int32")}))
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # We don't touch data_path; tests monkeypatch bulk_download to avoid network.
         yield f"{split}-0", {"x": 0}
 
@@ -130,7 +130,7 @@ class _TinyFallbackSplitBuilder(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(features=Features({"x": Value("int32")}))
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         yield f"{split}-0", {"x": 0}
 
 
@@ -151,7 +151,7 @@ class _TinyMixedAssetBuilder(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(features=Features({"x": Value("int32")}))
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         yield f"{split}-0", {"x": 0}
 
 
@@ -173,7 +173,7 @@ class _TinyArchiveBuilder(BaseDatasetBuilder):
             SplitGenerator(name=Split.TEST, gen_kwargs={"archive": archive, "n": 2}),
         ]
 
-    def _generate_examples(self, archive, n):
+    def _iter_examples(self, archive, n):
         for i in range(n):
             yield i, {"x": i}
 
@@ -263,7 +263,7 @@ def test_base_builder_passes_download_dir_to_bulk_download(tmp_path, monkeypatch
 
     def _fake_bulk_download(urls, dest_folder, checksums=None):
         seen["dest_folder"] = str(dest_folder)
-        # Return fake local paths; _generate_examples ignores data_path.
+        # Return fake local paths; _iter_examples ignores data_path.
         return [tmp_path / f"fake_{i}.bin" for i in range(len(list(urls)))]
 
     monkeypatch.setattr(utils, "bulk_download", _fake_bulk_download)
@@ -322,7 +322,7 @@ def test_base_builder_requires_version():
             def _info(self):
                 return DatasetInfo(features=Features({"x": Value("int32")}))
 
-            def _generate_examples(self, data_path, split):
+            def _iter_examples(self, data_path, split):
                 yield 0, {"x": 0}
 
 
@@ -335,7 +335,7 @@ def test_base_builder_requires_source_or_source_override():
             def _info(self):
                 return DatasetInfo(features=Features({"x": Value("int32")}))
 
-            def _generate_examples(self, data_path, split):
+            def _iter_examples(self, data_path, split):
                 yield 0, {"x": 0}
 
 
@@ -349,7 +349,7 @@ def test_base_builder_source_override_must_return_mapping(tmp_path):
         def _info(self):
             return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _generate_examples(self, data_path, split):
+        def _iter_examples(self, data_path, split):
             yield 0, {"x": 0}
 
     with pytest.raises(TypeError):
@@ -374,7 +374,7 @@ def test_base_builder_requires_source_homepage(tmp_path):
             def _split_generators(self):
                 return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
-            def _generate_examples(self, n):
+            def _iter_examples(self, n):
                 yield 0, {"x": 0}
 
 
@@ -391,7 +391,7 @@ def test_base_builder_requires_source_citation(tmp_path):
             def _split_generators(self):
                 return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
-            def _generate_examples(self, n):
+            def _iter_examples(self, n):
                 yield 0, {"x": 0}
 
 
@@ -408,7 +408,7 @@ def test_base_builder_requires_source_assets(tmp_path):
             def _split_generators(self):
                 return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
-            def _generate_examples(self, n):
+            def _iter_examples(self, n):
                 yield 0, {"x": 0}
 
 
@@ -425,7 +425,7 @@ def test_base_builder_validates_source_field_types(tmp_path):
             def _split_generators(self):
                 return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 1})]
 
-            def _generate_examples(self, n):
+            def _iter_examples(self, n):
                 yield 0, {"x": 0}
 
 
@@ -437,7 +437,7 @@ def test_base_builder_empty_urls_raises(tmp_path):
         def _info(self):
             return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _generate_examples(self, data_path, split):
+        def _iter_examples(self, data_path, split):
             yield 0, {"x": 0}
 
     with pytest.raises(ValueError):
@@ -458,7 +458,7 @@ def test_base_builder_maps_val_to_validation(monkeypatch, tmp_path):
         def _info(self):
             return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _generate_examples(self, data_path, split):
+        def _iter_examples(self, data_path, split):
             yield 0, {"x": 0}
 
     def _fake_bulk_download(urls, dest_folder, checksums=None):
@@ -489,7 +489,7 @@ def test_base_builder_deduplicates_urls(monkeypatch, tmp_path):
         def _info(self):
             return DatasetInfo(features=Features({"x": Value("int32")}))
 
-        def _generate_examples(self, data_path, split):
+        def _iter_examples(self, data_path, split):
             yield 0, {"x": 0}
 
     seen = {}
@@ -1159,3 +1159,17 @@ def test_download_does_not_retry_client_errors(tmp_path, monkeypatch):
         with pytest.raises(RuntimeError, match="Failed to download from all candidate URLs"):
             download("https://example.com/f.bin", dest_folder=tmp_path, progress_bar=False)
     assert len(session.requests) == 1
+
+
+def test_builders_use_iter_examples_hook():
+    import stable_datasets  # noqa: F401  (loads every builder module)
+
+    def subclasses(cls):
+        for sub in cls.__subclasses__():
+            yield sub
+            yield from subclasses(sub)
+
+    builders = [cls for cls in subclasses(BaseDatasetBuilder) if ".tests" not in cls.__module__]
+    assert len(builders) > 50
+    assert not [cls.__name__ for cls in [BaseDatasetBuilder, *builders] if hasattr(cls, "_generate_examples")]
+    assert all(cls._iter_examples is not BaseDatasetBuilder._iter_examples for cls in builders)

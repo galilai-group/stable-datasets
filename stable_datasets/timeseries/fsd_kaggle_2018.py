@@ -93,7 +93,7 @@ class FSDKaggle2018(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, audio_path, meta_path, split):
+    def _iter_examples(self, audio_path, meta_path, split):
         metadata = _load_metadata(meta_path)
         label_to_id = {
             name: idx for idx, name in enumerate(sorted({row["label"] for rows in metadata.values() for row in rows}))
