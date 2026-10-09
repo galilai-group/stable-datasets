@@ -706,7 +706,9 @@ def download(
                                     disable=not progress_bar,
                                 ) as bar,
                             ):
-                                for chunk in response.iter_content(chunk_size=8192):
+                                # Save bytes exactly as sent. Some servers label .tgz files as
+                                # "Content-Encoding: gzip"; decoding would silently store a .tar.
+                                for chunk in response.raw.stream(8192, decode_content=False):
                                     if not chunk:
                                         continue
                                     f.write(chunk)

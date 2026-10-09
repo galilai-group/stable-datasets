@@ -22,6 +22,16 @@ from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder
 
 
+class _FakeRaw:
+    """Stand-in for the raw urllib3 response that `download` streams from."""
+
+    def __init__(self, chunks):
+        self.chunks = chunks
+
+    def stream(self, amt=8192, decode_content=None):
+        return iter(self.chunks)
+
+
 class _TinyLocalBuilder(BaseDatasetBuilder):
     """A tiny local builder used to validate BaseDatasetBuilder return types."""
 
@@ -620,8 +630,9 @@ def test_download_resume_sends_range_header(tmp_path, monkeypatch):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([b"x" * 100])
+        @property
+        def raw(self):
+            return _FakeRaw([b"x" * 100])
 
         def __enter__(self):
             return self
@@ -684,8 +695,9 @@ def test_download_resume_fallback_on_200(tmp_path, monkeypatch):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        @property
+        def raw(self):
+            return _FakeRaw([content])
 
         def __enter__(self):
             return self
@@ -737,8 +749,9 @@ def test_download_uses_fallback_url(tmp_path):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        @property
+        def raw(self):
+            return _FakeRaw([content])
 
         def __enter__(self):
             return self
@@ -816,8 +829,9 @@ def test_download_validates_checksum_on_fallback(tmp_path):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        @property
+        def raw(self):
+            return _FakeRaw([content])
 
         def __enter__(self):
             return self
@@ -872,8 +886,9 @@ def test_checksum_validation_passes(tmp_path):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        @property
+        def raw(self):
+            return _FakeRaw([content])
 
         def __enter__(self):
             return self
@@ -924,8 +939,9 @@ def test_checksum_mismatch_deletes_and_raises(tmp_path):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        @property
+        def raw(self):
+            return _FakeRaw([content])
 
         def __enter__(self):
             return self
@@ -955,3 +971,36 @@ def test_checksum_mismatch_deletes_and_raises(tmp_path):
         with patch("stable_datasets.utils.FileLock"):
             with pytest.raises(ValueError, match="Checksum mismatch"):
                 download(url, dest_folder=dest_folder, progress_bar=False, checksum=wrong_checksum)
+
+
+def test_download_keeps_bytes_of_gzip_labeled_archive(tmp_path, monkeypatch):
+    """Servers that send a .tgz with "Content-Encoding: gzip" must not get it decompressed on save."""
+    import gzip
+    import http.server
+    import threading
+
+    from stable_datasets.utils import download
+
+    payload = gzip.compress(b"tar archive contents" * 1000)  # stands in for a .tgz file
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def log_message(self, *args):
+            pass
+
+    monkeypatch.setenv("NO_PROXY", "127.0.0.1")
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        url = f"http://127.0.0.1:{server.server_port}/archive.tgz"
+        path = download(url, dest_folder=tmp_path, progress_bar=False)
+    finally:
+        server.shutdown()
+
+    assert path.read_bytes() == payload
