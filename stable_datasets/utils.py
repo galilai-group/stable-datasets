@@ -1,3 +1,4 @@
+import contextlib
 import hashlib
 import multiprocessing
 import os
@@ -23,6 +24,7 @@ from rich.progress import (
 )
 from tqdm import tqdm
 
+from . import _uri
 from .cache import (
     cache_fingerprint,
     open_cache,
@@ -323,6 +325,7 @@ class BaseDatasetBuilder:
         download_dir=None,
         storage_format=None,
         backend_kwargs=None,
+        storage_options=None,
         decode_video=None,
         **kwargs,
     ):
@@ -333,7 +336,8 @@ class BaseDatasetBuilder:
             split: Dataset split to load (e.g., "train", "test", "validation"). If None,
                 loads all available splits and returns a StableDatasetDict.
             processed_cache_dir: Cache directory for processed datasets. If None,
-                defaults to ~/.stable_datasets/processed/.
+                defaults to ~/.stable_datasets/processed/. A URI such as
+                ``s3://bucket/prefix`` is valid with ``storage_format="lance"``.
             download_dir: Directory for raw downloads (ZIP/NPZ/etc). If None, defaults to
                 ~/.stable_datasets/downloads/.
             storage_format: Load-time override for the storage backend, either
@@ -347,6 +351,9 @@ class BaseDatasetBuilder:
                 Note this is distinct from :meth:`StableDataset.with_format`,
                 which controls the output type (torch / numpy / raw) of
                 decoded rows.
+            backend_kwargs: Keyword arguments for the storage backend.
+            storage_options: Object store options for Lance caches and for
+                the cache metadata files of a remote ``processed_cache_dir``.
             decode_video: Optional read-time video decode config or mapping.
                 This is applied after cache open/build and is not part of the
                 cache fingerprint.
@@ -367,7 +374,7 @@ class BaseDatasetBuilder:
         # 1) Decide cache locations
         if processed_cache_dir is None:
             processed_cache_dir = str(_default_processed_cache_dir())
-        instance._processed_cache_dir = Path(processed_cache_dir)
+        instance._processed_cache_dir = os.fspath(processed_cache_dir)
 
         if download_dir is None:
             download_dir = str(_default_dest_folder())
@@ -387,9 +394,14 @@ class BaseDatasetBuilder:
                 "Video(storage='frames') requires storage_format='lance' because "
                 "it uses the specialized lance-video-frames layout."
             )
+        if effective_format == "arrow" and _uri.local_path(instance._processed_cache_dir) is None:
+            raise ValueError(
+                f"Arrow caches must be local, got processed_cache_dir={instance._processed_cache_dir!r}. "
+                "Use storage_format='lance' for a remote URI."
+            )
 
         # 4) Read the split manifest. When every wanted split is cached, do not download.
-        def _shard_dir(split_name) -> Path:
+        def _shard_dir(split_name) -> str:
             name = cache_fingerprint(
                 cls.__name__,
                 str(cls.VERSION),
@@ -398,10 +410,18 @@ class BaseDatasetBuilder:
                 storage_format=effective_format,
                 features=features,
             )
-            return instance._processed_cache_dir / name
+            return _uri.join(instance._processed_cache_dir, name)
+
+        def _is_built(split_name) -> bool:
+            return _uri.exists(_uri.join(_shard_dir(split_name), "_metadata.json"), storage_options)
 
         def _open_split(split_name) -> StableDataset:
-            opened = open_cache(_shard_dir(split_name), features, backend_kwargs=backend_kwargs)
+            opened = open_cache(
+                _shard_dir(split_name),
+                features,
+                backend_kwargs=backend_kwargs,
+                storage_options=storage_options,
+            )
             return StableDataset(
                 features=features,
                 info=instance._dataset_info,
@@ -409,24 +429,25 @@ class BaseDatasetBuilder:
                 num_rows=opened.num_rows,
             )
 
-        manifest_path = instance._processed_cache_dir / split_manifest_name(
-            cls.__name__, str(cls.VERSION), instance.config.name, effective_format
+        manifest_path = _uri.join(
+            instance._processed_cache_dir,
+            split_manifest_name(cls.__name__, str(cls.VERSION), instance.config.name, effective_format),
         )
-        split_names = read_split_manifest(manifest_path)
+        split_names = read_split_manifest(manifest_path, storage_options)
         if split is not None and split_names is not None and split not in split_names:
             raise ValueError(
                 f"Split '{split}' not found. Available: {split_names}. "
                 f"If the builder has new splits, delete {manifest_path}."
             )
         wanted = split_names if split is None or split_names is None else [split]
-        if wanted is not None and all((_shard_dir(name) / "_metadata.json").exists() for name in wanted):
+        if wanted is not None and all(_is_built(name) for name in wanted):
             splits_data = {name: _open_split(name) for name in wanted}
         else:
             # 5) Cache miss: download raw files and build the wanted splits.
             #    Writer and backend are chosen by effective_format.
             split_generators = instance._split_generators()
             split_names = [sg.name for sg in split_generators]
-            write_split_manifest(manifest_path, split_names)
+            write_split_manifest(manifest_path, split_names, storage_options)
             if split is not None and split not in split_names:
                 raise ValueError(f"Split '{split}' not found. Available: {split_names}")
 
@@ -439,30 +460,31 @@ class BaseDatasetBuilder:
                 # Per-shard FileLock so concurrent workers (e.g. multiple SLURM
                 # jobs sharing the same scratch cache) don't all race to write
                 # the same lance/arrow shard. The first into the lock builds the
-                # cache; the rest wait and find _metadata.json present.
-                shard_dir.parent.mkdir(parents=True, exist_ok=True)
-                lock_path = shard_dir.parent / (shard_dir.name + ".build.lock")
+                # cache; the rest wait and find _metadata.json present. A remote
+                # URI has no lock: each Lance commit replaces the dataset atomically.
+                local_dir = _uri.local_path(shard_dir)
+                if local_dir is None:
+                    build_lock = contextlib.nullcontext()
+                else:
+                    local_dir.parent.mkdir(parents=True, exist_ok=True)
+                    build_lock = FileLock(str(local_dir.parent / (local_dir.name + ".build.lock")))
 
-                with FileLock(str(lock_path)):
-                    if has_frame_video:
-                        if not (shard_dir / "_metadata.json").exists():
-                            generator = instance._generate_examples(**sg.gen_kwargs)
+                with build_lock:
+                    if not _is_built(sg.name):
+                        generator = instance._generate_examples(**sg.gen_kwargs)
+                        if has_frame_video:
                             write_lance_video_frames_cache(
-                                generator,
-                                features,
-                                shard_dir,
+                                generator, features, shard_dir, storage_options=storage_options
                             )
-                    elif effective_format == "lance":
-                        if not (shard_dir / "_metadata.json").exists():
-                            generator = instance._generate_examples(**sg.gen_kwargs)
-                            write_lance_cache(generator, features, shard_dir, num_encode_workers=4)
-                    else:
-                        if not (shard_dir / "_metadata.json").exists():
-                            generator = instance._generate_examples(**sg.gen_kwargs)
+                        elif effective_format == "lance":
+                            write_lance_cache(
+                                generator, features, shard_dir, num_encode_workers=4, storage_options=storage_options
+                            )
+                        else:
                             has_images = any(isinstance(f, Image) for f in features.values())
                             compression = None if has_images else "zstd"
                             write_sharded_arrow_cache(
-                                generator, features, shard_dir, compression=compression, num_encode_workers=4
+                                generator, features, local_dir, compression=compression, num_encode_workers=4
                             )
 
                 splits_data[sg.name] = _open_split(sg.name)
@@ -475,7 +497,8 @@ class BaseDatasetBuilder:
 
         # Expose cache locations on the returned dataset object for convenience.
         try:
-            setattr(result, "_stable_datasets_processed_cache_dir", instance._processed_cache_dir)
+            processed_dir = _uri.local_path(instance._processed_cache_dir) or instance._processed_cache_dir
+            setattr(result, "_stable_datasets_processed_cache_dir", processed_dir)
         except Exception:
             pass
         try:

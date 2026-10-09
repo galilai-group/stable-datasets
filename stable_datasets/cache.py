@@ -23,6 +23,7 @@ import pyarrow.ipc as ipc
 from filelock import FileLock
 from loguru import logger as logging
 
+from . import _uri
 from .schema import Features, FeatureType, Video
 
 
@@ -77,21 +78,17 @@ def split_manifest_name(cls_name: str, version: str, config_name: str, storage_f
     return f"{cls_name.lower()}_{config_name}_{digest}.splits.json"
 
 
-def read_split_manifest(path: Path) -> list[str] | None:
+def read_split_manifest(uri: str | Path, storage_options: dict | None = None) -> list[str] | None:
     """Return the split names in a split manifest, or ``None`` if it does not exist."""
-    path = Path(path)
-    if not path.exists():
+    uri = os.fspath(uri)
+    if not _uri.exists(uri, storage_options):
         return None
-    return json.loads(path.read_text())["splits"]
+    return json.loads(_uri.read_text(uri, storage_options))["splits"]
 
 
-def write_split_manifest(path: Path, split_names: list[str]) -> None:
-    """Write a split manifest atomically."""
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    tmp.write_text(json.dumps({"splits": list(split_names)}, indent=2))
-    os.replace(tmp, path)
+def write_split_manifest(uri: str | Path, split_names: list[str], storage_options: dict | None = None) -> None:
+    """Write a split manifest."""
+    _uri.write_text(os.fspath(uri), json.dumps({"splits": list(split_names)}, indent=2), storage_options)
 
 
 # Sharded readers/writers
@@ -135,6 +132,15 @@ def _encode_gen(generator, features, batch_size, num_workers, *, cache_dir: Path
             encoded = list(pool.map(encode_fn, [ex for _, ex in chunk]))
             for (k, _), enc in zip(chunk, encoded):
                 yield k, enc
+
+
+def _writer_lock(cache_dir: str | os.PathLike):
+    """Return a file lock next to a local cache, or a no-op for a remote URI."""
+    path = _uri.local_path(cache_dir)
+    if path is None:
+        return contextlib.nullcontext()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return FileLock(str(path.with_suffix(".lock")))
 
 
 def write_sharded_arrow_cache(
@@ -327,27 +333,28 @@ def write_sharded_arrow_cache(
 def write_lance_cache(
     generator,
     features: Features,
-    cache_dir: Path,
+    cache_dir: str | Path,
     *,
     batch_size: int = 1000,
     num_encode_workers: int = 0,
     max_rows_per_file: int = DEFAULT_MAX_ROWS_PER_FILE,
     max_bytes_per_file: int = DEFAULT_SHARD_SIZE_BYTES,
     lineage: dict | None = None,
+    storage_options: dict | None = None,
 ) -> LanceCacheMeta:
     """Consume a generator and write directly to a Lance dataset.
 
     Mirrors :func:`write_sharded_arrow_cache` in shape (same generator
-    contract, same features, same encode pipeline, same atomic-publish
-    semantics) but writes a Lance dataset via ``lance.write_dataset``
-    instead of Arrow IPC shards. No intermediate Arrow IPC file is
-    produced -- the encoded rows stream into Lance via a
-    :class:`pa.RecordBatchReader`, so the native Lance write path is
-    used end-to-end.
+    contract, same features, same encode pipeline) but writes a Lance
+    dataset via ``lance.write_dataset`` instead of Arrow IPC shards. No
+    intermediate Arrow IPC file is produced -- the encoded rows stream
+    into Lance via a :class:`pa.RecordBatchReader`, so the native Lance
+    write path is used end-to-end.
 
-    Writing is atomic: Lance writes to a temporary directory next to
-    ``cache_dir`` and the directory is renamed on success. The
-    completed cache directory contains:
+    ``cache_dir`` is a local path or a URI such as ``s3://bucket/prefix``.
+    A Lance commit publishes the dataset atomically, and the writer then
+    writes ``_metadata.json``. A cache without ``_metadata.json`` is
+    incomplete. The completed cache directory contains:
 
     * Lance dataset files (``_versions/``, ``data/``, manifest)
     * ``_metadata.json`` -- row count, row count of each fragment, format
@@ -369,20 +376,21 @@ def write_lance_cache(
         converts it to a row limit from the size of the first batch.
     lineage : dict, optional
         Optional metadata blob written into ``_metadata.json``.
+    storage_options : dict, optional
+        Object store options for Lance and for the metadata file.
     """
     import lance
 
-    cache_dir = Path(cache_dir)
-    cache_dir.parent.mkdir(parents=True, exist_ok=True)
-    lock_path = cache_dir.with_suffix(".lock")
+    cache_dir = os.fspath(cache_dir)
     schema = features.to_arrow_schema()
-
-    tmp_dir = Path(tempfile.mkdtemp(dir=cache_dir.parent, prefix=f".{cache_dir.name}_tmp_"))
 
     # Counter state is read after Lance consumes the batch stream.
     counter = {"rows": 0}
 
-    encoded_gen = _encode_gen(generator, features, batch_size, num_encode_workers, cache_dir=tmp_dir)
+    # Video(storage="path") stages assets in a local cache directory only.
+    encoded_gen = _encode_gen(
+        generator, features, batch_size, num_encode_workers, cache_dir=_uri.local_path(cache_dir)
+    )
 
     def batch_stream():
         batch_rows: dict[str, list] = {name: [] for name in features}
@@ -399,45 +407,36 @@ def write_lance_cache(
             arrays = [pa.array(batch_rows[name], type=features[name].to_arrow_type()) for name in features]
             yield pa.record_batch(arrays, schema=schema)
 
-    try:
-        with FileLock(str(lock_path)):
-            batches = batch_stream()
-            first = next(batches, None)
-            rows_per_file = max_rows_per_file
-            if first is not None:
-                batches = itertools.chain([first], batches)
-                if first.nbytes > 0:
-                    # Lance v2 files do not apply max_bytes_per_file. Derive a row limit instead.
-                    rows_per_file = min(rows_per_file, max(1, max_bytes_per_file * first.num_rows // first.nbytes))
-            rbr = pa.RecordBatchReader.from_batches(schema, batches)
-            dataset = lance.write_dataset(
-                rbr,
-                str(tmp_dir),
-                max_rows_per_file=rows_per_file,
-                max_bytes_per_file=max_bytes_per_file,
-            )
+    with _writer_lock(cache_dir):
+        batches = batch_stream()
+        first = next(batches, None)
+        rows_per_file = max_rows_per_file
+        if first is not None:
+            batches = itertools.chain([first], batches)
+            if first.nbytes > 0:
+                # Lance v2 files do not apply max_bytes_per_file. Derive a row limit instead.
+                rows_per_file = min(rows_per_file, max(1, max_bytes_per_file * first.num_rows // first.nbytes))
+        rbr = pa.RecordBatchReader.from_batches(schema, batches)
+        dataset = lance.write_dataset(
+            rbr,
+            cache_dir,
+            mode="overwrite",
+            max_rows_per_file=rows_per_file,
+            max_bytes_per_file=max_bytes_per_file,
+            storage_options=storage_options,
+        )
 
-            meta = {
-                "cache_format_version": _CACHE_FORMAT_VERSION,
-                "format": "lance",
-                "layout": "lance-rows",
-                "schema_fingerprint": _features_fingerprint(features),
-                "num_rows": counter["rows"],
-                "shard_row_counts": [fragment.count_rows() for fragment in dataset.get_fragments()],
-            }
-            if lineage:
-                meta["lineage"] = lineage
-            (tmp_dir / _METADATA_FILE).write_text(json.dumps(meta, indent=2))
-
-            # Atomic publish. Lance dataset files are internally
-            # self-contained (paths are relative to the dataset root),
-            # so a rename is safe.
-            if cache_dir.exists():
-                shutil.rmtree(cache_dir)
-            os.rename(str(tmp_dir), str(cache_dir))
-    except BaseException:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-        raise
+        meta = {
+            "cache_format_version": _CACHE_FORMAT_VERSION,
+            "format": "lance",
+            "layout": "lance-rows",
+            "schema_fingerprint": _features_fingerprint(features),
+            "num_rows": counter["rows"],
+            "shard_row_counts": [fragment.count_rows() for fragment in dataset.get_fragments()],
+        }
+        if lineage:
+            meta["lineage"] = lineage
+        _uri.write_text(_uri.join(cache_dir, _METADATA_FILE), json.dumps(meta, indent=2), storage_options)
 
     logging.info(f"Cached {counter['rows']} examples in Lance format to {cache_dir}")
 
@@ -537,7 +536,7 @@ def _video_input_to_path(value, *, tmp_dir: Path, allowed_extensions: tuple[str,
 def write_lance_video_frames_cache(
     generator,
     features: Features,
-    cache_dir: Path,
+    cache_dir: str | Path,
     *,
     video_column: str | None = None,
     quality: int = 65,
@@ -545,12 +544,17 @@ def write_lance_video_frames_cache(
     workers: int | None = None,
     skip_corrupt: bool = True,
     lineage: dict | None = None,
+    storage_options: dict | None = None,
 ) -> LanceCacheMeta:
     """Write a specialized Lance row-per-frame video cache.
 
     Each input example contributes one source video. The physical Lance
     dataset stores one WebP-encoded frame per row. Segment sampling is a
     read-time concern handled by :class:`LanceVideoFramesBackend`.
+
+    ``cache_dir`` is a local path or a URI. As in :func:`write_lance_cache`,
+    a Lance commit publishes the frames and the writer then writes
+    ``_metadata.json``.
     """
     import lance
 
@@ -566,12 +570,13 @@ def write_lance_video_frames_cache(
     if not isinstance(feat, Video) or feat.storage != "frames":
         raise TypeError(f"{video_column!r} must be a Video(storage='frames') feature.")
 
-    cache_dir = Path(cache_dir)
-    cache_dir.parent.mkdir(parents=True, exist_ok=True)
-    lock_path = cache_dir.with_suffix(".lock")
-    tmp_dir = Path(tempfile.mkdtemp(dir=cache_dir.parent, prefix=f".{cache_dir.name}_tmp_"))
-
-    input_tmp_dir = Path(tempfile.mkdtemp(dir=cache_dir.parent, prefix=f".{cache_dir.name}_inputs_"))
+    cache_dir = os.fspath(cache_dir)
+    local_dir = _uri.local_path(cache_dir)
+    if local_dir is not None:
+        local_dir.parent.mkdir(parents=True, exist_ok=True)
+        input_tmp_dir = Path(tempfile.mkdtemp(dir=local_dir.parent, prefix=f".{local_dir.name}_inputs_"))
+    else:
+        input_tmp_dir = Path(tempfile.mkdtemp(prefix=".video_frames_inputs_"))
     tasks = []
     examples: list[dict] = []
     try:
@@ -637,7 +642,7 @@ def write_lance_video_frames_cache(
                 )
                 row += frames
 
-        with FileLock(str(lock_path)), contextlib.ExitStack() as stack:
+        with _writer_lock(cache_dir), contextlib.ExitStack() as stack:
             # Write each video when it is encoded. Do not keep all encoded videos in memory.
             if n_workers <= 1:
                 results = map(_encode_one_video_frames, tasks)
@@ -645,7 +650,7 @@ def write_lance_video_frames_cache(
                 pool = stack.enter_context(mp.get_context("spawn").Pool(n_workers))
                 results = pool.imap(_encode_one_video_frames, tasks, chunksize=1)
             reader = pa.RecordBatchReader.from_batches(_VIDEO_FRAME_SCHEMA, batch_stream(results))
-            lance.write_dataset(reader, str(tmp_dir), mode="create")
+            lance.write_dataset(reader, cache_dir, mode="overwrite", storage_options=storage_options)
 
             total_frames = sum(int(video["T"]) for video in video_records)
             meta = {
@@ -665,14 +670,7 @@ def write_lance_video_frames_cache(
             }
             if lineage:
                 meta["lineage"] = lineage
-            (tmp_dir / _METADATA_FILE).write_text(json.dumps(meta, indent=2))
-
-            if cache_dir.exists():
-                shutil.rmtree(cache_dir)
-            os.rename(str(tmp_dir), str(cache_dir))
-    except BaseException:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-        raise
+            _uri.write_text(_uri.join(cache_dir, _METADATA_FILE), json.dumps(meta, indent=2), storage_options)
     finally:
         shutil.rmtree(input_tmp_dir, ignore_errors=True)
 
@@ -693,43 +691,42 @@ class LanceCacheMeta:
 
     def __init__(
         self,
-        cache_dir: Path,
+        cache_dir: str | Path,
         num_rows: int,
         schema_fingerprint: str,
         shard_row_counts: list[int] | None = None,
     ):
-        self.cache_dir = Path(cache_dir)
+        self.cache_dir = os.fspath(cache_dir)
         self.num_rows = num_rows
         self.schema_fingerprint = schema_fingerprint
         self.shard_row_counts = shard_row_counts
 
 
-def detect_cache_format(cache_dir: Path) -> str:
+def _read_metadata(cache_dir: str | Path, storage_options: dict | None = None) -> dict:
+    """Read ``_metadata.json`` from a local or remote cache directory."""
+    meta_path = _uri.join(cache_dir, _METADATA_FILE)
+    if not _uri.exists(meta_path, storage_options):
+        raise FileNotFoundError(f"No metadata file at {meta_path}")
+    return json.loads(_uri.read_text(meta_path, storage_options))
+
+
+def _metadata_field(raw: dict, field: str, cache_dir: str | Path):
+    if field not in raw:
+        raise ValueError(
+            f"Cache metadata at {_uri.join(cache_dir, _METADATA_FILE)} is missing required {field!r}. "
+            "Rebuild the cache with the current stable-datasets version."
+        )
+    return raw[field]
+
+
+def detect_cache_format(cache_dir: str | Path, storage_options: dict | None = None) -> str:
     """Return ``"arrow"`` or ``"lance"`` based on the cache's metadata."""
-    meta_path = Path(cache_dir) / _METADATA_FILE
-    if not meta_path.exists():
-        raise FileNotFoundError(f"No metadata file at {meta_path}")
-    raw = json.loads(meta_path.read_text())
-    if "format" not in raw:
-        raise ValueError(
-            f"Cache metadata at {meta_path} is missing required 'format'. "
-            "Rebuild the cache with the current stable-datasets version."
-        )
-    return raw["format"]
+    return _metadata_field(_read_metadata(cache_dir, storage_options), "format", cache_dir)
 
 
-def detect_cache_layout(cache_dir: Path) -> str:
+def detect_cache_layout(cache_dir: str | Path, storage_options: dict | None = None) -> str:
     """Return the physical cache layout recorded in cache metadata."""
-    meta_path = Path(cache_dir) / _METADATA_FILE
-    if not meta_path.exists():
-        raise FileNotFoundError(f"No metadata file at {meta_path}")
-    raw = json.loads(meta_path.read_text())
-    if "layout" not in raw:
-        raise ValueError(
-            f"Cache metadata at {meta_path} is missing required 'layout'. "
-            "Rebuild the cache with the current stable-datasets version."
-        )
-    return raw["layout"]
+    return _metadata_field(_read_metadata(cache_dir, storage_options), "layout", cache_dir)
 
 
 class CacheOpenResult:
@@ -745,15 +742,22 @@ class CacheOpenResult:
 
 
 def open_cache(
-    cache_dir: Path,
+    cache_dir: str | Path,
     features: Features,
     *,
     backend_kwargs: dict | None = None,
+    storage_options: dict | None = None,
 ) -> CacheOpenResult:
-    """Open a cache directory and return the backend selected by its layout."""
+    """Open a cache directory and return the backend selected by its layout.
+
+    ``cache_dir`` is a local path or a URI. Lance caches can be remote.
+    Arrow caches must be local. ``backend_kwargs`` go to the backend and
+    replace the values from the metadata. ``storage_options`` go to Lance
+    and to the metadata reads.
+    """
     backend_kwargs = backend_kwargs or {}
-    cache_dir = Path(cache_dir)
-    layout = detect_cache_layout(cache_dir)
+    cache_dir = os.fspath(cache_dir)
+    layout = detect_cache_layout(cache_dir, storage_options)
 
     if layout == "arrow-shards":
         from .backends.arrow_shards import ArrowBackend
@@ -769,18 +773,16 @@ def open_cache(
     if layout == "lance-rows":
         from .backends.lance_rows import LanceBackend
 
-        meta = read_lance_cache_meta(cache_dir)
+        meta = read_lance_cache_meta(cache_dir, storage_options)
         _check_schema_fingerprint(meta.schema_fingerprint, features, cache_dir)
-        lance_kwargs = {}
-        if "batch_readahead" in backend_kwargs:
-            lance_kwargs["batch_readahead"] = backend_kwargs["batch_readahead"]
-        backend = LanceBackend(uri=cache_dir, shard_row_counts=meta.shard_row_counts, **lance_kwargs)
+        defaults = {"shard_row_counts": meta.shard_row_counts, "storage_options": storage_options}
+        backend = LanceBackend(uri=cache_dir, **{**defaults, **backend_kwargs})
         return CacheOpenResult(backend=backend, num_rows=meta.num_rows, layout=layout, metadata=meta)
 
     if layout == "lance-video-frames":
         from .backends.lance_video_frames import LanceVideoFramesBackend
 
-        backend = LanceVideoFramesBackend(uri=cache_dir, **backend_kwargs)
+        backend = LanceVideoFramesBackend(uri=cache_dir, **{"storage_options": storage_options, **backend_kwargs})
         _check_format_version(backend.metadata)
         _check_schema_fingerprint(backend.metadata["schema_fingerprint"], features, cache_dir)
         return CacheOpenResult(backend=backend, num_rows=backend.num_rows, layout=layout, metadata=backend.metadata)
@@ -788,7 +790,7 @@ def open_cache(
     raise ValueError(f"Unknown cache layout {layout!r} in {cache_dir}")
 
 
-def read_lance_cache_meta(cache_dir: Path) -> LanceCacheMeta:
+def read_lance_cache_meta(cache_dir: str | Path, storage_options: dict | None = None) -> LanceCacheMeta:
     """Read metadata from a Lance-format cache directory.
 
     Returns a :class:`LanceCacheMeta` with the cached row count and
@@ -798,11 +800,7 @@ def read_lance_cache_meta(cache_dir: Path) -> LanceCacheMeta:
     DataLoader-fork footgun. Row count comes from the metadata file,
     not from ``ds.count_rows()``.
     """
-    cache_dir = Path(cache_dir)
-    meta_path = cache_dir / _METADATA_FILE
-    if not meta_path.exists():
-        raise FileNotFoundError(f"No metadata file at {meta_path}")
-    raw = json.loads(meta_path.read_text())
+    raw = _read_metadata(cache_dir, storage_options)
     if raw.get("format") != "lance":
         raise ValueError(f"Not a Lance cache: {cache_dir} (format={raw.get('format')!r})")
     _check_format_version(raw)
@@ -854,15 +852,14 @@ def read_sharded_cache_meta(cache_dir: Path) -> ShardedCacheMeta:
     """Read metadata from a sharded cache directory.
 
     Validates that all shard files and metadata exist and are internally
-    consistent.  Raises ``ValueError`` on corruption.
+    consistent.  Raises ``ValueError`` on corruption. Arrow caches are
+    memory-mapped, so ``cache_dir`` must be local.
     """
-    cache_dir = Path(cache_dir)
-    meta_path = cache_dir / _METADATA_FILE
-
-    if not meta_path.exists():
-        raise FileNotFoundError(f"No metadata file at {meta_path}")
-
-    raw = json.loads(meta_path.read_text())
+    local_dir = _uri.local_path(cache_dir)
+    if local_dir is None:
+        raise ValueError(f"Arrow caches must be local, got {cache_dir!r}. Use a Lance cache for a remote URI.")
+    cache_dir = local_dir
+    raw = _read_metadata(cache_dir)
 
     if raw.get("format") != "arrow":
         raise ValueError(f"Not an Arrow sharded cache: {cache_dir} (format={raw.get('format')!r})")

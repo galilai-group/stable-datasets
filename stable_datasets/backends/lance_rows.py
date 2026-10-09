@@ -28,17 +28,23 @@ here use plain ``take`` / ``to_batches``, which work for any Lance
 dataset regardless of whether the column was blob-encoded.
 
 **Pickling is URI-based.** ``__getstate__`` serializes only the dataset
-URI plus cached row/shard counts; ``__setstate__`` reopens by URI via
-``lance.dataset(...)``.
+URI, the storage options and cached row/shard counts; ``__setstate__``
+reopens by URI via ``lance.dataset(...)``.
+
+**URIs stay strings.** ``uri`` is a local path or a URI such as
+``s3://bucket/prefix``. ``storage_options`` go to ``lance.dataset``.
 """
 
 from __future__ import annotations
 
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
 import numpy as np
 import pyarrow as pa
+
+from .. import _uri
 
 
 class LanceBackend:
@@ -53,12 +59,13 @@ class LanceBackend:
         uri: str | Path,
         batch_readahead: int = 8,
         shard_row_counts: list[int] | None = None,
+        storage_options: dict | None = None,
     ):
         """
         Parameters
         ----------
         uri : str or Path
-            Path to the Lance dataset directory.
+            Local path or URI of the Lance dataset.
         batch_readahead : int, default 8
             Number of RecordBatches Lance reads ahead in the scanner
             when ``iter_batches`` is called. Matches Lance's own
@@ -69,8 +76,11 @@ class LanceBackend:
         shard_row_counts : list of int, optional
             Row count of each fragment, from the cache metadata. With
             this value, the shape properties do not open the dataset.
+        storage_options : dict, optional
+            Object store options for ``lance.dataset``.
         """
-        self._uri = Path(uri)
+        self._uri = os.fspath(uri)
+        self._storage_options = storage_options
         self._ds = None  # opened lazily so DataLoader workers re-open after fork
         self._shard_row_counts = list(shard_row_counts) if shard_row_counts is not None else None
         self._cached_num_rows: int | None = None
@@ -91,7 +101,7 @@ class LanceBackend:
         if self._ds is None:
             import lance
 
-            self._ds = lance.dataset(str(self._uri))
+            self._ds = lance.dataset(self._uri, storage_options=self._storage_options)
         return self._ds
 
     # -- Shape ----------------------------------------------------------------
@@ -120,8 +130,9 @@ class LanceBackend:
         return True
 
     @property
-    def cache_dir(self) -> Path:
-        return self._uri
+    def cache_dir(self) -> Path | None:
+        """Local cache directory, or ``None`` for a remote URI."""
+        return _uri.local_path(self._uri)
 
     @property
     def schema(self) -> pa.Schema:
@@ -195,7 +206,8 @@ class LanceBackend:
 
     def __getstate__(self) -> dict:
         return {
-            "uri": str(self._uri),
+            "uri": self._uri,
+            "storage_options": self._storage_options,
             "num_rows": self._cached_num_rows,
             "num_shards": self._cached_num_shards,
             "shard_row_counts": self._shard_row_counts,
@@ -203,7 +215,8 @@ class LanceBackend:
         }
 
     def __setstate__(self, state: dict) -> None:
-        self._uri = Path(state["uri"])
+        self._uri = state["uri"]
+        self._storage_options = state["storage_options"]
         self._ds = None
         self._cached_num_rows = state.get("num_rows")
         self._cached_num_shards = state.get("num_shards")
