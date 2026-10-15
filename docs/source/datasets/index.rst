@@ -47,6 +47,7 @@ Available Datasets
    arabic_characters
    arabic_digits
    cifar10
+   cifar10_shifted
    cifar100
    cifar10_c
    cifar100_c

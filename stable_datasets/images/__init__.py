@@ -7,6 +7,8 @@ from .beans import Beans
 from .cars3d import Cars3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
+from .cifar10_1 import CIFAR10_1
+from .cifar10_2 import CIFAR10_2
 from .cifar10_c import CIFAR10C
 from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
@@ -55,6 +57,8 @@ __all__ = [
     "Cars196",
     "Cars3D",
     "CIFAR10",
+    "CIFAR10_1",
+    "CIFAR10_2",
     "CIFAR10C",
     "CIFAR100",
     "CIFAR100C",
