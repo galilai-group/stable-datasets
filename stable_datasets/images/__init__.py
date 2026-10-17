@@ -35,6 +35,8 @@ from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
+from .omniglot import Omniglot
+from .q_mnist import QMNIST
 
 # from .mnist import MNIST
 # from .places365_small import Places365Small
@@ -81,6 +83,8 @@ __all__ = [
     "Linnaeus5",
     "MedMNIST",
     "NotMNIST",
+    "Omniglot",
+    "QMNIST",
     "RockPaperScissor",
     "Shapes3D",
     "SmallNORB",

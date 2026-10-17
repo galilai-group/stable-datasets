@@ -71,6 +71,8 @@ Available Datasets
    face_pointing
    rock_paper_scissor
    linnaeus5
+   q_mnist
+   omniglot
 
 .. toctree::
    :maxdepth: 1
