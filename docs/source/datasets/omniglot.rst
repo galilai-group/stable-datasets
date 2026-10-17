@@ -1,6 +1,14 @@
 Omniglot
 ========
 
+.. raw:: html
+
+   <p style="display: flex; gap: 10px;">
+   <img src="https://img.shields.io/badge/Task-Few--shot%20Classification-blue" alt="Task: Few-shot Classification">
+   <img src="https://img.shields.io/badge/Classes-1623-green" alt="Classes: 1623 total; 964 background and 659 evaluation">
+   <img src="https://img.shields.io/badge/Size-105x105-orange" alt="Image Size: 105x105">
+   </p>
+
 `Omniglot <https://github.com/brendenlake/omniglot>`_ contains handwritten
 characters from 50 alphabets, with 20 drawings for each of 1,623 characters.
 This builder downloads the original image archives at commit

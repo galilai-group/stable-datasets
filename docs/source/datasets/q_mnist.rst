@@ -1,6 +1,14 @@
 QMNIST
 ======
 
+.. raw:: html
+
+   <p style="display: flex; gap: 10px;">
+   <img src="https://img.shields.io/badge/Task-Image%20Classification-blue" alt="Task: Image Classification">
+   <img src="https://img.shields.io/badge/Classes-10-green" alt="Classes: 10">
+   <img src="https://img.shields.io/badge/Size-28x28-orange" alt="Image Size: 28x28">
+   </p>
+
 `QMNIST <https://github.com/facebookresearch/qmnist>`_ reconstructs the MNIST
 digits from NIST Special Database 19. It adds the recovered 50,000 test digits
 and provenance fields that associate samples with their source writers.
