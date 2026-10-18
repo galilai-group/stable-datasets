@@ -17,7 +17,11 @@ The Weizmann Segmentation Evaluation Database is a benchmark for figure-ground s
 - **one_object**: 100 images showing one object, each with 3 human segmentations
 - **two_objects**: 100 images showing two objects, each with 1 to 3 human segmentations (87 with 3, 8 with 2, 5 with 1)
 
-In the original files, annotators painted the objects red (first object) and blue (second object) on top of the image. stable-datasets converts each of these into a label map: 0 = background, 1 = first object, 2 = second object.
+In the original files, annotators painted the object red (and, in ``two_objects``, the second object blue) on top of the image. stable-datasets converts each of these into a label map: 0 = background, 1 = red object, 2 = blue object.
+
+.. note::
+
+   In ``two_objects``, labels 1 and 2 are not matched across annotators: the same object can be red in one annotation and blue in another. Of the 182 annotations that follow an image's first annotation, 68 have the two objects swapped relative to it. Before combining annotators (for example by majority vote), match the objects first, e.g. by swapping labels 1 and 2 in an annotation when that makes it overlap better with the first one.
 
 Data Structure
 --------------

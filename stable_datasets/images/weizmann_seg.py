@@ -31,8 +31,8 @@ def _marks_to_mask(marked: np.ndarray) -> np.ndarray:
     rgb = marked.astype(np.int16)
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     mask = np.zeros(r.shape, dtype=np.uint8)
-    mask[r - np.maximum(g, b) > _COLOR_MARGIN] = 1  # red: first object
-    mask[b - np.maximum(r, g) > _COLOR_MARGIN] = 2  # blue: second object
+    mask[r - np.maximum(g, b) > _COLOR_MARGIN] = 1  # red object
+    mask[b - np.maximum(r, g) > _COLOR_MARGIN] = 2  # blue object
     return mask
 
 
@@ -44,7 +44,10 @@ class WeizmannSegmentation(BaseDatasetBuilder):
     segmentations (always 3 for ``one_object``). There is no training split and no class labels.
 
     Segmentations are stored as a list of PNG bytes (one per annotator); use
-    `decode_mask` to get a 2-D map with 0 = background, 1 = first object, 2 = second object.
+    `decode_mask` to get a 2-D map with 0 = background, 1 = red object, 2 = blue object.
+    In ``two_objects``, labels 1 and 2 are not matched across annotators (the same
+    object can be 1 in one annotation and 2 in another), so match objects by overlap
+    before combining annotators.
     """
 
     VERSION = Version("1.0.0")
