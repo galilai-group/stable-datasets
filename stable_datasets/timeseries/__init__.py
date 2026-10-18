@@ -3,6 +3,7 @@
 from .audiomnist import AudioMNIST
 from .birdvox_dcase_20k import BirdVoxDCASE20k
 from .CatsDogs import CatsDogs
+from .daily_and_sports_activities import DailyAndSportsActivities
 from .freefield1010 import Freefield1010
 from .fsd_kaggle_2018 import FSDKaggle2018
 from .groove_MIDI import GrooveMIDI
@@ -11,6 +12,7 @@ from .JapaneseVowels import JapaneseVowels
 from .MosquitoSound import MosquitoSound
 from .Phoneme import Phoneme
 from .picidae import Picidae
+from .robot_execution_failures import RobotExecutionFailures
 from .seizures_neonatal import SeizuresNeonatal
 from .sonycust import SONYCUST
 from .speech_commands import SpeechCommands
@@ -21,6 +23,8 @@ from .warblr import Warblr
 
 
 __all__ = [
+    "DailyAndSportsActivities",
+    "RobotExecutionFailures",
     "AudioMNIST",
     "BirdVoxDCASE20k",
     "CatsDogs",
