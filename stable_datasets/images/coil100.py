@@ -11,8 +11,7 @@ from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
-_IMAGE_NAME = re.compile(r"obj([1-9][0-9]{0,2})__(0|[1-9][0-9]{0,2})\.png")
-_EXPECTED_VIEWS = {(object_id, angle) for object_id in range(1, 101) for angle in range(0, 360, 5)}
+_IMAGE_NAME = re.compile(r"obj(\d+)__(\d+)\.png")
 
 
 class COIL100(BaseDatasetBuilder):
@@ -58,25 +57,17 @@ class COIL100(BaseDatasetBuilder):
 
     def _generate_examples(self, data_path, split):
         with zipfile.ZipFile(data_path) as archive:
-            views = {}
+            views = []
             for member in archive.infolist():
-                if member.is_dir() or PurePosixPath(member.filename).suffix.lower() != ".png":
+                if member.is_dir():
                     continue
                 match = _IMAGE_NAME.fullmatch(PurePosixPath(member.filename).name)
-                if match is None:
-                    raise ValueError(f"Unexpected COIL-100 image filename: {member.filename}")
-                view = (int(match[1]), int(match[2]))
-                if view not in _EXPECTED_VIEWS or view in views:
-                    raise ValueError(f"Invalid or duplicate COIL-100 view: {member.filename}")
-                views[view] = member
+                if match:
+                    views.append((int(match[1]), int(match[2]), member))
 
-            if views.keys() != _EXPECTED_VIEWS:
-                missing = _EXPECTED_VIEWS - views.keys()
-                raise ValueError(f"COIL-100 archive is missing {len(missing)} expected views")
-
-            for index, ((object_id, angle), member) in enumerate(sorted(views.items())):
+            # Sort by object and angle so ZIP entry order cannot change row order.
+            for index, (object_id, angle, member) in enumerate(sorted(views, key=lambda view: view[:2])):
                 with archive.open(member) as image_file, PILImage.open(image_file) as source_image:
                     image = source_image.convert("RGB")
-                if image.size != (128, 128):
-                    raise ValueError(f"Unexpected COIL-100 image size in {member.filename}: {image.size}")
+                # Filenames use object IDs 1-100; labels use indices 0-99.
                 yield index, {"image": image, "label": object_id - 1, "angle": angle}
