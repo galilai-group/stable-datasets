@@ -14,12 +14,11 @@ The original images are PPM files with variable width and height. They are
 decoded as RGB without resizing, cropping, padding, or normalization. The
 dataset's cache stores them as PNG while preserving their pixels and dimensions.
 
-The training ZIP includes per-class annotation CSVs. The test image ZIP includes
-image annotations without labels; labels come from the separate official test
-ground-truth ZIP. The builder joins the two test tables by filename. Width,
-height, and sign-region coordinates are checked against the source data during
-loading but are not exposed as columns, following the image classification
-builders' ``image``/``label`` schema.
+The training ZIP includes per-class annotation CSVs, but labels are read from
+the image class directories. The test image ZIP includes annotations without
+labels; the builder matches test images to the separate ground-truth CSV by
+filename. Width, height, and sign-region coordinates remain in the source files
+and are not exposed as dataset columns.
 
 Data Structure
 --------------
