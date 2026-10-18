@@ -4,6 +4,7 @@ from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
 from .awa2 import AWA2
 from .beans import Beans
+from .caltech101_silhouettes import Caltech101Silhouettes
 from .cars3d import Cars3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
@@ -34,6 +35,7 @@ from .imagenet_100 import ImageNet100
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
+from .mnist_c import MNISTC
 from .not_mnist import NotMNIST
 
 # from .mnist import MNIST
@@ -52,6 +54,7 @@ __all__ = [
     "ArabicDigits",
     "AWA2",
     "Beans",
+    "Caltech101Silhouettes",
     "Cars196",
     "Cars3D",
     "CIFAR10",
@@ -80,6 +83,7 @@ __all__ = [
     "KMNIST",
     "Linnaeus5",
     "MedMNIST",
+    "MNISTC",
     "NotMNIST",
     "RockPaperScissor",
     "Shapes3D",

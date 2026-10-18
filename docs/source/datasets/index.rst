@@ -61,6 +61,7 @@ Available Datasets
    tiny_imagenet
    tiny_imagenet_c
    e_mnist
+   mnist_c
    fgvc_aircraft
    flowers102
    food101
@@ -71,6 +72,7 @@ Available Datasets
    face_pointing
    rock_paper_scissor
    linnaeus5
+   caltech101_silhouettes
 
 .. toctree::
    :maxdepth: 1

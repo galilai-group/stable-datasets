@@ -364,3 +364,82 @@ class TestSmoke:
         module, embed_dim = build_module(cfg, DUMMY_CONFIG)
         assert embed_dim == 384  # vit_small
         assert hasattr(module, "backbone")
+
+
+# MNIST-C robustness evaluation
+
+
+class TestMNISTCRobustness:
+    def test_mnistc_trains_on_clean_config(self):
+        cfg = get_config("mnistc")
+        assert cfg.builder_kwargs == {"config_name": "identity"}
+        assert cfg.channels == 1 and cfg.num_classes == 10
+
+    def test_corruptions_exclude_clean_reference(self):
+        from benchmarks.robustness.mnist_c import CORRUPTIONS
+
+        assert len(CORRUPTIONS) == 15
+        assert "identity" not in CORRUPTIONS
+        assert len(set(CORRUPTIONS)) == 15
+
+    def test_unknown_corruption_raises(self):
+        from benchmarks.robustness.mnist_c import evaluate_mnist_c
+
+        with pytest.raises(ValueError, match="Unknown corruptions"):
+            evaluate_mnist_c("unused.ckpt", corruptions=("not_a_corruption",))
+
+    def test_load_backbone_and_probe_round_trip(self, tmp_path):
+        from benchmarks.robustness.mnist_c import load_backbone_and_probe
+
+        ds_config = get_config("mnistc")
+        backbone = create_backbone("vit_small_patch16_224", ds_config)
+        probe = torch.nn.Linear(get_embedding_dim(backbone), ds_config.num_classes)
+        state_dict = {f"backbone.{k}": v for k, v in backbone.state_dict().items()}
+        state_dict.update({f"callbacks_modules.linear_probe.{k}": v for k, v in probe.state_dict().items()})
+        # Other modules saved by benchmarks.run (projector, kNN queues) must be ignored.
+        state_dict["projector.0.weight"] = torch.zeros(1)
+        ckpt = tmp_path / "last.ckpt"
+        torch.save({"state_dict": state_dict}, ckpt)
+
+        loaded_backbone, loaded_probe = load_backbone_and_probe(ckpt, ds_config)
+        torch.testing.assert_close(loaded_probe.weight, probe.weight)
+        torch.testing.assert_close(loaded_backbone.pos_embed, backbone.pos_embed)
+        assert not loaded_backbone.training and not loaded_probe.training
+        assert not any(p.requires_grad for p in loaded_probe.parameters())
+
+    def test_load_without_probe_raises(self, tmp_path):
+        from benchmarks.robustness.mnist_c import load_backbone_and_probe
+
+        ds_config = get_config("mnistc")
+        backbone = create_backbone("vit_small_patch16_224", ds_config)
+        ckpt = tmp_path / "last.ckpt"
+        torch.save({"state_dict": {f"backbone.{k}": v for k, v in backbone.state_dict().items()}}, ckpt)
+        with pytest.raises(KeyError, match="linear probe"):
+            load_backbone_and_probe(ckpt, ds_config)
+
+    def test_probe_accuracy_is_macro_averaged(self):
+        from benchmarks.robustness.mnist_c import probe_accuracy
+
+        # Identity "backbone" + identity probe: predictions are the argmax of the inputs.
+        probe = torch.nn.Linear(3, 3, bias=False)
+        with torch.no_grad():
+            probe.weight.copy_(torch.eye(3))
+        inputs = torch.eye(3)[[0, 0, 0, 1, 2]]
+        labels = torch.tensor([0, 0, 1, 1, 2])  # class 0: 2/2, class 1: 1/2, class 2: 1/1
+        loader = [{"image": inputs, "label": labels}]
+
+        top1, n = probe_accuracy(torch.nn.Identity(), probe, loader, 3, torch.device("cpu"))
+        assert n == 5
+        assert top1 == pytest.approx((1.0 + 0.5 + 1.0) / 3)
+
+    def test_format_table_reports_mean_over_corruptions(self):
+        from benchmarks.robustness.mnist_c import RobustnessResult, format_table
+
+        rows = [
+            RobustnessResult("ckpt", "identity", 0.99, 0.99, 0.0, 10000, "t"),
+            RobustnessResult("ckpt", "fog", 0.5, 0.99, 1 - 0.5 / 0.99, 10000, "t"),
+            RobustnessResult("ckpt", "shear", 0.9, 0.99, 1 - 0.9 / 0.99, 10000, "t"),
+        ]
+        table = format_table(rows)
+        assert "| identity | 0.9900 | 0.00% |" in table
+        assert "| **mean (corrupted)** | 0.7000 |" in table

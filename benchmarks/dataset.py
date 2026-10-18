@@ -322,6 +322,25 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
         std=[0.2389],
         builder_kwargs={"config_name": "fold-1"},
     ),
+    # MNIST-C trains on the clean ``identity`` config; corruptions are evaluation-only
+    # (see benchmarks/robustness/mnist_c.py).
+    "mnistc": _gray(
+        "mnistc",
+        "MNIST-C",
+        10,
+        mean=[0.1307],
+        std=[0.3081],
+        builder_name="MNISTC",
+        builder_kwargs={"config_name": "identity"},
+    ),
+    "caltech101silhouettes": _gray(
+        "caltech101silhouettes",
+        "Caltech-101 Silhouettes",
+        101,
+        mean=[0.5511],
+        std=[0.4974],
+        builder_name="Caltech101Silhouettes",
+    ),
     # Timeseries builders are registered for metadata/loading but are not part
     # of dataset=all until a timeseries backbone/model path exists.
     "catsdogs": _timeseries("catsdogs", "CatsDogs", 2, builder_name="CatsDogs", num_channels=1),
