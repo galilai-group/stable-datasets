@@ -71,6 +71,8 @@ Available Datasets
    face_pointing
    rock_paper_scissor
    linnaeus5
+   caltech101
+   mnist_m
 
 .. toctree::
    :maxdepth: 1

@@ -118,6 +118,7 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     # RGB datasets (3-channel, ImageNet stats unless overridden)
     "beans": _rgb("beans", "Beans", 3, include_in_results=False),
     "awa2": _rgb("awa2", "AWA2", 50),
+    "caltech101": _rgb("caltech101", "Caltech-101", 101),
     "cifar10": _rgb("cifar10", "CIFAR-10", 10, mean=[0.4914, 0.4822, 0.4465], std=[0.247, 0.2435, 0.2616]),
     "cifar100": _rgb("cifar100", "CIFAR-100", 100, mean=[0.5071, 0.4867, 0.4408], std=[0.2675, 0.2565, 0.2761]),
     "country211": _rgb("country211", "Country-211", 211),
@@ -142,6 +143,7 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     "food101": _rgb("food101", "Food-101", 101),
     "imagenet": _rgb("imagenet", "ImageNet", 1000, builder_name="ImageNet1K", include_in_results=False),
     "imagenette": _rgb("imagenette", "Imagenette", 10),
+    "mnistm": _rgb("mnistm", "MNIST-M", 10, mean=[0.4639, 0.4676, 0.4199], std=[0.2534, 0.2380, 0.2618]),
     "rockpaperscissor": _rgb("rockpaperscissor", "Rock-Paper-Scissors", 3),
     "stl10": _rgb("stl10", "STL-10", 10, mean=[0.4467, 0.4398, 0.4066], std=[0.2603, 0.2566, 0.2713]),
     "svhn": _rgb("svhn", "SVHN", 10, mean=[0.4377, 0.4438, 0.4728], std=[0.1980, 0.2010, 0.1970]),
