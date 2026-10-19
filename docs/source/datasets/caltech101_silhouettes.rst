@@ -75,6 +75,42 @@ Usage Example
     # Optional: make it PyTorch-friendly
     ds_torch = ds_train.with_format("torch")
 
+Benchmark Validation
+--------------------
+
+The dataset is registered in the SSL benchmark as ``caltech101silhouettes``:
+
+.. code-block:: bash
+
+    python -m benchmarks.run model=simclr dataset=caltech101silhouettes
+
+**Protocol.** SimCLR with a ViT-S/16 backbone was trained from scratch for 150 epochs with the default harness config (batch size 256). The representation is scored with a standard linear evaluation on frozen features:
+
+- extract backbone features of clean images (the benchmark's validation transform, no augmentation) for all three splits,
+- standardize the features and fit a linear classifier on the train split (AdamW, lr 1e-3, batch size 256, 300 epochs),
+- choose weight decay from {1e-4, 1e-3, 1e-2, 1e-1} by validation accuracy,
+- report test accuracy for the chosen setting, mean ± std over 3 seeds.
+
+Accuracy is class-balanced (``MulticlassAccuracy``, as in the benchmark), which is the metric the authors recommend for the imbalanced evaluation splits. Chance is about 1%.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 50 25 25
+
+   * - Probe (test split)
+     - Balanced top-1 (%)
+     - Plain top-1 (%)
+   * - Frozen-feature linear probe (3 seeds)
+     - **49.1 ± 0.9**
+     - 63.0 ± 0.4
+   * - Benchmark online probe
+     - 5.2
+     - 27.0
+
+The checkpoint is from epoch 100 of 150: the harness checks every 10 epochs and, with ``monitor`` set and ``save_top_k=1``, writes ``last.ckpt`` only when the monitored online-probe metric has improved, which last happened at epoch 100.
+
+**Why not the online probe.** The benchmark's online probe gets one optimizer step per training batch. With 4,100 training images (16 batches per epoch), it receives about 1,600 updates by epoch 100 and stays near chance (training loss 4.2 against 4.6 for uniform guessing over 101 classes), even though the run's k-NN probe ends at 28% (validation) and the frozen-feature probe reaches 49%. It also trains only on the SimCLR views, whose crops down to 8% of the image often remove most of a 28×28 silhouette; a converged probe fit on augmented views scores about 20 points lower than one fit on clean images.
+
 References
 ----------
 
