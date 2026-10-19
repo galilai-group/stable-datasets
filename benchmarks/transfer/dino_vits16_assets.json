@@ -1,0 +1,31 @@
+{
+  "files": {
+    "LICENSE": {
+      "bytes": 11324,
+      "sha256": "50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a",
+      "url": "https://raw.githubusercontent.com/facebookresearch/dino/7c446df5b9f45747937fb0d72314eb9f7b66930a/LICENSE"
+    },
+    "dino_deitsmall16_pretrain.pth": {
+      "bytes": 86710517,
+      "sha256": "1566d50496f27f52f07fea6094fa29b2fdd6fae89da65bdd3ebc3b24ef6b7eb7",
+      "url": "https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth"
+    },
+    "hubconf.py": {
+      "bytes": 5653,
+      "sha256": "fa80babf82c71d2123e23b05061eb1991a1fbc9877238f250b2a25023e910f72",
+      "url": "https://raw.githubusercontent.com/facebookresearch/dino/7c446df5b9f45747937fb0d72314eb9f7b66930a/hubconf.py"
+    },
+    "utils.py": {
+      "bytes": 28039,
+      "sha256": "962a97e1acda1c986dfd921275325e4083f9016dddadcf018f1ccf03fa600eab",
+      "url": "https://raw.githubusercontent.com/facebookresearch/dino/7c446df5b9f45747937fb0d72314eb9f7b66930a/utils.py"
+    },
+    "vision_transformer.py": {
+      "bytes": 11150,
+      "sha256": "b1f998d5f49ab43666b9fc6d007c5f6540c3ead2e8645e144f74045f63ff44d7",
+      "url": "https://raw.githubusercontent.com/facebookresearch/dino/7c446df5b9f45747937fb0d72314eb9f7b66930a/vision_transformer.py"
+    }
+  },
+  "repository": "facebookresearch/dino",
+  "revision": "7c446df5b9f45747937fb0d72314eb9f7b66930a"
+}

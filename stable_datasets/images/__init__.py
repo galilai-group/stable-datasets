@@ -31,6 +31,7 @@ from .hasy_v2 import HASYv2
 from .imagenet_1k import ImageNet1K
 from .imagenet_10 import Imagenette
 from .imagenet_100 import ImageNet100
+from .isic2016 import ISIC2016
 from .k_mnist import KMNIST
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
@@ -39,6 +40,7 @@ from .not_mnist import NotMNIST
 # from .mnist import MNIST
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
+from .scene8 import Scene8
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
 from .stl10 import STL10
@@ -77,11 +79,13 @@ __all__ = [
     "ImageNet1K",
     "ImageNet100",
     "Imagenette",
+    "ISIC2016",
     "KMNIST",
     "Linnaeus5",
     "MedMNIST",
     "NotMNIST",
     "RockPaperScissor",
+    "Scene8",
     "Shapes3D",
     "SmallNORB",
     "STL10",

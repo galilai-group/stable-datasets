@@ -1,0 +1,180 @@
+{
+  "environment": {
+    "pillow": "12.3.0",
+    "pyarrow": "26.0.0",
+    "python": "3.12.14",
+    "scikit-learn": "1.9.1",
+    "stable-datasets": "0.0.0a1"
+  },
+  "executed_source_sha256": {
+    "benchmarks/audit_scene8_isic2016.py": "f76ad75ed885ec2bf78397e83323d6ded7cdb270441f25addf57ea7ce9c9e3ba",
+    "benchmarks/protocols.py": "c7c37700c350e60066119e090e25c774b58a6abe26f31d003a9022bd835c1d9b",
+    "stable_datasets/images/isic2016.py": "fd238947276b66b0aba157cc5256586d9200959aaea6681d1972b6d972e0f440",
+    "stable_datasets/images/scene8.py": "f5d47c528f215d54f7a516991135e0cbd9e5dfd62d14d3e743492162f3bf3e71"
+  },
+  "limitations": [
+    "Exact RGB pixel audit only; near duplicates and patient identity not established.",
+    "No model training or evaluation has run in this audit."
+  ],
+  "protocols": [
+    {
+      "counts": {
+        "fit": 1613,
+        "test": 538,
+        "trainval": 2150,
+        "validation": 537
+      },
+      "excluded_train_ids": [],
+      "manifest": "scene8-pixel-groups-v1-seed42.json",
+      "source_fingerprint": "5e52ed441db82e4f45269123bcf62380c2d40ac84978164457f35d4afa00d145"
+    },
+    {
+      "counts": {
+        "fit": 720,
+        "test": 379,
+        "trainval": 900,
+        "validation": 180
+      },
+      "excluded_train_ids": [],
+      "manifest": "isic2016-official-pixel-groups-v1-seed42.json",
+      "source_fingerprint": "4345cba672f02c327d732ee3ca2db925d4a2bb67a83496f21a6596c191acbfda"
+    },
+    {
+      "counts": {
+        "fit": 717,
+        "test": 379,
+        "trainval": 897,
+        "validation": 180
+      },
+      "excluded_train_ids": [
+        "ISIC_0000280",
+        "ISIC_0001184",
+        "ISIC_0001385"
+      ],
+      "manifest": "isic2016-train-filtered-pixel-groups-v1-seed42.json",
+      "source_fingerprint": "4345cba672f02c327d732ee3ca2db925d4a2bb67a83496f21a6596c191acbfda"
+    },
+    {
+      "counts": {
+        "fit": 1612,
+        "test": 538,
+        "trainval": 2150,
+        "validation": 538
+      },
+      "excluded_train_ids": [],
+      "manifest": "scene8-pixel-groups-v1-seed43.json",
+      "source_fingerprint": "5e52ed441db82e4f45269123bcf62380c2d40ac84978164457f35d4afa00d145"
+    },
+    {
+      "counts": {
+        "fit": 720,
+        "test": 379,
+        "trainval": 900,
+        "validation": 180
+      },
+      "excluded_train_ids": [],
+      "manifest": "isic2016-official-pixel-groups-v1-seed43.json",
+      "source_fingerprint": "4345cba672f02c327d732ee3ca2db925d4a2bb67a83496f21a6596c191acbfda"
+    },
+    {
+      "counts": {
+        "fit": 717,
+        "test": 379,
+        "trainval": 897,
+        "validation": 180
+      },
+      "excluded_train_ids": [
+        "ISIC_0000280",
+        "ISIC_0001184",
+        "ISIC_0001385"
+      ],
+      "manifest": "isic2016-train-filtered-pixel-groups-v1-seed43.json",
+      "source_fingerprint": "4345cba672f02c327d732ee3ca2db925d4a2bb67a83496f21a6596c191acbfda"
+    },
+    {
+      "counts": {
+        "fit": 1612,
+        "test": 538,
+        "trainval": 2150,
+        "validation": 538
+      },
+      "excluded_train_ids": [],
+      "manifest": "scene8-pixel-groups-v1-seed44.json",
+      "source_fingerprint": "5e52ed441db82e4f45269123bcf62380c2d40ac84978164457f35d4afa00d145"
+    },
+    {
+      "counts": {
+        "fit": 720,
+        "test": 379,
+        "trainval": 900,
+        "validation": 180
+      },
+      "excluded_train_ids": [],
+      "manifest": "isic2016-official-pixel-groups-v1-seed44.json",
+      "source_fingerprint": "4345cba672f02c327d732ee3ca2db925d4a2bb67a83496f21a6596c191acbfda"
+    },
+    {
+      "counts": {
+        "fit": 717,
+        "test": 379,
+        "trainval": 897,
+        "validation": 180
+      },
+      "excluded_train_ids": [
+        "ISIC_0000280",
+        "ISIC_0001184",
+        "ISIC_0001385"
+      ],
+      "manifest": "isic2016-train-filtered-pixel-groups-v1-seed44.json",
+      "source_fingerprint": "4345cba672f02c327d732ee3ca2db925d4a2bb67a83496f21a6596c191acbfda"
+    }
+  ],
+  "source_sha256": {
+    "ISBI2016_ISIC_Part3_Test_Data.zip": "7c52d5c013b6a79b92c246d48d9f175299670537c128bcc1400b35891f6350e6",
+    "ISBI2016_ISIC_Part3_Test_GroundTruth.csv": "8f7718bfe5ed110e0235b0d9afc40fe89e52610c5687cc9cd7dd0c23352b82ce",
+    "ISBI2016_ISIC_Part3_Training_Data.zip": "d78bd1de08511b514e58784c91fd2d8dab24e407cafd023a7debbceb9155ffb2",
+    "ISBI2016_ISIC_Part3_Training_GroundTruth.csv": "0ffadd63b7cec650cddfbe5df54d1d3167453fe6004c2bbf05824184b0c4d405",
+    "scene8.zip": "e6157352dd9aeb055519be6afe1744bd20be9b2270bcb987f9dd06afb787f460"
+  },
+  "splits": {
+    "isic2016_test": {
+      "class_counts": {
+        "0": 304,
+        "1": 75
+      },
+      "decoded_all": true,
+      "images": 379,
+      "original_bytes_preserved": true
+    },
+    "isic2016_train": {
+      "class_counts": {
+        "0": 727,
+        "1": 173
+      },
+      "decoded_all": true,
+      "images": 900,
+      "original_bytes_preserved": true
+    },
+    "scene8": {
+      "class_counts": {
+        "0": 360,
+        "1": 328,
+        "2": 260,
+        "3": 308,
+        "4": 374,
+        "5": 410,
+        "6": 292,
+        "7": 356
+      },
+      "decoded_all": true,
+      "images": 2688,
+      "original_bytes_preserved": true
+    }
+  },
+  "validation": {
+    "core_regression": "162 passed and one Windows video-cache rename failure; that single test passed on targeted rerun",
+    "models_trained": false,
+    "new_tests": "25 passed; focused suite"
+  },
+  "warm_cache_all_rows_equal": true
+}

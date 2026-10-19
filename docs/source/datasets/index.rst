@@ -42,6 +42,12 @@ Available Datasets
 
 .. toctree::
    :maxdepth: 1
+   :caption: Dataset Integration Experiments
+
+   experiments/scene8_isic2016/REPORT
+
+.. toctree::
+   :maxdepth: 1
    :caption: Image Classification Datasets
 
    arabic_characters
@@ -71,6 +77,8 @@ Available Datasets
    face_pointing
    rock_paper_scissor
    linnaeus5
+   scene8
+   isic2016
 
 .. toctree::
    :maxdepth: 1

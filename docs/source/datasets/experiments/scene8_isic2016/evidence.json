@@ -1,0 +1,105 @@
+{
+  "all_saved_metrics_recomputed": true,
+  "artifacts": {
+    "REPORT.md": "64654014a5b664d50d52c4c352b074d8c9b5ff4d793339f4766075a70c3bc3db",
+    "SUPPLEMENT.md": "92a0d05ae8860f2ea637279e0e91e9c56084d612c7dc17f0ec4a210b9a9fbad8",
+    "environment.txt": "34732f8421686a09ccb3d99465f56c692976286b6813b3bedaf97807b9d489be",
+    "errors_seed42.csv": "6159b7697dbf02bfaf685934e2b26d799cd1a281a3e7da93f9fd2e7330512633",
+    "isic2016_confusion.png": "c448031cfadee34e9c4a437937ec3f77b98b66fa4048d6fac4b5b65ce40fe02f",
+    "label_efficiency.png": "888bb8c530f85a6c6949ac008b7207b6896d40a417cb94a50be13f49629fafa1",
+    "matrix.json.gz": "a24c3cee6171573902d488f85fed1571d761a2b70e456760c0400dbba90e6349",
+    "predictions.csv.gz": "bb88efc93267e0f437c974fd913291190f3e1b41064c695b2b47d74a89e49638",
+    "primary_results.json": "ab5ca5c4945d0ef4afb86907f3789f661395fe11029b74785742867e1ea19bb4",
+    "resource_pilot.json": "bc4b9b998100ce3ce1b8ae3459a38380a163588ee3ca6071b6d7247ff9851e1c",
+    "runs.csv": "1daae4c86d461defc3e157094a44cff41430dd84d8d0032193aa8ffbc8cb08fc",
+    "scene8_confusion.png": "2931ab09c9d2a1406bc0936eca6849d74ad037453b7b47f9a807e74515ac8dac",
+    "summary.csv": "320d18009650c8b72e28b754154f4856def7c6535d42a250f47ffcdea95a72ed",
+    "training_smoke.json": "d810b75eb0a403ddf2d439261b28ca17ca28b6f889e974aea2ff7f9d6fe3b014",
+    "uncertainty.json": "a7445e4d6ced0656922d31c2861cf6015276729544bf5febf538e49d668373cb",
+    "validation.json": "25ca3e55ec56af53d13e7ada721bcae474f6c960131cfb1e4a153aeaca26a703"
+  },
+  "encoder_assets": {
+    "files": {
+      "LICENSE": {
+        "bytes": 11324,
+        "sha256": "50e6751797c50dedd75ef1b8a0d9e42f5f8472e9fbce91f34718e9f97b0c780a",
+        "url": "https://raw.githubusercontent.com/facebookresearch/dino/7c446df5b9f45747937fb0d72314eb9f7b66930a/LICENSE"
+      },
+      "dino_deitsmall16_pretrain.pth": {
+        "bytes": 86710517,
+        "sha256": "1566d50496f27f52f07fea6094fa29b2fdd6fae89da65bdd3ebc3b24ef6b7eb7",
+        "url": "https://dl.fbaipublicfiles.com/dino/dino_deitsmall16_pretrain/dino_deitsmall16_pretrain.pth"
+      },
+      "hubconf.py": {
+        "bytes": 5653,
+        "sha256": "fa80babf82c71d2123e23b05061eb1991a1fbc9877238f250b2a25023e910f72",
+        "url": "https://raw.githubusercontent.com/facebookresearch/dino/7c446df5b9f45747937fb0d72314eb9f7b66930a/hubconf.py"
+      },
+      "utils.py": {
+        "bytes": 28039,
+        "sha256": "962a97e1acda1c986dfd921275325e4083f9016dddadcf018f1ccf03fa600eab",
+        "url": "https://raw.githubusercontent.com/facebookresearch/dino/7c446df5b9f45747937fb0d72314eb9f7b66930a/utils.py"
+      },
+      "vision_transformer.py": {
+        "bytes": 11150,
+        "sha256": "b1f998d5f49ab43666b9fc6d007c5f6540c3ead2e8645e144f74045f63ff44d7",
+        "url": "https://raw.githubusercontent.com/facebookresearch/dino/7c446df5b9f45747937fb0d72314eb9f7b66930a/vision_transformer.py"
+      }
+    },
+    "repository": "facebookresearch/dino",
+    "revision": "7c446df5b9f45747937fb0d72314eb9f7b66930a"
+  },
+  "environment": {
+    "numpy": "2.5.2",
+    "pillow": "12.3.0",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "pyarrow": "26.0.0",
+    "python": "3.12.14",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "stable-datasets": "0.0.0a1",
+    "torch": "2.9.1+cpu",
+    "torchvision": "0.24.1+cpu"
+  },
+  "executed_source_sha256": {
+    "benchmarks/SCENE8_ISIC2016_EXPERIMENT_PROTOCOL.md": "14d940b45e89e074dafa6000507da95bdb35fe598f173a30a11bda8d58a4a7c9",
+    "benchmarks/protocols.py": "6e2f217dd9860e3342825d3bc4e488a756a6953dd5691bfd38582d9782f0ae63",
+    "benchmarks/transfer/dino_vits16_assets.json": "de4f704ccd875c6860116ca220d872ab6b9fd9378cd001f06992a08c9c0bbc00",
+    "benchmarks/transfer/protocol_probe.py": "389efa1c6b6c3f720fd1aa87244594aeadce83d73e08d0f4de0b68af4aa15350",
+    "benchmarks/transfer/scene8_isic2016.py": "f1b3a808c75d65310bfbe612144ff180fb62787816ebead73b80e86f3b4adcbe",
+    "stable_datasets/images/isic2016.py": "fd238947276b66b0aba157cc5256586d9200959aaea6681d1972b6d972e0f440",
+    "stable_datasets/images/scene8.py": "f5d47c528f215d54f7a516991135e0cbd9e5dfd62d14d3e743492162f3bf3e71"
+  },
+  "feature_caches": {
+    "isic2016": {
+      "key": "ca0e63382e0a5f28a9b79af8377cd2c3e7846a0a301c5dae7bd0e6892333bdd3",
+      "payload_sha256": "81b4c8d194a33ccafe99790970b2e4be452e9a279fa238cb694cd5494dcf5040",
+      "seconds": 187.89844069996616
+    },
+    "scene8": {
+      "key": "e4fdcb9a5f2c0b748fa17e08fc23b3d27fa9b0b7116a3011b9689e9080324cf9",
+      "payload_sha256": "f1e3f48fc88629c6da2e04c525c9b3cfec4e7fb0a6b9bb202d39f618e9c66276",
+      "seconds": 284.7174759999616
+    }
+  },
+  "manifest_hashes": [
+    "02886b89d10bf32f45d5e6065da24ea8ca087f850ef5142f91e4f867a1689e4c",
+    "2a5bcaed2333a533dbd0557b6b0d6556cbe563717f37e64b919404f023129c30",
+    "3011207a791e0873746205a6c5c6580c688384bceb88fd76107875e5a3b2621f",
+    "5031f53249ab0e6f9df992b1b3fdfbefc4aa694a2da0a470508f634e62f0ea95",
+    "63a0bbc76f972e86c36f92aedccf23b4e3afef5ce7d1808a00d5c6fba3a0a71c",
+    "84e822f0757e72fb6dbf6eaf28b4457b32c8bae18e7faf48b2e9a53da3013ad0",
+    "858f6e62a0d0fbda9e7e469a9b7a566fc09999b4faaee4721933f4027342c336",
+    "dbdb66a3363bb788fb570e728b6992224a3d6e564ff5c8fc65ea5db0b2a7571f",
+    "dbdbf2caac3765af5785bb046d885416c052c5ac5fa954e55e1d112a9b772b0f"
+  ],
+  "matrix_sha256": "f6e7be0f5c7c0c2f67ceaddb01c6152914fd9d39df8bdff9d023be1f83ee428a",
+  "presentation_scope": "Two builders, correctness tests, one full-label DINO + linear validation; extended results retained in SUPPLEMENT.md.",
+  "primary_runner_sha256": "a09a83bd64571035c0ce7d8822b2570a95ae959c00c62e63d0889ae2ffc8a6c2",
+  "report_revision": {
+    "original_primary_execution_source": "primary_results.json:executed_source_sha256",
+    "scope": "Report wording only; no model fitting or prediction changes."
+  },
+  "summary_source_sha256": "5f3627217f66568821e837b151edc8457df49f63a1088161e039439abb6768d6",
+  "verified_conditions": 60
+}
