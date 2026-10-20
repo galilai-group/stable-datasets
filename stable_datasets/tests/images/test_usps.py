@@ -16,17 +16,14 @@ def _write_bz2(path, text):
 
 
 def _dense_row(label, values):
-    return str(label) + " " + " ".join(
-        f"{index}:{value}" for index, value in enumerate(values, start=1)
-    ) + "\n"
+    return str(label) + " " + " ".join(f"{index}:{value}" for index, value in enumerate(values, start=1)) + "\n"
 
 
 @pytest.fixture
 def archives(tmp_path):
     train = _write_bz2(
         tmp_path / "usps.bz2",
-        _dense_row(1, [-1, 0, 1, 0.5] + [-1] * 252)
-        + _dense_row(10, [1] * 256),
+        _dense_row(1, [-1, 0, 1, 0.5] + [-1] * 252) + _dense_row(10, [1] * 256),
     )
     test = _write_bz2(
         tmp_path / "usps.t.bz2",
@@ -50,9 +47,7 @@ def test_dense_samples(archives):
     expected = np.zeros((16, 16), dtype=np.uint8)
     expected[0, :4] = [0, 127, 255, 191]
     np.testing.assert_array_equal(rows[0][1]["image"], expected)
-    np.testing.assert_array_equal(
-        rows[1][1]["image"], np.full((16, 16), 255, dtype=np.uint8)
-    )
+    np.testing.assert_array_equal(rows[1][1]["image"], np.full((16, 16), 255, dtype=np.uint8))
     for _, sample in rows:
         assert set(sample) == {"image", "label"}
         assert sample["image"].dtype == np.uint8
@@ -82,10 +77,19 @@ def test_label_mapping(tmp_path, source_label):
 @pytest.mark.parametrize(
     "bad_row",
     [
-        "0 1:0", "11 1:0", "x 1:0",
-        "1 0:0", "1 257:0", "1 1:0 1:1",
-        "1 1:nan", "1 1:inf", "1 1:1.01", "1 1:-1.01",
-        "1 1", "1 x:0", "",
+        "0 1:0",
+        "11 1:0",
+        "x 1:0",
+        "1 0:0",
+        "1 257:0",
+        "1 1:0 1:1",
+        "1 1:nan",
+        "1 1:inf",
+        "1 1:1.01",
+        "1 1:-1.01",
+        "1 1",
+        "1 x:0",
+        "",
     ],
 )
 def test_invalid_samples(tmp_path, bad_row):
@@ -135,9 +139,7 @@ def test_loading_and_cache_reuse(archives, tmp_path, monkeypatch):
     reopened = USPS(split="test", **kwargs)
     assert len(reopened) == 1
     assert reopened[0]["label"] == 4
-    np.testing.assert_array_equal(
-        np.asarray(reopened[0]["image"]), np.full((16, 16), 127, dtype=np.uint8)
-    )
+    np.testing.assert_array_equal(np.asarray(reopened[0]["image"]), np.full((16, 16), 127, dtype=np.uint8))
     with pytest.raises(ValueError, match="not found"):
         USPS(split="validation", **kwargs)
 

@@ -104,9 +104,7 @@ def test_unknown_split(archives):
 
 
 def test_missing_image(archives, tmp_path):
-    splits = _write_splits(
-        tmp_path / "missing.zip", ["applauding_999.jpg"], ["applauding_002.jpg"]
-    )
+    splits = _write_splits(tmp_path / "missing.zip", ["applauding_999.jpg"], ["applauding_002.jpg"])
     with pytest.raises(KeyError, match="applauding_999.jpg"):
         list(_builder()._generate_examples(archives[0], splits, "train"))
 
@@ -153,6 +151,7 @@ def test_loading_and_cache_reuse(archives, tmp_path, monkeypatch):
         Stanford40(split="validation", **kwargs)
 
 
+@pytest.mark.large
 def test_stanford40_real_data():
     """Download if needed; decode every image and check official split sizes."""
     datasets = Stanford40()

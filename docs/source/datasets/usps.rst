@@ -31,10 +31,9 @@ to construct grayscale images. No separate validation split is provided.
 Label Convention
 ----------------
 
-Source labels from 1 to 10 are converted to indices from 0 to 9 by
-subtracting 1, following the torchvision USPS convention. These are class
-indices in the source encoding, rather than the literal digit values
-shown in the images.
+The LIBSVM files encode each digit ``d`` as label ``d + 1`` (1 to 10).
+Labels are shifted down by 1, following torchvision's USPS convention,
+so the ``label`` field equals the digit shown in the image (0-9).
 
 Data Structure
 --------------
@@ -54,7 +53,7 @@ the following keys:
      - 16 x 16 grayscale image with uint8 pixel values.
    * - ``label``
      - ``int``
-     - Zero-based class index (0-9), following the source label order.
+     - Digit shown in the image (0-9).
 
 Usage Example
 -------------

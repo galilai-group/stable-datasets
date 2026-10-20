@@ -25,12 +25,8 @@ class USPS(BaseDatasetBuilder):
             doi={10.1109/34.291440}
         }""",
         assets={
-            "train": DownloadInfo(
-                url="https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/usps.bz2"
-            ),
-            "test": DownloadInfo(
-                url="https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/usps.t.bz2"
-            ),
+            "train": DownloadInfo(url="https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/usps.bz2"),
+            "test": DownloadInfo(url="https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/usps.t.bz2"),
         },
     )
 
