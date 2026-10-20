@@ -319,10 +319,12 @@ def test_malaria_dataset(tmp_path):
 
     counts = Counter()
     filenames = set()
+    patient_ids = set()
     sample_indices = {}
     for index, row in enumerate(ds.with_format("raw")):
         counts[row["label"]] += 1
         filenames.add(row["filename"])
+        patient_ids.add(row["patient_id"])
         sample_indices.setdefault(row["label"], index)
         # Raw rows keep the encoded image bytes rather than a decoded PIL image.
         assert isinstance(row["image"], bytes), (
@@ -340,6 +342,10 @@ def test_malaria_dataset(tmp_path):
     }, f"Expected 13779 examples per class, got {dict(counts)}."
     # Every cell crop has its own filename, so the filename set matches the row count.
     assert len(filenames) == len(ds), f"Expected {len(ds)} unique filenames, got {len(filenames)}."
+    # The NIH mappings group cells under roughly 200 patients. Infected patients
+    # also contribute uninfected cells, so IDs are not unique to one class. A count
+    # near the row count would mean the mapping no longer groups cells by patient.
+    assert 100 < len(patient_ids) < 300, f"Expected about 200 unique patient IDs, got {len(patient_ids)}."
 
     # Decode one example from each class. Crops have variable resolution, so only
     # RGB mode and a positive size are required.
