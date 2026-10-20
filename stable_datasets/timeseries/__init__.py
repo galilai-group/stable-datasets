@@ -4,7 +4,9 @@ from .audiomnist import AudioMNIST
 from .birdvox_dcase_20k import BirdVoxDCASE20k
 from .CatsDogs import CatsDogs
 from .freefield1010 import Freefield1010
+from .fsd50k import FSD50K
 from .fsd_kaggle_2018 import FSDKaggle2018
+from .fsdnoisy18k import FSDnoisy18k
 from .groove_MIDI import GrooveMIDI
 from .gtzan import GTZAN
 from .JapaneseVowels import JapaneseVowels
@@ -25,7 +27,9 @@ __all__ = [
     "BirdVoxDCASE20k",
     "CatsDogs",
     "Freefield1010",
+    "FSD50K",
     "FSDKaggle2018",
+    "FSDnoisy18k",
     "GrooveMIDI",
     "GTZAN",
     "JapaneseVowels",
