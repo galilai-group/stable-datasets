@@ -171,6 +171,13 @@ params:
   fgvcaircraft_manufacturer:
     batch_size: 256
     max_epochs: 378
+  # Added with Stanford40 / USPS (tiers copied from kmnist / dtd)
+  usps:
+    batch_size: 256
+    max_epochs: 188
+  stanford40:
+    batch_size: 256
+    max_epochs: 375
 
 # Per-dataset backbone overrides: patch_size and img_size for datasets whose
 # native resolution is too small for the default ViT/16 at 224×224.
