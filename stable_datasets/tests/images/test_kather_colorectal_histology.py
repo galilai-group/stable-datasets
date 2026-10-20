@@ -33,9 +33,7 @@ def _tiff_bytes(mode="RGB", size=(150, 150)):
     """Create a non-uniform TIFF so pixel preservation is observable."""
     color = {"RGB": (17, 35, 91), "L": 73, "RGBA": (17, 35, 91, 127)}[mode]
     with Image.new(mode, size, color=color) as image:
-        image.putpixel(
-            (0, 0), {"RGB": (255, 0, 0), "L": 19, "RGBA": (255, 0, 0, 42)}[mode]
-        )
+        image.putpixel((0, 0), {"RGB": (255, 0, 0), "L": 19, "RGBA": (255, 0, 0, 42)}[mode])
         buffer = io.BytesIO()
         image.save(buffer, format="TIFF")
         return buffer.getvalue()
@@ -54,14 +52,10 @@ def kather_archive_path(tmp_path):
     archive_path = tmp_path / "tiles.zip"
     with ZipFile(archive_path, "w") as archive:
         for index, label in reversed(list(enumerate(LABELS, start=1))):
-            source_id = ("CRC-Prim-HE-03_009", "CRC-Prim-HE-02_003b", "CRC-Prim-HE-07")[
-                (index - 1) % 3
-            ]
+            source_id = ("CRC-Prim-HE-03_009", "CRC-Prim-HE-02_003b", "CRC-Prim-HE-07")[(index - 1) % 3]
             filename = f"{10000 + index}_{source_id}.tif_Row_301_Col_151.tif"
             mode = ("RGB", "L", "RGBA")[(index - 1) % 3]
-            archive.writestr(
-                f"{ROOT}/{index:02d}_{label.upper()}/{filename}", _tiff_bytes(mode)
-            )
+            archive.writestr(f"{ROOT}/{index:02d}_{label.upper()}/{filename}", _tiff_bytes(mode))
         archive.writestr(f"{ROOT}/01_TUMOR/", b"")
         archive.writestr(f"{ROOT}/01_TUMOR/Thumbs.db", b"not an image")
         archive.writestr(f"{ROOT}/01_TUMOR/readme.txt", b"not an image")
@@ -98,11 +92,7 @@ def test_kather_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, kather_arc
         return [kather_archive]
 
     monkeypatch.setattr("stable_datasets.utils.bulk_download", fake_bulk_download)
-    datasets = StableDatasetDict(
-        KatherColorectalHistology(
-            processed_cache_dir=cache_dir, download_dir=download_dir
-        )
-    )
+    datasets = StableDatasetDict(KatherColorectalHistology(processed_cache_dir=cache_dir, download_dir=download_dir))
     # The release has no official test or validation split, so only train is exposed.
     assert list(datasets) == ["train"]
     dataset = datasets["train"]
@@ -161,36 +151,26 @@ def test_kather_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, kather_arc
         pytest.fail("Cached Kather tiles must not be downloaded again")
 
     monkeypatch.setattr("stable_datasets.utils.bulk_download", unexpected_download)
-    cached = StableDatasetDict(
-        KatherColorectalHistology(
-            processed_cache_dir=cache_dir, download_dir=download_dir
-        )
-    )
+    cached = StableDatasetDict(KatherColorectalHistology(processed_cache_dir=cache_dir, download_dir=download_dir))
     # Loading the processed cache still exposes only the train split.
     assert list(cached) == ["train"]
     # Cached bytes, labels, metadata, and ordering match the original build without downloading.
     assert list(cached["train"].with_format("raw")) == rows
     # Selecting train directly returns a single StableDataset rather than a split mapping.
     assert isinstance(
-        KatherColorectalHistology(
-            split="train", processed_cache_dir=cache_dir, download_dir=download_dir
-        ),
+        KatherColorectalHistology(split="train", processed_cache_dir=cache_dir, download_dir=download_dir),
         StableDataset,
     )
     for split in ("test", "validation"):
         # Test and validation requests fail instead of creating synthetic splits.
         with pytest.raises(ValueError, match="not found"):
-            KatherColorectalHistology(
-                split=split, processed_cache_dir=cache_dir, download_dir=download_dir
-            )
+            KatherColorectalHistology(split=split, processed_cache_dir=cache_dir, download_dir=download_dir)
 
 
 def test_kather_png_preserves_pixels(kather_archive):
     """RGB, grayscale, and RGBA TIFFs retain their RGB pixels without resizing."""
     with ZipFile(kather_archive) as archive:
-        for key, example in _builder()._generate_examples(
-            data_path=kather_archive, split="train"
-        ):
+        for key, example in _builder()._generate_examples(data_path=kather_archive, split="train"):
             with (
                 Image.open(io.BytesIO(archive.read(key))) as original,
                 Image.open(io.BytesIO(example["image"])) as encoded,
@@ -230,9 +210,7 @@ def test_kather_source_filename_variants(tmp_path, source_image_id, slide_id):
     archive_path = tmp_path / "source_variant.zip"
     with ZipFile(archive_path, "w") as archive:
         archive.writestr(f"{ROOT}/01_TUMOR/{filename}", _tiff_bytes())
-    examples = list(
-        _builder()._generate_examples(data_path=archive_path, split="train")
-    )
+    examples = list(_builder()._generate_examples(data_path=archive_path, split="train"))
     # Each supported filename variant yields exactly one tile instead of being skipped.
     assert len(examples) == 1
     _, example = examples[0]
@@ -250,12 +228,8 @@ def test_kather_order_is_independent_of_zip_order(tmp_path, kather_archive):
     with ZipFile(kather_archive) as source, ZipFile(reversed_path, "w") as target:
         for member in reversed(source.infolist()):
             target.writestr(member, source.read(member))
-    original = list(
-        _builder()._generate_examples(data_path=kather_archive, split="train")
-    )
-    reversed_examples = list(
-        _builder()._generate_examples(data_path=reversed_path, split="train")
-    )
+    original = list(_builder()._generate_examples(data_path=kather_archive, split="train"))
+    reversed_examples = list(_builder()._generate_examples(data_path=reversed_path, split="train"))
     # Reversing ZIP insertion order leaves example keys, PNG bytes, labels, and metadata unchanged.
     assert original == reversed_examples
     # Examples are emitted in sorted archive-path order, independent of ZIP insertion order.
@@ -319,10 +293,7 @@ def test_kather_colorectal_histology_dataset(tmp_path):
         filenames.add(row["filename"])
         sample_indices.setdefault(row["label"], index)
         # Every tile has non-empty string metadata for its filename, source image, and slide group.
-        assert all(
-            isinstance(row[key], str) and row[key]
-            for key in ("filename", "source_image_id", "slide_id")
-        )
+        assert all(isinstance(row[key], str) and row[key] for key in ("filename", "source_image_id", "slide_id"))
         # Original filenames remain TIFF names even though stored image bytes are PNGs.
         assert row["filename"].endswith(".tif")
         # Each source-image ID belongs to the numeric prefix recorded as its slide group.

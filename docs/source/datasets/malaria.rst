@@ -21,6 +21,7 @@ of parasitized versus uninfected cells, not patient-level diagnosis.
 - **Official splits**: none; the builder exposes the entire release as ``train``
 - **Downloads**: the cell-image archive and two NIH patient-to-cell mapping CSVs,
   each verified against a pinned SHA-256 checksum
+- **License**: not stated on the NIH datasheet; cite the original paper when using the data
 
 .. image:: teasers/malaria_teaser.png
    :align: center

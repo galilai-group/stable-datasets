@@ -131,9 +131,7 @@ def test_malaria_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, malaria_a
         calls.append(specs)
         return list(malaria_assets.values())
 
-    monkeypatch.setattr(
-        "stable_datasets.images.malaria.bulk_download", fake_bulk_download
-    )
+    monkeypatch.setattr("stable_datasets.images.malaria.bulk_download", fake_bulk_download)
     ds = _require_dataset(
         Malaria(
             split="train",
@@ -179,13 +177,9 @@ def test_malaria_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, malaria_a
         assert raw_image.startswith(b"\x89PNG\r\n\x1a\n")
 
     def unexpected_download(*_args, **_kwargs):
-        pytest.fail(
-            "A cached `Malaria` dataset must not download its auxiliary assets again"
-        )
+        pytest.fail("A cached `Malaria` dataset must not download its auxiliary assets again")
 
-    monkeypatch.setattr(
-        "stable_datasets.images.malaria.bulk_download", unexpected_download
-    )
+    monkeypatch.setattr("stable_datasets.images.malaria.bulk_download", unexpected_download)
     cached = _require_dataset_dict(
         Malaria(processed_cache_dir=cache_dir, download_dir=download_dir),
     )
@@ -196,15 +190,13 @@ def test_malaria_fixture_loads_and_reuses_cache(tmp_path, monkeypatch, malaria_a
     for split in ("test", "validation", "patient_mapping_parasitized"):
         # Test, validation, and the mapping asset names are not dataset splits.
         with pytest.raises(ValueError, match="not found"):
-            Malaria(
-                split=split, processed_cache_dir=cache_dir, download_dir=download_dir
-            )
+            Malaria(split=split, processed_cache_dir=cache_dir, download_dir=download_dir)
 
 
 def test_malaria_order_is_independent_of_zip_order(tmp_path, malaria_assets):
     """Yield the same examples when the zip member order is reversed."""
     builder = _builder()
-    original = list(builder._generate_examples(malaria_assets, "train"))
+    original = list(builder._generate_examples(path_map=malaria_assets, split="train"))
     reversed_path = tmp_path / "reversed.zip"
     with (
         ZipFile(malaria_assets["images"]) as source,
@@ -214,8 +206,8 @@ def test_malaria_order_is_independent_of_zip_order(tmp_path, malaria_assets):
             target.writestr(member, source.read(member))
     reversed_examples = list(
         builder._generate_examples(
-            {**malaria_assets, "images": reversed_path},
-            "train",
+            path_map={**malaria_assets, "images": reversed_path},
+            split="train",
         )
     )
     # Examples are emitted in filename order, not in the order stored in the zip.
@@ -258,9 +250,7 @@ def test_malaria_mapping_reads_padded_lists_and_preserves_ids(tmp_path, quoted):
         ("first,['cell.png']\nsecond,['cell.png']\n", "Conflicting patient mappings"),
     ],
 )
-def test_malaria_mapping_rejects_invalid_or_conflicting_rows(
-    tmp_path, content, message
-):
+def test_malaria_mapping_rejects_invalid_or_conflicting_rows(tmp_path, content, message):
     """Reject filename lists, patient ids, and duplicate cells that `Malaria` would not emit."""
     path = tmp_path / "mapping.csv"
     path.write_text(content, encoding="utf-8")
@@ -274,7 +264,7 @@ def test_malaria_rejects_missing_patient_mapping(malaria_assets):
     _write_mapping(malaria_assets["patient_mapping_parasitized"], [])
     # A parasitized crop with no mapping row cannot be assigned a patient id.
     with pytest.raises(ValueError, match="Missing patient mapping.*cell_162.png"):
-        list(_builder()._generate_examples(malaria_assets, "train"))
+        list(_builder()._generate_examples(path_map=malaria_assets, split="train"))
 
 
 @pytest.mark.parametrize(
@@ -288,9 +278,7 @@ def test_malaria_rejects_missing_patient_mapping(malaria_assets):
         ),
     ],
 )
-def test_malaria_rejects_invalid_images(
-    tmp_path, malaria_assets, filename, content, message
-):
+def test_malaria_rejects_invalid_images(tmp_path, malaria_assets, filename, content, message):
     """Reject cell filenames and image bytes that do not match the `Malaria` archive."""
     archive_path = tmp_path / "invalid.zip"
     with ZipFile(archive_path, "w") as archive:
@@ -299,8 +287,8 @@ def test_malaria_rejects_invalid_images(
     with pytest.raises(ValueError, match=message):
         list(
             _builder()._generate_examples(
-                {**malaria_assets, "images": archive_path},
-                "train",
+                path_map={**malaria_assets, "images": archive_path},
+                split="train",
             )
         )
 
@@ -319,9 +307,7 @@ def test_malaria_dataset(tmp_path):
     )
     # The data source publishes no official train/test split.
     # The patient-mapping CSVs are metadata, so loading every split exposes only "train".
-    assert list(ds_all) == [
-        "train"
-    ], f"Expected only a train split, got {list(ds_all)}."
+    assert list(ds_all) == ["train"], f"Expected only a train split, got {list(ds_all)}."
     ds = ds_all["train"]
     # The cell-image archive contains 27,558 red blood cell crops.
     assert len(ds) == 27558, f"Expected 27558 cell crops, got {len(ds)}."
@@ -339,37 +325,31 @@ def test_malaria_dataset(tmp_path):
         filenames.add(row["filename"])
         sample_indices.setdefault(row["label"], index)
         # Raw rows keep the encoded image bytes rather than a decoded PIL image.
-        assert isinstance(
-            row["image"], bytes
-        ), f"Raw image at index {index} should be bytes, got {type(row['image'])}."
+        assert isinstance(row["image"], bytes), (
+            f"Raw image at index {index} should be bytes, got {type(row['image'])}."
+        )
         # Filename, patient ID, and source microscopy ID are required non-empty strings.
-        metadata = {
-            key: row[key] for key in ("filename", "patient_id", "source_image_id")
-        }
-        assert all(
-            isinstance(row[key], str) and row[key] for key in metadata
-        ), f"Row {index} has missing string metadata: {metadata}."
+        metadata = {key: row[key] for key in ("filename", "patient_id", "source_image_id")}
+        assert all(isinstance(row[key], str) and row[key] for key in metadata), (
+            f"Row {index} has missing string metadata: {metadata}."
+        )
     # The release is balanced: 13,779 cells in each class, using the label indices above.
     assert counts == {
         0: 13779,
         1: 13779,
     }, f"Expected 13779 examples per class, got {dict(counts)}."
     # Every cell crop has its own filename, so the filename set matches the row count.
-    assert len(filenames) == len(
-        ds
-    ), f"Expected {len(ds)} unique filenames, got {len(filenames)}."
+    assert len(filenames) == len(ds), f"Expected {len(ds)} unique filenames, got {len(filenames)}."
 
     # Decode one example from each class. Crops have variable resolution, so only
     # RGB mode and a positive size are required.
     for index in sample_indices.values():
         image = ds[index]["image"]
-        assert isinstance(
-            image, Image.Image
-        ), f"Decoded image at index {index} should be a PIL image, got {type(image)}."
-        mode_message = (
-            f"Decoded image at index {index} should be RGB, got {image.mode}."
+        assert isinstance(image, Image.Image), (
+            f"Decoded image at index {index} should be a PIL image, got {type(image)}."
         )
+        mode_message = f"Decoded image at index {index} should be RGB, got {image.mode}."
         assert image.mode == "RGB", mode_message
-        assert (
-            image.width > 0 and image.height > 0
-        ), f"Decoded image at index {index} should have a positive size, got {image.size}."
+        assert image.width > 0 and image.height > 0, (
+            f"Decoded image at index {index} should have a positive size, got {image.size}."
+        )

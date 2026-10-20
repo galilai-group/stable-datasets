@@ -100,9 +100,7 @@ class Malaria(BaseDatasetBuilder):
         download_dir = getattr(self, "_raw_download_dir", None)
         if download_dir is None:
             download_dir = _default_dest_folder()
-        paths = bulk_download(
-            [assets[key] for key in asset_keys], dest_folder=download_dir
-        )
+        paths = bulk_download([assets[key] for key in asset_keys], dest_folder=download_dir)
         return [
             SplitGenerator(
                 name=Split.TRAIN,
@@ -121,38 +119,27 @@ class Malaria(BaseDatasetBuilder):
                 patient_id = row[0].strip()
                 # In NIH's CSV the Python list spans comma-separated cells;
                 # trailing empty cells pad each row to the same width.
-                filenames_text = ",".join(
-                    field.strip() for field in row[1:] if field.strip()
-                )
+                filenames_text = ",".join(field.strip() for field in row[1:] if field.strip())
                 try:
                     filenames = ast.literal_eval(filenames_text)
                 except (SyntaxError, ValueError) as error:
-                    raise ValueError(
-                        f"Invalid filename list in {path}, row {row_number}"
-                    ) from error
+                    raise ValueError(f"Invalid filename list in {path}, row {row_number}") from error
                 if not patient_id or not isinstance(filenames, list):
-                    raise ValueError(
-                        f"Invalid patient mapping in {path}, row {row_number}"
-                    )
+                    raise ValueError(f"Invalid patient mapping in {path}, row {row_number}")
                 for filename in filenames:
                     if not isinstance(filename, str) or not filename:
-                        raise ValueError(
-                            f"Invalid cell filename in {path}, row {row_number}"
-                        )
+                        raise ValueError(f"Invalid cell filename in {path}, row {row_number}")
                     if filename in mapping and mapping[filename] != patient_id:
-                        raise ValueError(
-                            f"Conflicting patient mappings for {filename} in {path}"
-                        )
+                        raise ValueError(f"Conflicting patient mappings for {filename} in {path}")
                     mapping[filename] = patient_id
         return mapping
 
-    def _generate_examples(self, path_map: dict | None = None, _split=None, **_kwargs):
+    def _generate_examples(self, path_map: dict | None = None, **_kwargs):
         if path_map is None:
             raise TypeError("path_map is required")
         paths: dict = path_map
         patient_mappings = {
-            label: self._read_patient_mapping(paths[f"patient_mapping_{label}"])
-            for label in self._labels()
+            label: self._read_patient_mapping(paths[f"patient_mapping_{label}"]) for label in self._labels()
         }
         class_directories = {"Parasitized": "parasitized", "Uninfected": "uninfected"}
 
@@ -172,21 +159,15 @@ class Malaria(BaseDatasetBuilder):
                 label = class_directories[parts[1]]
                 match = re.fullmatch(r"(.+)_cell_\d+\.png", filename)
                 if match is None:
-                    raise ValueError(
-                        f"Cannot identify source image for {member.filename}"
-                    )
+                    raise ValueError(f"Cannot identify source image for {member.filename}")
                 if filename not in patient_mappings[label]:
                     raise ValueError(f"Missing patient mapping for {member.filename}")
 
                 try:
-                    with PILImage.open(
-                        io.BytesIO(archive.read(member))
-                    ) as source_image:
+                    with PILImage.open(io.BytesIO(archive.read(member))) as source_image:
                         image = source_image.convert("RGB")
                 except (OSError, ValueError) as error:
-                    raise ValueError(
-                        f"Cannot decode Malaria image {member.filename}"
-                    ) from error
+                    raise ValueError(f"Cannot decode Malaria image {member.filename}") from error
 
                 yield (
                     member.filename,

@@ -169,6 +169,13 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
         std=[0.2731, 0.2659, 0.2797],
     ),
     "imagenet100": _rgb("imagenet100", "ImageNet-100", 100, builder_name="ImageNet100"),
+    "malaria": _rgb("malaria", "Malaria Cell Images", 2, builder_name="Malaria"),
+    "kather_colorectal_histology": _rgb(
+        "kather_colorectal_histology",
+        "Kather Colorectal Histology",
+        8,
+        builder_name="KatherColorectalHistology",
+    ),
     # Grayscale datasets (1-channel) — includes character/line-art datasets
     # whose images are visually binary (ink-on-paper) regardless of source channel count.
     "arabiccharacters": _gray("arabiccharacters", "Arabic Characters", 28, mean=[0.1030], std=[0.3040]),
@@ -336,13 +343,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     "mosquitosound": _timeseries("mosquitosound", "Mosquito Sound", 2, builder_name="MosquitoSound", num_channels=1),
     "phoneme": _timeseries("phoneme", "Phoneme", 39, builder_name="Phoneme", num_channels=1, sequence_length=512),
     "urbansound": _timeseries("urbansound", "UrbanSound", 10, builder_name="UrbanSound", num_channels=1),
-    "malaria": _rgb("malaria", "Malaria Cell Images", 2, builder_name="Malaria"),
-    "kather_colorectal_histology": _rgb(
-        "kather_colorectal_histology",
-        "Kather Colorectal Histology",
-        8,
-        builder_name="KatherColorectalHistology",
-    ),
 }
 
 DATASET_CONFIGS["emnist"].builder_kwargs = {"config_name": "balanced"}

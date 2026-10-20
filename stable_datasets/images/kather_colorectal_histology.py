@@ -86,8 +86,7 @@ class KatherColorectalHistology(BaseDatasetBuilder):
         if data_path is None:
             raise TypeError("data_path is required")
         class_directories = {
-            f"{index:02d}_{label.upper()}": label
-            for index, label in enumerate(self._labels(), start=1)
+            f"{index:02d}_{label.upper()}": label for index, label in enumerate(self._labels(), start=1)
         }
         with ZipFile(data_path) as archive:
             for member in sorted(archive.infolist(), key=lambda entry: entry.filename):
@@ -107,23 +106,15 @@ class KatherColorectalHistology(BaseDatasetBuilder):
                     filename,
                 )
                 if match is None:
-                    raise ValueError(
-                        f"Cannot identify source image for {member.filename}"
-                    )
+                    raise ValueError(f"Cannot identify source image for {member.filename}")
 
                 try:
-                    with PILImage.open(
-                        io.BytesIO(archive.read(member))
-                    ) as source_image:
+                    with PILImage.open(io.BytesIO(archive.read(member))) as source_image:
                         image = source_image.convert("RGB")
                 except (OSError, ValueError) as error:
-                    raise ValueError(
-                        f"Cannot decode Kather image {member.filename}"
-                    ) from error
+                    raise ValueError(f"Cannot decode Kather image {member.filename}") from error
                 if image.size != (150, 150):
-                    raise ValueError(
-                        f"Expected a 150x150 Kather tile for {member.filename}, got {image.size}"
-                    )
+                    raise ValueError(f"Expected a 150x150 Kather tile for {member.filename}, got {image.size}")
 
                 # Supplying bytes avoids `ImageFeature` preserving the original TIFF encoding.
                 buffer = io.BytesIO()
