@@ -71,6 +71,8 @@ Available Datasets
    face_pointing
    rock_paper_scissor
    linnaeus5
+   rendered_sst2
+   fruits360
 
 .. toctree::
    :maxdepth: 1
