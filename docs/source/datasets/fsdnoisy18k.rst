@@ -84,6 +84,43 @@ Usage Example
     wave = np.asarray(sample["series"], dtype=np.float32)[:, 0] / 32768.0   # [T] in [-1, 1]
     print(sample["sample_rate"], train.features["label"].names[sample["label"]], sample["manually_verified"])
 
+Validation: SimCLR (Fonseca et al., 2021)
+-----------------------------------------
+
+``examples/fsd_simclr.py`` reproduces the linear evaluation of `Unsupervised Contrastive Learning of Sound
+Event Representations <https://arxiv.org/abs/2011.07616>`_ on top of this builder, following the authors'
+`code <https://github.com/edufonseca/uclser20>`_: log-mel patches of 1 s, SimCLR with mix-back on the noisy
+train subset without labels, then a linear classifier on the frozen ResNet-18 trained on the noisy subset,
+selected on the clean subset and evaluated once on the test set (balanced clip accuracy).
+
+.. list-table:: Linear evaluation, balanced test accuracy (%), seeds 0-2
+   :header-rows: 1
+   :widths: 50 25 25
+
+   * - Encoder
+     - Mean ± std
+     - Paper
+   * - SimCLR pretrained with this example
+     - 73.4 ± 0.8
+     - 74.3
+   * - Authors' released checkpoint, through this pipeline
+     - 73.7 ± 0.4
+     - 74.3
+   * - Random initialisation
+     - 35.3 ± 1.5
+     - --
+
+The released checkpoint isolates the data and evaluation side (builder, subsets, features, probe) from
+pretraining. Per-seed metrics, the full protocol and versions are in ``fsdnoisy18k_simclr_results.json``.
+One seed of pretraining takes about 2.5 h on an Apple M2 Max.
+
+.. code-block:: bash
+
+    python examples/fsd_simclr.py features --out runs/fsdnoisy18k
+    python examples/fsd_simclr.py pretrain --features runs/fsdnoisy18k --out runs/fsdnoisy18k/simclr_seed0 --seed 0
+    python examples/fsd_simclr.py probe --features runs/fsdnoisy18k \
+        --encoder runs/fsdnoisy18k/simclr_seed0/encoder.pt --out runs/fsdnoisy18k/simclr_seed0/probe --seed 0
+
 References
 ----------
 

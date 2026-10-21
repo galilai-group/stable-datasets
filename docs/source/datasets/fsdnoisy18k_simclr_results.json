@@ -1,0 +1,163 @@
+{
+  "recorded_utc": "2026-10-21T08:30:00Z",
+  "metric_units": "fraction (multiply by 100 for percent)",
+  "variation": "sample standard deviation over seeds 0, 1, 2 (pretraining and probe seed); not a confidence interval",
+  "reference": {
+    "paper": "Fonseca et al., Unsupervised Contrastive Learning of Sound Event Representations, ICASSP 2021 (arXiv:2011.07616), Table 3",
+    "resnet18_linear_eval_test_accuracy": 0.743,
+    "code": "https://github.com/edufonseca/uclser20"
+  },
+  "protocol": {
+    "data": "FSDnoisy18k builder, config '22khz'; SimCLR on the noisy train subset (manually_verified=False) without labels",
+    "subsets": {
+      "noisy": 15813,
+      "clean": 1772,
+      "test": 947
+    },
+    "front_end": "log10 mel, 96 bands 50-10500 Hz, n_fft 2048, 30 ms Hamming window, hop 220 (10 ms); 1 s patches (101 frames)",
+    "pretraining": "ResNet-18 (1-channel stem, GAP, 512-d), MLP head 512-512-512, NT-Xent tau=0.2, batch 128, SGD lr 0.03 momentum 0.9 wd 1e-4, 500 epochs, lr /10 at epochs 325 and 425; mix-back alpha 0.05, random resized crop (0.8-1), compander U(0.75,1), Gaussian noise sigma~U(0,0.01)",
+    "linear_probe": "frozen encoder (batch norm re-estimated on un-augmented train patches), linear layer on 512-d embeddings of noisy-subset patches, SGD lr 0.1 momentum 0.9 wd 1e-4, 200 epochs, lr /10 at 80 and 160; epoch selected on clean-subset balanced accuracy; test evaluated once",
+    "metric": "balanced (class-averaged) clip accuracy; clip prediction = mean of patch softmax outputs (patch hop 50 frames)",
+    "pretraining_checkpoint": "final epoch (no selection)"
+  },
+  "results": {
+    "simclr_ours": {
+      "per_seed": [
+        {
+          "seed": 0,
+          "selected_probe_epoch": 80,
+          "validation_balanced_accuracy": 0.8301483863807808,
+          "test_balanced_accuracy": 0.7430023546502805,
+          "test_accuracy": 0.7486800422386484,
+          "final_contrastive_loss": 1.6344391844136927
+        },
+        {
+          "seed": 1,
+          "selected_probe_epoch": 60,
+          "validation_balanced_accuracy": 0.8319463891382355,
+          "test_balanced_accuracy": 0.7263290808845644,
+          "test_accuracy": 0.7391763463569165,
+          "final_contrastive_loss": 1.6277885185024603
+        },
+        {
+          "seed": 2,
+          "selected_probe_epoch": 63,
+          "validation_balanced_accuracy": 0.8327020794593791,
+          "test_balanced_accuracy": 0.7337265499301779,
+          "test_accuracy": 0.7402323125659979,
+          "final_contrastive_loss": 1.629610264204382
+        }
+      ],
+      "summary": {
+        "test_balanced_accuracy": {
+          "mean": 0.7343526618216742,
+          "std": 0.008354252006740904
+        },
+        "test_accuracy": {
+          "mean": 0.742696233720521,
+          "std": 0.00520895761596227
+        },
+        "validation_balanced_accuracy": {
+          "mean": 0.8315989516594652,
+          "std": 0.0013118199899989932
+        }
+      }
+    },
+    "uclser20_released_checkpoint": {
+      "per_seed": [
+        {
+          "seed": 0,
+          "selected_probe_epoch": 51,
+          "validation_balanced_accuracy": 0.8398401767940331,
+          "test_balanced_accuracy": 0.7405902421322602,
+          "test_accuracy": 0.7486800422386484
+        },
+        {
+          "seed": 1,
+          "selected_probe_epoch": 60,
+          "validation_balanced_accuracy": 0.8386464896421517,
+          "test_balanced_accuracy": 0.732027224723532,
+          "test_accuracy": 0.7412882787750792
+        },
+        {
+          "seed": 2,
+          "selected_probe_epoch": 56,
+          "validation_balanced_accuracy": 0.8412517616602024,
+          "test_balanced_accuracy": 0.736996880776143,
+          "test_accuracy": 0.7455121436114044
+        }
+      ],
+      "summary": {
+        "test_balanced_accuracy": {
+          "mean": 0.7365381158773118,
+          "std": 0.004299902988422577
+        },
+        "test_accuracy": {
+          "mean": 0.745160154875044,
+          "std": 0.00370843145119773
+        },
+        "validation_balanced_accuracy": {
+          "mean": 0.8399128093654624,
+          "std": 0.0013041538213852853
+        }
+      },
+      "checkpoint": "uclser20 pth/ResNet_best.pth, sha256 d0fab6409afa7221e61a2b62748db13be553b3fbbcd7e580256232e09e2b98f8"
+    },
+    "random_init": {
+      "per_seed": [
+        {
+          "seed": 0,
+          "selected_probe_epoch": 192,
+          "validation_balanced_accuracy": 0.4290233051721959,
+          "test_balanced_accuracy": 0.3558326856091959,
+          "test_accuracy": 0.3801478352692714
+        },
+        {
+          "seed": 1,
+          "selected_probe_epoch": 200,
+          "validation_balanced_accuracy": 0.4283484834945792,
+          "test_balanced_accuracy": 0.3662905803733164,
+          "test_accuracy": 0.38753959873284055
+        },
+        {
+          "seed": 2,
+          "selected_probe_epoch": 171,
+          "validation_balanced_accuracy": 0.41790781753556666,
+          "test_balanced_accuracy": 0.3362600053272601,
+          "test_accuracy": 0.3579725448785639
+        }
+      ],
+      "summary": {
+        "test_balanced_accuracy": {
+          "mean": 0.35279442376992415,
+          "std": 0.01524408526780753
+        },
+        "test_accuracy": {
+          "mean": 0.3752199929602253,
+          "std": 0.015387182678207946
+        },
+        "validation_balanced_accuracy": {
+          "mean": 0.4250932020674473,
+          "std": 0.006231866432088145
+        }
+      }
+    }
+  },
+  "environment": {
+    "script": "examples/fsd_simclr.py",
+    "script_sha256": "395360ee74cbc0d259659d040c2b292e9073449308138699aa8c1632b5e13332",
+    "stable_datasets_commit": "f759dd94d58da4f799657d06a752f1baeec1ce94",
+    "python": "3.12.5",
+    "platform": "macOS-15.7.2-arm64-arm-64bit",
+    "device": "Apple M2 Max (MPS), fp32",
+    "versions": {
+      "torch": "2.14.1",
+      "torchvision": "0.29.1",
+      "numpy": "2.5.4",
+      "lightning": "2.6.6",
+      "stable-pretraining": "0.1.9.dev10+gab836bf69",
+      "stable-datasets": "0.0.0a1"
+    },
+    "pretraining_minutes_per_seed": 140
+  }
+}
