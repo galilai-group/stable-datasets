@@ -20,6 +20,10 @@ labels; the builder matches test images to the separate ground-truth CSV by
 filename. Width, height, and sign-region coordinates remain in the source files
 and are not exposed as dataset columns.
 
+.. image:: teasers/gtsrb_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 
