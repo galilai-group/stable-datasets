@@ -1,6 +1,15 @@
 DailyAndSportsActivities
 ========================
 
+.. figure:: teasers/daily_and_sports_activities_teaser.png
+   :alt: Original multichannel sensor windows from DailyAndSportsActivities
+   :align: center
+   :width: 100%
+
+   Five original windows from training subject 1, segment 1. Only torso
+   acceleration x/y/z is shown (3 of 45 channels), without normalization.
+   Each panel uses its own vertical scale.
+
 Source and evaluation
 ---------------------
 
@@ -42,3 +51,10 @@ isolation, and reports accuracy, balanced accuracy, macro-F1 and confusion matri
 against a majority-class baseline. Test data is never used for fitting or tuning.
 This is a pipeline validation baseline, not a claim of state-of-the-art performance.
 Please cite the original dataset using the citation on its official UCI page.
+
+Reproduce the teaser
+--------------------
+
+With ``matplotlib`` installed, run from the repository root::
+
+    python examples/generate_sensor_teasers.py --output-dir docs/source/datasets/teasers

@@ -1,6 +1,16 @@
 Robot Execution Failures
 ========================
 
+.. figure:: teasers/robot_execution_failures_teaser.png
+   :alt: Original multichannel sensor windows from Robot Execution Failures
+   :align: center
+   :width: 100%
+
+   The first non-normal record from each task, with original sample IDs
+   shown above. Force and torque are plotted separately in source units,
+   without normalization. Panel scales differ; sample index is not time.
+   Repeated curves across tasks reflect shared records in the original source.
+
 Source and structure
 --------------------
 
@@ -63,3 +73,10 @@ macro-F1 and confusion matrices.
 These are small-sample pipeline checks. Hidden session dependence cannot be ruled
 out because the source lacks session IDs. No claim is made about new robots,
 new sessions, state-of-the-art performance, or self-supervised learning gains.
+
+Reproduce the teaser
+--------------------
+
+With ``matplotlib`` installed, run from the repository root::
+
+    python examples/generate_sensor_teasers.py --output-dir docs/source/datasets/teasers
