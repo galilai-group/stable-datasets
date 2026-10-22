@@ -14,6 +14,16 @@ characters from 50 alphabets, with 20 drawings for each of 1,623 characters.
 This builder downloads the original image archives at commit
 ``057f034baf2ecb8530bc5710e5a23584d2a519cc``, with SHA-256 verification.
 
+.. figure:: teasers/omniglot_teaser.png
+   :align: center
+   :width: 90%
+   :alt: Omniglot characters from Alphabet of the Magi, Anglo-Saxon Futhorc, Arcadian, Armenian, and Asomtavruli (Georgian).
+
+   One image from each of the first five background alphabets in alphabetical
+   order, taking the first PNG filename in each alphabet's sorted paths.
+   Titles show the alphabet and global class ID. Original 105 x 105 images are
+   enlarged for display using nearest-neighbor interpolation.
+
 Splits and evaluation
 ---------------------
 

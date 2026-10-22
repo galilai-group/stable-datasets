@@ -15,6 +15,15 @@ and provenance fields that associate samples with their source writers.
 This builder downloads the authors' files at commit
 ``94061367ec2e099ea18c553c75727ecf849ddb9b``, with SHA-256 verification.
 
+.. figure:: teasers/q_mnist_teaser.png
+   :align: center
+   :width: 90%
+   :alt: Five QMNIST training images with digit labels 5, 0, 4, 1, and 9.
+
+   The first training image encountered for each of the first five distinct
+   digit labels, in original dataset order. Images are enlarged for display
+   using nearest-neighbor interpolation; their original size is 28 x 28.
+
 Splits and evaluation
 ---------------------
 
