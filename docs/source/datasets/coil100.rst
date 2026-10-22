@@ -17,6 +17,10 @@ COIL-100 contains 7,200 images of 100 physical objects. Each object has 72 RGB v
 
 The only available split is ``train`` (7,200 examples). It represents the **entire official dataset**: Columbia does not provide a predefined train/test classification split.
 
+.. image:: teasers/coil100_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 
