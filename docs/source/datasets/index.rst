@@ -71,6 +71,13 @@ Available Datasets
    face_pointing
    rock_paper_scissor
    linnaeus5
+   sign_language_digits
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Time-Series / Audio Datasets
+
+   fsdd
 
 .. toctree::
    :maxdepth: 1

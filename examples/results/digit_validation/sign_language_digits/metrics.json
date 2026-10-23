@@ -1,0 +1,356 @@
+{
+  "artifacts": {
+    "checkpoint": "checkpoints/best-validation.ckpt",
+    "metrics_csv": "metrics.csv"
+  },
+  "config": {
+    "experiment": {
+      "class_counts": {
+        "test": [
+          20,
+          20,
+          20,
+          20,
+          21,
+          21,
+          21,
+          20,
+          21,
+          20
+        ],
+        "train": [
+          164,
+          165,
+          165,
+          165,
+          165,
+          165,
+          165,
+          165,
+          166,
+          163
+        ],
+        "validation": [
+          21,
+          21,
+          21,
+          21,
+          21,
+          21,
+          21,
+          21,
+          21,
+          21
+        ]
+      },
+      "image_preprocessing": {
+        "augmentation": null,
+        "convert": "RGB",
+        "resize": [
+          64,
+          64
+        ],
+        "value_range": "uint8 [0,255] -> float32 [-1,1]"
+      },
+      "manifests": {
+        "test": "manifest_test.csv",
+        "train": "manifest_train.csv",
+        "validation": "manifest_validation.csv"
+      },
+      "source_revision": "4b09433ef9d5c60602e8805bb54b8aa2428527f8",
+      "source_split": "all",
+      "split_counts": {
+        "test": 204,
+        "train": 1648,
+        "validation": 210
+      },
+      "split_definition": "per-class largest-remainder allocation with ratios 0.8/0.1/0.1"
+    },
+    "training": {
+      "batch_size": 64,
+      "dataset": "sign-language-digits",
+      "device": "cpu",
+      "epochs": 15,
+      "learning_rate": 0.001,
+      "max_eval_batches": null,
+      "max_train_batches": null,
+      "num_workers": 0,
+      "seed": 42,
+      "smoke_test": false,
+      "weight_decay": 0.0001
+    }
+  },
+  "engine": {
+    "data": "stable_pretraining.data.DataModule",
+    "module": "stable_pretraining.Module",
+    "optimizer": "AdamW",
+    "runner": "stable_pretraining.Manager",
+    "scheduler": {
+      "T_max": 390,
+      "type": "CosineAnnealingLR"
+    },
+    "trainer": "lightning.Trainer"
+  },
+  "history": [
+    {
+      "elapsed_seconds": 7.19478499982506,
+      "epoch": 1,
+      "train": {
+        "accuracy": 0.43992719054222107,
+        "loss": 1.7105711698532104,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.3857142925262451,
+        "loss": 1.9815735816955566,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 12.790830167010427,
+      "epoch": 2,
+      "train": {
+        "accuracy": 0.7797330021858215,
+        "loss": 0.7776430249214172,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.8380952477455139,
+        "loss": 0.6823523640632629,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 20.02330904174596,
+      "epoch": 3,
+      "train": {
+        "accuracy": 0.8470873832702637,
+        "loss": 0.49807208776474,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.8857142925262451,
+        "loss": 0.4117387533187866,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 27.172970874700695,
+      "epoch": 4,
+      "train": {
+        "accuracy": 0.8986650705337524,
+        "loss": 0.33640164136886597,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9095237851142883,
+        "loss": 0.33109620213508606,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 34.40068491687998,
+      "epoch": 5,
+      "train": {
+        "accuracy": 0.9356796145439148,
+        "loss": 0.259187251329422,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.8904761672019958,
+        "loss": 0.3413831889629364,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 41.55349766695872,
+      "epoch": 6,
+      "train": {
+        "accuracy": 0.9478155374526978,
+        "loss": 0.20780709385871887,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9238095283508301,
+        "loss": 0.24424144625663757,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 47.74429920781404,
+      "epoch": 7,
+      "train": {
+        "accuracy": 0.9654126167297363,
+        "loss": 0.1686004102230072,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9333333373069763,
+        "loss": 0.24497435986995697,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 53.86628666706383,
+      "epoch": 8,
+      "train": {
+        "accuracy": 0.9739077687263489,
+        "loss": 0.13753992319107056,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9190475940704346,
+        "loss": 0.2554907202720642,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 59.791661417111754,
+      "epoch": 9,
+      "train": {
+        "accuracy": 0.9781553149223328,
+        "loss": 0.11479136347770691,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9285714030265808,
+        "loss": 0.22146472334861755,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 65.82118074968457,
+      "epoch": 10,
+      "train": {
+        "accuracy": 0.979975700378418,
+        "loss": 0.10370106250047684,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9476190209388733,
+        "loss": 0.19714009761810303,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 70.74267466692254,
+      "epoch": 11,
+      "train": {
+        "accuracy": 0.987864077091217,
+        "loss": 0.09016872197389603,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.938095211982727,
+        "loss": 0.2022978812456131,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 75.29773520771414,
+      "epoch": 12,
+      "train": {
+        "accuracy": 0.9915048480033875,
+        "loss": 0.08098883926868439,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9428571462631226,
+        "loss": 0.190504252910614,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 79.61049275007099,
+      "epoch": 13,
+      "train": {
+        "accuracy": 0.9915048480033875,
+        "loss": 0.07579011470079422,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9428571462631226,
+        "loss": 0.18671637773513794,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 83.75964195793495,
+      "epoch": 14,
+      "train": {
+        "accuracy": 0.9939320683479309,
+        "loss": 0.07467623054981232,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9476190209388733,
+        "loss": 0.1861119270324707,
+        "samples": 210
+      }
+    },
+    {
+      "elapsed_seconds": 88.08477183291689,
+      "epoch": 15,
+      "train": {
+        "accuracy": 0.9933252334594727,
+        "loss": 0.07570061832666397,
+        "samples": 1648
+      },
+      "validation": {
+        "accuracy": 0.9476190209388733,
+        "loss": 0.18641024827957153,
+        "samples": 210
+      }
+    }
+  ],
+  "model": {
+    "class": "TinyImageCNN",
+    "trainable_parameters": 156298
+  },
+  "runtime": {
+    "command": [
+      "python",
+      "examples/validate_digits.py",
+      "--dataset",
+      "sign-language-digits",
+      "--epochs",
+      "15",
+      "--batch-size",
+      "64",
+      "--device",
+      "cpu",
+      "--cache-dir",
+      "/private/tmp/sign-script-cache",
+      "--output-dir",
+      "benchmark-runs/digit-validation"
+    ],
+    "device": "cpu",
+    "finished_at_utc": "2026-10-23T20:33:31.944157+00:00",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "seconds": 88.3677352918312,
+    "started_at_utc": "2026-10-23T20:32:03.574617+00:00"
+  },
+  "selection": {
+    "best_epoch": 10,
+    "best_validation": {
+      "accuracy": 0.9476190209388733,
+      "loss": 0.19714009761810303,
+      "samples": 210
+    },
+    "metric": "validation/accuracy"
+  },
+  "test": {
+    "accuracy": 0.9460784196853638,
+    "loss": 0.14261244237422943,
+    "samples": 204
+  },
+  "versions": {
+    "lightning": "2.6.6",
+    "numpy": "2.5.4",
+    "pillow": "13.0.0",
+    "python": "3.12.6",
+    "stable_datasets": "0.0.0a1",
+    "stable_pretraining": "0.1.9.dev10+gab836bf69",
+    "torch": "2.14.1"
+  }
+}

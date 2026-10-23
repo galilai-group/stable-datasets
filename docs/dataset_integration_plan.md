@@ -1,6 +1,6 @@
 # Dataset Integration Plan: Sign Language Digits and FSDD
 
-**Status: Work in progress. Dataset implementations, tests, and experiments are pending.**
+**Status: Local implementation and validation are complete. The user-owned commits and remote PR update remain pending.**
 
 ## Overview
 
@@ -21,7 +21,7 @@ The contribution will include dataset builders, public exports, tests, documenta
 - Task: Classification of RGB hand-sign images representing digits 0–9.
 - This dataset is distinct from Sign Language MNIST.
 
-### Planned implementation
+### Implementation
 
 - Add a `SignLanguageDigits` builder under `stable_datasets/images/`.
 - Read images only from `Dataset/<digit>/`.
@@ -47,7 +47,7 @@ The proposed proportions are approximately 80% training, 10% validation, and 10%
 - Task: Classification of spoken English digits 0–9.
 - This dataset is distinct from AudioMNIST.
 
-### Planned implementation
+### Implementation
 
 - Add an `FSDD` builder under `stable_datasets/timeseries/`.
 - Read WAV files from the `recordings/` directory.
@@ -106,16 +106,18 @@ An initial smoke test will check the training pipeline. Separate training runs w
 
 ## 5. Completion Checklist
 
-- [ ] Implement the Sign Language Digits builder.
-- [ ] Implement the FSDD builder.
-- [ ] Add public exports for both datasets.
-- [ ] Add and pass local-fixture tests.
-- [ ] Verify actual downloads, decoding, labels, and sample counts.
-- [ ] Implement reproducible training and evaluation examples.
-- [ ] Run supervised validation on both datasets.
-- [ ] Record actual metrics and reproduction instructions.
-- [ ] Add dataset documentation and documentation index entries.
-- [ ] Run formatting checks and review CI results.
+- [x] Implement the Sign Language Digits builder.
+- [x] Implement the FSDD builder.
+- [x] Add public exports for both datasets.
+- [x] Add and pass local-fixture tests.
+- [x] Verify actual downloads, decoding, labels, and sample counts.
+- [x] Implement reproducible training and evaluation examples.
+- [x] Run supervised validation on both datasets.
+- [x] Record actual metrics and reproduction instructions.
+- [x] Add dataset documentation and documentation index entries.
+- [x] Run local formatting checks and review the currently gated CI results.
 - [ ] Update the PR description with completed work and remaining limitations.
 
-No implementation, test, or experiment is claimed complete in this initial plan.
+The final item is intentionally left open because the course requires the user,
+not an agent, to commit, push, and update the remote PR. A ready-to-paste PR
+description is included in the local handoff.
