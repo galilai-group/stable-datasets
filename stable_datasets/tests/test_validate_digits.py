@@ -16,12 +16,56 @@ from examples.validate_digits import (
     TinyImageCNN,
     TrainConfig,
     _AudioAdapter,
+    _image_to_tensor,
     _ImageAdapter,
     audio_collate,
     fsdd_split_indices,
     stratified_split_indices,
     train_and_evaluate,
 )
+
+
+@pytest.mark.parametrize("as_pil", [False, True])
+def test_image_to_tensor_scales_low_dynamic_range_uint8(as_pil):
+    pixels = np.array([[[0, 1, 1]]], dtype=np.uint8)
+    image = Image.fromarray(pixels, mode="RGB") if as_pil else pixels
+
+    tensor = _image_to_tensor(image, size=1)
+
+    expected = torch.tensor([-1.0, 2.0 / 255.0 - 1.0, 2.0 / 255.0 - 1.0]).reshape(3, 1, 1)
+    torch.testing.assert_close(tensor, expected)
+
+
+@pytest.mark.parametrize("as_pil", [False, True])
+def test_image_to_tensor_scales_uint8_endpoints(as_pil):
+    pixels = np.array([[[0, 255, 1]]], dtype=np.uint8)
+    image = Image.fromarray(pixels, mode="RGB") if as_pil else pixels
+
+    tensor = _image_to_tensor(image, size=1)
+
+    expected = torch.tensor([-1.0, 1.0, 2.0 / 255.0 - 1.0]).reshape(3, 1, 1)
+    torch.testing.assert_close(tensor, expected)
+
+
+def test_image_to_tensor_preserves_normalized_float_input():
+    pixels = np.array([[[0.0, 1.0 / 255.0, 1.0]]], dtype=np.float32)
+
+    tensor = _image_to_tensor(pixels, size=1)
+
+    expected = torch.tensor([-1.0, 2.0 / 255.0 - 1.0, 1.0]).reshape(3, 1, 1)
+    torch.testing.assert_close(tensor, expected)
+
+
+@pytest.mark.parametrize(
+    "pixels, error",
+    [
+        (np.array([[[1.01]]], dtype=np.float32), r"range \[0, 1\]"),
+        (np.array([[[np.nan]]], dtype=np.float32), "finite"),
+    ],
+)
+def test_image_to_tensor_rejects_invalid_float_input(pixels, error):
+    with pytest.raises(ValueError, match=error):
+        _image_to_tensor(pixels, size=1)
 
 
 def test_stratified_split_is_reproducible_disjoint_and_complete():

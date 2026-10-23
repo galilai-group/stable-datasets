@@ -140,6 +140,19 @@ def test_sign_language_digits_reports_corrupt_images(tmp_path):
         list(builder._generate_examples(archive_path, "all"))
 
 
+def test_sign_language_digits_rejects_duplicate_logical_filenames(tmp_path):
+    archive_path = tmp_path / "duplicates.zip"
+    image = _image_bytes("RGB", (1, 2, 3), "JPEG")
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr("root-a/Dataset/4/same.JPG", image)
+        archive.writestr("root-b/Dataset/4/same.JPG", image)
+
+    builder = object.__new__(SignLanguageDigits)
+    builder.__init__()
+    with pytest.raises(ValueError, match="Duplicate dataset filename"):
+        list(builder._generate_examples(archive_path, "all"))
+
+
 def test_sign_language_digits_rejects_invalid_zip(tmp_path):
     archive_path = tmp_path / "invalid.zip"
     archive_path.write_bytes(b"not a ZIP archive")

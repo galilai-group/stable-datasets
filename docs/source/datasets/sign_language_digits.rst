@@ -83,8 +83,22 @@ does not provide reliable signer identifiers for this purpose.
 Experiment Reproduction
 -----------------------
 
-Install the ``benchmarks`` dependency group, then run the deterministic
-supervised baseline:
+The project's ``benchmarks`` extra follows the current ``stable-pretraining``
+Git source without pinning a revision. To reproduce the tracked reference run,
+create a Python 3.12 environment and install the exact ``stable-pretraining``
+revision plus the core package versions verified in the retained reference
+environment:
+
+.. code-block:: console
+
+    python3.12 -m venv .venv
+    . .venv/bin/activate
+    python -m pip install -e . \
+        "stable-pretraining @ git+https://github.com/galilai-group/stable-pretraining.git@ab836bf699a2be712dfcf980a5eb70d36391e876" \
+        "torch==2.14.1" "torchvision==0.29.1" "lightning==2.6.6" \
+        "numpy==2.5.4" "pillow==13.0.0"
+
+Then run the deterministic supervised baseline:
 
 .. code-block:: console
 
@@ -110,6 +124,10 @@ and 15 epochs on CPU. The selected epoch was 10: train loss/accuracy were
 loss/accuracy were 0.1426/94.6078%. Runtime was 88.37 seconds. This is a
 lightweight pipeline check on an experiment-defined split, not a
 signer-independent benchmark or a multi-seed performance claim.
+
+The reported train loss and accuracy are training-loop aggregates from epoch
+10. They were not recomputed by evaluating the restored best checkpoint on the
+training split.
 
 The run used Python 3.12.6, PyTorch 2.14.1, Lightning 2.6.6, and
 ``stable-pretraining`` commit

@@ -154,6 +154,12 @@ def test_fsdd_generator_returns_float32_column_vector(tmp_path):
             "train",
             "non-finite",
         ),
+        (
+            "1_jackson_5.wav",
+            _float_wav_bytes(np.array([0.0, 0.5], dtype=np.float32)),
+            "train",
+            "16-bit PCM",
+        ),
     ],
 )
 def test_fsdd_rejects_invalid_recordings(tmp_path, filename, wav_data, split, error):
@@ -173,6 +179,21 @@ def test_fsdd_rejects_unknown_split(tmp_path):
 
     with pytest.raises(ValueError, match="Unknown FSDD split"):
         list(_builder()._generate_examples(archive_path, "validation"))
+
+
+def test_fsdd_rejects_duplicate_logical_filenames(tmp_path):
+    archive_path = tmp_path / "duplicates.zip"
+    wav_data = _wav_bytes(np.array([1, -1], dtype=np.int16))
+    _write_zip(
+        archive_path,
+        {
+            "root-a/recordings/0_george_0.wav": wav_data,
+            "root-b/recordings/0_george_0.wav": wav_data,
+        },
+    )
+
+    with pytest.raises(ValueError, match="Duplicate FSDD recording filename"):
+        list(_builder()._generate_examples(archive_path, "test"))
 
 
 def test_fsdd_rejects_invalid_zip(tmp_path):

@@ -256,12 +256,35 @@ class TinyAudioCNN(nn.Module):
 
 
 def _image_to_tensor(image: Any, size: int) -> torch.Tensor:
+    """Convert supported image values to a resized tensor in ``[-1, 1]``.
+
+    PIL images and integer arrays represent byte-scaled values in ``[0, 255]``;
+    floating-point arrays must already be normalized to ``[0, 1]``.  The
+    distinction is based on the input type and dtype rather than the observed
+    maximum of one particular image.
+    """
     if isinstance(image, Image.Image):
         image = image.convert("RGB").resize((size, size), Image.Resampling.BILINEAR)
         array = np.asarray(image, dtype=np.float32).copy()
-        tensor = torch.from_numpy(array).permute(2, 0, 1)
+        tensor = torch.from_numpy(array).permute(2, 0, 1) / 255.0
     else:
-        tensor = torch.as_tensor(np.asarray(image), dtype=torch.float32)
+        array = np.asarray(image)
+        if array.size == 0:
+            raise ValueError("expected a non-empty image")
+        if np.issubdtype(array.dtype, np.integer):
+            if np.min(array) < 0 or np.max(array) > 255:
+                raise ValueError("integer image values must be in the range [0, 255]")
+            scale = 255.0
+        elif np.issubdtype(array.dtype, np.floating):
+            if not np.isfinite(array).all():
+                raise ValueError("floating-point image values must be finite")
+            if np.min(array) < 0 or np.max(array) > 1:
+                raise ValueError("floating-point image values must be in the range [0, 1]")
+            scale = 1.0
+        else:
+            raise TypeError(f"unsupported image dtype {array.dtype}; expected an integer or floating-point array")
+
+        tensor = torch.as_tensor(array, dtype=torch.float32) / scale
         if tensor.ndim == 2:
             tensor = tensor.unsqueeze(-1).expand(-1, -1, 3)
         if tensor.ndim != 3:
@@ -273,8 +296,6 @@ def _image_to_tensor(image: Any, size: int) -> torch.Tensor:
         if tensor.shape[0] == 1:
             tensor = tensor.expand(3, -1, -1)
         tensor = F.interpolate(tensor.unsqueeze(0), size=(size, size), mode="bilinear", align_corners=False)[0]
-    if tensor.max() > 1:
-        tensor = tensor / 255.0
     return ((tensor - 0.5) / 0.5).contiguous()
 
 

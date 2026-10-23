@@ -108,8 +108,22 @@ Usage Example
 Experiment Reproduction
 -----------------------
 
-Install the ``benchmarks`` dependency group, then run the deterministic
-supervised baseline:
+The project's ``benchmarks`` extra follows the current ``stable-pretraining``
+Git source without pinning a revision. To reproduce the tracked reference run,
+create a Python 3.12 environment and install the exact ``stable-pretraining``
+revision plus the core package versions verified in the retained reference
+environment:
+
+.. code-block:: console
+
+    python3.12 -m venv .venv
+    . .venv/bin/activate
+    python -m pip install -e . \
+        "stable-pretraining @ git+https://github.com/galilai-group/stable-pretraining.git@ab836bf699a2be712dfcf980a5eb70d36391e876" \
+        "torch==2.14.1" "torchvision==0.29.1" "lightning==2.6.6" \
+        "numpy==2.5.4" "pillow==13.0.0"
+
+Then run the deterministic supervised baseline:
 
 .. code-block:: console
 
@@ -136,8 +150,12 @@ The 2026-10-23 reference run used one seed, a 22,986-parameter CNN, AdamW, and
 1.3876/46.5833%, validation loss/accuracy were 1.4169/44.0000%, and final
 official-test loss/accuracy were 1.3971/47.0000%. Runtime was 90.34 seconds.
 This deliberately small model is an above-chance pipeline validation; it is
-not a tuned or speaker-independent benchmark, and the metrics should not be
-read as a state-of-the-art result.
+not a tuned or speaker-independent benchmark. Its 47.00% test accuracy is a
+weak baseline and should not be read as a state-of-the-art result.
+
+The reported train loss and accuracy are training-loop aggregates from epoch
+15. They were not recomputed by evaluating the restored best checkpoint on the
+training split.
 
 The run used Python 3.12.6, PyTorch 2.14.1, Lightning 2.6.6, and
 ``stable-pretraining`` commit
