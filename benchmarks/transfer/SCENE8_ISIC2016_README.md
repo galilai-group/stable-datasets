@@ -10,7 +10,7 @@ Use a dedicated Python environment. The executed setup used Python 3.12.14:
 
 ```console
 python -m pip install torch==2.9.1+cpu torchvision==0.24.1+cpu --index-url https://download.pytorch.org/whl/cpu
-python -m pip install -e . pytest
+python -m pip install -e . pytest matplotlib
 ```
 
 Executed package versions are retained in the report's environment.txt. On
