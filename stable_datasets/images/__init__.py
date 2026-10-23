@@ -19,6 +19,7 @@ from .dsprites_noise import DSpritesNoise
 from .dsprites_scream import DSpritesScream
 from .dtd import DTD
 from .e_mnist import EMNIST
+from .eth80 import ETH80
 from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
 
@@ -26,6 +27,7 @@ from .fashion_mnist import FashionMNIST
 from .fgvc_aircraft import FGVCAircraft
 from .flowers102 import Flowers102
 from .food101 import Food101
+from .freiburg_groceries import FreiburgGroceries
 from .galaxy10 import Galaxy10Decal
 from .hasy_v2 import HASYv2
 from .imagenet_1k import ImageNet1K
@@ -67,12 +69,14 @@ __all__ = [
     "DSpritesScream",
     "DTD",
     "EMNIST",
+    "ETH80",
     "FacePointing",
     "FashionMNIST",
     "FGVCAircraft",
     "Flowers102",
     "Galaxy10Decal",
     "Food101",
+    "FreiburgGroceries",
     "HASYv2",
     "ImageNet1K",
     "ImageNet100",

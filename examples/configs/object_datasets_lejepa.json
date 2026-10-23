@@ -1,0 +1,16 @@
+{
+  "epochs": 20,
+  "batch_size": 32,
+  "image_size": 64,
+  "local_size": 32,
+  "n_slices": 64,
+  "learning_rate": 0.0005,
+  "warmup_epochs": 2,
+  "num_workers": 2,
+  "threads": 4,
+  "freiburg_config": "split0",
+  "validation_fraction": 0.2,
+  "split_seed": 42,
+  "probe_epochs": 200,
+  "probe_weight_decays": [0.0, 0.001, 0.01]
+}

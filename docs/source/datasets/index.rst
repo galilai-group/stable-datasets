@@ -61,9 +61,11 @@ Available Datasets
    tiny_imagenet
    tiny_imagenet_c
    e_mnist
+   eth80
    fgvc_aircraft
    flowers102
    food101
+   freiburg_groceries
    cub200
    country211
    galaxy10
