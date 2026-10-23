@@ -6,6 +6,13 @@ in eight classes, each 256 x 256 pixels. The builder preserves original JPEG
 bytes, labels, and image IDs. It exposes the complete collection as ``train``;
 this is not an official training partition.
 
+.. figure:: teasers/scene8_teaser.png
+   :alt: Eight original Scene8 images, one per outdoor scene class, with class names and image IDs.
+   :width: 100%
+
+   One example per class, selected by the first image ID in each class.
+   Source images are resized for display without cropping or changing labels.
+
 Usage
 -----
 

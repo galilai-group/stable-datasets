@@ -73,8 +73,8 @@ def write_main_report(results, output_dir):
         "",
         "The classifier selects its regularization on validation data, then refits on the allowed fitting/validation union. Test labels are used only for evaluation. The table uses all full-label linear runs at the three previously fixed partition seeds, 42, 43, and 44. The same method is used for both datasets.",
         "",
-        "| Dataset | Primary metric | Result |",
-        "| --- | --- | ---: |",
+        "| Dataset | Primary metric | Validation | Held-out test |",
+        "| --- | --- | ---: | ---: |",
     ]
     for dataset, title, metric, display in (
         ("scene8", "Scene8", "balanced_accuracy", "Balanced accuracy"),
@@ -91,11 +91,22 @@ def write_main_report(results, output_dir):
         if sorted(r["seed"] for r in selected) != [42, 43, 44]:
             raise ValueError("The main report requires all three declared full-label linear runs.")
         values = [r["metrics"][metric] for r in selected]
+        validation_values = [
+            next(
+                c["validation_score"]
+                for c in r["selection"]["candidates"]
+                if c["parameter"] == r["selection"]["selected_parameter"]
+            )
+            for r in selected
+        ]
+        validation_value = f"{np.mean(validation_values):.4f} +/- {np.std(validation_values, ddof=1):.4f}"
         value = f"{np.mean(values):.4f}"
         if dataset == "scene8":
             value += f" +/- {np.std(values, ddof=1):.4f}"
-        rows.append(f"| {title} | {display} | {value} |")
+        rows.append(f"| {title} | {display} | {validation_value} | {value} |")
     rows += [
+        "",
+        "Validation scores are from the selected classifier before refitting, reported as mean +/- sample SD over seeds 42, 43, and 44. Test scores are evaluated after refitting on the fitting/validation union. Validation is used for model selection and is not an independent performance estimate.",
         "",
         "Scene8 balanced accuracy averages recall across its eight classes; the displayed variation is sample SD across overlapping partitions. ISIC AP measures ranking of malignant images, and its constant-score baseline is 0.1979. Its full-label linear refits use the same 897-image pool and select the same parameter, so their predictions coincide across inner-partition seeds.",
         "",

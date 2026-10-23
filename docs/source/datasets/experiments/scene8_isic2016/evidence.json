@@ -1,7 +1,7 @@
 {
   "all_saved_metrics_recomputed": true,
   "artifacts": {
-    "REPORT.md": "64654014a5b664d50d52c4c352b074d8c9b5ff4d793339f4766075a70c3bc3db",
+    "REPORT.md": "0ca4e0aee40d829fb3ab521ff7f09ad68ab6f02e175e962cf217e14b344e6560",
     "SUPPLEMENT.md": "92a0d05ae8860f2ea637279e0e91e9c56084d612c7dc17f0ec4a210b9a9fbad8",
     "environment.txt": "34732f8421686a09ccb3d99465f56c692976286b6813b3bedaf97807b9d489be",
     "errors_seed42.csv": "6159b7697dbf02bfaf685934e2b26d799cd1a281a3e7da93f9fd2e7330512633",
@@ -16,7 +16,11 @@
     "summary.csv": "320d18009650c8b72e28b754154f4856def7c6535d42a250f47ffcdea95a72ed",
     "training_smoke.json": "d810b75eb0a403ddf2d439261b28ca17ca28b6f889e974aea2ff7f9d6fe3b014",
     "uncertainty.json": "a7445e4d6ced0656922d31c2861cf6015276729544bf5febf538e49d668373cb",
-    "validation.json": "25ca3e55ec56af53d13e7ada721bcae474f6c960131cfb1e4a153aeaca26a703"
+    "validation.json": "7de3ba5c5712fd2887ce5f77c64a6bbab8056e896c9edd4980012e4a6f56cf79"
+  },
+  "documentation_teasers": {
+    "docs/source/datasets/teasers/isic2016_teaser.png": "ff53dc6d46b6e3dedce9948ae97e9ae0071c29f741d1ae01899ade02997a2a73",
+    "docs/source/datasets/teasers/scene8_teaser.png": "f91021d607222f9fec1a0f5c889c0849d802fc37f7807e22e3366c2e5dd5a6a5"
   },
   "encoder_assets": {
     "files": {
@@ -95,11 +99,12 @@
   ],
   "matrix_sha256": "f6e7be0f5c7c0c2f67ceaddb01c6152914fd9d39df8bdff9d023be1f83ee428a",
   "presentation_scope": "Two builders, correctness tests, one full-label DINO + linear validation; extended results retained in SUPPLEMENT.md.",
-  "primary_runner_sha256": "a09a83bd64571035c0ce7d8822b2570a95ae959c00c62e63d0889ae2ffc8a6c2",
+  "primary_runner_sha256": "d01c270c2e8b530992b4d3d66edf7549bb10ef0a0242e6ee92b879443a779cb9",
   "report_revision": {
     "original_primary_execution_source": "primary_results.json:executed_source_sha256",
-    "scope": "Report wording only; no model fitting or prediction changes."
+    "scope": "Added selected-model validation metrics from original saved runs; no model fitting or prediction changes."
   },
   "summary_source_sha256": "5f3627217f66568821e837b151edc8457df49f63a1088161e039439abb6768d6",
+  "teaser_generator_sha256": "db59f06ba62094372a7f71beabd96547e8a52eb20ba37477d44437f1c5c7017d",
   "verified_conditions": 60
 }

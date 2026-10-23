@@ -51,6 +51,16 @@ images or model weights.
 
 ## Supplementary material
 
+To regenerate the dataset documentation figures from the audited local data:
+
+```console
+python -m benchmarks.transfer.generate_scene8_isic2016_teasers
+```
+
+Teasers show the first audited image IDs per class: one per Scene8 class and
+three per ISIC2016 training class. Images retain their aspect ratios without
+cropping. Figure selection does not depend on model predictions.
+
 SCENE8_ISIC2016_SUPPLEMENT.md documents the earlier extended checks and the
 separate SimCLR optimization smoke run. The report's SUPPLEMENT.md retains all
 original comparisons. These are optional supporting evidence, outside the main

@@ -17,10 +17,18 @@
   "full_repository_suite_run": false,
   "published_prediction_conditions_recomputed": 60,
   "python310_syntax_check": true,
+  "requirements_update": {
+    "date": "2026-10-22",
+    "focused_tests_passed": 44,
+    "new_documentation_warnings": 0,
+    "new_training_runs": 0,
+    "teasers": 2,
+    "validation_metrics_from_existing_runs": true
+  },
   "simplified_delivery": {
     "all_primary_predictions_exactly_match_prior_results": true,
     "main_method": "Frozen DINO ViT-S/16 + linear classifier",
-    "main_report_words": 601,
+    "main_report_words": 658,
     "new_documentation_warnings": 0,
     "primary_runs": 6,
     "supplement_preserved": true

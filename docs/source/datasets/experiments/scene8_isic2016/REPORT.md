@@ -40,10 +40,12 @@ The pipeline is: load images, extract features with the original ImageNet-pretra
 
 The classifier selects its regularization on validation data, then refits on the allowed fitting/validation union. Test labels are used only for evaluation. The table uses all full-label linear runs at the three previously fixed partition seeds, 42, 43, and 44. The same method is used for both datasets.
 
-| Dataset | Primary metric | Result |
-| --- | --- | ---: |
-| Scene8 | Balanced accuracy | 0.9650 +/- 0.0072 |
-| ISIC2016, duplicate-filtered training | Average precision (AP) | 0.6481 |
+| Dataset | Primary metric | Validation | Held-out test |
+| --- | --- | ---: | ---: |
+| Scene8 | Balanced accuracy | 0.9524 +/- 0.0067 | 0.9650 +/- 0.0072 |
+| ISIC2016, duplicate-filtered training | Average precision (AP) | 0.6065 +/- 0.0788 | 0.6481 |
+
+Validation scores are from the selected classifier before refitting, reported as mean +/- sample SD over seeds 42, 43, and 44. Test scores are evaluated after refitting on the fitting/validation union. Validation is used for model selection and is not an independent performance estimate.
 
 Scene8 balanced accuracy averages recall across its eight classes; the displayed variation is sample SD across overlapping partitions. ISIC AP measures ranking of malignant images, and its constant-score baseline is 0.1979. Its full-label linear refits use the same 897-image pool and select the same parameter, so their predictions coincide across inner-partition seeds.
 
