@@ -28,6 +28,13 @@ test splits for controlled distribution-shift experiments.
 - **Image resolution**: 32×32×3 RGB.
 - **Classes**: 10, matching CIFAR-10 exactly.
 
+Representative CIFAR-10.2 training images, one from each CIFAR-10 class:
+
+.. image:: teasers/cifar10_shifted_teaser.png
+   :align: center
+   :width: 100%
+   :alt: Representative CIFAR-10.2 images for the ten CIFAR-10 classes
+
 Data Structure
 --------------
 
