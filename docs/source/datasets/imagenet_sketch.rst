@@ -20,6 +20,8 @@ ImageNet-Sketch is a test set for out-of-domain generalization of ImageNet-1K cl
 
 The official README gives 50,000 images; the released archive has 50,889, and the builder loads all of them. Labels use the ``ImageNet1K`` label space and order, so ImageNet-1K classifiers are evaluated without remapping their outputs.
 
+Many images repeat within a class. Comparing grayscale thumbnails up to a flip or 90° rotation, 19,741 images (39%) are copies of another image in the same class: the authors' flip and rotation augmentation, or the same drawing scraped twice (e.g. with and without a watermark). Some classes are a single drawing; ``n02113712`` (miniature poodle) is one sketch repeated 50 times. Keep copies on the same side of any train/val split made from this set.
+
 .. image:: teasers/imagenet_sketch_teaser.png
    :align: center
    :width: 90%
@@ -114,6 +116,22 @@ Top-1 accuracy (%) of pretrained timm models evaluated on all 50,889 images with
      - 20.226
      - 20.238
      - -0.012
+
+**Linear probe.** ``examples/probe_imagenet_sketch.py`` trains a linear classifier on frozen ``resnet50.tv_in1k`` features (timm eval transform, no augmentation). It holds out about 20% of each class for validation, keeping near-duplicates together so no drawing appears in both splits. The weight decay is chosen on an inner split of the training rows. This gives 41,227 training and 9,662 validation images; the validation images cover 990 classes, since 10 classes consist of a single repeated drawing and stay in training.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 50 25 25
+
+   * - Classifier on frozen ``resnet50.tv_in1k`` features
+     - Train top-1
+     - Val top-1
+   * - ImageNet-1K head (not trained on sketches)
+     - 23.89
+     - 24.95
+   * - Linear probe trained on the train split
+     - 97.12
+     - 44.11
 
 Related Datasets
 ----------------
