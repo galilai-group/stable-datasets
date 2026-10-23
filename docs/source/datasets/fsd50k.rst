@@ -111,8 +111,46 @@ Usage Example
     # All splits at once
     splits = FSD50K(split=None)   # {"train", "validation", "test"}
 
-Evaluation follows the paper: mean average precision (mAP) and d' on ``test``, with model selection on
-``validation``.
+Evaluation follows the paper: mean average precision (mAP), d' and lwlrap on ``test``, with model selection
+on ``validation``.
+
+Validation: supervised VGG-like baseline (Fonseca et al., 2022)
+---------------------------------------------------------------
+
+``examples/fsd50k_supervised.py`` reproduces the VGG-like row of the paper's baseline table (Table VI) on
+top of the ``22khz`` config: 96-band log-mel patches of 1 s, a 0.27M-weight VGG-like network with 200
+sigmoid outputs trained from scratch with binary cross-entropy, model selection on ``validation`` and a
+single evaluation on ``test``. Clip scores are the mean of the patch outputs.
+
+.. list-table:: Eval set (``test``), seeds 0-2, mean ± std
+   :header-rows: 1
+   :widths: 40 30 30
+
+   * - Metric
+     - This example
+     - Paper
+   * - mAP
+     - 0.424 ± 0.005
+     - 0.434 ± 0.002
+   * - d'
+     - 2.243 ± 0.015
+     - 2.167 ± 0.011
+   * - lwlrap (averaged over classes)
+     - 0.521 ± 0.008
+     - 0.514 ± 0.003
+
+The paper's baseline code is no longer online, so a few details follow the text and Keras defaults; the
+largest is that the checkpoint is selected on validation mAP instead of TensorFlow's PR-AUC. The paper
+averages every metric over classes, including lwlrap. The DCASE definition of lwlrap, which weighs every
+(clip, label) pair equally, gives 0.618 ± 0.006 on the same predictions, because frequent classes are
+easier; the script reports both (``lwlrap_class`` and ``lwlrap``). Per-seed metrics, the full protocol and
+versions are in ``fsd50k_supervised_results.json``. One seed takes 1.5-2.7 h on an RTX 2080 Ti
+(about 4.6 min per epoch, early stopping after 21-35 epochs).
+
+.. code-block:: bash
+
+    python examples/fsd50k_supervised.py features --out runs/fsd50k
+    python examples/fsd50k_supervised.py train --features runs/fsd50k --out runs/fsd50k/vgg_seed0 --seed 0
 
 References
 ----------
