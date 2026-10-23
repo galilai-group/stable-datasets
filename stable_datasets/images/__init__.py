@@ -27,6 +27,7 @@ from .fgvc_aircraft import FGVCAircraft
 from .flowers102 import Flowers102
 from .food101 import Food101
 from .galaxy10 import Galaxy10Decal
+from .grocery_store import GroceryStore
 from .hasy_v2 import HASYv2
 from .imagenet_1k import ImageNet1K
 from .imagenet_10 import Imagenette
@@ -38,6 +39,7 @@ from .not_mnist import NotMNIST
 
 # from .mnist import MNIST
 # from .places365_small import Places365Small
+from .plantdoc import PlantDoc
 from .rock_paper_scissor import RockPaperScissor
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
@@ -73,6 +75,7 @@ __all__ = [
     "Flowers102",
     "Galaxy10Decal",
     "Food101",
+    "GroceryStore",
     "HASYv2",
     "ImageNet1K",
     "ImageNet100",
@@ -81,6 +84,7 @@ __all__ = [
     "Linnaeus5",
     "MedMNIST",
     "NotMNIST",
+    "PlantDoc",
     "RockPaperScissor",
     "Shapes3D",
     "SmallNORB",

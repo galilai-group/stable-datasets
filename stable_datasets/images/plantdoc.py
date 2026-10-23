@@ -1,0 +1,117 @@
+import io
+import zipfile
+
+from PIL import Image as PILImage
+
+from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
+from stable_datasets.schema import Image as ImageFeature
+from stable_datasets.utils import BaseDatasetBuilder
+
+
+# Pinned to a commit so the split folders and images can't change under us.
+_ARCHIVE = DownloadInfo(
+    url="https://github.com/pratikkayal/PlantDoc-Dataset/archive/5467f6012d78d1c446145d5f582da6096f852ae8.zip",
+    filename="PlantDoc-Dataset.zip",
+)
+
+# Class folder names of the cropped classification release, in sorted order.
+_CLASSES = [
+    "Apple Scab Leaf",
+    "Apple leaf",
+    "Apple rust leaf",
+    "Bell_pepper leaf",
+    "Bell_pepper leaf spot",
+    "Blueberry leaf",
+    "Cherry leaf",
+    "Corn Gray leaf spot",
+    "Corn leaf blight",
+    "Corn rust leaf",
+    "Peach leaf",
+    "Potato leaf early blight",
+    "Potato leaf late blight",
+    "Raspberry leaf",
+    "Soyabean leaf",
+    "Squash Powdery mildew leaf",
+    "Strawberry leaf",
+    "Tomato Early blight leaf",
+    "Tomato Septoria leaf spot",
+    "Tomato leaf",
+    "Tomato leaf bacterial spot",
+    "Tomato leaf late blight",
+    "Tomato leaf mosaic virus",
+    "Tomato leaf yellow virus",
+    "Tomato mold leaf",
+    "Tomato two spotted spider mites leaf",
+    "grape leaf",
+    "grape leaf black rot",
+]
+
+
+class PlantDoc(BaseDatasetBuilder):
+    """PlantDoc: plant disease classification from leaf images taken in the wild.
+
+    This is the cropped classification release of PlantDoc: 2,578 leaf images of 13 plant
+    species, labeled as either a healthy leaf of a species or one of its diseases (28
+    classes). Unlike lab datasets such as PlantVillage, the images were collected from the
+    internet and show leaves in natural conditions, with cluttered backgrounds.
+
+    The official split has 2,342 train and 236 test images. "Tomato two spotted spider mites
+    leaf" only has 2 train images and does not appear in the test split.
+    """
+
+    VERSION = Version("1.0.0")
+
+    SOURCE = DatasetSource(
+        homepage="https://github.com/pratikkayal/PlantDoc-Dataset",
+        assets={
+            "train": _ARCHIVE,
+            "test": _ARCHIVE,
+        },
+        citation="""@inproceedings{singh2020plantdoc,
+                         title={PlantDoc: A Dataset for Visual Plant Disease Detection},
+                         author={Singh, Davinder and Jain, Naman and Jain, Pranjali and Kayal, Pratik and
+                                 Kumawat, Sudhakar and Batra, Nipun},
+                         booktitle={Proceedings of the 7th ACM IKDD CoDS and 25th COMAD},
+                         pages={249--253},
+                         year={2020},
+                         doi={10.1145/3371158.3371196}}""",
+        license="CC BY 4.0",
+    )
+
+    def _info(self):
+        return DatasetInfo(
+            description="""PlantDoc (cropped classification release) contains 2,578 leaf images of 13 plant
+                species collected from the internet, labeled with 28 classes covering healthy leaves and
+                plant diseases.""",
+            features=Features(
+                {
+                    "image": ImageFeature(),
+                    "label": ClassLabel(names=_CLASSES),
+                }
+            ),
+            supervised_keys=("image", "label"),
+            homepage=self.SOURCE["homepage"],
+            license=self.SOURCE["license"],
+            citation=self.SOURCE["citation"],
+        )
+
+    def _generate_examples(self, data_path, split):
+        label_feature = self.info.features["label"]
+        with zipfile.ZipFile(data_path, "r") as archive:
+            for name in sorted(archive.namelist()):
+                # Images live at "<repo>-<commit>/<split>/<class>/<file>".
+                parts = name.split("/")
+                if len(parts) != 4 or parts[1] != split or not parts[3]:
+                    continue
+                _, _, class_name, file_name = parts
+
+                image = archive.read(name)
+                with PILImage.open(io.BytesIO(image)) as img:
+                    # A few files are PNG, MPO, CMYK or grayscale even when named .jpg.
+                    if img.format != "JPEG" or img.mode != "RGB":
+                        image = img.convert("RGB")
+
+                yield (
+                    f"{split}/{class_name}/{file_name}",
+                    {"image": image, "label": label_feature.str2int(class_name)},
+                )

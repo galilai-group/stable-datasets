@@ -71,6 +71,8 @@ Available Datasets
    face_pointing
    rock_paper_scissor
    linnaeus5
+   grocery_store
+   plantdoc
 
 .. toctree::
    :maxdepth: 1
