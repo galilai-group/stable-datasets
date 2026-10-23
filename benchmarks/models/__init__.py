@@ -181,6 +181,7 @@ def create_eval_callbacks(module: spt.Module, ds_config, embed_dim: int) -> list
                 "top5": torchmetrics.classification.MulticlassAccuracy(num_classes, top_k=min(5, num_classes)),
             },
             input_dim=embed_dim,
+            num_classes=num_classes,
             k=10,
         )
         callbacks.append(knn_probe)

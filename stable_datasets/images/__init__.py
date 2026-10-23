@@ -4,6 +4,7 @@ from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
 from .awa2 import AWA2
 from .beans import Beans
+from .belgium_tsc import BelgiumTSC
 from .cars3d import Cars3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
@@ -39,7 +40,6 @@ from .not_mnist import NotMNIST
 
 # from .mnist import MNIST
 # from .places365_small import Places365Small
-from .rendered_sst2 import RenderedSST2
 from .rock_paper_scissor import RockPaperScissor
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
@@ -54,6 +54,7 @@ __all__ = [
     "ArabicDigits",
     "AWA2",
     "Beans",
+    "BelgiumTSC",
     "Cars196",
     "Cars3D",
     "CIFAR10",
@@ -84,7 +85,6 @@ __all__ = [
     "Linnaeus5",
     "MedMNIST",
     "NotMNIST",
-    "RenderedSST2",
     "RockPaperScissor",
     "Shapes3D",
     "SmallNORB",
