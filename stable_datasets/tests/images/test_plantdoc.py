@@ -14,6 +14,15 @@ def _image_bytes(mode, fmt):
     return buff.getvalue()
 
 
+def _rotated_jpeg_bytes():
+    # An 8x4 JPEG whose EXIF orientation (6) says it should be shown rotated by 90 degrees.
+    exif = Image.Exif()
+    exif[0x0112] = 6
+    buff = io.BytesIO()
+    Image.new("RGB", (8, 4)).save(buff, format="JPEG", exif=exif.tobytes())
+    return buff.getvalue()
+
+
 def _create_plantdoc_zip(path):
     # Same layout as the GitHub archive: "<repo>-<commit>/<split>/<class>/<file>".
     root = "PlantDoc-Dataset-0123abc/"
@@ -24,6 +33,7 @@ def _create_plantdoc_zip(path):
         "train/Tomato leaf/tomato_1.jpg": _image_bytes("CMYK", "JPEG"),
         "test/Corn rust leaf/corn_1.jpg": _image_bytes("L", "JPEG"),
         "test/grape leaf/grape_1.jpg": _image_bytes("RGB", "JPEG"),
+        "test/grape leaf/grape_2.jpg": _rotated_jpeg_bytes(),
     }
     folders = {"train", "test"} | {name.rsplit("/", 1)[0] for name in images}
     with zipfile.ZipFile(path, "w") as archive:
@@ -45,17 +55,20 @@ def test_plantdoc_local_archive(tmp_path, monkeypatch):
     monkeypatch.setattr(utils, "bulk_download", _fake_bulk_download)
     ds = PlantDoc(processed_cache_dir=str(tmp_path / "processed"), download_dir=str(tmp_path / "downloads"))
 
-    assert {split: len(ds[split]) for split in ds} == {"train": 3, "test": 2}
+    assert {split: len(ds[split]) for split in ds} == {"train": 3, "test": 3}
 
     label = ds["train"].features["label"]
     assert sorted(label.int2str(ex["label"]) for ex in ds["train"]) == ["Apple leaf", "Apple leaf", "Tomato leaf"]
-    assert sorted(label.int2str(ex["label"]) for ex in ds["test"]) == ["Corn rust leaf", "grape leaf"]
+    assert sorted(label.int2str(ex["label"]) for ex in ds["test"]) == ["Corn rust leaf", "grape leaf", "grape leaf"]
 
     # Every image comes back as RGB, whatever its format and color mode in the archive.
     for split in ds:
         for ex in ds[split]:
             assert isinstance(ex["image"], Image.Image)
             assert ex["image"].mode == "RGB"
+
+    # The photo with an EXIF rotation is stored upright: 8x4 becomes 4x8.
+    assert sorted(ex["image"].size for ex in ds["test"]) == [(4, 8), (8, 8), (8, 8)]
 
 
 def test_plantdoc_dataset():
@@ -88,5 +101,10 @@ def test_plantdoc_dataset():
     assert train_labels.count(mites) == 2
     assert set(range(28)) - set(test_labels) == {mites}
 
-    for i in range(0, len(train), 20):
-        assert train[i]["image"].mode == "RGB", f"Image {i} has mode {train[i]['image'].mode}."
+    # Every stored image is RGB with no EXIF rotation left. Reading only the file headers keeps
+    # this fast, so all images are checked, including the ones the builder converted.
+    for split_ds in (train, test):
+        for i, row in enumerate(split_ds.set_decode(False)):
+            with Image.open(io.BytesIO(row["image"])) as img:
+                assert img.mode == "RGB", f"Image {i} has mode {img.mode}."
+                assert img.getexif().get(0x0112, 1) <= 1, f"Image {i} still has an EXIF rotation."

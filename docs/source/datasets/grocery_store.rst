@@ -76,7 +76,7 @@ Notes
 -----
 
 - The validation split only has images of 60 of the 81 fine-grained classes (37 of the 43 coarse-grained ones).
-- The README of the dataset repository mentions 42 coarse-grained classes and a validation set of 292 images from 59 classes. The split files at the commit used here (``classes.csv``, ``val.txt``) have 43 coarse-grained classes and 296 validation images from 60 classes; the builder follows the split files.
+- The README of the dataset repository mentions 42 coarse-grained classes and a validation set of 292 images from 59 classes. The files at the commit used here (``classes.csv`` and ``val.txt``) have 43 coarse-grained classes and 296 validation images from 60 classes; the builder follows these files.
 - The repository also has an iconic image and a product description for each class. These are not part of this builder, which only loads the natural images and their labels.
 
 References

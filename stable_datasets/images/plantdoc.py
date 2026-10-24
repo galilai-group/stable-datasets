@@ -2,6 +2,7 @@ import io
 import zipfile
 
 from PIL import Image as PILImage
+from PIL import ImageOps
 
 from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Version
 from stable_datasets.schema import Image as ImageFeature
@@ -14,7 +15,10 @@ _ARCHIVE = DownloadInfo(
     filename="PlantDoc-Dataset.zip",
 )
 
-# Class folder names of the cropped classification release, in sorted order.
+# EXIF tag that stores how a photo should be rotated for display.
+_EXIF_ORIENTATION = 0x0112
+
+# Class folder names of the dataset repository, in sorted order.
 _CLASSES = [
     "Apple Scab Leaf",
     "Apple leaf",
@@ -50,10 +54,12 @@ _CLASSES = [
 class PlantDoc(BaseDatasetBuilder):
     """PlantDoc: plant disease classification from leaf images taken in the wild.
 
-    This is the cropped classification release of PlantDoc: 2,578 leaf images of 13 plant
-    species, labeled as either a healthy leaf of a species or one of its diseases (28
-    classes). Unlike lab datasets such as PlantVillage, the images were collected from the
-    internet and show leaves in natural conditions, with cluttered backgrounds.
+    The classification data of the PlantDoc repository: 2,578 images of 13 plant species,
+    one label per image, in 28 classes that are either a healthy leaf of a species or one
+    of its diseases or pests. Unlike lab datasets such as PlantVillage, the images were
+    collected from the internet and mostly show leaves in natural conditions, with cluttered
+    backgrounds. The repository README calls this data Cropped-PlantDoc, but the images are
+    the whole photos, not the 9,216 bounding-box crops that the paper calls Cropped-PlantDoc.
 
     The official split has 2,342 train and 236 test images. "Tomato two spotted spider mites
     leaf" only has 2 train images and does not appear in the test split.
@@ -80,9 +86,8 @@ class PlantDoc(BaseDatasetBuilder):
 
     def _info(self):
         return DatasetInfo(
-            description="""PlantDoc (cropped classification release) contains 2,578 leaf images of 13 plant
-                species collected from the internet, labeled with 28 classes covering healthy leaves and
-                plant diseases.""",
+            description="""PlantDoc contains 2,578 images of plant leaves from 13 species collected from the
+                internet, labeled with 28 classes covering healthy leaves and plant diseases.""",
             features=Features(
                 {
                     "image": ImageFeature(),
@@ -107,9 +112,15 @@ class PlantDoc(BaseDatasetBuilder):
 
                 image = archive.read(name)
                 with PILImage.open(io.BytesIO(image)) as img:
-                    # A few files are PNG, MPO, CMYK or grayscale even when named .jpg.
                     if img.format != "JPEG" or img.mode != "RGB":
-                        image = img.convert("RGB")
+                        # A few files are PNG, MPO, CMYK or grayscale even when named .jpg.
+                        image = ImageOps.exif_transpose(img).convert("RGB")
+                    elif img.getexif().get(_EXIF_ORIENTATION, 1) > 1:
+                        # Some photos only store their rotation in EXIF, which decoding ignores,
+                        # so save them upright. They are large photos, so keep them as JPEG.
+                        buff = io.BytesIO()
+                        ImageOps.exif_transpose(img).save(buff, format="JPEG", quality=95)
+                        image = buff.getvalue()
 
                 yield (
                     f"{split}/{class_name}/{file_name}",

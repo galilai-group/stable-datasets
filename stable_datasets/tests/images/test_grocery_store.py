@@ -1,3 +1,4 @@
+import csv
 import io
 import zipfile
 
@@ -103,6 +104,15 @@ def test_grocery_store_dataset():
     coarse_names = train.features["coarse_label"].names
     assert (names.index("Granny-Smith"), coarse_names.index("Apple")) in pairs
     assert (names.index("Oatly-Oat-Milk"), coarse_names.index("Oat-Milk")) in pairs
+
+    # The class names in the builder are copied from dataset/classes.csv, so compare them with it.
+    with zipfile.ZipFile(utils.download(GroceryStore.SOURCE["assets"]["train"])) as archive:
+        csv_name = next(n for n in archive.namelist() if n.endswith("dataset/classes.csv"))
+        rows = list(csv.DictReader(io.StringIO(archive.read(csv_name).decode("utf-8"))))
+    fine_from_csv = {int(r["Class ID (int)"]): r["Class Name (str)"] for r in rows}
+    coarse_from_csv = {int(r["Coarse Class ID (int)"]): r["Coarse Class Name (str)"] for r in rows}
+    assert names == [fine_from_csv[i] for i in range(81)]
+    assert coarse_names == [coarse_from_csv[i] for i in range(43)]
 
     # The validation split only has images for 60 of the 81 classes.
     assert len(set(val.table.column("label").to_pylist())) == 60

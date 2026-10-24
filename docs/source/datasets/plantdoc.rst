@@ -12,7 +12,7 @@ PlantDoc
 Overview
 --------
 
-PlantDoc is a plant disease dataset built from images collected on the internet instead of in a lab, so the leaves are photographed in natural conditions, often with cluttered backgrounds. This builder loads Cropped-PlantDoc, the classification version of the dataset released with the paper: 2,578 images of 13 plant species in 28 classes. Each class is either a healthy leaf or a disease of one species, e.g. *Tomato leaf* and *Tomato leaf late blight*.
+PlantDoc is a plant disease dataset built from images collected on the internet instead of in a lab, so the leaves are mostly photographed in natural conditions, often with cluttered backgrounds. This builder loads the classification data of the PlantDoc repository: 2,578 images of 13 plant species, one label per image, in 28 classes. Each class is either a healthy leaf or a disease or pest of one species, e.g. *Tomato leaf* and *Tomato leaf late blight*.
 
 - **Train**: 2,342 images
 - **Test**: 236 images
@@ -69,9 +69,11 @@ Usage Example
 Notes
 -----
 
+- The repository README calls this data Cropped-PlantDoc, but the images are the whole photos. The paper's Cropped-PlantDoc is a different set of 9,216 leaf crops cut out along the annotated bounding boxes, so its classification results are not comparable with this dataset.
 - *Tomato two spotted spider mites leaf* only has 2 training images and none in the test split, so the test split covers 27 of the 28 classes.
-- 11 of the 236 test images are byte-identical to a training image, and 8 of these pairs have different labels in the two splits (for example *Potato leaf early blight* in train and *Potato leaf late blight* in test). The builder keeps the official split as released.
-- 13 training images are PNG, MPO, CMYK or grayscale files, most of them with a ``.jpg`` name. The builder converts them to RGB so every example has 3 channels.
+- At least 14 of the 236 test images also appear in the training split (11 byte-identical files and 3 re-encoded copies), and 9 of these pairs have different labels in the two splits (for example *Potato leaf early blight* in train and *Potato leaf late blight* in test). The training split also has a byte-identical pair with two different labels. The builder keeps the official split as released.
+- 13 training images are PNG, MPO, CMYK or grayscale files, most of them with a ``.jpg`` name. The builder converts them to RGB (stored as PNG) so every example has 3 channels.
+- 29 photos store their rotation only in EXIF metadata, which image decoding ignores. The builder saves them upright, re-encoded as JPEG.
 - The paper reports 2,598 data points in total; the ``train`` and ``test`` folders of the repository contain 2,578 images.
 
 References
