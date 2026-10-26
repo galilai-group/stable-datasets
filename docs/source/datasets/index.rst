@@ -71,12 +71,27 @@ Available Datasets
    face_pointing
    rock_paper_scissor
    linnaeus5
+   svhn
+   not_mnist
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Disentanglement Datasets
+
+   dsprites
+   dsprites_color
+   dsprites_noise
+   dsprites_scream
+   shapes3d
+   cars3d
+   small_norb
 
 .. toctree::
    :maxdepth: 1
    :caption: Video Datasets
 
    something_something_v2
+   clevrer
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.

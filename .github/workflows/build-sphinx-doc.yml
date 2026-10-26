@@ -23,9 +23,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          # The PR check diffs GitHub's merge commit against its first parent (main).
-          fetch-depth: 2
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -41,20 +38,24 @@ jobs:
       #   run: |
       #     find docs/source -type f -name "*.rst" ! -name "index.rst" -exec rm -f {} \;
 
+      # The excluded modules are legacy load() scripts that import helpers which no longer
+      # exist, so autodoc can't import them. Drop an entry once its module is ported or deleted.
       - name: Generate .rst files from package
         run: |
-          sphinx-apidoc -o docs/source stable_datasets
+          sphinx-apidoc -o docs/source stable_datasets \
+            stable_datasets/timeseries/birdvox_70k.py \
+            stable_datasets/timeseries/dcase_2019_task4.py \
+            stable_datasets/timeseries/esc.py \
+            stable_datasets/timeseries/irmas.py \
+            stable_datasets/timeseries/TUTacousticscenes2017.py \
+            stable_datasets/timeseries/UCR_multivariate.py \
+            stable_datasets/timeseries/UCR_univariate.py
 
+      # -W fails the build on any warning; --keep-going reports them all before failing.
       - name: Build Sphinx HTML documentation
         run: |
           cd docs
-          sphinx-build -b dirhtml source/ build/ -w ../docs-warnings.txt
-
-      # main still has older warnings, so PRs only fail on warnings from files they changed.
-      # Once main builds cleanly, add -W to sphinx-build above and drop this step.
-      - name: Fail on docs warnings from files this PR changed
-        if: github.event_name == 'pull_request'
-        run: python .github/scripts/check_docs_warnings.py docs-warnings.txt --base HEAD^1
+          sphinx-build -W --keep-going -b dirhtml source/ build/
 
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
