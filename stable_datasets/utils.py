@@ -56,6 +56,22 @@ def _default_processed_cache_dir() -> Path:
     return Path(os.path.expanduser(_get_cache_dir())) / "processed"
 
 
+class HostUnreachableError(RuntimeError):
+    """Every candidate URL failed with a network error: a timeout, DNS failure, refused connection or 5xx/429 reply.
+
+    Unlike a 404 or a checksum mismatch, this usually means the host is down, not that the
+    dataset's URL or code is wrong.
+    """
+
+
+def _is_network_error(error: Exception) -> bool:
+    """Whether *error* means the host couldn't be reached, not that the URL or file is wrong."""
+    if isinstance(error, requests.HTTPError):
+        status = error.response.status_code if error.response is not None else None
+        return status is not None and (status >= 500 or status == 429)
+    return isinstance(error, (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError))
+
+
 class BaseDatasetBuilder:
     """
     Base class for stable-datasets builders.
@@ -604,102 +620,6 @@ def bulk_download(
     return results
 
 
-# Seconds to wait before each retry of a URL that failed with a network error. A retry resumes
-# from the partial file, so a dropped connection doesn't restart a large download.
-DOWNLOAD_RETRY_WAITS = (10, 30, 60)
-
-
-class HostUnreachableError(RuntimeError):
-    """Every candidate URL failed with a network error: a timeout, DNS failure, refused connection or 5xx/429 reply.
-
-    Unlike a 404 or a checksum mismatch, this usually means the host is down, not that the
-    dataset's URL or code is wrong.
-    """
-
-
-def _is_network_error(error: Exception) -> bool:
-    """Whether *error* means the host couldn't be reached (worth retrying), not that the URL or file is wrong."""
-    if isinstance(error, requests.HTTPError):
-        status = error.response.status_code if error.response is not None else None
-        return status is not None and (status >= 500 or status == 429)
-    return isinstance(error, (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError))
-
-
-def _fetch(url: str, tmp: Path, dest_name: str, progress_bar: bool, _progress_dict, _task_id) -> int:
-    """Download *url* into *tmp*, resuming from a partial file, and return the expected total size."""
-    total_size = 0
-    with requests.Session() as session:
-        session.headers.update({"User-Agent": "stable-datasets"})
-
-        # Resume from partial download if .tmp exists
-        existing_size = tmp.stat().st_size if tmp.exists() else 0
-        req_headers = {}
-        if existing_size > 0:
-            req_headers["Range"] = f"bytes={existing_size}-"
-            logging.info(f"Resuming download from byte {existing_size}: {url}")
-        else:
-            logging.info(f"Downloading: {url}")
-
-        with session.get(
-            url,
-            stream=True,
-            allow_redirects=True,
-            timeout=(10, 300),
-            headers=req_headers,
-        ) as response:
-            response.raise_for_status()
-
-            if response.status_code == 206:
-                mode = "ab"
-                remaining = int(response.headers.get("content-length", 0) or 0)
-                total_size = existing_size + remaining
-            else:
-                mode = "wb"
-                existing_size = 0
-                total_size = int(response.headers.get("content-length", 0) or 0)
-
-            logging.info(f"Total size: {total_size} bytes")
-
-            downloaded = existing_size
-            with (
-                open(tmp, mode) as f,
-                tqdm(
-                    desc=dest_name,
-                    total=total_size or None,
-                    initial=existing_size,
-                    unit="B",
-                    unit_scale=True,
-                    unit_divisor=1024,
-                    disable=not progress_bar,
-                ) as bar,
-            ):
-                for chunk in response.iter_content(chunk_size=8192):
-                    if not chunk:
-                        continue
-                    f.write(chunk)
-                    downloaded += len(chunk)
-                    bar.update(len(chunk))
-
-                    if _progress_dict is not None and _task_id is not None:
-                        _progress_dict[_task_id] = {
-                            "progress": downloaded,
-                            "total": total_size,
-                        }
-    return total_size
-
-
-def _fetch_with_retries(url: str, tmp: Path, dest_name: str, progress_bar: bool, _progress_dict, _task_id) -> int:
-    """Run :func:`_fetch`, retrying network errors after each wait in ``DOWNLOAD_RETRY_WAITS``."""
-    for wait in (*DOWNLOAD_RETRY_WAITS, None):
-        try:
-            return _fetch(url, tmp, dest_name, progress_bar, _progress_dict, _task_id)
-        except Exception as error:
-            if wait is None or not _is_network_error(error):
-                raise
-            logging.warning(f"Network error downloading {url}: {error}. Retrying in {wait}s.")
-            time.sleep(wait)
-
-
 def download(
     url: str | DownloadInfo,
     dest_folder: str | Path | None = None,
@@ -757,9 +677,63 @@ def download(
             total_size = 0
             for candidate_url in candidate_urls:
                 try:
-                    total_size = _fetch_with_retries(
-                        candidate_url, tmp, dest.name, progress_bar, _progress_dict, _task_id
-                    )
+                    with requests.Session() as session:
+                        session.headers.update({"User-Agent": "stable-datasets"})
+
+                        # Resume from partial download if .tmp exists
+                        existing_size = tmp.stat().st_size if tmp.exists() else 0
+                        req_headers = {}
+                        if existing_size > 0:
+                            req_headers["Range"] = f"bytes={existing_size}-"
+                            logging.info(f"Resuming download from byte {existing_size}: {candidate_url}")
+                        else:
+                            logging.info(f"Downloading: {candidate_url}")
+
+                        with session.get(
+                            candidate_url,
+                            stream=True,
+                            allow_redirects=True,
+                            timeout=(10, 300),
+                            headers=req_headers,
+                        ) as response:
+                            response.raise_for_status()
+
+                            if response.status_code == 206:
+                                mode = "ab"
+                                remaining = int(response.headers.get("content-length", 0) or 0)
+                                total_size = existing_size + remaining
+                            else:
+                                mode = "wb"
+                                existing_size = 0
+                                total_size = int(response.headers.get("content-length", 0) or 0)
+
+                            logging.info(f"Total size: {total_size} bytes")
+
+                            downloaded = existing_size
+                            with (
+                                open(tmp, mode) as f,
+                                tqdm(
+                                    desc=dest.name,
+                                    total=total_size or None,
+                                    initial=existing_size,
+                                    unit="B",
+                                    unit_scale=True,
+                                    unit_divisor=1024,
+                                    disable=not progress_bar,
+                                ) as bar,
+                            ):
+                                for chunk in response.iter_content(chunk_size=8192):
+                                    if not chunk:
+                                        continue
+                                    f.write(chunk)
+                                    downloaded += len(chunk)
+                                    bar.update(len(chunk))
+
+                                    if _progress_dict is not None and _task_id is not None:
+                                        _progress_dict[_task_id] = {
+                                            "progress": downloaded,
+                                            "total": total_size,
+                                        }
                     break
                 except Exception as candidate_error:
                     errors.append((candidate_url, candidate_error))

@@ -34,7 +34,7 @@ Let builders download to the default cache, which CI clears after each test, or 
 On every pull request:
 
 - **pre-commit**: formatting and linting with ruff (including docstrings on dataset builders) and a 1 MB limit on added files.
-- **Testing**: the tests for the datasets you changed. If you change shared code (anything else under `stable_datasets/`, or `pyproject.toml`), the whole suite runs instead. Tests marked `large` are skipped. Downloads retry network errors a few times. In the whole-suite run, a test whose dataset host still can't be reached is reported as skipped rather than failed, since it says nothing about your change; for the datasets you changed, it fails, so re-run the check once the host is back.
+- **Testing**: the tests for the datasets you changed. If you change shared code (anything else under `stable_datasets/`, or `pyproject.toml`), the whole suite runs instead. Tests marked `large` are skipped. In the whole-suite run, a test whose dataset host can't be reached is reported as skipped rather than failed, since it says nothing about your change; for the datasets you changed, it fails, so re-run the check once the host is back.
 - **Docs**: the docs are built, and the check fails on any Sphinx warning.
 - **Dataset checklist**: each new builder has a test file and a docs page, and the page is listed in the index.
 
