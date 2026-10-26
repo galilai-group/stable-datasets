@@ -213,15 +213,10 @@ class StableDataset:
     def __getitems__(self, indices: list[int]) -> list[dict]:
         """Batched sample loading (called by PyTorch DataLoader).
 
-        Policy is backend-sensitive. ArrowBackend's ``slice(i, 1)`` on
-        an mmap'd table is zero-copy and unbeatable per-row, while its
-        ``take`` rebuilds chunk offsets -- so for binary columns the
-        per-row loop wins. LanceBackend inverts this: every call
-        crosses the Python<->Rust async boundary at fixed cost, so the
-        batched ``take`` path amortizes it and the per-row loop is
-        catastrophic. Backends advertise their preference via
-        ``prefer_batched_take``; when absent it defaults to False
-        (Arrow's shape).
+        Execution strategy depends on backend capabilities:
+        use direct batched rows when available, otherwise fall back
+        to per-row reads for binary-heavy data or ``take`` for
+        table-friendly backends.
         """
         prefer_batched = getattr(self._backend, "prefer_batched_take", False)
         idx_array = np.asarray(indices, dtype=np.int64)
@@ -240,7 +235,7 @@ class StableDataset:
 
         if self._has_binary_cols and not prefer_batched:
             rows = []
-            for sample_idx, physical in zip(sample_indices, physical_indices.tolist(), strict=False):
+            for physical in physical_indices.tolist():
                 rows.append(self._formatter.format_row(self._backend.get_row(int(physical))))
             rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
             if self._transform is not None:

@@ -85,9 +85,8 @@ class LanceVideoFramesBackend:
     logical dataset exposes deterministic frame windows as samples.
     """
 
-    # This backend supports a direct batched row path (get_rows) used by
-    # StableDataset.__getitems__, so batched loading amortizes storage calls
-    # without forcing expensive Arrow table materialization of video tensors.
+    # StableDataset can use get_rows for batched access and avoid
+    # materializing decoded video tensors through Arrow tables.
     prefer_batched_take: bool = True
 
     def __init__(
