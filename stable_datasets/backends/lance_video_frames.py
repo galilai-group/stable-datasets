@@ -85,7 +85,7 @@ class LanceVideoFramesBackend:
     logical dataset exposes deterministic frame windows as samples.
     """
 
-    prefer_batched_take: bool = False
+    prefer_batched_take: bool = True
 
     def __init__(
         self,
@@ -123,6 +123,7 @@ class LanceVideoFramesBackend:
         if self._seg_vid.size == 0:
             raise ValueError(f"no valid segments: every video has fewer than span={self._span} frames")
         self._ds = None
+        self._iter_batch_size = max(1, self._batch_readahead * 32)
 
     @property
     def _dataset(self):
@@ -177,36 +178,10 @@ class LanceVideoFramesBackend:
         }
 
     def get_row(self, idx: int) -> dict:
-        if idx < 0:
-            idx += self.num_rows
-        if idx < 0 or idx >= self.num_rows:
-            raise IndexError(idx)
-
-        vi = int(self._seg_vid[idx])
-        start = int(self._seg_start[idx])
-        video = self._videos[vi]
-        frame_indices = [start + j * self._stride for j in range(self.window_length)]
-        row0 = int(video["start_row"])
-        rows = [row0 + frame_idx for frame_idx in frame_indices]
-
-        blobs = self._dataset.take(rows, columns=["bytes"]).column("bytes").to_pylist()
-        frames = self._decode_blobs(blobs, int(video["H"]), int(video["W"]))
-
-        sample = {
-            "video": frames,
-            "video_idx": vi,
-            "filename": video["path"],
-            "start_frame": start,
-            "frame_indices": frame_indices,
-            "sample_idx": int(idx),
-        }
-        metadata = video.get("metadata")
-        if isinstance(metadata, dict):
-            sample.update(metadata)
-        return sample
+        return self._rows_for_indices([idx])[0]
 
     def take(self, indices: np.ndarray | list[int]) -> pa.Table:
-        rows = [self.get_row(int(i)) for i in list(indices)]
+        rows = self._rows_for_indices(indices)
         serializable = []
         for row in rows:
             converted = dict(row)
@@ -230,8 +205,9 @@ class LanceVideoFramesBackend:
         if shuffle:
             rng = np.random.default_rng(seed)
             rng.shuffle(indices)
-        for idx in indices:
-            yield from self.take([int(idx)]).to_batches()
+        for start in range(0, len(indices), self._iter_batch_size):
+            chunk = indices[start : start + self._iter_batch_size]
+            yield from self.take(chunk).to_batches(max_chunksize=self._iter_batch_size)
 
     def __getstate__(self) -> dict:
         return {
@@ -250,6 +226,69 @@ class LanceVideoFramesBackend:
             hop_size=state.get("hop_size", 1),
             batch_readahead=state.get("batch_readahead", 8),
         )
+
+    def _normalize_index(self, idx: int) -> int:
+        idx = int(idx)
+        if idx < 0:
+            idx += self.num_rows
+        if idx < 0 or idx >= self.num_rows:
+            raise IndexError(idx)
+        return idx
+
+    def _rows_for_indices(self, indices: np.ndarray | list[int]) -> list[dict]:
+        if isinstance(indices, np.ndarray):
+            requested = [int(i) for i in indices.tolist()]
+        else:
+            requested = [int(i) for i in indices]
+        if not requested:
+            return []
+
+        normalized = [self._normalize_index(i) for i in requested]
+        requests_by_video: dict[int, list[tuple[int, int, list[int], list[int]]]] = {}
+
+        for out_pos, idx in enumerate(normalized):
+            vi = int(self._seg_vid[idx])
+            start = int(self._seg_start[idx])
+            frame_indices = [start + j * self._stride for j in range(self.window_length)]
+            row0 = int(self._videos[vi]["start_row"])
+            row_ids = [row0 + frame_idx for frame_idx in frame_indices]
+            requests_by_video.setdefault(vi, []).append((out_pos, idx, frame_indices, row_ids))
+
+        out: list[dict | None] = [None] * len(normalized)
+        for vi, reqs in requests_by_video.items():
+            ordered_unique_rows: list[int] = []
+            seen_rows: set[int] = set()
+            for _, _, _, row_ids in reqs:
+                for row_id in row_ids:
+                    if row_id not in seen_rows:
+                        seen_rows.add(row_id)
+                        ordered_unique_rows.append(row_id)
+
+            blobs = self._dataset.take(ordered_unique_rows, columns=["bytes"]).column("bytes").to_pylist()
+            decoded_frames = self._decode_blobs(
+                blobs,
+                int(self._videos[vi]["H"]),
+                int(self._videos[vi]["W"]),
+            )
+            by_row = {row_id: decoded_frames[i] for i, row_id in enumerate(ordered_unique_rows)}
+
+            video = self._videos[vi]
+            metadata = video.get("metadata")
+            for out_pos, sample_idx, frame_indices, row_ids in reqs:
+                frames = np.stack([by_row[row_id] for row_id in row_ids], axis=0)
+                sample = {
+                    "video": frames,
+                    "video_idx": vi,
+                    "filename": video["path"],
+                    "start_frame": int(frame_indices[0]),
+                    "frame_indices": frame_indices,
+                    "sample_idx": int(sample_idx),
+                }
+                if isinstance(metadata, dict):
+                    sample.update(metadata)
+                out[out_pos] = sample
+
+        return [row for row in out if row is not None]
 
     @staticmethod
     def worker_init(worker_id: int) -> None:
