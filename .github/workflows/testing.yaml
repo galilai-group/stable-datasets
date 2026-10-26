@@ -111,6 +111,7 @@ jobs:
             --group ${{ matrix.shard }} \
             --splitting-algorithm least_duration \
             --store-durations \
+            --clean-durations \
             --junitxml=junit-${{ matrix.shard }}.xml \
             --cov=stable_datasets \
             --cov-report=term-missing:skip-covered \
@@ -179,7 +180,9 @@ jobs:
           pattern: shard-*
           path: artifacts
 
-      # Merge durations from shards into a single .test_durations
+      # Merge durations from shards into a single .test_durations. Each shard stores only the
+      # tests it ran (--clean-durations); a shard that wrote the whole restored file would
+      # overwrite the fresh timings of the shards merged before it with the old ones.
       - name: Merge test durations from shards
         run: |
           python -c "
