@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.backends.arrow_shards | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -194,14 +210,14 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.backends.arrow_shards</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="sd">&quot;&quot;&quot;Arrow IPC implementation of :class:`StorageBackend`.</span>
+<span></span><code><span id="line-1"><span class="sd">"""Arrow IPC implementation of :class:`StorageBackend`.</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="sd">:class:`ArrowBackend` owns mmap lifetime, shard routing, and</span>
 </span><span id="line-4"><span class="sd">pickle/unpickle for Arrow IPC shard files. Returns Arrow-native types</span>
 </span><span id="line-5"><span class="sd">(:class:`pa.Table`, :class:`pa.RecordBatch`) and plain Python dicts;</span>
 </span><span id="line-6"><span class="sd">carries no dependency on PIL, torch, or numpy beyond what Arrow itself</span>
-</span><span id="line-7"><span class="sd">requires. Decoding to user-facing types is the formatter&#39;s job.</span>
-</span><span id="line-8"><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="line-7"><span class="sd">requires. Decoding to user-facing types is the formatter's job.</span>
+</span><span id="line-8"><span class="sd">"""</span>
 </span><span id="line-9">
 </span><span id="line-10"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span id="line-11">
@@ -223,7 +239,7 @@
 <div class="viewcode-block" id="ArrowBackend">
 <a class="viewcode-back" href="../../../../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend">[docs]</a>
 </span><span id="line-27"><span class="k">class</span><span class="w"> </span><span class="nc">ArrowBackend</span><span class="p">:</span>
-</span><span id="line-28"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Arrow-native storage layer.</span>
+</span><span id="line-28"><span class="w">    </span><span class="sd">"""Arrow-native storage layer.</span>
 </span><span id="line-29">
 </span><span id="line-30"><span class="sd">    Construction modes:</span>
 </span><span id="line-31">
@@ -234,7 +250,7 @@
 </span><span id="line-36">
 </span><span id="line-37"><span class="sd">    ``StableDataset`` should never inspect shard internals — it delegates</span>
 </span><span id="line-38"><span class="sd">    all storage concerns here.</span>
-</span><span id="line-39"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-39"><span class="sd">    """</span>
 </span><span id="line-40">
 </span><span id="line-41">    <span class="c1"># DataLoader ``__getitems__`` uses batched gather for Arrow-backed data.</span>
 </span><span id="line-42">    <span class="c1"># Binary-heavy random access is rebuilt from record-batch slices.</span>
@@ -270,7 +286,7 @@
 </span><span id="line-72">
 </span><span id="line-73">    <span class="nd">@property</span>
 </span><span id="line-74">    <span class="k">def</span><span class="w"> </span><span class="nf">num_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span id="line-75"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Row count without forcing table load.&quot;&quot;&quot;</span>
+</span><span id="line-75"><span class="w">        </span><span class="sd">"""Row count without forcing table load."""</span>
 </span><span id="line-76">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_row_counts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-77">            <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shard_row_counts</span><span class="p">)</span>
 </span><span id="line-78">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -297,14 +313,14 @@
 </span><span id="line-99">
 </span><span id="line-100">    <span class="nd">@property</span>
 </span><span id="line-101">    <span class="k">def</span><span class="w"> </span><span class="nf">table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
-</span><span id="line-102"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Materialize and return the full Arrow table.</span>
+</span><span id="line-102"><span class="w">        </span><span class="sd">"""Materialize and return the full Arrow table.</span>
 </span><span id="line-103">
 </span><span id="line-104"><span class="sd">        For single-file datasets this is a cheap mmap. For multi-shard</span>
 </span><span id="line-105"><span class="sd">        datasets this concatenates all shards into one table — use only</span>
 </span><span id="line-106"><span class="sd">        when full materialization is intended (e.g. column mutations).</span>
 </span><span id="line-107"><span class="sd">        Hot paths should use ``get_row``, ``take``,</span>
 </span><span id="line-108"><span class="sd">        or ``iter_batches`` instead.</span>
-</span><span id="line-109"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="line-109"><span class="sd">        """</span>
 </span><span id="line-110">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-111">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-112">                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span><span class="p">:</span>
@@ -322,13 +338,13 @@
 </span><span id="line-124">                    <span class="k">else</span><span class="p">:</span>
 </span><span id="line-125">                        <span class="bp">self</span><span class="o">.</span><span class="n">_table</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">table</span><span class="p">({})</span>
 </span><span id="line-126">            <span class="k">else</span><span class="p">:</span>
-</span><span id="line-127">                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No shard paths or in-memory table.&quot;</span><span class="p">)</span>
+</span><span id="line-127">                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"No shard paths or in-memory table."</span><span class="p">)</span>
 </span><span id="line-128">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table</span>
 </span><span id="line-129">
 <div class="viewcode-block" id="ArrowBackend.get_row">
 <a class="viewcode-back" href="../../../../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.get_row">[docs]</a>
 </span><span id="line-130">    <span class="k">def</span><span class="w"> </span><span class="nf">get_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span id="line-131"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Single row access. Uses slice() which avoids copying binary data.&quot;&quot;&quot;</span>
+</span><span id="line-131"><span class="w">        </span><span class="sd">"""Single row access. Uses slice() which avoids copying binary data."""</span>
 </span><span id="line-132">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cumulative</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-133">            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
 </span><span id="line-134">                <span class="n">tbl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shard_table</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">table</span>
@@ -345,7 +361,7 @@
 <div class="viewcode-block" id="ArrowBackend.take">
 <a class="viewcode-back" href="../../../../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.take">[docs]</a>
 </span><span id="line-144">    <span class="k">def</span><span class="w"> </span><span class="nf">take</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
-</span><span id="line-145"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Batched row access without using ``pa.Table.take``.&quot;&quot;&quot;</span>
+</span><span id="line-145"><span class="w">        </span><span class="sd">"""Batched row access without using ``pa.Table.take``."""</span>
 </span><span id="line-146">        <span class="n">index_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
 </span><span id="line-147">        <span class="k">if</span> <span class="n">index_array</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 </span><span id="line-148">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_empty_table</span><span class="p">()</span>
@@ -387,11 +403,11 @@
 <div class="viewcode-block" id="ArrowBackend.slice">
 <a class="viewcode-back" href="../../../../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.slice">[docs]</a>
 </span><span id="line-183">    <span class="k">def</span><span class="w"> </span><span class="nf">slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
-</span><span id="line-184"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Contiguous range access.</span>
+</span><span id="line-184"><span class="w">        </span><span class="sd">"""Contiguous range access.</span>
 </span><span id="line-185">
-</span><span id="line-186"><span class="sd">        For single-shard datasets, slices directly from the mmap&#39;d table</span>
+</span><span id="line-186"><span class="sd">        For single-shard datasets, slices directly from the mmap'd table</span>
 </span><span id="line-187"><span class="sd">        without triggering full materialization.</span>
-</span><span id="line-188"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="line-188"><span class="sd">        """</span>
 </span><span id="line-189">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cumulative</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-190">            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
 </span><span id="line-191">                <span class="n">tbl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_shard_table</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -407,11 +423,11 @@
 </span><span id="line-198">        <span class="n">shuffle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span id="line-199">        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="line-200">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">pa</span><span class="o">.</span><span class="n">RecordBatch</span><span class="p">]:</span>
-</span><span id="line-201"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield record batches from shard files sequentially.</span>
+</span><span id="line-201"><span class="w">        </span><span class="sd">"""Yield record batches from shard files sequentially.</span>
 </span><span id="line-202">
-</span><span id="line-203"><span class="sd">        Only one shard is mmap&#39;d at a time, which can reduce peak</span>
+</span><span id="line-203"><span class="sd">        Only one shard is mmap'd at a time, which can reduce peak</span>
 </span><span id="line-204"><span class="sd">        Python-managed memory for multi-shard datasets.</span>
-</span><span id="line-205"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="line-205"><span class="sd">        """</span>
 </span><span id="line-206">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-207">            <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">to_batches</span><span class="p">()</span>
 </span><span id="line-208">            <span class="k">return</span>
@@ -440,20 +456,20 @@
 </span><span id="line-230">
 </span><span id="line-231">    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-232">        <span class="n">state</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-233">            <span class="s2">&quot;shard_paths&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span><span class="p">,</span>
-</span><span id="line-234">            <span class="s2">&quot;shard_row_counts&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_row_counts</span><span class="p">,</span>
-</span><span id="line-235">            <span class="s2">&quot;schema&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">,</span>
+</span><span id="line-233">            <span class="s2">"shard_paths"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span><span class="p">,</span>
+</span><span id="line-234">            <span class="s2">"shard_row_counts"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_row_counts</span><span class="p">,</span>
+</span><span id="line-235">            <span class="s2">"schema"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema</span><span class="p">,</span>
 </span><span id="line-236">        <span class="p">}</span>
 </span><span id="line-237">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_paths</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-238">            <span class="n">state</span><span class="p">[</span><span class="s2">&quot;table&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table</span>
+</span><span id="line-238">            <span class="n">state</span><span class="p">[</span><span class="s2">"table"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table</span>
 </span><span id="line-239">        <span class="k">return</span> <span class="n">state</span>
 </span><span id="line-240">
 </span><span id="line-241">    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
 </span><span id="line-242">        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-</span><span id="line-243">            <span class="n">shard_paths</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;shard_paths&quot;</span><span class="p">),</span>
-</span><span id="line-244">            <span class="n">table</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;table&quot;</span><span class="p">),</span>
-</span><span id="line-245">            <span class="n">shard_row_counts</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;shard_row_counts&quot;</span><span class="p">),</span>
-</span><span id="line-246">            <span class="n">schema</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;schema&quot;</span><span class="p">),</span>
+</span><span id="line-243">            <span class="n">shard_paths</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"shard_paths"</span><span class="p">),</span>
+</span><span id="line-244">            <span class="n">table</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"table"</span><span class="p">),</span>
+</span><span id="line-245">            <span class="n">shard_row_counts</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"shard_row_counts"</span><span class="p">),</span>
+</span><span id="line-246">            <span class="n">schema</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schema"</span><span class="p">),</span>
 </span><span id="line-247">        <span class="p">)</span>
 </span><span id="line-248">
 </span><span id="line-249">    <span class="c1"># -- Internal helpers -----------------------------------------------------</span>
@@ -490,7 +506,7 @@
 </span><span id="line-280">
 </span><span id="line-281">    <span class="nd">@staticmethod</span>
 </span><span id="line-282">    <span class="k">def</span><span class="w"> </span><span class="nf">_mmap_ipc</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">upgrade_binary</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
-</span><span id="line-283">        <span class="n">mmap</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">memory_map</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+</span><span id="line-283">        <span class="n">mmap</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">memory_map</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="s2">"r"</span><span class="p">)</span>
 </span><span id="line-284">        <span class="n">reader</span> <span class="o">=</span> <span class="n">ipc</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="n">mmap</span><span class="p">)</span>
 </span><span id="line-285">        <span class="n">table</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">read_all</span><span class="p">()</span>
 </span><span id="line-286">        <span class="k">if</span> <span class="n">upgrade_binary</span><span class="p">:</span>
@@ -510,9 +526,9 @@
 </span><span id="line-299">
 </span><span id="line-300">
 </span><span id="line-301"><span class="k">def</span><span class="w"> </span><span class="nf">_upgrade_binary_columns</span><span class="p">(</span><span class="n">table</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
-</span><span id="line-302"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Cast any ``binary`` columns to ``large_binary`` at open time.</span>
+</span><span id="line-302"><span class="w">    </span><span class="sd">"""Cast any ``binary`` columns to ``large_binary`` at open time.</span>
 </span><span id="line-303">
-</span><span id="line-304"><span class="sd">    PyArrow&#39;s compute kernels (notably ``take``) fail with an i32 offset</span>
+</span><span id="line-304"><span class="sd">    PyArrow's compute kernels (notably ``take``) fail with an i32 offset</span>
 </span><span id="line-305"><span class="sd">    overflow on a ``binary`` column whose cumulative bytes exceed 2GB,</span>
 </span><span id="line-306"><span class="sd">    regardless of how many rows are selected. Any ImageNet-scale image</span>
 </span><span id="line-307"><span class="sd">    cache written before the ``Image`` feature was upgraded to</span>
@@ -520,7 +536,7 @@
 </span><span id="line-309"><span class="sd">    offset buffers (one-time ~10MB per million rows) while the values</span>
 </span><span id="line-310"><span class="sd">    buffer is shared, so the runtime cost is negligible and existing</span>
 </span><span id="line-311"><span class="sd">    on-disk caches need no rewrite.</span>
-</span><span id="line-312"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-312"><span class="sd">    """</span>
 </span><span id="line-313">    <span class="n">needs_cast</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">schema</span> <span class="k">if</span> <span class="n">pa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_binary</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">type</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_large_binary</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">type</span><span class="p">)]</span>
 </span><span id="line-314">    <span class="k">if</span> <span class="ow">not</span> <span class="n">needs_cast</span><span class="p">:</span>
 </span><span id="line-315">        <span class="k">return</span> <span class="n">table</span>
@@ -559,7 +575,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

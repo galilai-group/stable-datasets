@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.features.base | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -194,7 +210,7 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.features.base</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="sd">&quot;&quot;&quot;Core feature descriptors shared across modalities.&quot;&quot;&quot;</span>
+<span></span><code><span id="line-1"><span class="sd">"""Core feature descriptors shared across modalities."""</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span id="line-4">
@@ -204,32 +220,32 @@
 </span><span id="line-8">
 </span><span id="line-9">
 <div class="viewcode-block" id="FeatureType">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.FeatureType">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.FeatureType">[docs]</a>
 </span><span id="line-10"><span class="k">class</span><span class="w"> </span><span class="nc">FeatureType</span><span class="p">:</span>
-</span><span id="line-11"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for feature type descriptors.&quot;&quot;&quot;</span>
+</span><span id="line-11"><span class="w">    </span><span class="sd">"""Base class for feature type descriptors."""</span>
 </span><span id="line-12">
 <div class="viewcode-block" id="FeatureType.to_arrow_type">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.FeatureType.to_arrow_type">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.FeatureType.to_arrow_type">[docs]</a>
 </span><span id="line-13">    <span class="k">def</span><span class="w"> </span><span class="nf">to_arrow_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataType</span><span class="p">:</span>
 </span><span id="line-14">        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 </span><span id="line-15">
 <div class="viewcode-block" id="FeatureType.arrow_metadata">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.FeatureType.arrow_metadata">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.FeatureType.arrow_metadata">[docs]</a>
 </span><span id="line-16">    <span class="k">def</span><span class="w"> </span><span class="nf">arrow_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
-</span><span id="line-17">        <span class="k">return</span> <span class="p">{</span><span class="sa">b</span><span class="s2">&quot;stable_datasets.feature&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">encode</span><span class="p">()}</span></div>
+</span><span id="line-17">        <span class="k">return</span> <span class="p">{</span><span class="sa">b</span><span class="s2">"stable_datasets.feature"</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">encode</span><span class="p">()}</span></div>
 
 </span><span id="line-18">
 <div class="viewcode-block" id="FeatureType.encode">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.FeatureType.encode">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.FeatureType.encode">[docs]</a>
 </span><span id="line-19">    <span class="k">def</span><span class="w"> </span><span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-</span><span id="line-20">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">):</span>
+</span><span id="line-20">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"item"</span><span class="p">):</span>
 </span><span id="line-21">            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 </span><span id="line-22">        <span class="k">return</span> <span class="n">value</span></div>
 
 </span><span id="line-23">
 <div class="viewcode-block" id="FeatureType.format">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.FeatureType.format">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.FeatureType.format">[docs]</a>
 </span><span id="line-24">    <span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span>
 </span><span id="line-25">        <span class="bp">self</span><span class="p">,</span>
 </span><span id="line-26">        <span class="n">value</span><span class="p">,</span>
@@ -242,7 +258,7 @@
 
 </span><span id="line-33">
 <div class="viewcode-block" id="FeatureType.fingerprint_data">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.FeatureType.fingerprint_data">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.FeatureType.fingerprint_data">[docs]</a>
 </span><span id="line-34">    <span class="k">def</span><span class="w"> </span><span class="nf">fingerprint_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-35">        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 </div>
@@ -250,40 +266,40 @@
 </span><span id="line-36">
 </span><span id="line-37">
 <div class="viewcode-block" id="Value">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Value">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.Value">[docs]</a>
 </span><span id="line-38"><span class="k">class</span><span class="w"> </span><span class="nc">Value</span><span class="p">(</span><span class="n">FeatureType</span><span class="p">):</span>
-</span><span id="line-39"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Scalar value type. Maps dtype strings to PyArrow types.&quot;&quot;&quot;</span>
+</span><span id="line-39"><span class="w">    </span><span class="sd">"""Scalar value type. Maps dtype strings to PyArrow types."""</span>
 </span><span id="line-40">
 </span><span id="line-41">    <span class="n">_DTYPE_MAP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataType</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-42">        <span class="s2">&quot;int8&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">int8</span><span class="p">(),</span>
-</span><span id="line-43">        <span class="s2">&quot;int16&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">int16</span><span class="p">(),</span>
-</span><span id="line-44">        <span class="s2">&quot;int32&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">(),</span>
-</span><span id="line-45">        <span class="s2">&quot;int64&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">int64</span><span class="p">(),</span>
-</span><span id="line-46">        <span class="s2">&quot;uint8&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">uint8</span><span class="p">(),</span>
-</span><span id="line-47">        <span class="s2">&quot;uint16&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">uint16</span><span class="p">(),</span>
-</span><span id="line-48">        <span class="s2">&quot;uint32&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">uint32</span><span class="p">(),</span>
-</span><span id="line-49">        <span class="s2">&quot;uint64&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">uint64</span><span class="p">(),</span>
-</span><span id="line-50">        <span class="s2">&quot;float16&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">float16</span><span class="p">(),</span>
-</span><span id="line-51">        <span class="s2">&quot;float32&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">float32</span><span class="p">(),</span>
-</span><span id="line-52">        <span class="s2">&quot;float64&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">float64</span><span class="p">(),</span>
-</span><span id="line-53">        <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">bool_</span><span class="p">(),</span>
-</span><span id="line-54">        <span class="s2">&quot;string&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">(),</span>
-</span><span id="line-55">        <span class="s2">&quot;binary&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">binary</span><span class="p">(),</span>
+</span><span id="line-42">        <span class="s2">"int8"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">int8</span><span class="p">(),</span>
+</span><span id="line-43">        <span class="s2">"int16"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">int16</span><span class="p">(),</span>
+</span><span id="line-44">        <span class="s2">"int32"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">(),</span>
+</span><span id="line-45">        <span class="s2">"int64"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">int64</span><span class="p">(),</span>
+</span><span id="line-46">        <span class="s2">"uint8"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">uint8</span><span class="p">(),</span>
+</span><span id="line-47">        <span class="s2">"uint16"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">uint16</span><span class="p">(),</span>
+</span><span id="line-48">        <span class="s2">"uint32"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">uint32</span><span class="p">(),</span>
+</span><span id="line-49">        <span class="s2">"uint64"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">uint64</span><span class="p">(),</span>
+</span><span id="line-50">        <span class="s2">"float16"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">float16</span><span class="p">(),</span>
+</span><span id="line-51">        <span class="s2">"float32"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">float32</span><span class="p">(),</span>
+</span><span id="line-52">        <span class="s2">"float64"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">float64</span><span class="p">(),</span>
+</span><span id="line-53">        <span class="s2">"bool"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">bool_</span><span class="p">(),</span>
+</span><span id="line-54">        <span class="s2">"string"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">(),</span>
+</span><span id="line-55">        <span class="s2">"binary"</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">binary</span><span class="p">(),</span>
 </span><span id="line-56">    <span class="p">}</span>
 </span><span id="line-57">
 </span><span id="line-58">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-59">        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DTYPE_MAP</span><span class="p">:</span>
-</span><span id="line-60">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown dtype &#39;</span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&#39;. Supported: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_DTYPE_MAP</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-60">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown dtype '</span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2">'. Supported: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_DTYPE_MAP</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-61">        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
 </span><span id="line-62">
 <div class="viewcode-block" id="Value.to_arrow_type">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Value.to_arrow_type">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.Value.to_arrow_type">[docs]</a>
 </span><span id="line-63">    <span class="k">def</span><span class="w"> </span><span class="nf">to_arrow_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataType</span><span class="p">:</span>
 </span><span id="line-64">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DTYPE_MAP</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span></div>
 
 </span><span id="line-65">
 <div class="viewcode-block" id="Value.format">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Value.format">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.Value.format">[docs]</a>
 </span><span id="line-66">    <span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span>
 </span><span id="line-67">        <span class="bp">self</span><span class="p">,</span>
 </span><span id="line-68">        <span class="n">value</span><span class="p">,</span>
@@ -292,7 +308,7 @@
 </span><span id="line-71">        <span class="n">decode_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span id="line-72">        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="line-73">    <span class="p">):</span>
-</span><span id="line-74">        <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="s2">&quot;torch&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">):</span>
+</span><span id="line-74">        <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="s2">"torch"</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">):</span>
 </span><span id="line-75">            <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 </span><span id="line-76">
 </span><span id="line-77">            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -300,14 +316,14 @@
 
 </span><span id="line-79">
 </span><span id="line-80">    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-81">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Value(&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&#39;)&quot;</span></div>
+</span><span id="line-81">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Value('</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">')"</span></div>
 
 </span><span id="line-82">
 </span><span id="line-83">
 <div class="viewcode-block" id="ClassLabel">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.ClassLabel">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.ClassLabel">[docs]</a>
 </span><span id="line-84"><span class="k">class</span><span class="w"> </span><span class="nc">ClassLabel</span><span class="p">(</span><span class="n">FeatureType</span><span class="p">):</span>
-</span><span id="line-85"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Categorical label with name-to-int mapping.&quot;&quot;&quot;</span>
+</span><span id="line-85"><span class="w">    </span><span class="sd">"""Categorical label with name-to-int mapping."""</span>
 </span><span id="line-86">
 </span><span id="line-87">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 </span><span id="line-88">        <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -317,40 +333,40 @@
 </span><span id="line-92">            <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span>
 </span><span id="line-93">            <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)]</span>
 </span><span id="line-94">        <span class="k">else</span><span class="p">:</span>
-</span><span id="line-95">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ClassLabel requires either &#39;names&#39; or &#39;num_classes&#39;&quot;</span><span class="p">)</span>
+</span><span id="line-95">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ClassLabel requires either 'names' or 'num_classes'"</span><span class="p">)</span>
 </span><span id="line-96">        <span class="bp">self</span><span class="o">.</span><span class="n">_str2int</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)}</span>
 </span><span id="line-97">        <span class="bp">self</span><span class="o">.</span><span class="n">_int2str</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">))</span>
 </span><span id="line-98">
 <div class="viewcode-block" id="ClassLabel.str2int">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.ClassLabel.str2int">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.ClassLabel.str2int">[docs]</a>
 </span><span id="line-99">    <span class="k">def</span><span class="w"> </span><span class="nf">str2int</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 </span><span id="line-100">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str2int</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
 
 </span><span id="line-101">
 <div class="viewcode-block" id="ClassLabel.int2str">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.ClassLabel.int2str">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.ClassLabel.int2str">[docs]</a>
 </span><span id="line-102">    <span class="k">def</span><span class="w"> </span><span class="nf">int2str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-103">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_int2str</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span></div>
 
 </span><span id="line-104">
 <div class="viewcode-block" id="ClassLabel.to_arrow_type">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.ClassLabel.to_arrow_type">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.ClassLabel.to_arrow_type">[docs]</a>
 </span><span id="line-105">    <span class="k">def</span><span class="w"> </span><span class="nf">to_arrow_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataType</span><span class="p">:</span>
 </span><span id="line-106">        <span class="k">return</span> <span class="n">pa</span><span class="o">.</span><span class="n">int64</span><span class="p">()</span></div>
 
 </span><span id="line-107">
 <div class="viewcode-block" id="ClassLabel.encode">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.ClassLabel.encode">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.ClassLabel.encode">[docs]</a>
 </span><span id="line-108">    <span class="k">def</span><span class="w"> </span><span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 </span><span id="line-109">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
 </span><span id="line-110">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">str2int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-</span><span id="line-111">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;item&quot;</span><span class="p">):</span>
+</span><span id="line-111">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"item"</span><span class="p">):</span>
 </span><span id="line-112">            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 </span><span id="line-113">        <span class="k">return</span> <span class="n">value</span></div>
 
 </span><span id="line-114">
 <div class="viewcode-block" id="ClassLabel.format">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.ClassLabel.format">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.ClassLabel.format">[docs]</a>
 </span><span id="line-115">    <span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span>
 </span><span id="line-116">        <span class="bp">self</span><span class="p">,</span>
 </span><span id="line-117">        <span class="n">value</span><span class="p">,</span>
@@ -359,7 +375,7 @@
 </span><span id="line-120">        <span class="n">decode_images</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span id="line-121">        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="line-122">    <span class="p">):</span>
-</span><span id="line-123">        <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="s2">&quot;torch&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">):</span>
+</span><span id="line-123">        <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="s2">"torch"</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">bool</span><span class="p">):</span>
 </span><span id="line-124">            <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 </span><span id="line-125">
 </span><span id="line-126">            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -368,37 +384,37 @@
 </span><span id="line-128">
 </span><span id="line-129">    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-130">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
-</span><span id="line-131">            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;ClassLabel(names=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2">)&quot;</span>
-</span><span id="line-132">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;ClassLabel(num_classes=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+</span><span id="line-131">            <span class="k">return</span> <span class="sa">f</span><span class="s2">"ClassLabel(names=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2">)"</span>
+</span><span id="line-132">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"ClassLabel(num_classes=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="si">}</span><span class="s2">)"</span></div>
 
 </span><span id="line-133">
 </span><span id="line-134">
 <div class="viewcode-block" id="Sequence">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Sequence">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.Sequence">[docs]</a>
 </span><span id="line-135"><span class="k">class</span><span class="w"> </span><span class="nc">Sequence</span><span class="p">(</span><span class="n">FeatureType</span><span class="p">):</span>
-</span><span id="line-136"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Variable-length list of a sub-feature.&quot;&quot;&quot;</span>
+</span><span id="line-136"><span class="w">    </span><span class="sd">"""Variable-length list of a sub-feature."""</span>
 </span><span id="line-137">
 </span><span id="line-138">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature</span><span class="p">:</span> <span class="n">FeatureType</span><span class="p">):</span>
 </span><span id="line-139">        <span class="bp">self</span><span class="o">.</span><span class="n">feature</span> <span class="o">=</span> <span class="n">feature</span>
 </span><span id="line-140">
 <div class="viewcode-block" id="Sequence.to_arrow_type">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Sequence.to_arrow_type">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.Sequence.to_arrow_type">[docs]</a>
 </span><span id="line-141">    <span class="k">def</span><span class="w"> </span><span class="nf">to_arrow_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataType</span><span class="p">:</span>
 </span><span id="line-142">        <span class="k">return</span> <span class="n">pa</span><span class="o">.</span><span class="n">list_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature</span><span class="o">.</span><span class="n">to_arrow_type</span><span class="p">())</span></div>
 
 </span><span id="line-143">
 <div class="viewcode-block" id="Sequence.encode">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Sequence.encode">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.base.Sequence.encode">[docs]</a>
 </span><span id="line-144">    <span class="k">def</span><span class="w"> </span><span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 </span><span id="line-145">        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-146">            <span class="k">return</span> <span class="kc">None</span>
-</span><span id="line-147">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;tolist&quot;</span><span class="p">):</span>
+</span><span id="line-147">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"tolist"</span><span class="p">):</span>
 </span><span id="line-148">            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 </span><span id="line-149">        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
 </span><span id="line-150">
 </span><span id="line-151">    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-152">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Sequence(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">feature</span><span class="si">!r}</span><span class="s2">)&quot;</span></div>
+</span><span id="line-152">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Sequence(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">feature</span><span class="si">!r}</span><span class="s2">)"</span></div>
 
 </span></code></pre></div>
     </div></div>
@@ -433,7 +449,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

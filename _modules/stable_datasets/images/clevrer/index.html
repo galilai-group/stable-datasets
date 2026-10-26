@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.images.clevrer | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -207,12 +223,12 @@
 <div class="viewcode-block" id="CLEVRER">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.clevrer.CLEVRER">[docs]</a>
 </span><span id="line-11"><span class="k">class</span><span class="w"> </span><span class="nc">CLEVRER</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
-</span><span id="line-12"><span class="w">    </span><span class="sd">&quot;&quot;&quot;CLEVRER: CoLlision Events for Video REpresentation and Reasoning.</span>
+</span><span id="line-12"><span class="w">    </span><span class="sd">"""CLEVRER: CoLlision Events for Video REpresentation and Reasoning.</span>
 </span><span id="line-13">
 </span><span id="line-14"><span class="sd">    A diagnostic video dataset for systematic evaluation of computational models</span>
 </span><span id="line-15"><span class="sd">    on a wide range of reasoning tasks. The dataset includes four types of questions:</span>
-</span><span id="line-16"><span class="sd">    descriptive (e.g., &quot;what color&quot;), explanatory (&quot;what&#39;s responsible for&quot;),</span>
-</span><span id="line-17"><span class="sd">    predictive (&quot;what will happen next&quot;), and counterfactual (&quot;what if&quot;).</span>
+</span><span id="line-16"><span class="sd">    descriptive (e.g., "what color"), explanatory ("what's responsible for"),</span>
+</span><span id="line-17"><span class="sd">    predictive ("what will happen next"), and counterfactual ("what if").</span>
 </span><span id="line-18">
 </span><span id="line-19"><span class="sd">    The dataset contains 20,000 synthetic videos of moving and colliding objects.</span>
 </span><span id="line-20"><span class="sd">    Each video is 5 seconds long and contains 128 frames with resolution 480 x 320.</span>
@@ -221,63 +237,63 @@
 </span><span id="line-23"><span class="sd">        - train: 10,000 videos (index 0 - 9999)</span>
 </span><span id="line-24"><span class="sd">        - validation: 5,000 videos (index 10000 - 14999)</span>
 </span><span id="line-25"><span class="sd">        - test: 5,000 videos (index 15000 - 19999)</span>
-</span><span id="line-26"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-26"><span class="sd">    """</span>
 </span><span id="line-27">
-</span><span id="line-28">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-28">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">"1.0.0"</span><span class="p">)</span>
 </span><span id="line-29">
 </span><span id="line-30">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="n">DatasetSource</span><span class="p">(</span>
-</span><span id="line-31">        <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;http://clevrer.csail.mit.edu/&quot;</span><span class="p">,</span>
+</span><span id="line-31">        <span class="n">homepage</span><span class="o">=</span><span class="s2">"http://clevrer.csail.mit.edu/"</span><span class="p">,</span>
 </span><span id="line-32">        <span class="n">assets</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-33">            <span class="s2">&quot;train_videos&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/clevrer/videos/train/video_train.zip&quot;</span><span class="p">),</span>
-</span><span id="line-34">            <span class="s2">&quot;train_annotations&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
-</span><span id="line-35">                <span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/clevrer/annotations/train/annotation_train.zip&quot;</span>
+</span><span id="line-33">            <span class="s2">"train_videos"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"http://data.csail.mit.edu/clevrer/videos/train/video_train.zip"</span><span class="p">),</span>
+</span><span id="line-34">            <span class="s2">"train_annotations"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
+</span><span id="line-35">                <span class="n">url</span><span class="o">=</span><span class="s2">"http://data.csail.mit.edu/clevrer/annotations/train/annotation_train.zip"</span>
 </span><span id="line-36">            <span class="p">),</span>
-</span><span id="line-37">            <span class="s2">&quot;train_questions&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/clevrer/questions/train.json&quot;</span><span class="p">),</span>
-</span><span id="line-38">            <span class="s2">&quot;validation_videos&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
-</span><span id="line-39">                <span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/clevrer/videos/validation/video_validation.zip&quot;</span>
+</span><span id="line-37">            <span class="s2">"train_questions"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"http://data.csail.mit.edu/clevrer/questions/train.json"</span><span class="p">),</span>
+</span><span id="line-38">            <span class="s2">"validation_videos"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
+</span><span id="line-39">                <span class="n">url</span><span class="o">=</span><span class="s2">"http://data.csail.mit.edu/clevrer/videos/validation/video_validation.zip"</span>
 </span><span id="line-40">            <span class="p">),</span>
-</span><span id="line-41">            <span class="s2">&quot;validation_annotations&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
-</span><span id="line-42">                <span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/clevrer/annotations/validation/annotation_validation.zip&quot;</span>
+</span><span id="line-41">            <span class="s2">"validation_annotations"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
+</span><span id="line-42">                <span class="n">url</span><span class="o">=</span><span class="s2">"http://data.csail.mit.edu/clevrer/annotations/validation/annotation_validation.zip"</span>
 </span><span id="line-43">            <span class="p">),</span>
-</span><span id="line-44">            <span class="s2">&quot;validation_questions&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/clevrer/questions/validation.json&quot;</span><span class="p">),</span>
-</span><span id="line-45">            <span class="s2">&quot;test_videos&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/clevrer/videos/test/video_test.zip&quot;</span><span class="p">),</span>
-</span><span id="line-46">            <span class="s2">&quot;test_questions&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://data.csail.mit.edu/clevrer/questions/test.json&quot;</span><span class="p">),</span>
+</span><span id="line-44">            <span class="s2">"validation_questions"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"http://data.csail.mit.edu/clevrer/questions/validation.json"</span><span class="p">),</span>
+</span><span id="line-45">            <span class="s2">"test_videos"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"http://data.csail.mit.edu/clevrer/videos/test/video_test.zip"</span><span class="p">),</span>
+</span><span id="line-46">            <span class="s2">"test_questions"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"http://data.csail.mit.edu/clevrer/questions/test.json"</span><span class="p">),</span>
 </span><span id="line-47">        <span class="p">},</span>
-</span><span id="line-48">        <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@inproceedings{yi2020clevrer,</span>
+</span><span id="line-48">        <span class="n">citation</span><span class="o">=</span><span class="s2">"""@inproceedings{yi2020clevrer,</span>
 </span><span id="line-49"><span class="s2">            title={CLEVRER: CoLlision Events for Video REpresentation and Reasoning},</span>
 </span><span id="line-50"><span class="s2">            author={Yi, Kexin and Gan, Chuang and Li, Yunzhu and Kohli, Pushmeet and Wu, Jiajun and Torralba, Antonio and Tenenbaum, Joshua B},</span>
 </span><span id="line-51"><span class="s2">            booktitle={International Conference on Learning Representations},</span>
 </span><span id="line-52"><span class="s2">            year=</span><span class="si">{2020}</span>
-</span><span id="line-53"><span class="s2">        }&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-53"><span class="s2">        }"""</span><span class="p">,</span>
 </span><span id="line-54">    <span class="p">)</span>
 </span><span id="line-55">
 </span><span id="line-56">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-57">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-58">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;CLEVRER is a diagnostic video dataset for temporal and causal reasoning.</span>
+</span><span id="line-58">            <span class="n">description</span><span class="o">=</span><span class="s2">"""CLEVRER is a diagnostic video dataset for temporal and causal reasoning.</span>
 </span><span id="line-59"><span class="s2">            It contains 20,000 synthetic videos of moving and colliding objects, with four types</span>
-</span><span id="line-60"><span class="s2">            of questions: descriptive, explanatory, predictive, and counterfactual.&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-60"><span class="s2">            of questions: descriptive, explanatory, predictive, and counterfactual."""</span><span class="p">,</span>
 </span><span id="line-61">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">(</span>
 </span><span id="line-62">                <span class="p">{</span>
-</span><span id="line-63">                    <span class="s2">&quot;video&quot;</span><span class="p">:</span> <span class="n">Video</span><span class="p">(),</span>
-</span><span id="line-64">                    <span class="s2">&quot;scene_index&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
-</span><span id="line-65">                    <span class="s2">&quot;video_filename&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
+</span><span id="line-63">                    <span class="s2">"video"</span><span class="p">:</span> <span class="n">Video</span><span class="p">(),</span>
+</span><span id="line-64">                    <span class="s2">"scene_index"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">),</span>
+</span><span id="line-65">                    <span class="s2">"video_filename"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"string"</span><span class="p">),</span>
 </span><span id="line-66">                    <span class="c1"># Store questions as JSON string to avoid nested Sequence issues</span>
-</span><span id="line-67">                    <span class="s2">&quot;questions_json&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
+</span><span id="line-67">                    <span class="s2">"questions_json"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"string"</span><span class="p">),</span>
 </span><span id="line-68">                    <span class="c1"># Store annotations as JSON string</span>
-</span><span id="line-69">                    <span class="s2">&quot;annotations_json&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
+</span><span id="line-69">                    <span class="s2">"annotations_json"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"string"</span><span class="p">),</span>
 </span><span id="line-70">                <span class="p">}</span>
 </span><span id="line-71">            <span class="p">),</span>
 </span><span id="line-72">            <span class="n">supervised_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="line-73">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
-</span><span id="line-74">            <span class="n">license</span><span class="o">=</span><span class="s2">&quot;CC0&quot;</span><span class="p">,</span>
-</span><span id="line-75">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-73">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"homepage"</span><span class="p">],</span>
+</span><span id="line-74">            <span class="n">license</span><span class="o">=</span><span class="s2">"CC0"</span><span class="p">,</span>
+</span><span id="line-75">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"citation"</span><span class="p">],</span>
 </span><span id="line-76">        <span class="p">)</span>
 </span><span id="line-77">
 </span><span id="line-78">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-79">        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">()</span>
-</span><span id="line-80">        <span class="n">assets</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">]</span>
+</span><span id="line-80">        <span class="n">assets</span> <span class="o">=</span> <span class="n">source</span><span class="p">[</span><span class="s2">"assets"</span><span class="p">]</span>
 </span><span id="line-81">
-</span><span id="line-82">        <span class="n">download_dir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_raw_download_dir&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-82">        <span class="n">download_dir</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_raw_download_dir"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span id="line-83">        <span class="k">if</span> <span class="n">download_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-84">            <span class="n">download_dir</span> <span class="o">=</span> <span class="n">_default_dest_folder</span><span class="p">()</span>
 </span><span id="line-85">        <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
@@ -291,28 +307,28 @@
 </span><span id="line-93">            <span class="n">SplitGenerator</span><span class="p">(</span>
 </span><span id="line-94">                <span class="n">name</span><span class="o">=</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
 </span><span id="line-95">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-96">                    <span class="s2">&quot;videos_path&quot;</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">&quot;train_videos&quot;</span><span class="p">],</span>
-</span><span id="line-97">                    <span class="s2">&quot;annotations_path&quot;</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">&quot;train_annotations&quot;</span><span class="p">],</span>
-</span><span id="line-98">                    <span class="s2">&quot;questions_path&quot;</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">&quot;train_questions&quot;</span><span class="p">],</span>
-</span><span id="line-99">                    <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span>
+</span><span id="line-96">                    <span class="s2">"videos_path"</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">"train_videos"</span><span class="p">],</span>
+</span><span id="line-97">                    <span class="s2">"annotations_path"</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">"train_annotations"</span><span class="p">],</span>
+</span><span id="line-98">                    <span class="s2">"questions_path"</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">"train_questions"</span><span class="p">],</span>
+</span><span id="line-99">                    <span class="s2">"split"</span><span class="p">:</span> <span class="s2">"train"</span><span class="p">,</span>
 </span><span id="line-100">                <span class="p">},</span>
 </span><span id="line-101">            <span class="p">),</span>
 </span><span id="line-102">            <span class="n">SplitGenerator</span><span class="p">(</span>
 </span><span id="line-103">                <span class="n">name</span><span class="o">=</span><span class="n">Split</span><span class="o">.</span><span class="n">VALIDATION</span><span class="p">,</span>
 </span><span id="line-104">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-105">                    <span class="s2">&quot;videos_path&quot;</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">&quot;validation_videos&quot;</span><span class="p">],</span>
-</span><span id="line-106">                    <span class="s2">&quot;annotations_path&quot;</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">&quot;validation_annotations&quot;</span><span class="p">],</span>
-</span><span id="line-107">                    <span class="s2">&quot;questions_path&quot;</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">&quot;validation_questions&quot;</span><span class="p">],</span>
-</span><span id="line-108">                    <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;validation&quot;</span><span class="p">,</span>
+</span><span id="line-105">                    <span class="s2">"videos_path"</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">"validation_videos"</span><span class="p">],</span>
+</span><span id="line-106">                    <span class="s2">"annotations_path"</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">"validation_annotations"</span><span class="p">],</span>
+</span><span id="line-107">                    <span class="s2">"questions_path"</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">"validation_questions"</span><span class="p">],</span>
+</span><span id="line-108">                    <span class="s2">"split"</span><span class="p">:</span> <span class="s2">"validation"</span><span class="p">,</span>
 </span><span id="line-109">                <span class="p">},</span>
 </span><span id="line-110">            <span class="p">),</span>
 </span><span id="line-111">            <span class="n">SplitGenerator</span><span class="p">(</span>
 </span><span id="line-112">                <span class="n">name</span><span class="o">=</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span>
 </span><span id="line-113">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-114">                    <span class="s2">&quot;videos_path&quot;</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">&quot;test_videos&quot;</span><span class="p">],</span>
-</span><span id="line-115">                    <span class="s2">&quot;annotations_path&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Test split has no annotations</span>
-</span><span id="line-116">                    <span class="s2">&quot;questions_path&quot;</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">&quot;test_questions&quot;</span><span class="p">],</span>
-</span><span id="line-117">                    <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;test&quot;</span><span class="p">,</span>
+</span><span id="line-114">                    <span class="s2">"videos_path"</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">"test_videos"</span><span class="p">],</span>
+</span><span id="line-115">                    <span class="s2">"annotations_path"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Test split has no annotations</span>
+</span><span id="line-116">                    <span class="s2">"questions_path"</span><span class="p">:</span> <span class="n">path_by_key</span><span class="p">[</span><span class="s2">"test_questions"</span><span class="p">],</span>
+</span><span id="line-117">                    <span class="s2">"split"</span><span class="p">:</span> <span class="s2">"test"</span><span class="p">,</span>
 </span><span id="line-118">                <span class="p">},</span>
 </span><span id="line-119">            <span class="p">),</span>
 </span><span id="line-120">        <span class="p">]</span>
@@ -323,27 +339,27 @@
 </span><span id="line-125">            <span class="n">questions_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </span><span id="line-126">
 </span><span id="line-127">        <span class="c1"># Create a mapping from scene_index to questions</span>
-</span><span id="line-128">        <span class="n">scene_to_questions</span> <span class="o">=</span> <span class="p">{</span><span class="n">item</span><span class="p">[</span><span class="s2">&quot;scene_index&quot;</span><span class="p">]:</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">questions_data</span><span class="p">}</span>
+</span><span id="line-128">        <span class="n">scene_to_questions</span> <span class="o">=</span> <span class="p">{</span><span class="n">item</span><span class="p">[</span><span class="s2">"scene_index"</span><span class="p">]:</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">questions_data</span><span class="p">}</span>
 </span><span id="line-129">
 </span><span id="line-130">        <span class="c1"># Load annotations if available (not available for test split)</span>
 </span><span id="line-131">        <span class="n">scene_to_annotations</span> <span class="o">=</span> <span class="p">{}</span>
 </span><span id="line-132">        <span class="k">if</span> <span class="n">annotations_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-133">            <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">annotations_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">ann_zip</span><span class="p">:</span>
+</span><span id="line-133">            <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">annotations_path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">ann_zip</span><span class="p">:</span>
 </span><span id="line-134">                <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">ann_zip</span><span class="o">.</span><span class="n">namelist</span><span class="p">():</span>
-</span><span id="line-135">                    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.json&quot;</span><span class="p">):</span>
+</span><span id="line-135">                    <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".json"</span><span class="p">):</span>
 </span><span id="line-136">                        <span class="k">with</span> <span class="n">ann_zip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 </span><span id="line-137">                            <span class="n">ann_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-</span><span id="line-138">                            <span class="n">scene_to_annotations</span><span class="p">[</span><span class="n">ann_data</span><span class="p">[</span><span class="s2">&quot;scene_index&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">ann_data</span>
+</span><span id="line-138">                            <span class="n">scene_to_annotations</span><span class="p">[</span><span class="n">ann_data</span><span class="p">[</span><span class="s2">"scene_index"</span><span class="p">]]</span> <span class="o">=</span> <span class="n">ann_data</span>
 </span><span id="line-139">
 </span><span id="line-140">        <span class="c1"># Extract videos directory</span>
-</span><span id="line-141">        <span class="n">extract_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">videos_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;clevrer_</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2">_videos&quot;</span>
+</span><span id="line-141">        <span class="n">extract_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">videos_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"clevrer_</span><span class="si">{</span><span class="n">split</span><span class="si">}</span><span class="s2">_videos"</span>
 </span><span id="line-142">        <span class="k">if</span> <span class="ow">not</span> <span class="n">extract_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="line-143">            <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">videos_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">vid_zip</span><span class="p">:</span>
+</span><span id="line-143">            <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">videos_path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">vid_zip</span><span class="p">:</span>
 </span><span id="line-144">                <span class="n">vid_zip</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">extract_dir</span><span class="p">)</span>
 </span><span id="line-145">
 </span><span id="line-146">        <span class="c1"># Generate examples</span>
 </span><span id="line-147">        <span class="k">for</span> <span class="n">scene_index</span><span class="p">,</span> <span class="n">question_item</span> <span class="ow">in</span> <span class="n">scene_to_questions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="line-148">            <span class="n">video_filename</span> <span class="o">=</span> <span class="n">question_item</span><span class="p">[</span><span class="s2">&quot;video_filename&quot;</span><span class="p">]</span>
+</span><span id="line-148">            <span class="n">video_filename</span> <span class="o">=</span> <span class="n">question_item</span><span class="p">[</span><span class="s2">"video_filename"</span><span class="p">]</span>
 </span><span id="line-149">
 </span><span id="line-150">            <span class="c1"># Find the video file</span>
 </span><span id="line-151">            <span class="n">video_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_video_file</span><span class="p">(</span><span class="n">extract_dir</span><span class="p">,</span> <span class="n">video_filename</span><span class="p">)</span>
@@ -351,7 +367,7 @@
 </span><span id="line-153">                <span class="k">continue</span>
 </span><span id="line-154">
 </span><span id="line-155">            <span class="c1"># Get questions from the question file</span>
-</span><span id="line-156">            <span class="n">questions</span> <span class="o">=</span> <span class="n">question_item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;questions&quot;</span><span class="p">,</span> <span class="p">[])</span>
+</span><span id="line-156">            <span class="n">questions</span> <span class="o">=</span> <span class="n">question_item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"questions"</span><span class="p">,</span> <span class="p">[])</span>
 </span><span id="line-157">
 </span><span id="line-158">            <span class="c1"># Get annotations if available</span>
 </span><span id="line-159">            <span class="n">annotations</span> <span class="o">=</span> <span class="p">{}</span>
@@ -361,16 +377,16 @@
 </span><span id="line-163">            <span class="k">yield</span> <span class="p">(</span>
 </span><span id="line-164">                <span class="n">scene_index</span><span class="p">,</span>
 </span><span id="line-165">                <span class="p">{</span>
-</span><span id="line-166">                    <span class="s2">&quot;video&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">video_path</span><span class="p">),</span>
-</span><span id="line-167">                    <span class="s2">&quot;scene_index&quot;</span><span class="p">:</span> <span class="n">scene_index</span><span class="p">,</span>
-</span><span id="line-168">                    <span class="s2">&quot;video_filename&quot;</span><span class="p">:</span> <span class="n">video_filename</span><span class="p">,</span>
-</span><span id="line-169">                    <span class="s2">&quot;questions_json&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">questions</span><span class="p">),</span>
-</span><span id="line-170">                    <span class="s2">&quot;annotations_json&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">annotations</span><span class="p">),</span>
+</span><span id="line-166">                    <span class="s2">"video"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">video_path</span><span class="p">),</span>
+</span><span id="line-167">                    <span class="s2">"scene_index"</span><span class="p">:</span> <span class="n">scene_index</span><span class="p">,</span>
+</span><span id="line-168">                    <span class="s2">"video_filename"</span><span class="p">:</span> <span class="n">video_filename</span><span class="p">,</span>
+</span><span id="line-169">                    <span class="s2">"questions_json"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">questions</span><span class="p">),</span>
+</span><span id="line-170">                    <span class="s2">"annotations_json"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">annotations</span><span class="p">),</span>
 </span><span id="line-171">                <span class="p">},</span>
 </span><span id="line-172">            <span class="p">)</span>
 </span><span id="line-173">
 </span><span id="line-174">    <span class="k">def</span><span class="w"> </span><span class="nf">_find_video_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extract_dir</span><span class="p">,</span> <span class="n">video_filename</span><span class="p">):</span>
-</span><span id="line-175"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Find a video file in the extracted directory structure.&quot;&quot;&quot;</span>
+</span><span id="line-175"><span class="w">        </span><span class="sd">"""Find a video file in the extracted directory structure."""</span>
 </span><span id="line-176">        <span class="c1"># Videos are arranged in folders per 1000 files</span>
 </span><span id="line-177">        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">extract_dir</span><span class="p">):</span>
 </span><span id="line-178">            <span class="k">if</span> <span class="n">video_filename</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
@@ -410,7 +426,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

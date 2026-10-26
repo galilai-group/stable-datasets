@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.video.moving_mnist | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -194,7 +210,7 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.video.moving_mnist</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="sd">&quot;&quot;&quot;MovingMNIST: the canonical 10K-sequence test set from Srivastava et al. (2015).&quot;&quot;&quot;</span>
+<span></span><code><span id="line-1"><span class="sd">"""MovingMNIST: the canonical 10K-sequence test set from Srivastava et al. (2015)."""</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 </span><span id="line-4">
@@ -208,46 +224,46 @@
 <div class="viewcode-block" id="MovingMNIST">
 <a class="viewcode-back" href="../../../../stable_datasets.video/#stable_datasets.video.moving_mnist.MovingMNIST">[docs]</a>
 </span><span id="line-12"><span class="k">class</span><span class="w"> </span><span class="nc">MovingMNIST</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
-</span><span id="line-13"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Moving MNIST (test split only).</span>
+</span><span id="line-13"><span class="w">    </span><span class="sd">"""Moving MNIST (test split only).</span>
 </span><span id="line-14">
 </span><span id="line-15"><span class="sd">    10,000 sequences of 20 grayscale frames at 64x64. The canonical artifact has</span>
 </span><span id="line-16"><span class="sd">    no class labels; training data is conventionally generated procedurally from</span>
 </span><span id="line-17"><span class="sd">    MNIST digits, which is out of scope here.</span>
-</span><span id="line-18"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-18"><span class="sd">    """</span>
 </span><span id="line-19">
-</span><span id="line-20">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-20">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">"1.0.0"</span><span class="p">)</span>
 </span><span id="line-21">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="n">DatasetSource</span><span class="p">(</span>
-</span><span id="line-22">        <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;http://www.cs.toronto.edu/~nitish/unsupervised_video/&quot;</span><span class="p">,</span>
+</span><span id="line-22">        <span class="n">homepage</span><span class="o">=</span><span class="s2">"http://www.cs.toronto.edu/~nitish/unsupervised_video/"</span><span class="p">,</span>
 </span><span id="line-23">        <span class="n">assets</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-24">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;http://www.cs.toronto.edu/~nitish/unsupervised_video/mnist_test_seq.npy&quot;</span><span class="p">),</span>
+</span><span id="line-24">            <span class="s2">"test"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">"http://www.cs.toronto.edu/~nitish/unsupervised_video/mnist_test_seq.npy"</span><span class="p">),</span>
 </span><span id="line-25">        <span class="p">},</span>
-</span><span id="line-26">        <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@inproceedings{srivastava2015unsupervised,</span>
+</span><span id="line-26">        <span class="n">citation</span><span class="o">=</span><span class="s2">"""@inproceedings{srivastava2015unsupervised,</span>
 </span><span id="line-27"><span class="s2">            title={Unsupervised Learning of Video Representations using LSTMs},</span>
 </span><span id="line-28"><span class="s2">            author={Srivastava, Nitish and Mansimov, Elman and Salakhutdinov, Ruslan},</span>
 </span><span id="line-29"><span class="s2">            booktitle=</span><span class="si">{ICML}</span><span class="s2">,</span>
 </span><span id="line-30"><span class="s2">            year=</span><span class="si">{2015}</span>
-</span><span id="line-31"><span class="s2">        }&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-31"><span class="s2">        }"""</span><span class="p">,</span>
 </span><span id="line-32">    <span class="p">)</span>
 </span><span id="line-33">
 </span><span id="line-34">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-35">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-36">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;MovingMNIST test split: 10,000 sequences of 20 grayscale 64x64 frames.&quot;</span><span class="p">,</span>
-</span><span id="line-37">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">({</span><span class="s2">&quot;video&quot;</span><span class="p">:</span> <span class="n">Array4D</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)}),</span>
+</span><span id="line-36">            <span class="n">description</span><span class="o">=</span><span class="s2">"MovingMNIST test split: 10,000 sequences of 20 grayscale 64x64 frames."</span><span class="p">,</span>
+</span><span id="line-37">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">({</span><span class="s2">"video"</span><span class="p">:</span> <span class="n">Array4D</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint8"</span><span class="p">)}),</span>
 </span><span id="line-38">            <span class="n">supervised_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="line-39">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
-</span><span id="line-40">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-39">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"homepage"</span><span class="p">],</span>
+</span><span id="line-40">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"citation"</span><span class="p">],</span>
 </span><span id="line-41">        <span class="p">)</span>
 </span><span id="line-42">
 </span><span id="line-43">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="line-44">        <span class="n">data_path</span> <span class="o">=</span> <span class="n">download</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="s2">&quot;test&quot;</span><span class="p">],</span> <span class="n">dest_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_download_dir</span><span class="p">)</span>
-</span><span id="line-45">        <span class="k">return</span> <span class="p">[</span><span class="n">SplitGenerator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data_path&quot;</span><span class="p">:</span> <span class="n">data_path</span><span class="p">})]</span>
+</span><span id="line-44">        <span class="n">data_path</span> <span class="o">=</span> <span class="n">download</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"assets"</span><span class="p">][</span><span class="s2">"test"</span><span class="p">],</span> <span class="n">dest_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_download_dir</span><span class="p">)</span>
+</span><span id="line-45">        <span class="k">return</span> <span class="p">[</span><span class="n">SplitGenerator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">Split</span><span class="o">.</span><span class="n">TEST</span><span class="p">,</span> <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"data_path"</span><span class="p">:</span> <span class="n">data_path</span><span class="p">})]</span>
 </span><span id="line-46">
 </span><span id="line-47">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">):</span>
 </span><span id="line-48">        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">data_path</span><span class="p">))</span>
 </span><span id="line-49">        <span class="c1"># Source layout: (T=20, N, H=64, W=64). Reshape to (N, T, H, W, 1).</span>
 </span><span id="line-50">        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
 </span><span id="line-51">        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-</span><span id="line-52">            <span class="k">yield</span> <span class="n">idx</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;video&quot;</span><span class="p">:</span> <span class="n">arr</span><span class="p">[</span><span class="n">idx</span><span class="p">]}</span></div>
+</span><span id="line-52">            <span class="k">yield</span> <span class="n">idx</span><span class="p">,</span> <span class="p">{</span><span class="s2">"video"</span><span class="p">:</span> <span class="n">arr</span><span class="p">[</span><span class="n">idx</span><span class="p">]}</span></div>
 
 </span></code></pre></div>
     </div></div>
@@ -282,7 +298,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.backends.lance_video_frames | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -194,7 +210,7 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.backends.lance_video_frames</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="sd">&quot;&quot;&quot;Lance-backed random-access video frame segment layout.&quot;&quot;&quot;</span>
+<span></span><code><span id="line-1"><span class="sd">"""Lance-backed random-access video frame segment layout."""</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span id="line-4">
@@ -208,9 +224,9 @@
 </span><span id="line-12">
 </span><span id="line-13"><span class="n">_FRAME_SCHEMA</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">schema</span><span class="p">(</span>
 </span><span id="line-14">    <span class="p">[</span>
-</span><span id="line-15">        <span class="p">(</span><span class="s2">&quot;video_id&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">()),</span>
-</span><span id="line-16">        <span class="p">(</span><span class="s2">&quot;frame_idx&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">()),</span>
-</span><span id="line-17">        <span class="p">(</span><span class="s2">&quot;bytes&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">large_binary</span><span class="p">()),</span>
+</span><span id="line-15">        <span class="p">(</span><span class="s2">"video_id"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">()),</span>
+</span><span id="line-16">        <span class="p">(</span><span class="s2">"frame_idx"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">int32</span><span class="p">()),</span>
+</span><span id="line-17">        <span class="p">(</span><span class="s2">"bytes"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">large_binary</span><span class="p">()),</span>
 </span><span id="line-18">    <span class="p">]</span>
 </span><span id="line-19"><span class="p">)</span>
 </span><span id="line-20">
@@ -230,7 +246,7 @@
 <div class="viewcode-block" id="reset_worker_state">
 <a class="viewcode-back" href="../../../../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.reset_worker_state">[docs]</a>
 </span><span id="line-34"><span class="k">def</span><span class="w"> </span><span class="nf">reset_worker_state</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-35"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Reset process-local decoder/backend state after a DataLoader fork.&quot;&quot;&quot;</span>
+</span><span id="line-35"><span class="w">    </span><span class="sd">"""Reset process-local decoder/backend state after a DataLoader fork."""</span>
 </span><span id="line-36">    <span class="k">global</span> <span class="n">_LANCE_CACHE</span>
 </span><span id="line-37">    <span class="n">_LANCE_CACHE</span> <span class="o">=</span> <span class="p">{}</span>
 </span><span id="line-38">    <span class="k">try</span><span class="p">:</span>
@@ -250,11 +266,11 @@
 </span><span id="line-51">    <span class="n">min_video_frames</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="line-52"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
 </span><span id="line-53">    <span class="k">if</span> <span class="n">window_length</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span id="line-54">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;window_length must be &gt;= 1, got </span><span class="si">{</span><span class="n">window_length</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-54">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"window_length must be &gt;= 1, got </span><span class="si">{</span><span class="n">window_length</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-55">    <span class="k">if</span> <span class="n">frame_skip</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="line-56">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;frame_skip must be &gt;= 0, got </span><span class="si">{</span><span class="n">frame_skip</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-56">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"frame_skip must be &gt;= 0, got </span><span class="si">{</span><span class="n">frame_skip</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-57">    <span class="k">if</span> <span class="n">hop_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span id="line-58">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;hop_size must be &gt;= 1, got </span><span class="si">{</span><span class="n">hop_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-58">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"hop_size must be &gt;= 1, got </span><span class="si">{</span><span class="n">hop_size</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-59">
 </span><span id="line-60">    <span class="n">stride</span> <span class="o">=</span> <span class="n">frame_skip</span> <span class="o">+</span> <span class="mi">1</span>
 </span><span id="line-61">    <span class="n">span</span> <span class="o">=</span> <span class="p">(</span><span class="n">window_length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">stride</span> <span class="o">+</span> <span class="mi">1</span>
@@ -264,7 +280,7 @@
 </span><span id="line-65">    <span class="n">seg_start</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="line-66">    <span class="n">per_video</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="line-67">    <span class="k">for</span> <span class="n">vi</span><span class="p">,</span> <span class="n">video</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">videos</span><span class="p">):</span>
-</span><span id="line-68">        <span class="n">frames</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
+</span><span id="line-68">        <span class="n">frames</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="p">[</span><span class="s2">"T"</span><span class="p">])</span>
 </span><span id="line-69">        <span class="k">if</span> <span class="n">frames</span> <span class="o">&lt;</span> <span class="n">min_t</span><span class="p">:</span>
 </span><span id="line-70">            <span class="n">per_video</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </span><span id="line-71">            <span class="k">continue</span>
@@ -280,11 +296,11 @@
 <div class="viewcode-block" id="LanceVideoFramesBackend">
 <a class="viewcode-back" href="../../../../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend">[docs]</a>
 </span><span id="line-81"><span class="k">class</span><span class="w"> </span><span class="nc">LanceVideoFramesBackend</span><span class="p">:</span>
-</span><span id="line-82"><span class="w">    </span><span class="sd">&quot;&quot;&quot;StorageBackend for the ``lance-video-frames`` layout.</span>
+</span><span id="line-82"><span class="w">    </span><span class="sd">"""StorageBackend for the ``lance-video-frames`` layout.</span>
 </span><span id="line-83">
 </span><span id="line-84"><span class="sd">    The physical Lance dataset stores one WebP-encoded frame per row. The</span>
 </span><span id="line-85"><span class="sd">    logical dataset exposes deterministic frame windows as samples.</span>
-</span><span id="line-86"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-86"><span class="sd">    """</span>
 </span><span id="line-87">
 </span><span id="line-88">    <span class="n">prefer_batched_take</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 </span><span id="line-89">
@@ -306,13 +322,13 @@
 </span><span id="line-105">        <span class="bp">self</span><span class="o">.</span><span class="n">_stride</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_skip</span> <span class="o">+</span> <span class="mi">1</span>
 </span><span id="line-106">        <span class="bp">self</span><span class="o">.</span><span class="n">_span</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stride</span> <span class="o">+</span> <span class="mi">1</span>
 </span><span id="line-107">
-</span><span id="line-108">        <span class="n">meta_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uri</span> <span class="o">/</span> <span class="s2">&quot;_metadata.json&quot;</span>
+</span><span id="line-108">        <span class="n">meta_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uri</span> <span class="o">/</span> <span class="s2">"_metadata.json"</span>
 </span><span id="line-109">        <span class="k">if</span> <span class="ow">not</span> <span class="n">meta_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="line-110">            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No metadata file at </span><span class="si">{</span><span class="n">meta_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-110">            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No metadata file at </span><span class="si">{</span><span class="n">meta_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-111">        <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">meta_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
-</span><span id="line-112">        <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;videos&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+</span><span id="line-112">        <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"videos"</span><span class="p">,</span> <span class="p">[]))</span>
 </span><span id="line-113">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span><span class="p">:</span>
-</span><span id="line-114">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;no videos recorded in </span><span class="si">{</span><span class="n">meta_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-114">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no videos recorded in </span><span class="si">{</span><span class="n">meta_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-115">
 </span><span id="line-116">        <span class="bp">self</span><span class="o">.</span><span class="n">_seg_vid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seg_start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_per_video</span> <span class="o">=</span> <span class="n">_compute_segment_plan</span><span class="p">(</span>
 </span><span id="line-117">            <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span><span class="p">,</span>
@@ -322,7 +338,7 @@
 </span><span id="line-121">            <span class="n">min_video_frames</span><span class="p">,</span>
 </span><span id="line-122">        <span class="p">)</span>
 </span><span id="line-123">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seg_vid</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span id="line-124">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;no valid segments: every video has fewer than span=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_span</span><span class="si">}</span><span class="s2"> frames&quot;</span><span class="p">)</span>
+</span><span id="line-124">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"no valid segments: every video has fewer than span=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_span</span><span class="si">}</span><span class="s2"> frames"</span><span class="p">)</span>
 </span><span id="line-125">        <span class="bp">self</span><span class="o">.</span><span class="n">_ds</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span id="line-126">
 </span><span id="line-127">    <span class="nd">@property</span>
@@ -357,7 +373,7 @@
 </span><span id="line-156">
 </span><span id="line-157">    <span class="nd">@property</span>
 </span><span id="line-158">    <span class="k">def</span><span class="w"> </span><span class="nf">video_paths</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span id="line-159">        <span class="k">return</span> <span class="p">[</span><span class="n">video</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span><span class="p">]</span>
+</span><span id="line-159">        <span class="k">return</span> <span class="p">[</span><span class="n">video</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span> <span class="k">for</span> <span class="n">video</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span><span class="p">]</span>
 </span><span id="line-160">
 </span><span id="line-161">    <span class="nd">@property</span>
 </span><span id="line-162">    <span class="k">def</span><span class="w"> </span><span class="nf">segment_filenames</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -367,7 +383,7 @@
 <div class="viewcode-block" id="LanceVideoFramesBackend.segment_filename">
 <a class="viewcode-back" href="../../../../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.segment_filename">[docs]</a>
 </span><span id="line-166">    <span class="k">def</span><span class="w"> </span><span class="nf">segment_filename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-167">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seg_vid</span><span class="p">[</span><span class="n">idx</span><span class="p">])][</span><span class="s2">&quot;path&quot;</span><span class="p">]</span></div>
+</span><span id="line-167">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seg_vid</span><span class="p">[</span><span class="n">idx</span><span class="p">])][</span><span class="s2">"path"</span><span class="p">]</span></div>
 
 </span><span id="line-168">
 <div class="viewcode-block" id="LanceVideoFramesBackend.segment_info">
@@ -376,10 +392,10 @@
 </span><span id="line-170">        <span class="n">vi</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seg_vid</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
 </span><span id="line-171">        <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seg_start</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
 </span><span id="line-172">        <span class="k">return</span> <span class="p">{</span>
-</span><span id="line-173">            <span class="s2">&quot;video_idx&quot;</span><span class="p">:</span> <span class="n">vi</span><span class="p">,</span>
-</span><span id="line-174">            <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span><span class="p">[</span><span class="n">vi</span><span class="p">][</span><span class="s2">&quot;path&quot;</span><span class="p">],</span>
-</span><span id="line-175">            <span class="s2">&quot;start_frame&quot;</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span>
-</span><span id="line-176">            <span class="s2">&quot;frame_indices&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">start</span> <span class="o">+</span> <span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stride</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">)],</span>
+</span><span id="line-173">            <span class="s2">"video_idx"</span><span class="p">:</span> <span class="n">vi</span><span class="p">,</span>
+</span><span id="line-174">            <span class="s2">"filename"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span><span class="p">[</span><span class="n">vi</span><span class="p">][</span><span class="s2">"path"</span><span class="p">],</span>
+</span><span id="line-175">            <span class="s2">"start_frame"</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span>
+</span><span id="line-176">            <span class="s2">"frame_indices"</span><span class="p">:</span> <span class="p">[</span><span class="n">start</span> <span class="o">+</span> <span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stride</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">)],</span>
 </span><span id="line-177">        <span class="p">}</span></div>
 
 </span><span id="line-178">
@@ -395,21 +411,21 @@
 </span><span id="line-186">        <span class="n">start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seg_start</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
 </span><span id="line-187">        <span class="n">video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_videos</span><span class="p">[</span><span class="n">vi</span><span class="p">]</span>
 </span><span id="line-188">        <span class="n">frame_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">start</span> <span class="o">+</span> <span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stride</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">)]</span>
-</span><span id="line-189">        <span class="n">row0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="p">[</span><span class="s2">&quot;start_row&quot;</span><span class="p">])</span>
+</span><span id="line-189">        <span class="n">row0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="p">[</span><span class="s2">"start_row"</span><span class="p">])</span>
 </span><span id="line-190">        <span class="n">rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">row0</span> <span class="o">+</span> <span class="n">frame_idx</span> <span class="k">for</span> <span class="n">frame_idx</span> <span class="ow">in</span> <span class="n">frame_indices</span><span class="p">]</span>
 </span><span id="line-191">
-</span><span id="line-192">        <span class="n">blobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bytes&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="s2">&quot;bytes&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_pylist</span><span class="p">()</span>
-</span><span id="line-193">        <span class="n">frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_blobs</span><span class="p">(</span><span class="n">blobs</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="p">[</span><span class="s2">&quot;W&quot;</span><span class="p">]))</span>
+</span><span id="line-192">        <span class="n">blobs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"bytes"</span><span class="p">])</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="s2">"bytes"</span><span class="p">)</span><span class="o">.</span><span class="n">to_pylist</span><span class="p">()</span>
+</span><span id="line-193">        <span class="n">frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_blobs</span><span class="p">(</span><span class="n">blobs</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="p">[</span><span class="s2">"H"</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">video</span><span class="p">[</span><span class="s2">"W"</span><span class="p">]))</span>
 </span><span id="line-194">
 </span><span id="line-195">        <span class="n">sample</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-196">            <span class="s2">&quot;video&quot;</span><span class="p">:</span> <span class="n">frames</span><span class="p">,</span>
-</span><span id="line-197">            <span class="s2">&quot;video_idx&quot;</span><span class="p">:</span> <span class="n">vi</span><span class="p">,</span>
-</span><span id="line-198">            <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">video</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">],</span>
-</span><span id="line-199">            <span class="s2">&quot;start_frame&quot;</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span>
-</span><span id="line-200">            <span class="s2">&quot;frame_indices&quot;</span><span class="p">:</span> <span class="n">frame_indices</span><span class="p">,</span>
-</span><span id="line-201">            <span class="s2">&quot;sample_idx&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+</span><span id="line-196">            <span class="s2">"video"</span><span class="p">:</span> <span class="n">frames</span><span class="p">,</span>
+</span><span id="line-197">            <span class="s2">"video_idx"</span><span class="p">:</span> <span class="n">vi</span><span class="p">,</span>
+</span><span id="line-198">            <span class="s2">"filename"</span><span class="p">:</span> <span class="n">video</span><span class="p">[</span><span class="s2">"path"</span><span class="p">],</span>
+</span><span id="line-199">            <span class="s2">"start_frame"</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span>
+</span><span id="line-200">            <span class="s2">"frame_indices"</span><span class="p">:</span> <span class="n">frame_indices</span><span class="p">,</span>
+</span><span id="line-201">            <span class="s2">"sample_idx"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
 </span><span id="line-202">        <span class="p">}</span>
-</span><span id="line-203">        <span class="n">metadata</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;metadata&quot;</span><span class="p">)</span>
+</span><span id="line-203">        <span class="n">metadata</span> <span class="o">=</span> <span class="n">video</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metadata"</span><span class="p">)</span>
 </span><span id="line-204">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metadata</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
 </span><span id="line-205">            <span class="n">sample</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span>
 </span><span id="line-206">        <span class="k">return</span> <span class="n">sample</span></div>
@@ -422,8 +438,8 @@
 </span><span id="line-210">        <span class="n">serializable</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="line-211">        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
 </span><span id="line-212">            <span class="n">converted</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-</span><span id="line-213">            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">converted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;video&quot;</span><span class="p">),</span> <span class="s2">&quot;tolist&quot;</span><span class="p">):</span>
-</span><span id="line-214">                <span class="n">converted</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">converted</span><span class="p">[</span><span class="s2">&quot;video&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</span><span id="line-213">            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">converted</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"video"</span><span class="p">),</span> <span class="s2">"tolist"</span><span class="p">):</span>
+</span><span id="line-214">                <span class="n">converted</span><span class="p">[</span><span class="s2">"video"</span><span class="p">]</span> <span class="o">=</span> <span class="n">converted</span><span class="p">[</span><span class="s2">"video"</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 </span><span id="line-215">            <span class="n">serializable</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">converted</span><span class="p">)</span>
 </span><span id="line-216">        <span class="k">return</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pylist</span><span class="p">(</span><span class="n">serializable</span><span class="p">)</span> <span class="k">if</span> <span class="n">serializable</span> <span class="k">else</span> <span class="n">pa</span><span class="o">.</span><span class="n">table</span><span class="p">({})</span></div>
 
@@ -454,20 +470,20 @@
 </span><span id="line-235">
 </span><span id="line-236">    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 </span><span id="line-237">        <span class="k">return</span> <span class="p">{</span>
-</span><span id="line-238">            <span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uri</span><span class="p">),</span>
-</span><span id="line-239">            <span class="s2">&quot;window_length&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">,</span>
-</span><span id="line-240">            <span class="s2">&quot;frame_skip&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_skip</span><span class="p">,</span>
-</span><span id="line-241">            <span class="s2">&quot;hop_size&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hop_size</span><span class="p">,</span>
-</span><span id="line-242">            <span class="s2">&quot;batch_readahead&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_readahead</span><span class="p">,</span>
+</span><span id="line-238">            <span class="s2">"uri"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_uri</span><span class="p">),</span>
+</span><span id="line-239">            <span class="s2">"window_length"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_length</span><span class="p">,</span>
+</span><span id="line-240">            <span class="s2">"frame_skip"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">frame_skip</span><span class="p">,</span>
+</span><span id="line-241">            <span class="s2">"hop_size"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">hop_size</span><span class="p">,</span>
+</span><span id="line-242">            <span class="s2">"batch_readahead"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_batch_readahead</span><span class="p">,</span>
 </span><span id="line-243">        <span class="p">}</span>
 </span><span id="line-244">
 </span><span id="line-245">    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-246">        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-</span><span id="line-247">            <span class="n">uri</span><span class="o">=</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;uri&quot;</span><span class="p">],</span>
-</span><span id="line-248">            <span class="n">window_length</span><span class="o">=</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;window_length&quot;</span><span class="p">],</span>
-</span><span id="line-249">            <span class="n">frame_skip</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frame_skip&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
-</span><span id="line-250">            <span class="n">hop_size</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hop_size&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-</span><span id="line-251">            <span class="n">batch_readahead</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;batch_readahead&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
+</span><span id="line-247">            <span class="n">uri</span><span class="o">=</span><span class="n">state</span><span class="p">[</span><span class="s2">"uri"</span><span class="p">],</span>
+</span><span id="line-248">            <span class="n">window_length</span><span class="o">=</span><span class="n">state</span><span class="p">[</span><span class="s2">"window_length"</span><span class="p">],</span>
+</span><span id="line-249">            <span class="n">frame_skip</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frame_skip"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+</span><span id="line-250">            <span class="n">hop_size</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hop_size"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+</span><span id="line-251">            <span class="n">batch_readahead</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"batch_readahead"</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span>
 </span><span id="line-252">        <span class="p">)</span>
 </span><span id="line-253">
 <div class="viewcode-block" id="LanceVideoFramesBackend.worker_init">
@@ -486,13 +502,13 @@
 </span><span id="line-264">        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">blob</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">blobs</span><span class="p">):</span>
 </span><span id="line-265">            <span class="n">bgr</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imdecode</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">blob</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span> <span class="n">cv2</span><span class="o">.</span><span class="n">IMREAD_COLOR</span><span class="p">)</span>
 </span><span id="line-266">            <span class="k">if</span> <span class="n">bgr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-267">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to decode video frame blob at position </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-267">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Failed to decode video frame blob at position </span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-268">            <span class="n">out</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">bgr</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
 </span><span id="line-269">        <span class="k">return</span> <span class="n">out</span></div>
 
 </span><span id="line-270">
 </span><span id="line-271">
-</span><span id="line-272"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;LanceVideoFramesBackend&quot;</span><span class="p">,</span> <span class="s2">&quot;reset_worker_state&quot;</span><span class="p">]</span>
+</span><span id="line-272"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"LanceVideoFramesBackend"</span><span class="p">,</span> <span class="s2">"reset_worker_state"</span><span class="p">]</span>
 </span></code></pre></div>
     </div></div>
           </main>
@@ -526,7 +542,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

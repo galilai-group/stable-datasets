@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.backends.protocol | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -194,7 +210,7 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.backends.protocol</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="sd">&quot;&quot;&quot;Read-side storage backend protocol.</span>
+<span></span><code><span id="line-1"><span class="sd">"""Read-side storage backend protocol.</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="sd">Defines :class:`StorageBackend`, the interface :class:`StableDataset`</span>
 </span><span id="line-4"><span class="sd">depends on for row access, iteration, and materialization. Concrete</span>
@@ -203,7 +219,7 @@
 </span><span id="line-7"><span class="sd">Arrow types (:class:`pa.Table`, :class:`pa.RecordBatch`,</span>
 </span><span id="line-8"><span class="sd">:class:`pa.Schema`) are the boundary types. Members not declared on the</span>
 </span><span id="line-9"><span class="sd">protocol are backend-private.</span>
-</span><span id="line-10"><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="line-10"><span class="sd">"""</span>
 </span><span id="line-11">
 </span><span id="line-12"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span id="line-13">
@@ -218,7 +234,7 @@
 <a class="viewcode-back" href="../../../../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend">[docs]</a>
 </span><span id="line-21"><span class="nd">@runtime_checkable</span>
 </span><span id="line-22"><span class="k">class</span><span class="w"> </span><span class="nc">StorageBackend</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-</span><span id="line-23"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Read-side storage interface consumed by ``StableDataset``.&quot;&quot;&quot;</span>
+</span><span id="line-23"><span class="w">    </span><span class="sd">"""Read-side storage interface consumed by ``StableDataset``."""</span>
 </span><span id="line-24">
 </span><span id="line-25">    <span class="c1"># -- Shape ----------------------------------------------------------------</span>
 </span><span id="line-26">
@@ -238,11 +254,11 @@
 </span><span id="line-40">
 </span><span id="line-41">    <span class="nd">@property</span>
 </span><span id="line-42">    <span class="k">def</span><span class="w"> </span><span class="nf">table</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">:</span>
-</span><span id="line-43"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Full materialization as a single ``pa.Table``.</span>
+</span><span id="line-43"><span class="w">        </span><span class="sd">"""Full materialization as a single ``pa.Table``.</span>
 </span><span id="line-44">
 </span><span id="line-45"><span class="sd">        Expensive for multi-shard datasets. Hot paths should prefer</span>
 </span><span id="line-46"><span class="sd">        ``get_row``, ``take``, ``slice``, or ``iter_batches``.</span>
-</span><span id="line-47"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="line-47"><span class="sd">        """</span>
 </span><span id="line-48">        <span class="o">...</span>
 </span><span id="line-49">
 </span><span id="line-50">    <span class="c1"># -- Random access --------------------------------------------------------</span>
@@ -316,7 +332,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="Index | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../search/" />
   <link rel="index" title="Index" href="#" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -195,10 +211,10 @@
   <h2 id="_">_</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.__init__">__init__() (BaseDatasetBuilder method)</a>, <a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.__init__">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.__init__">__init__() (BaseDatasetBuilder method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.__init__">(LanceBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.__init__">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.__init__">(LanceBackend method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -208,70 +224,36 @@
   <h2 id="A">A</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.add_column">add_column() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.add_column">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.add_column">add_column() (StableDataset method)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.DownloadInfo.all_urls">all_urls() (DownloadInfo method)</a>, <a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.all_urls">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.all_urls">all_urls() (DownloadInfo method)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.ArabicCharacters">ArabicCharacters (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.arabic_characters.ArabicCharacters">(class in stable_datasets.images.arabic_characters)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.arabic_characters.ArabicCharacters">ArabicCharacters (class in stable_datasets.images.arabic_characters)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.ArabicDigits">ArabicDigits (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.arabic_digits.ArabicDigits">(class in stable_datasets.images.arabic_digits)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.arabic_digits.ArabicDigits">ArabicDigits (class in stable_datasets.images.arabic_digits)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.Array3D">Array3D (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Array3D">(class in stable_datasets.features)</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.array.Array3D">Array3D (class in stable_datasets.features.array)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.array.Array3D">(class in stable_datasets.features.array)</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.array.Array4D">Array4D (class in stable_datasets.features.array)</a>
 </li>
-        <li><a href="../stable_datasets/#stable_datasets.schema.Array3D">(class in stable_datasets.schema)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.Array4D">Array4D (class in stable_datasets.features)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.array.Array4D">(class in stable_datasets.features.array)</a>
-</li>
-        <li><a href="../stable_datasets/#stable_datasets.schema.Array4D">(class in stable_datasets.schema)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.features/#stable_datasets.features.FeatureType.arrow_metadata">arrow_metadata() (FeatureType method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.arrow_metadata">[1]</a>, <a href="../stable_datasets/#stable_datasets.schema.FeatureType.arrow_metadata">[2]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.arrow_metadata">arrow_metadata() (FeatureType method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Video.arrow_metadata">(Video method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.Video.arrow_metadata">[1]</a>, <a href="../stable_datasets/#stable_datasets.Video.arrow_metadata">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Video.arrow_metadata">[3]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.video.Video.arrow_metadata">(Video method)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend">ArrowBackend (class in stable_datasets.backends)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend">(class in stable_datasets.backends.arrow_shards)</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend">ArrowBackend (class in stable_datasets.backends.arrow_shards)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.as_iterable">as_iterable() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.as_iterable">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.as_iterable">as_iterable() (StableDataset method)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.DatasetSource.assets">assets (DatasetSource attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetSource.assets">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource.assets">assets (DatasetSource attribute)</a>
 </li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.AudioMNIST">AudioMNIST (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.audiomnist.AudioMNIST">(class in stable_datasets.timeseries.audiomnist)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.audiomnist.AudioMNIST">AudioMNIST (class in stable_datasets.timeseries.audiomnist)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.AWA2">AWA2 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.awa2.AWA2">(class in stable_datasets.images.awa2)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.awa2.AWA2">AWA2 (class in stable_datasets.images.awa2)</a>
 </li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -281,49 +263,33 @@
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets/#stable_datasets.cache.CacheOpenResult.backend">backend (CacheOpenResult attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.BaseDatasetBuilder">BaseDatasetBuilder (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder">(class in stable_datasets.utils)</a>
+      <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder">BaseDatasetBuilder (class in stable_datasets.utils)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Beans">Beans (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.beans.Beans">(class in stable_datasets.images.beans)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.beans.Beans">Beans (class in stable_datasets.images.beans)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.BirdVoxDCASE20k">BirdVoxDCASE20k (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.birdvox_dcase_20k.BirdVoxDCASE20k">(class in stable_datasets.timeseries.birdvox_dcase_20k)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.birdvox_dcase_20k.BirdVoxDCASE20k">BirdVoxDCASE20k (class in stable_datasets.timeseries.birdvox_dcase_20k)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.brain_mnist.BrainMNIST">BrainMNIST (class in stable_datasets.timeseries.brain_mnist)</a>
 </li>
+      <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.BUILDER_CONFIGS">BUILDER_CONFIGS (BaseDatasetBuilder attribute)</a>
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST.BUILDER_CONFIGS">(EMNIST attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft.BUILDER_CONFIGS">(FGVCAircraft attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.BUILDER_CONFIGS">(HASYv2 attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.med_mnist.MedMNIST.BUILDER_CONFIGS">(MedMNIST attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.BUILDER_CONFIGS">BUILDER_CONFIGS (BaseDatasetBuilder attribute)</a>, <a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.BUILDER_CONFIGS">[1]</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.EMNIST.BUILDER_CONFIGS">(EMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST.BUILDER_CONFIGS">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.BuilderConfig">BuilderConfig (class in stable_datasets.schema)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.FGVCAircraft.BUILDER_CONFIGS">(FGVCAircraft attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft.BUILDER_CONFIGS">[1]</a>
-</li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.HASYv2.BUILDER_CONFIGS">(HASYv2 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.BUILDER_CONFIGS">[1]</a>
-</li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.MedMNIST.BUILDER_CONFIGS">(MedMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.med_mnist.MedMNIST.BUILDER_CONFIGS">[1]</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.BuilderConfig">BuilderConfig (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.schema.BuilderConfig">(class in stable_datasets.schema)</a>
-</li>
-      </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.utils.bulk_download">bulk_download() (in module stable_datasets.utils)</a>
 </li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef.bytes">bytes (VideoRef property)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.bytes">[1]</a>, <a href="../stable_datasets/#stable_datasets.VideoRef.bytes">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoRef.bytes">[3]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.bytes">bytes (VideoRef property)</a>
 </li>
   </ul></td>
   </tr>
@@ -332,130 +298,82 @@
   <h2 id="C">C</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.cache_dir">cache_dir (ArrowBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.cache_dir">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.cache_dir">cache_dir (ArrowBackend property)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.cache_dir">(LanceBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.cache_dir">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.cache_dir">(LanceBackend property)</a>
 </li>
         <li><a href="../stable_datasets/#stable_datasets.cache.LanceCacheMeta.cache_dir">(LanceCacheMeta attribute)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.cache_dir">(LanceVideoFramesBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.cache_dir">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.cache_dir">(LanceVideoFramesBackend property)</a>
 </li>
         <li><a href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.cache_dir">(ShardedCacheMeta attribute)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef.cache_dir">(VideoRef attribute)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.cache_dir">[1]</a>, <a href="../stable_datasets/#stable_datasets.VideoRef.cache_dir">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoRef.cache_dir">[3]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.cache_dir">(VideoRef attribute)</a>
 </li>
       </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.cache.cache_fingerprint">cache_fingerprint() (in module stable_datasets.cache)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.cache.CacheOpenResult">CacheOpenResult (class in stable_datasets.cache)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Cars196">Cars196 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.cars196.Cars196">(class in stable_datasets.images.cars196)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.cars196.Cars196">Cars196 (class in stable_datasets.images.cars196)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Cars3D">Cars3D (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.cars3d.Cars3D">(class in stable_datasets.images.cars3d)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.cars3d.Cars3D">Cars3D (class in stable_datasets.images.cars3d)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.cassava.cassava">cassava (class in stable_datasets.images.cassava)</a>
 </li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs">CatsDogs (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.CatsDogs">(class in stable_datasets.timeseries.CatsDogs)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.CatsDogs">CatsDogs (class in stable_datasets.timeseries.CatsDogs)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.celeb_a.CelebA">CelebA (class in stable_datasets.images.celeb_a)</a>
 </li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef.cell">cell (VideoRef attribute)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.cell">[1]</a>, <a href="../stable_datasets/#stable_datasets.VideoRef.cell">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoRef.cell">[3]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.cell">cell (VideoRef attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.DownloadInfo.checksum">checksum (DownloadInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.checksum">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.checksum">checksum (DownloadInfo attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef.checksum">(VideoRef property)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.checksum">[1]</a>, <a href="../stable_datasets/#stable_datasets.VideoRef.checksum">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoRef.checksum">[3]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.checksum">(VideoRef property)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.DatasetSource.checksums">checksums (DatasetSource attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetSource.checksums">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource.checksums">checksums (DatasetSource attribute)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR10">CIFAR10 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10.CIFAR10">(class in stable_datasets.images.cifar10)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR100">CIFAR100 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar100.CIFAR100">(class in stable_datasets.images.cifar100)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR100C">CIFAR100C (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C">(class in stable_datasets.images.cifar100_c)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10.CIFAR10">CIFAR10 (class in stable_datasets.images.cifar10)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR10C">CIFAR10C (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10_c.CIFAR10C">(class in stable_datasets.images.cifar10_c)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.cifar100.CIFAR100">CIFAR100 (class in stable_datasets.images.cifar100)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.DatasetInfo.citation">citation (DatasetInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.citation">[1]</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C">CIFAR100C (class in stable_datasets.images.cifar100_c)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10_c.CIFAR10C">CIFAR10C (class in stable_datasets.images.cifar10_c)</a>
+</li>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.citation">citation (DatasetInfo attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.DatasetSource.citation">(DatasetSource attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetSource.citation">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource.citation">(DatasetSource attribute)</a>
 </li>
       </ul></li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.cassava.cassava.classes">classes (cassava attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.ClassLabel">ClassLabel (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.ClassLabel">(class in stable_datasets.features)</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel">ClassLabel (class in stable_datasets.features.base)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel">(class in stable_datasets.features.base)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.clevrer.CLEVRER">CLEVRER (class in stable_datasets.images.clevrer)</a>
 </li>
-        <li><a href="../stable_datasets/#stable_datasets.schema.ClassLabel">(class in stable_datasets.schema)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.CLEVRER">CLEVRER (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.clevrer.CLEVRER">(class in stable_datasets.images.clevrer)</a>
-</li>
-      </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.schema.collect_dataset_citations">collect_dataset_citations() (in module stable_datasets.schema)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.column">column (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.column">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.column">column (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.column_names">column_names (StableDataset property)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.column_names">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.column_names">column_names (StableDataset property)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.compression">compression (ShardedCacheMeta attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.DatasetInfo.config_name">config_name (DatasetInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.config_name">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.config_name">config_name (DatasetInfo attribute)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Country211">Country211 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.country211.Country211">(class in stable_datasets.images.country211)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.country211.Country211">Country211 (class in stable_datasets.images.country211)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.crop">crop (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.crop">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.crop">crop (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.CUB200">CUB200 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.cub200.CUB200">(class in stable_datasets.images.cub200)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.cub200.CUB200">CUB200 (class in stable_datasets.images.cub200)</a>
 </li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -463,89 +381,57 @@
   <h2 id="D">D</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.DatasetInfo">DatasetInfo (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo">(class in stable_datasets.schema)</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo">DatasetInfo (class in stable_datasets.schema)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.DatasetSource">DatasetSource (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource">(class in stable_datasets.schema)</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource">DatasetSource (class in stable_datasets.schema)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.dclde.DCLDE">DCLDE (class in stable_datasets.timeseries.dclde)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.decode_fn">decode_fn (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decode_fn">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decode_fn">decode_fn (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.decode_fn_batched">decode_fn_batched (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decode_fn_batched">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decode_fn_batched">decode_fn_batched (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.decoder">decoder (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decoder">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decoder">decoder (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.DEFAULT_CONFIG_NAME">DEFAULT_CONFIG_NAME (BaseDatasetBuilder attribute)</a>, <a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.DEFAULT_CONFIG_NAME">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.DEFAULT_CONFIG_NAME">DEFAULT_CONFIG_NAME (BaseDatasetBuilder attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.FGVCAircraft.DEFAULT_CONFIG_NAME">(FGVCAircraft attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft.DEFAULT_CONFIG_NAME">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft.DEFAULT_CONFIG_NAME">(FGVCAircraft attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.HASYv2.DEFAULT_CONFIG_NAME">(HASYv2 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.DEFAULT_CONFIG_NAME">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.DEFAULT_CONFIG_NAME">(HASYv2 attribute)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.BuilderConfig.description">description (BuilderConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.BuilderConfig.description">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.BuilderConfig.description">description (BuilderConfig attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.DatasetInfo.description">(DatasetInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.description">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.description">(DatasetInfo attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets/#stable_datasets.cache.detect_cache_format">detect_cache_format() (in module stable_datasets.cache)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.cache.detect_cache_layout">detect_cache_layout() (in module stable_datasets.cache)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets.images/#stable_datasets.images.cassava.cassava.download">download() (cassava static method)</a>
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets/#stable_datasets.utils.download">(in module stable_datasets.utils)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.DownloadInfo">DownloadInfo (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.schema.DownloadInfo">(class in stable_datasets.schema)</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DownloadInfo">DownloadInfo (class in stable_datasets.schema)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.DSprites">DSprites (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites.DSprites">(class in stable_datasets.images.dsprites)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites.DSprites">DSprites (class in stable_datasets.images.dsprites)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.DSpritesColor">DSpritesColor (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_color.DSpritesColor">(class in stable_datasets.images.dsprites_color)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_color.DSpritesColor">DSpritesColor (class in stable_datasets.images.dsprites_color)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.DSpritesNoise">DSpritesNoise (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_noise.DSpritesNoise">(class in stable_datasets.images.dsprites_noise)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_noise.DSpritesNoise">DSpritesNoise (class in stable_datasets.images.dsprites_noise)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.DSpritesScream">DSpritesScream (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_scream.DSpritesScream">(class in stable_datasets.images.dsprites_scream)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_scream.DSpritesScream">DSpritesScream (class in stable_datasets.images.dsprites_scream)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.DTD">DTD (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.dtd.DTD">(class in stable_datasets.images.dtd)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.dtd.DTD">DTD (class in stable_datasets.images.dtd)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.dtype">dtype (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.dtype">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.dtype">dtype (VideoDecodeConfig attribute)</a>
 </li>
   </ul></td>
   </tr>
@@ -554,31 +440,27 @@
   <h2 id="E">E</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.images/#stable_datasets.images.EMNIST">EMNIST (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST">(class in stable_datasets.images.e_mnist)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST">EMNIST (class in stable_datasets.images.e_mnist)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNISTConfig">EMNISTConfig (class in stable_datasets.images.e_mnist)</a>
 </li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.ClassLabel.encode">encode() (ClassLabel method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.encode">[1]</a>, <a href="../stable_datasets/#stable_datasets.ClassLabel.encode">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.ClassLabel.encode">[3]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.encode">encode() (ClassLabel method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.FeatureType.encode">(FeatureType method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.encode">[1]</a>, <a href="../stable_datasets/#stable_datasets.schema.FeatureType.encode">[2]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.encode">(FeatureType method)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Image.encode">(Image method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.image.Image.encode">[1]</a>, <a href="../stable_datasets/#stable_datasets.Image.encode">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Image.encode">[3]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.image.Image.encode">(Image method)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Sequence.encode">(Sequence method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.Sequence.encode">[1]</a>, <a href="../stable_datasets/#stable_datasets.Sequence.encode">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Sequence.encode">[3]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.base.Sequence.encode">(Sequence method)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Video.encode">(Video method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.Video.encode">[1]</a>, <a href="../stable_datasets/#stable_datasets.Video.encode">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Video.encode">[3]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.video.Video.encode">(Video method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets/#stable_datasets.cache.encode_example">encode_example() (in module stable_datasets.cache)</a>
 </li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef.extension">extension (VideoRef property)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.extension">[1]</a>, <a href="../stable_datasets/#stable_datasets.VideoRef.extension">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoRef.extension">[3]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.extension">extension (VideoRef property)</a>
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.places365_small.Places365Small.extract_train_class">extract_train_class() (Places365Small static method)</a>
 </li>
@@ -589,86 +471,56 @@
   <h2 id="F">F</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.images/#stable_datasets.images.FacePointing">FacePointing (class in stable_datasets.images)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.face_pointing.FacePointing">FacePointing (class in stable_datasets.images.face_pointing)</a>
+</li>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.fallbacks">fallbacks (DownloadInfo attribute)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.fashion_mnist.FashionMNIST">FashionMNIST (class in stable_datasets.images.fashion_mnist)</a>
+</li>
+      <li><a href="../stable_datasets/#stable_datasets.schema.Features">Features (class in stable_datasets.schema)</a>
+</li>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.features">features (DatasetInfo attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.face_pointing.FacePointing">(class in stable_datasets.images.face_pointing)</a>
+        <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.features">(StableDataset property)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.DownloadInfo.fallbacks">fallbacks (DownloadInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.fallbacks">[1]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType">FeatureType (class in stable_datasets.features.base)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.FashionMNIST">FashionMNIST (class in stable_datasets.images)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft">FGVCAircraft (class in stable_datasets.images.fgvc_aircraft)</a>
+</li>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.filename">filename (DownloadInfo attribute)</a>
+</li>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.filter">filter() (StableDataset method)</a>
+</li>
+      <li><a href="../stable_datasets/#stable_datasets.schema.Features.fingerprint_data">fingerprint_data() (Features method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.fashion_mnist.FashionMNIST">(class in stable_datasets.images.fashion_mnist)</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.fingerprint_data">(FeatureType method)</a>
+</li>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.video.Video.fingerprint_data">(Video method)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.Features">Features (class in stable_datasets)</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.flatten_indices">flatten_indices() (StableDataset method)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.flowers102.Flowers102">Flowers102 (class in stable_datasets.images.flowers102)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.food101.Food101">Food101 (class in stable_datasets.images.food101)</a>
+</li>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.format">format() (ClassLabel method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.schema.Features">(class in stable_datasets.schema)</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.format">(FeatureType method)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.DatasetInfo.features">features (DatasetInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.features">[1]</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.StableDataset.features">(StableDataset property)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.features">[1]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.image.Image.format">(Image method)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.FeatureType">FeatureType (class in stable_datasets.features)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType">(class in stable_datasets.features.base)</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.base.Value.format">(Value method)</a>
 </li>
-        <li><a href="../stable_datasets/#stable_datasets.schema.FeatureType">(class in stable_datasets.schema)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.FGVCAircraft">FGVCAircraft (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft">(class in stable_datasets.images.fgvc_aircraft)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.DownloadInfo.filename">filename (DownloadInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.filename">[1]</a>
-</li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.filter">filter() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.filter">[1]</a>
-</li>
-      <li><a href="../stable_datasets/#stable_datasets.Features.fingerprint_data">fingerprint_data() (Features method)</a>, <a href="../stable_datasets/#stable_datasets.schema.Features.fingerprint_data">[1]</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.FeatureType.fingerprint_data">(FeatureType method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.fingerprint_data">[1]</a>, <a href="../stable_datasets/#stable_datasets.schema.FeatureType.fingerprint_data">[2]</a>
-</li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Video.fingerprint_data">(Video method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.Video.fingerprint_data">[1]</a>, <a href="../stable_datasets/#stable_datasets.Video.fingerprint_data">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Video.fingerprint_data">[3]</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.flatten_indices">flatten_indices() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.flatten_indices">[1]</a>
-</li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Flowers102">Flowers102 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.flowers102.Flowers102">(class in stable_datasets.images.flowers102)</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.video.Video.format">(Video method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Food101">Food101 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.food101.Food101">(class in stable_datasets.images.food101)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.ClassLabel.format">format() (ClassLabel method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.format">[1]</a>, <a href="../stable_datasets/#stable_datasets.ClassLabel.format">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.ClassLabel.format">[3]</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.FeatureType.format">(FeatureType method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.format">[1]</a>, <a href="../stable_datasets/#stable_datasets.schema.FeatureType.format">[2]</a>
-</li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Image.format">(Image method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.image.Image.format">[1]</a>, <a href="../stable_datasets/#stable_datasets.Image.format">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Image.format">[3]</a>
-</li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Value.format">(Value method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.Value.format">[1]</a>, <a href="../stable_datasets/#stable_datasets.Value.format">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Value.format">[3]</a>
-</li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Video.format">(Video method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.Video.format">[1]</a>, <a href="../stable_datasets/#stable_datasets.Video.format">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Video.format">[3]</a>
-</li>
-      </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.formatting.Formatter.format_batch">format_batch() (Formatter method)</a>
 
       <ul style="list-style-type:none">
@@ -695,20 +547,12 @@
       </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.formatting.Formatter">Formatter (class in stable_datasets.formatting)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.frame_stride">frame_stride (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.frame_stride">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.frame_stride">frame_stride (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Freefield1010">Freefield1010 (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.freefield1010.Freefield1010">(class in stable_datasets.timeseries.freefield1010)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.freefield1010.Freefield1010">Freefield1010 (class in stable_datasets.timeseries.freefield1010)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.FSDKaggle2018">FSDKaggle2018 (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd_kaggle_2018.FSDKaggle2018">(class in stable_datasets.timeseries.fsd_kaggle_2018)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd_kaggle_2018.FSDKaggle2018">FSDKaggle2018 (class in stable_datasets.timeseries.fsd_kaggle_2018)</a>
 </li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -716,42 +560,30 @@
   <h2 id="G">G</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Galaxy10Decal">Galaxy10Decal (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.galaxy10.Galaxy10Decal">(class in stable_datasets.images.galaxy10)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.galaxy10.Galaxy10Decal">Galaxy10Decal (class in stable_datasets.images.galaxy10)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.splits.SplitGenerator.gen_kwargs">gen_kwargs (SplitGenerator attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.DatasetSource.get">get() (DatasetSource method)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetSource.get">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource.get">get() (DatasetSource method)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.formatting.get_formatter">get_formatter() (in module stable_datasets.formatting)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.get_row">get_row() (ArrowBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.get_row">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.get_row">get_row() (ArrowBackend method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.get_row">(LanceBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.get_row">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.get_row">(LanceBackend method)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.get_row">(LanceVideoFramesBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.get_row">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.get_row">(LanceVideoFramesBackend method)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend.get_row">(StorageBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.get_row">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.get_row">(StorageBackend method)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.GrooveMIDI">GrooveMIDI (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.groove_MIDI.GrooveMIDI">(class in stable_datasets.timeseries.groove_MIDI)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.groove_MIDI.GrooveMIDI">GrooveMIDI (class in stable_datasets.timeseries.groove_MIDI)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.GTZAN">GTZAN (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.gtzan.GTZAN">(class in stable_datasets.timeseries.gtzan)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.gtzan.GTZAN">GTZAN (class in stable_datasets.timeseries.gtzan)</a>
 </li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -759,22 +591,20 @@
   <h2 id="H">H</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.images/#stable_datasets.images.HASYv2">HASYv2 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2">(class in stable_datasets.images.hasy_v2)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2">HASYv2 (class in stable_datasets.images.hasy_v2)</a>
 </li>
-      </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.high_gamma.HighGamma">HighGamma (class in stable_datasets.timeseries.high_gamma)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.DatasetInfo.homepage">homepage (DatasetInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.homepage">[1]</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.homepage">homepage (DatasetInfo attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.DatasetSource.homepage">(DatasetSource attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetSource.homepage">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource.homepage">(DatasetSource attribute)</a>
 </li>
       </ul></li>
+      <li><a href="../stable_datasets/#stable_datasets.utils.HostUnreachableError">HostUnreachableError</a>
+</li>
   </ul></td>
   </tr>
       </table>
@@ -782,67 +612,49 @@
   <h2 id="I">I</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.Image">Image (class in stable_datasets)</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.image.Image">Image (class in stable_datasets.features.image)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_100.ImageNet100">ImageNet100 (class in stable_datasets.images.imagenet_100)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_1k.ImageNet1K">ImageNet1K (class in stable_datasets.images.imagenet_1k)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_10.Imagenette">Imagenette (class in stable_datasets.images.imagenet_10)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Image">(class in stable_datasets.features)</a>
-</li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.image.Image">(class in stable_datasets.features.image)</a>
-</li>
-        <li><a href="../stable_datasets/#stable_datasets.schema.Image">(class in stable_datasets.schema)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.ImageNet100">ImageNet100 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_100.ImageNet100">(class in stable_datasets.images.imagenet_100)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.ImageNet1K">ImageNet1K (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_1k.ImageNet1K">(class in stable_datasets.images.imagenet_1k)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Imagenette">Imagenette (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_10.Imagenette">(class in stable_datasets.images.imagenet_10)</a>
-</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenette.Imagenette">(class in stable_datasets.images.imagenette)</a>
 </li>
       </ul></li>
+      <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.info">info (BaseDatasetBuilder property)</a>
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.info">(StableDataset property)</a>
+</li>
+      </ul></li>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.int2str">int2str() (ClassLabel method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.info">info (BaseDatasetBuilder property)</a>, <a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.info">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.is_file_backed">is_file_backed (ArrowBackend property)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.StableDataset.info">(StableDataset property)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.info">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.is_file_backed">(LanceBackend property)</a>
+</li>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.is_file_backed">(LanceVideoFramesBackend property)</a>
+</li>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.is_file_backed">(StorageBackend property)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.ClassLabel.int2str">int2str() (ClassLabel method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.int2str">[1]</a>, <a href="../stable_datasets/#stable_datasets.ClassLabel.int2str">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.ClassLabel.int2str">[3]</a>
-</li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.is_file_backed">is_file_backed (ArrowBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.is_file_backed">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.iter_batches">iter_batches() (ArrowBackend method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.is_file_backed">(LanceBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.is_file_backed">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.iter_batches">(LanceBackend method)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.is_file_backed">(LanceVideoFramesBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.is_file_backed">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.iter_batches">(LanceVideoFramesBackend method)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend.is_file_backed">(StorageBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.is_file_backed">[1]</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.iter_batches">iter_batches() (ArrowBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.iter_batches">[1]</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.iter_batches">(LanceBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.iter_batches">[1]</a>
-</li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.iter_batches">(LanceVideoFramesBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.iter_batches">[1]</a>
-</li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend.iter_batches">(StorageBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.iter_batches">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.iter_batches">(StorageBackend method)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.iter_epoch">iter_epoch() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.iter_epoch">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.iter_epoch">iter_epoch() (StableDataset method)</a>
 </li>
   </ul></td>
   </tr>
@@ -851,12 +663,8 @@
   <h2 id="J">J</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels">JapaneseVowels (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels">(class in stable_datasets.timeseries.JapaneseVowels)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels">JapaneseVowels (class in stable_datasets.timeseries.JapaneseVowels)</a>
 </li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -864,12 +672,8 @@
   <h2 id="K">K</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.images/#stable_datasets.images.KMNIST">KMNIST (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.k_mnist.KMNIST">(class in stable_datasets.images.k_mnist)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.k_mnist.KMNIST">KMNIST (class in stable_datasets.images.k_mnist)</a>
 </li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -877,46 +681,30 @@
   <h2 id="L">L</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend">LanceBackend (class in stable_datasets.backends)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend">(class in stable_datasets.backends.lance_rows)</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend">LanceBackend (class in stable_datasets.backends.lance_rows)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.cache.LanceCacheMeta">LanceCacheMeta (class in stable_datasets.cache)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend">LanceVideoFramesBackend (class in stable_datasets.backends)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend">(class in stable_datasets.backends.lance_video_frames)</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend">LanceVideoFramesBackend (class in stable_datasets.backends.lance_video_frames)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.cache.CacheOpenResult.layout">layout (CacheOpenResult attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.layout">(VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.layout">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.layout">(VideoDecodeConfig attribute)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.DatasetInfo.license">license (DatasetInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.license">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.license">license (DatasetInfo attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.DatasetSource.license">(DatasetSource attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetSource.license">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource.license">(DatasetSource attribute)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Linnaeus5">Linnaeus5 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.linnaeus5.Linnaeus5">(class in stable_datasets.images.linnaeus5)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.linnaeus5.Linnaeus5">Linnaeus5 (class in stable_datasets.images.linnaeus5)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.cassava.cassava.load">load() (cassava static method)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.esc.load">(in module stable_datasets.timeseries.esc)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.utils.load_from_tsfile_to_dataframe">load_from_tsfile_to_dataframe() (in module stable_datasets.utils)</a>
 </li>
   </ul></td>
@@ -926,25 +714,21 @@
   <h2 id="M">M</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.make_sampler">make_sampler() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.make_sampler">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.make_sampler">make_sampler() (StableDataset method)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.map">map() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.map">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.map">map() (StableDataset method)</a>
 </li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef.media_type">media_type (VideoRef property)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.media_type">[1]</a>, <a href="../stable_datasets/#stable_datasets.VideoRef.media_type">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoRef.media_type">[3]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.media_type">media_type (VideoRef property)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.MedMNIST">MedMNIST (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.med_mnist.MedMNIST">(class in stable_datasets.images.med_mnist)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.med_mnist.MedMNIST">MedMNIST (class in stable_datasets.images.med_mnist)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.med_mnist.MedMNISTConfig">MedMNISTConfig (class in stable_datasets.images.med_mnist)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.cache.CacheOpenResult.metadata">metadata (CacheOpenResult attribute)</a>
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.mnist.MNIST">MNIST (class in stable_datasets.images.mnist)</a>
 </li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef.mode">mode (VideoRef property)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.mode">[1]</a>, <a href="../stable_datasets/#stable_datasets.VideoRef.mode">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoRef.mode">[3]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.mode">mode (VideoRef property)</a>
 </li>
       <li>
     module
@@ -1092,8 +876,6 @@
 </li>
         <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.dclde">stable_datasets.timeseries.dclde</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.esc">stable_datasets.timeseries.esc</a>
-</li>
         <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.freefield1010">stable_datasets.timeseries.freefield1010</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.fsd_kaggle_2018">stable_datasets.timeseries.fsd_kaggle_2018</a>
@@ -1139,18 +921,10 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.MosquitoSound">MosquitoSound (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.MosquitoSound.MosquitoSound">(class in stable_datasets.timeseries.MosquitoSound)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.MosquitoSound.MosquitoSound">MosquitoSound (class in stable_datasets.timeseries.MosquitoSound)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.video/#stable_datasets.video.MovingMNIST">MovingMNIST (class in stable_datasets.video)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.video/#stable_datasets.video.moving_mnist.MovingMNIST">(class in stable_datasets.video.moving_mnist)</a>
+      <li><a href="../stable_datasets.video/#stable_datasets.video.moving_mnist.MovingMNIST">MovingMNIST (class in stable_datasets.video.moving_mnist)</a>
 </li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -1158,50 +932,46 @@
   <h2 id="N">N</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.BuilderConfig.name">name (BuilderConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.BuilderConfig.name">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.BuilderConfig.name">name (BuilderConfig attribute)</a>
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets/#stable_datasets.splits.SplitGenerator.name">(SplitGenerator attribute)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.NotMNIST">NotMNIST (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.not_mnist.NotMNIST">(class in stable_datasets.images.not_mnist)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.not_mnist.NotMNIST">NotMNIST (class in stable_datasets.images.not_mnist)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.num_frames">num_frames (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.num_frames">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.num_frames">num_frames (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.num_rows">num_rows (ArrowBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.num_rows">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.num_rows">num_rows (ArrowBackend property)</a>
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets/#stable_datasets.cache.CacheOpenResult.num_rows">(CacheOpenResult attribute)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.num_rows">(LanceBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.num_rows">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.num_rows">(LanceBackend property)</a>
 </li>
         <li><a href="../stable_datasets/#stable_datasets.cache.LanceCacheMeta.num_rows">(LanceCacheMeta attribute)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.num_rows">(LanceVideoFramesBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.num_rows">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.num_rows">(LanceVideoFramesBackend property)</a>
 </li>
         <li><a href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.num_rows">(ShardedCacheMeta attribute)</a>
 </li>
-        <li><a href="../stable_datasets/#stable_datasets.StableDataset.num_rows">(StableDataset property)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.num_rows">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.num_rows">(StableDataset property)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend.num_rows">(StorageBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.num_rows">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.num_rows">(StorageBackend property)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.num_shards">num_shards (ArrowBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.num_shards">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.num_shards">num_shards (ArrowBackend property)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.num_shards">(LanceBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.num_shards">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.num_shards">(LanceBackend property)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.num_shards">(LanceVideoFramesBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.num_shards">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.num_shards">(LanceVideoFramesBackend property)</a>
 </li>
         <li><a href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.num_shards">(ShardedCacheMeta attribute)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend.num_shards">(StorageBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.num_shards">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.num_shards">(StorageBackend property)</a>
 </li>
       </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.formatting.NumpyFormatter">NumpyFormatter (class in stable_datasets.formatting)</a>
@@ -1217,7 +987,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.output">output (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.output">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.output">output (VideoDecodeConfig attribute)</a>
 </li>
   </ul></td>
   </tr>
@@ -1226,34 +996,26 @@
   <h2 id="P">P</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.pad">pad (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.pad">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.pad">pad (VideoDecodeConfig attribute)</a>
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.patch_camelyon.PatchCamelyon">PatchCamelyon (class in stable_datasets.images.patch_camelyon)</a>
 </li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef.path">path (VideoRef property)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.path">[1]</a>, <a href="../stable_datasets/#stable_datasets.VideoRef.path">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoRef.path">[3]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.path">path (VideoRef property)</a>
 </li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme">Phoneme (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme.Phoneme">(class in stable_datasets.timeseries.Phoneme)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme.Phoneme">Phoneme (class in stable_datasets.timeseries.Phoneme)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Picidae">Picidae (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.picidae.Picidae">(class in stable_datasets.timeseries.picidae)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.picidae.Picidae">Picidae (class in stable_datasets.timeseries.picidae)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets.images/#stable_datasets.images.places365_small.Places365Small">Places365Small (class in stable_datasets.images.places365_small)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.prefer_batched_take">prefer_batched_take (ArrowBackend attribute)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.prefer_batched_take">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.prefer_batched_take">prefer_batched_take (ArrowBackend attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.prefer_batched_take">(LanceBackend attribute)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.prefer_batched_take">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.prefer_batched_take">(LanceBackend attribute)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.prefer_batched_take">(LanceVideoFramesBackend attribute)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.prefer_batched_take">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.prefer_batched_take">(LanceVideoFramesBackend attribute)</a>
 </li>
       </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.formatting.PythonFormatter">PythonFormatter (class in stable_datasets.formatting)</a>
@@ -1273,24 +1035,20 @@
 </li>
       <li><a href="../stable_datasets/#stable_datasets.cache.read_sharded_cache_meta">read_sharded_cache_meta() (in module stable_datasets.cache)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.remove_columns">remove_columns() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.remove_columns">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.remove_columns">remove_columns() (StableDataset method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.rename_column">rename_column() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.rename_column">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.rename_column">rename_column() (StableDataset method)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.rename_columns">rename_columns() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.rename_columns">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.rename_columns">rename_columns() (StableDataset method)</a>
 </li>
       <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.reset_worker_state">reset_worker_state() (in module stable_datasets.backends.lance_video_frames)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.resize">resize (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.resize">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.resize">resize (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.RockPaperScissor">RockPaperScissor (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor">(class in stable_datasets.images.rock_paper_scissor)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor">RockPaperScissor (class in stable_datasets.images.rock_paper_scissor)</a>
 </li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -1298,18 +1056,18 @@
   <h2 id="S">S</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.sampling">sampling (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.sampling">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.sampling">sampling (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.scale">scale (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.scale">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.scale">scale (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.schema">schema (ArrowBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.schema">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.schema">schema (ArrowBackend property)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.schema">(LanceBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.schema">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.schema">(LanceBackend property)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.schema">(LanceVideoFramesBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.schema">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.schema">(LanceVideoFramesBackend property)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend.schema">(StorageBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.schema">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.schema">(StorageBackend property)</a>
 </li>
       </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.cache.LanceCacheMeta.schema_fingerprint">schema_fingerprint (LanceCacheMeta attribute)</a>
@@ -1318,35 +1076,23 @@
         <li><a href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.schema_fingerprint">(ShardedCacheMeta attribute)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig.seed">seed (VideoDecodeConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.seed">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.seed">seed (VideoDecodeConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.segment_filename">segment_filename() (LanceVideoFramesBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.segment_filename">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.segment_filename">segment_filename() (LanceVideoFramesBackend method)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.segment_filenames">segment_filenames (LanceVideoFramesBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.segment_filenames">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.segment_filenames">segment_filenames (LanceVideoFramesBackend property)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.segment_info">segment_info() (LanceVideoFramesBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.segment_info">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.segment_info">segment_info() (LanceVideoFramesBackend method)</a>
 </li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.SeizuresNeonatal">SeizuresNeonatal (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.seizures_neonatal.SeizuresNeonatal">(class in stable_datasets.timeseries.seizures_neonatal)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.seizures_neonatal.SeizuresNeonatal">SeizuresNeonatal (class in stable_datasets.timeseries.seizures_neonatal)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.select">select() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.select">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.select">select() (StableDataset method)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.Sequence">Sequence (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Sequence">(class in stable_datasets.features)</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.Sequence">Sequence (class in stable_datasets.features.base)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.base.Sequence">(class in stable_datasets.features.base)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels.SEQUENCE_LENGTH">SEQUENCE_LENGTH (JapaneseVowels attribute)</a>
 </li>
-        <li><a href="../stable_datasets/#stable_datasets.schema.Sequence">(class in stable_datasets.schema)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels.SEQUENCE_LENGTH">SEQUENCE_LENGTH (JapaneseVowels attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.SEQUENCE_LENGTH">[1]</a>
-</li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.set_decode">set_decode() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.set_decode">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.set_decode">set_decode() (StableDataset method)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.samplers.ShardShuffleSampler.set_epoch">set_epoch() (ShardShuffleSampler method)</a>
 
@@ -1354,18 +1100,14 @@
         <li><a href="../stable_datasets/#stable_datasets.iterable.StableIterableDataset.set_epoch">(StableIterableDataset method)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.set_video_decode">set_video_decode() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.set_video_decode">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.set_video_decode">set_video_decode() (StableDataset method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.StableDatasetDict.set_video_decode">(StableDatasetDict method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDatasetDict.set_video_decode">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.dataset.StableDatasetDict.set_video_decode">(StableDatasetDict method)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Shapes3D">Shapes3D (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.shapes3d.Shapes3D">(class in stable_datasets.images.shapes3d)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.shapes3d.Shapes3D">Shapes3D (class in stable_datasets.images.shapes3d)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.shard_filenames">shard_filenames (ShardedCacheMeta attribute)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.cache.ShardedCacheMeta.shard_paths">shard_paths (ShardedCacheMeta property)</a>
@@ -1376,190 +1118,170 @@
 </li>
       <li><a href="../stable_datasets/#stable_datasets.samplers.ShardShuffleSampler">ShardShuffleSampler (class in stable_datasets.samplers)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.shuffle">shuffle() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.shuffle">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.shuffle">shuffle() (StableDataset method)</a>
 </li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef.size">size (VideoRef property)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.size">[1]</a>, <a href="../stable_datasets/#stable_datasets.VideoRef.size">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.VideoRef.size">[3]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef.size">size (VideoRef property)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.slice">slice() (ArrowBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.slice">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.slice">slice() (ArrowBackend method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.slice">(LanceBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.slice">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.slice">(LanceBackend method)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.slice">(LanceVideoFramesBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.slice">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.slice">(LanceVideoFramesBackend method)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend.slice">(StorageBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.slice">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.slice">(StorageBackend method)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.SmallNORB">SmallNORB (class in stable_datasets.images)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.small_norb.SmallNORB">SmallNORB (class in stable_datasets.images.small_norb)</a>
+</li>
+      <li><a href="../stable_datasets.video/#stable_datasets.video.something_something_v2.SomethingSomethingV2">SomethingSomethingV2 (class in stable_datasets.video.something_something_v2)</a>
+</li>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.sonycust.SONYCUST">SONYCUST (class in stable_datasets.timeseries.sonycust)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.arabic_characters.ArabicCharacters.SOURCE">SOURCE (ArabicCharacters attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.small_norb.SmallNORB">(class in stable_datasets.images.small_norb)</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.arabic_digits.ArabicDigits.SOURCE">(ArabicDigits attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.video/#stable_datasets.video.SomethingSomethingV2">SomethingSomethingV2 (class in stable_datasets.video)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.video/#stable_datasets.video.something_something_v2.SomethingSomethingV2">(class in stable_datasets.video.something_something_v2)</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.audiomnist.AudioMNIST.SOURCE">(AudioMNIST attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.SONYCUST">SONYCUST (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.sonycust.SONYCUST">(class in stable_datasets.timeseries.sonycust)</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.awa2.AWA2.SOURCE">(AWA2 attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.ArabicCharacters.SOURCE">SOURCE (ArabicCharacters attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.arabic_characters.ArabicCharacters.SOURCE">[1]</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.ArabicDigits.SOURCE">(ArabicDigits attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.arabic_digits.ArabicDigits.SOURCE">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.SOURCE">(BaseDatasetBuilder attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.AudioMNIST.SOURCE">(AudioMNIST attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.audiomnist.AudioMNIST.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.beans.Beans.SOURCE">(Beans attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.AWA2.SOURCE">(AWA2 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.awa2.AWA2.SOURCE">[1]</a>
-</li>
-        <li><a href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.SOURCE">(BaseDatasetBuilder attribute)</a>, <a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.SOURCE">[1]</a>
-</li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Beans.SOURCE">(Beans attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.beans.Beans.SOURCE">[1]</a>
-</li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.BirdVoxDCASE20k.SOURCE">(BirdVoxDCASE20k attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.birdvox_dcase_20k.BirdVoxDCASE20k.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.birdvox_dcase_20k.BirdVoxDCASE20k.SOURCE">(BirdVoxDCASE20k attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.brain_mnist.BrainMNIST.SOURCE">(BrainMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Cars196.SOURCE">(Cars196 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cars196.Cars196.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cars196.Cars196.SOURCE">(Cars196 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Cars3D.SOURCE">(Cars3D attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cars3d.Cars3D.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cars3d.Cars3D.SOURCE">(Cars3D attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.CatsDogs.SOURCE">(CatsDogs attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.CatsDogs.SOURCE">(CatsDogs attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.celeb_a.CelebA.SOURCE">(CelebA attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR10.SOURCE">(CIFAR10 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cifar10.CIFAR10.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10.CIFAR10.SOURCE">(CIFAR10 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR100.SOURCE">(CIFAR100 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cifar100.CIFAR100.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar100.CIFAR100.SOURCE">(CIFAR100 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR100C.SOURCE">(CIFAR100C attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C.SOURCE">(CIFAR100C attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR10C.SOURCE">(CIFAR10C attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cifar10_c.CIFAR10C.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10_c.CIFAR10C.SOURCE">(CIFAR10C attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CLEVRER.SOURCE">(CLEVRER attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.clevrer.CLEVRER.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.clevrer.CLEVRER.SOURCE">(CLEVRER attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Country211.SOURCE">(Country211 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.country211.Country211.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.country211.Country211.SOURCE">(Country211 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CUB200.SOURCE">(CUB200 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cub200.CUB200.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cub200.CUB200.SOURCE">(CUB200 attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.dclde.DCLDE.SOURCE">(DCLDE attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DSprites.SOURCE">(DSprites attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dsprites.DSprites.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites.DSprites.SOURCE">(DSprites attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DSpritesColor.SOURCE">(DSpritesColor attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dsprites_color.DSpritesColor.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_color.DSpritesColor.SOURCE">(DSpritesColor attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DSpritesNoise.SOURCE">(DSpritesNoise attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dsprites_noise.DSpritesNoise.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_noise.DSpritesNoise.SOURCE">(DSpritesNoise attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DSpritesScream.SOURCE">(DSpritesScream attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dsprites_scream.DSpritesScream.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_scream.DSpritesScream.SOURCE">(DSpritesScream attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DTD.SOURCE">(DTD attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dtd.DTD.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dtd.DTD.SOURCE">(DTD attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.EMNIST.SOURCE">(EMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST.SOURCE">(EMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.FacePointing.SOURCE">(FacePointing attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.face_pointing.FacePointing.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.face_pointing.FacePointing.SOURCE">(FacePointing attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.FashionMNIST.SOURCE">(FashionMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.fashion_mnist.FashionMNIST.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.fashion_mnist.FashionMNIST.SOURCE">(FashionMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.FGVCAircraft.SOURCE">(FGVCAircraft attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft.SOURCE">(FGVCAircraft attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Flowers102.SOURCE">(Flowers102 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.flowers102.Flowers102.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.flowers102.Flowers102.SOURCE">(Flowers102 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Food101.SOURCE">(Food101 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.food101.Food101.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.food101.Food101.SOURCE">(Food101 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Freefield1010.SOURCE">(Freefield1010 attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.freefield1010.Freefield1010.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.freefield1010.Freefield1010.SOURCE">(Freefield1010 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.FSDKaggle2018.SOURCE">(FSDKaggle2018 attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd_kaggle_2018.FSDKaggle2018.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd_kaggle_2018.FSDKaggle2018.SOURCE">(FSDKaggle2018 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Galaxy10Decal.SOURCE">(Galaxy10Decal attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.galaxy10.Galaxy10Decal.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.galaxy10.Galaxy10Decal.SOURCE">(Galaxy10Decal attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.GrooveMIDI.SOURCE">(GrooveMIDI attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.groove_MIDI.GrooveMIDI.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.groove_MIDI.GrooveMIDI.SOURCE">(GrooveMIDI attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.GTZAN.SOURCE">(GTZAN attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.gtzan.GTZAN.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.gtzan.GTZAN.SOURCE">(GTZAN attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.HASYv2.SOURCE">(HASYv2 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.SOURCE">(HASYv2 attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.high_gamma.HighGamma.SOURCE">(HighGamma attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.ImageNet100.SOURCE">(ImageNet100 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenet_100.ImageNet100.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_100.ImageNet100.SOURCE">(ImageNet100 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.ImageNet1K.SOURCE">(ImageNet1K attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenet_1k.ImageNet1K.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_1k.ImageNet1K.SOURCE">(ImageNet1K attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Imagenette.SOURCE">(Imagenette attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenet_10.Imagenette.SOURCE">[1]</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenette.Imagenette.SOURCE">[2]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_10.Imagenette.SOURCE">(Imagenette attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenette.Imagenette.SOURCE">[1]</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels.SOURCE">(JapaneseVowels attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels.SOURCE">(JapaneseVowels attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.KMNIST.SOURCE">(KMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.k_mnist.KMNIST.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.k_mnist.KMNIST.SOURCE">(KMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Linnaeus5.SOURCE">(Linnaeus5 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.linnaeus5.Linnaeus5.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.linnaeus5.Linnaeus5.SOURCE">(Linnaeus5 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.mnist.MNIST.SOURCE">(MNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.MosquitoSound.MosquitoSound.SOURCE">(MosquitoSound attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.MosquitoSound.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.MosquitoSound.MosquitoSound.SOURCE">(MosquitoSound attribute)</a>
 </li>
-        <li><a href="../stable_datasets.video/#stable_datasets.video.MovingMNIST.SOURCE">(MovingMNIST attribute)</a>, <a href="../stable_datasets.video/#stable_datasets.video.moving_mnist.MovingMNIST.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.video/#stable_datasets.video.moving_mnist.MovingMNIST.SOURCE">(MovingMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.NotMNIST.SOURCE">(NotMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.not_mnist.NotMNIST.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.not_mnist.NotMNIST.SOURCE">(NotMNIST attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.patch_camelyon.PatchCamelyon.SOURCE">(PatchCamelyon attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme.Phoneme.SOURCE">(Phoneme attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme.Phoneme.SOURCE">(Phoneme attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Picidae.SOURCE">(Picidae attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.picidae.Picidae.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.picidae.Picidae.SOURCE">(Picidae attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.places365_small.Places365Small.SOURCE">(Places365Small attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.RockPaperScissor.SOURCE">(RockPaperScissor attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor.SOURCE">(RockPaperScissor attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.SeizuresNeonatal.SOURCE">(SeizuresNeonatal attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.seizures_neonatal.SeizuresNeonatal.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.seizures_neonatal.SeizuresNeonatal.SOURCE">(SeizuresNeonatal attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Shapes3D.SOURCE">(Shapes3D attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.shapes3d.Shapes3D.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.shapes3d.Shapes3D.SOURCE">(Shapes3D attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.SmallNORB.SOURCE">(SmallNORB attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.small_norb.SmallNORB.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.small_norb.SmallNORB.SOURCE">(SmallNORB attribute)</a>
 </li>
-        <li><a href="../stable_datasets.video/#stable_datasets.video.SomethingSomethingV2.SOURCE">(SomethingSomethingV2 attribute)</a>, <a href="../stable_datasets.video/#stable_datasets.video.something_something_v2.SomethingSomethingV2.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.video/#stable_datasets.video.something_something_v2.SomethingSomethingV2.SOURCE">(SomethingSomethingV2 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.SONYCUST.SOURCE">(SONYCUST attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.sonycust.SONYCUST.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.sonycust.SONYCUST.SOURCE">(SONYCUST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.SpeechCommands.SOURCE">(SpeechCommands attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.speech_commands.SpeechCommands.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.speech_commands.SpeechCommands.SOURCE">(SpeechCommands attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.STL10.SOURCE">(STL10 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.stl10.STL10.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.stl10.STL10.SOURCE">(STL10 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.SVHN.SOURCE">(SVHN attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.svhn.SVHN.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.svhn.SVHN.SOURCE">(SVHN attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.TinyImagenet.SOURCE">(TinyImagenet attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet.TinyImagenet.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet.TinyImagenet.SOURCE">(TinyImagenet attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.TinyImagenetC.SOURCE">(TinyImagenetC attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet_c.TinyImagenetC.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet_c.TinyImagenetC.SOURCE">(TinyImagenetC attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.UrbanSound.SOURCE">(UrbanSound attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.UrbanSound.UrbanSound.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.UrbanSound.UrbanSound.SOURCE">(UrbanSound attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VocalSet.SOURCE">(VocalSet attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.vocalset.VocalSet.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.vocalset.VocalSet.SOURCE">(VocalSet attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VoiceGenderDetection.SOURCE">(VoiceGenderDetection attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VoiceGenderDetection.VoiceGenderDetection.SOURCE">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VoiceGenderDetection.VoiceGenderDetection.SOURCE">(VoiceGenderDetection attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Warblr.SOURCE">(Warblr attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.warblr.Warblr.SOURCE">[1]</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.SpeechCommands">SpeechCommands (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.speech_commands.SpeechCommands">(class in stable_datasets.timeseries.speech_commands)</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.warblr.Warblr.SOURCE">(Warblr attribute)</a>
 </li>
       </ul></li>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.speech_commands.SpeechCommands">SpeechCommands (class in stable_datasets.timeseries.speech_commands)</a>
+</li>
       <li><a href="../stable_datasets/#stable_datasets.splits.Split">Split (class in stable_datasets.splits)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.splits.SplitGenerator">SplitGenerator (class in stable_datasets.splits)</a>
 </li>
-      <li><a href="../stable_datasets.video/#stable_datasets.video.SSv2">SSv2 (in module stable_datasets.video)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.video/#stable_datasets.video.something_something_v2.SSv2">(in module stable_datasets.video.something_something_v2)</a>
+      <li><a href="../stable_datasets.video/#stable_datasets.video.something_something_v2.SSv2">SSv2 (in module stable_datasets.video.something_something_v2)</a>
 </li>
-      </ul></li>
       <li>
     stable_datasets
 
@@ -1707,8 +1429,6 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cars3d">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li>
     stable_datasets.images.cassava
 
@@ -1716,6 +1436,8 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cassava">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li>
     stable_datasets.images.celeb_a
 
@@ -2060,13 +1782,6 @@
 </li>
       </ul></li>
       <li>
-    stable_datasets.timeseries.esc
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.esc">module</a>
-</li>
-      </ul></li>
-      <li>
     stable_datasets.timeseries.freefield1010
 
       <ul style="list-style-type:none">
@@ -2213,44 +1928,24 @@
         <li><a href="../stable_datasets.video/#module-stable_datasets.video.something_something_v2">module</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset">StableDataset (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset">(class in stable_datasets.dataset)</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset">StableDataset (class in stable_datasets.dataset)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDatasetDict">StableDatasetDict (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.dataset.StableDatasetDict">(class in stable_datasets.dataset)</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDatasetDict">StableDatasetDict (class in stable_datasets.dataset)</a>
 </li>
-      </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.iterable.StableIterableDataset">StableIterableDataset (class in stable_datasets.iterable)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.STL10">STL10 (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.stl10.STL10">(class in stable_datasets.images.stl10)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.stl10.STL10">STL10 (class in stable_datasets.images.stl10)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.STORAGE_FORMAT">STORAGE_FORMAT (BaseDatasetBuilder attribute)</a>, <a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.STORAGE_FORMAT">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.STORAGE_FORMAT">STORAGE_FORMAT (BaseDatasetBuilder attribute)</a>
 </li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend">StorageBackend (class in stable_datasets.backends)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend">(class in stable_datasets.backends.protocol)</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend">StorageBackend (class in stable_datasets.backends.protocol)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.ClassLabel.str2int">str2int() (ClassLabel method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.str2int">[1]</a>, <a href="../stable_datasets/#stable_datasets.ClassLabel.str2int">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.ClassLabel.str2int">[3]</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.str2int">str2int() (ClassLabel method)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.DatasetInfo.supervised_keys">supervised_keys (DatasetInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.supervised_keys">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.supervised_keys">supervised_keys (DatasetInfo attribute)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.SVHN">SVHN (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.svhn.SVHN">(class in stable_datasets.images.svhn)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.svhn.SVHN">SVHN (class in stable_datasets.images.svhn)</a>
 </li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -2258,65 +1953,57 @@
   <h2 id="T">T</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.table">table (ArrowBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.table">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.table">table (ArrowBackend property)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.table">(LanceBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.table">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.table">(LanceBackend property)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.table">(LanceVideoFramesBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.table">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.table">(LanceVideoFramesBackend property)</a>
 </li>
-        <li><a href="../stable_datasets/#stable_datasets.StableDataset.table">(StableDataset property)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.table">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.table">(StableDataset property)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend.table">(StorageBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.table">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.table">(StorageBackend property)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.ArrowBackend.take">take() (ArrowBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.take">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.take">take() (ArrowBackend method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceBackend.take">(LanceBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.take">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend.take">(LanceBackend method)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.take">(LanceVideoFramesBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.take">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.take">(LanceVideoFramesBackend method)</a>
 </li>
-        <li><a href="../stable_datasets.backends/#stable_datasets.backends.StorageBackend.take">(StorageBackend method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.take">[1]</a>
+        <li><a href="../stable_datasets.backends/#stable_datasets.backends.protocol.StorageBackend.take">(StorageBackend method)</a>
 </li>
       </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.splits.Split.TEST">TEST (Split attribute)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.TinyImagenet">TinyImagenet (class in stable_datasets.images)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet.TinyImagenet">(class in stable_datasets.images.tiny_imagenet)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet.TinyImagenet">TinyImagenet (class in stable_datasets.images.tiny_imagenet)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.images/#stable_datasets.images.TinyImagenetC">TinyImagenetC (class in stable_datasets.images)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet_c.TinyImagenetC">TinyImagenetC (class in stable_datasets.images.tiny_imagenet_c)</a>
+</li>
+      <li><a href="../stable_datasets/#stable_datasets.schema.Features.to_arrow_schema">to_arrow_schema() (Features method)</a>
+</li>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.to_arrow_type">to_arrow_type() (ClassLabel method)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet_c.TinyImagenetC">(class in stable_datasets.images.tiny_imagenet_c)</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.to_arrow_type">(FeatureType method)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.Features.to_arrow_schema">to_arrow_schema() (Features method)</a>, <a href="../stable_datasets/#stable_datasets.schema.Features.to_arrow_schema">[1]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.image.Image.to_arrow_type">(Image method)</a>
 </li>
-      <li><a href="../stable_datasets.features/#stable_datasets.features.ClassLabel.to_arrow_type">to_arrow_type() (ClassLabel method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.to_arrow_type">[1]</a>, <a href="../stable_datasets/#stable_datasets.ClassLabel.to_arrow_type">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.ClassLabel.to_arrow_type">[3]</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.FeatureType.to_arrow_type">(FeatureType method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.FeatureType.to_arrow_type">[1]</a>, <a href="../stable_datasets/#stable_datasets.schema.FeatureType.to_arrow_type">[2]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.base.Sequence.to_arrow_type">(Sequence method)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Image.to_arrow_type">(Image method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.image.Image.to_arrow_type">[1]</a>, <a href="../stable_datasets/#stable_datasets.Image.to_arrow_type">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Image.to_arrow_type">[3]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.base.Value.to_arrow_type">(Value method)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Sequence.to_arrow_type">(Sequence method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.Sequence.to_arrow_type">[1]</a>, <a href="../stable_datasets/#stable_datasets.Sequence.to_arrow_type">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Sequence.to_arrow_type">[3]</a>
-</li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Value.to_arrow_type">(Value method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.base.Value.to_arrow_type">[1]</a>, <a href="../stable_datasets/#stable_datasets.Value.to_arrow_type">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Value.to_arrow_type">[3]</a>
-</li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Video.to_arrow_type">(Video method)</a>, <a href="../stable_datasets.features/#stable_datasets.features.video.Video.to_arrow_type">[1]</a>, <a href="../stable_datasets/#stable_datasets.Video.to_arrow_type">[2]</a>, <a href="../stable_datasets/#stable_datasets.schema.Video.to_arrow_type">[3]</a>
+        <li><a href="../stable_datasets.features/#stable_datasets.features.video.Video.to_arrow_type">(Video method)</a>
 </li>
       </ul></li>
       <li><a href="../stable_datasets/#stable_datasets.formatting.TorchFormatter">TorchFormatter (class in stable_datasets.formatting)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.splits.Split.TRAIN">TRAIN (Split attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.train_test_split">train_test_split() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.train_test_split">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.train_test_split">train_test_split() (StableDataset method)</a>
 </li>
   </ul></td>
   </tr>
@@ -2325,15 +2012,11 @@
   <h2 id="U">U</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.UrbanSound">UrbanSound (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.UrbanSound.UrbanSound">(class in stable_datasets.timeseries.UrbanSound)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.UrbanSound.UrbanSound">UrbanSound (class in stable_datasets.timeseries.UrbanSound)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.DownloadInfo.url">url (DownloadInfo attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.url">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.DownloadInfo.url">url (DownloadInfo attribute)</a>
 </li>
   </ul></td>
   </tr>
@@ -2346,220 +2029,172 @@
 </li>
       <li><a href="../stable_datasets/#stable_datasets.splits.Split.VALIDATION">VALIDATION (Split attribute)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.Value">Value (class in stable_datasets)</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.base.Value">Value (class in stable_datasets.features.base)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.arabic_characters.ArabicCharacters.VERSION">VERSION (ArabicCharacters attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Value">(class in stable_datasets.features)</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.arabic_digits.ArabicDigits.VERSION">(ArabicDigits attribute)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.base.Value">(class in stable_datasets.features.base)</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.audiomnist.AudioMNIST.VERSION">(AudioMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets/#stable_datasets.schema.Value">(class in stable_datasets.schema)</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.awa2.AWA2.VERSION">(AWA2 attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.ArabicCharacters.VERSION">VERSION (ArabicCharacters attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.arabic_characters.ArabicCharacters.VERSION">[1]</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.ArabicDigits.VERSION">(ArabicDigits attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.arabic_digits.ArabicDigits.VERSION">[1]</a>
+        <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.VERSION">(BaseDatasetBuilder attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.AudioMNIST.VERSION">(AudioMNIST attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.audiomnist.AudioMNIST.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.beans.Beans.VERSION">(Beans attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.AWA2.VERSION">(AWA2 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.awa2.AWA2.VERSION">[1]</a>
-</li>
-        <li><a href="../stable_datasets/#stable_datasets.BaseDatasetBuilder.VERSION">(BaseDatasetBuilder attribute)</a>, <a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.VERSION">[1]</a>
-</li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Beans.VERSION">(Beans attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.beans.Beans.VERSION">[1]</a>
-</li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.BirdVoxDCASE20k.VERSION">(BirdVoxDCASE20k attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.birdvox_dcase_20k.BirdVoxDCASE20k.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.birdvox_dcase_20k.BirdVoxDCASE20k.VERSION">(BirdVoxDCASE20k attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.brain_mnist.BrainMNIST.VERSION">(BrainMNIST attribute)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.BuilderConfig.version">version (BuilderConfig attribute)</a>, <a href="../stable_datasets/#stable_datasets.schema.BuilderConfig.version">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.BuilderConfig.version">version (BuilderConfig attribute)</a>
 </li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.Cars196.VERSION">VERSION (Cars196 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cars196.Cars196.VERSION">[1]</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.cars196.Cars196.VERSION">VERSION (Cars196 attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Cars3D.VERSION">(Cars3D attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cars3d.Cars3D.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cars3d.Cars3D.VERSION">(Cars3D attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.CatsDogs.VERSION">(CatsDogs attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.CatsDogs.VERSION">(CatsDogs attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.celeb_a.CelebA.VERSION">(CelebA attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR10.VERSION">(CIFAR10 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cifar10.CIFAR10.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10.CIFAR10.VERSION">(CIFAR10 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR100.VERSION">(CIFAR100 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cifar100.CIFAR100.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar100.CIFAR100.VERSION">(CIFAR100 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR100C.VERSION">(CIFAR100C attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar100_c.CIFAR100C.VERSION">(CIFAR100C attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CIFAR10C.VERSION">(CIFAR10C attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cifar10_c.CIFAR10C.VERSION">[1]</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.Version">Version (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.schema.Version">(class in stable_datasets.schema)</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10_c.CIFAR10C.VERSION">(CIFAR10C attribute)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.CLEVRER.VERSION">VERSION (CLEVRER attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.clevrer.CLEVRER.VERSION">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.Version">Version (class in stable_datasets.schema)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.clevrer.CLEVRER.VERSION">VERSION (CLEVRER attribute)</a>
 
       <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Country211.VERSION">(Country211 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.country211.Country211.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.country211.Country211.VERSION">(Country211 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.CUB200.VERSION">(CUB200 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.cub200.CUB200.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cub200.CUB200.VERSION">(CUB200 attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.dclde.DCLDE.VERSION">(DCLDE attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DSprites.VERSION">(DSprites attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dsprites.DSprites.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites.DSprites.VERSION">(DSprites attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DSpritesColor.VERSION">(DSpritesColor attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dsprites_color.DSpritesColor.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_color.DSpritesColor.VERSION">(DSpritesColor attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DSpritesNoise.VERSION">(DSpritesNoise attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dsprites_noise.DSpritesNoise.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_noise.DSpritesNoise.VERSION">(DSpritesNoise attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DSpritesScream.VERSION">(DSpritesScream attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dsprites_scream.DSpritesScream.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites_scream.DSpritesScream.VERSION">(DSpritesScream attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.DTD.VERSION">(DTD attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.dtd.DTD.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.dtd.DTD.VERSION">(DTD attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.EMNIST.VERSION">(EMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST.VERSION">(EMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.FacePointing.VERSION">(FacePointing attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.face_pointing.FacePointing.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.face_pointing.FacePointing.VERSION">(FacePointing attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.FashionMNIST.VERSION">(FashionMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.fashion_mnist.FashionMNIST.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.fashion_mnist.FashionMNIST.VERSION">(FashionMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.FGVCAircraft.VERSION">(FGVCAircraft attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft.VERSION">(FGVCAircraft attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Flowers102.VERSION">(Flowers102 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.flowers102.Flowers102.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.flowers102.Flowers102.VERSION">(Flowers102 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Food101.VERSION">(Food101 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.food101.Food101.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.food101.Food101.VERSION">(Food101 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Freefield1010.VERSION">(Freefield1010 attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.freefield1010.Freefield1010.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.freefield1010.Freefield1010.VERSION">(Freefield1010 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.FSDKaggle2018.VERSION">(FSDKaggle2018 attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd_kaggle_2018.FSDKaggle2018.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd_kaggle_2018.FSDKaggle2018.VERSION">(FSDKaggle2018 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Galaxy10Decal.VERSION">(Galaxy10Decal attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.galaxy10.Galaxy10Decal.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.galaxy10.Galaxy10Decal.VERSION">(Galaxy10Decal attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.GrooveMIDI.VERSION">(GrooveMIDI attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.groove_MIDI.GrooveMIDI.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.groove_MIDI.GrooveMIDI.VERSION">(GrooveMIDI attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.GTZAN.VERSION">(GTZAN attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.gtzan.GTZAN.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.gtzan.GTZAN.VERSION">(GTZAN attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.HASYv2.VERSION">(HASYv2 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.VERSION">(HASYv2 attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.high_gamma.HighGamma.VERSION">(HighGamma attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.ImageNet100.VERSION">(ImageNet100 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenet_100.ImageNet100.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_100.ImageNet100.VERSION">(ImageNet100 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.ImageNet1K.VERSION">(ImageNet1K attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenet_1k.ImageNet1K.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_1k.ImageNet1K.VERSION">(ImageNet1K attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Imagenette.VERSION">(Imagenette attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenet_10.Imagenette.VERSION">[1]</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenette.Imagenette.VERSION">[2]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_10.Imagenette.VERSION">(Imagenette attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenette.Imagenette.VERSION">[1]</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels.VERSION">(JapaneseVowels attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels.VERSION">(JapaneseVowels attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.KMNIST.VERSION">(KMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.k_mnist.KMNIST.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.k_mnist.KMNIST.VERSION">(KMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Linnaeus5.VERSION">(Linnaeus5 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.linnaeus5.Linnaeus5.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.linnaeus5.Linnaeus5.VERSION">(Linnaeus5 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.MedMNIST.VERSION">(MedMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.med_mnist.MedMNIST.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.med_mnist.MedMNIST.VERSION">(MedMNIST attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.mnist.MNIST.VERSION">(MNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.MosquitoSound.MosquitoSound.VERSION">(MosquitoSound attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.MosquitoSound.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.MosquitoSound.MosquitoSound.VERSION">(MosquitoSound attribute)</a>
 </li>
-        <li><a href="../stable_datasets.video/#stable_datasets.video.MovingMNIST.VERSION">(MovingMNIST attribute)</a>, <a href="../stable_datasets.video/#stable_datasets.video.moving_mnist.MovingMNIST.VERSION">[1]</a>
+        <li><a href="../stable_datasets.video/#stable_datasets.video.moving_mnist.MovingMNIST.VERSION">(MovingMNIST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.NotMNIST.VERSION">(NotMNIST attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.not_mnist.NotMNIST.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.not_mnist.NotMNIST.VERSION">(NotMNIST attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.patch_camelyon.PatchCamelyon.VERSION">(PatchCamelyon attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme.Phoneme.VERSION">(Phoneme attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme.Phoneme.VERSION">(Phoneme attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Picidae.VERSION">(Picidae attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.picidae.Picidae.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.picidae.Picidae.VERSION">(Picidae attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.places365_small.Places365Small.VERSION">(Places365Small attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.RockPaperScissor.VERSION">(RockPaperScissor attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor.VERSION">(RockPaperScissor attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.SeizuresNeonatal.VERSION">(SeizuresNeonatal attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.seizures_neonatal.SeizuresNeonatal.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.seizures_neonatal.SeizuresNeonatal.VERSION">(SeizuresNeonatal attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.Shapes3D.VERSION">(Shapes3D attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.shapes3d.Shapes3D.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.shapes3d.Shapes3D.VERSION">(Shapes3D attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.SmallNORB.VERSION">(SmallNORB attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.small_norb.SmallNORB.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.small_norb.SmallNORB.VERSION">(SmallNORB attribute)</a>
 </li>
-        <li><a href="../stable_datasets.video/#stable_datasets.video.SomethingSomethingV2.VERSION">(SomethingSomethingV2 attribute)</a>, <a href="../stable_datasets.video/#stable_datasets.video.something_something_v2.SomethingSomethingV2.VERSION">[1]</a>
+        <li><a href="../stable_datasets.video/#stable_datasets.video.something_something_v2.SomethingSomethingV2.VERSION">(SomethingSomethingV2 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.SONYCUST.VERSION">(SONYCUST attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.sonycust.SONYCUST.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.sonycust.SONYCUST.VERSION">(SONYCUST attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.SpeechCommands.VERSION">(SpeechCommands attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.speech_commands.SpeechCommands.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.speech_commands.SpeechCommands.VERSION">(SpeechCommands attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.STL10.VERSION">(STL10 attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.stl10.STL10.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.stl10.STL10.VERSION">(STL10 attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.SVHN.VERSION">(SVHN attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.svhn.SVHN.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.svhn.SVHN.VERSION">(SVHN attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.TinyImagenet.VERSION">(TinyImagenet attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet.TinyImagenet.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet.TinyImagenet.VERSION">(TinyImagenet attribute)</a>
 </li>
-        <li><a href="../stable_datasets.images/#stable_datasets.images.TinyImagenetC.VERSION">(TinyImagenetC attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet_c.TinyImagenetC.VERSION">[1]</a>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.tiny_imagenet_c.TinyImagenetC.VERSION">(TinyImagenetC attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.UrbanSound.UrbanSound.VERSION">(UrbanSound attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.UrbanSound.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.UrbanSound.UrbanSound.VERSION">(UrbanSound attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VocalSet.VERSION">(VocalSet attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.vocalset.VocalSet.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.vocalset.VocalSet.VERSION">(VocalSet attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VoiceGenderDetection.VERSION">(VoiceGenderDetection attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VoiceGenderDetection.VoiceGenderDetection.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VoiceGenderDetection.VoiceGenderDetection.VERSION">(VoiceGenderDetection attribute)</a>
 </li>
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Warblr.VERSION">(Warblr attribute)</a>, <a href="../stable_datasets.timeseries/#stable_datasets.timeseries.warblr.Warblr.VERSION">[1]</a>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.warblr.Warblr.VERSION">(Warblr attribute)</a>
 </li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets/#stable_datasets.Video">Video (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.Video">(class in stable_datasets.features)</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.video.Video">Video (class in stable_datasets.features.video)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.video.Video">(class in stable_datasets.features.video)</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.video_paths">video_paths (LanceVideoFramesBackend property)</a>
 </li>
-        <li><a href="../stable_datasets/#stable_datasets.schema.Video">(class in stable_datasets.schema)</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig">VideoDecodeConfig (class in stable_datasets.schema)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.video_paths">video_paths (LanceVideoFramesBackend property)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.video_paths">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeFn">VideoDecodeFn (class in stable_datasets.schema)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeConfig">VideoDecodeConfig (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig">(class in stable_datasets.schema)</a>
+      <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeFnBatched">VideoDecodeFnBatched (class in stable_datasets.schema)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeFn">VideoDecodeFn (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeFn">(class in stable_datasets.schema)</a>
+      <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef">VideoRef (class in stable_datasets.features.video)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoDecodeFnBatched">VideoDecodeFnBatched (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeFnBatched">(class in stable_datasets.schema)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.vocalset.VocalSet">VocalSet (class in stable_datasets.timeseries.vocalset)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.VideoRef">VideoRef (class in stable_datasets)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.features/#stable_datasets.features.VideoRef">(class in stable_datasets.features)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VoiceGenderDetection.VoiceGenderDetection">VoiceGenderDetection (class in stable_datasets.timeseries.VoiceGenderDetection)</a>
 </li>
-        <li><a href="../stable_datasets.features/#stable_datasets.features.video.VideoRef">(class in stable_datasets.features.video)</a>
-</li>
-        <li><a href="../stable_datasets/#stable_datasets.schema.VideoRef">(class in stable_datasets.schema)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VocalSet">VocalSet (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.vocalset.VocalSet">(class in stable_datasets.timeseries.vocalset)</a>
-</li>
-      </ul></li>
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VoiceGenderDetection">VoiceGenderDetection (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.VoiceGenderDetection.VoiceGenderDetection">(class in stable_datasets.timeseries.VoiceGenderDetection)</a>
-</li>
-      </ul></li>
   </ul></td>
   </tr>
       </table>
@@ -2567,19 +2202,15 @@
   <h2 id="W">W</h2>
   <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Warblr">Warblr (class in stable_datasets.timeseries)</a>
-
-      <ul style="list-style-type:none">
-        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.warblr.Warblr">(class in stable_datasets.timeseries.warblr)</a>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.warblr.Warblr">Warblr (class in stable_datasets.timeseries.warblr)</a>
 </li>
-      </ul></li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.with_format">with_format() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.with_format">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.with_format">with_format() (StableDataset method)</a>
 </li>
-      <li><a href="../stable_datasets/#stable_datasets.StableDataset.with_transform">with_transform() (StableDataset method)</a>, <a href="../stable_datasets/#stable_datasets.dataset.StableDataset.with_transform">[1]</a>
+      <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.with_transform">with_transform() (StableDataset method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
-      <li><a href="../stable_datasets.backends/#stable_datasets.backends.LanceVideoFramesBackend.worker_init">worker_init() (LanceVideoFramesBackend static method)</a>, <a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.worker_init">[1]</a>
+      <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_video_frames.LanceVideoFramesBackend.worker_init">worker_init() (LanceVideoFramesBackend static method)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.cache.write_lance_cache">write_lance_cache() (in module stable_datasets.cache)</a>
 </li>
@@ -2629,7 +2260,7 @@
     <script src="../_static/documentation_options.js?v=c167d237"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../_static/theme.js?v=49cc6205"></script>
     <script src="../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.features.video | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -194,7 +210,7 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.features.video</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="sd">&quot;&quot;&quot;Video feature codec and lazy reference objects.&quot;&quot;&quot;</span>
+<span></span><code><span id="line-1"><span class="sd">"""Video feature codec and lazy reference objects."""</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span id="line-4">
@@ -214,10 +230,10 @@
 </span><span id="line-18">
 </span><span id="line-19">
 <div class="viewcode-block" id="VideoRef">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.VideoRef">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.video.VideoRef">[docs]</a>
 </span><span id="line-20"><span class="nd">@dataclass</span>
 </span><span id="line-21"><span class="k">class</span><span class="w"> </span><span class="nc">VideoRef</span><span class="p">:</span>
-</span><span id="line-22"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Lazy reference to a cached video asset.&quot;&quot;&quot;</span>
+</span><span id="line-22"><span class="w">    </span><span class="sd">"""Lazy reference to a cached video asset."""</span>
 </span><span id="line-23">
 </span><span id="line-24">    <span class="n">cell</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </span><span id="line-25">    <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
@@ -225,28 +241,28 @@
 </span><span id="line-27">
 </span><span id="line-28">    <span class="nd">@property</span>
 </span><span id="line-29">    <span class="k">def</span><span class="w"> </span><span class="nf">mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-30">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;mode&quot;</span><span class="p">]</span>
+</span><span id="line-30">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span>
 </span><span id="line-31">
 </span><span id="line-32">    <span class="nd">@property</span>
 </span><span id="line-33">    <span class="k">def</span><span class="w"> </span><span class="nf">extension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-34">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;extension&quot;</span><span class="p">]</span>
+</span><span id="line-34">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">"extension"</span><span class="p">]</span>
 </span><span id="line-35">
 </span><span id="line-36">    <span class="nd">@property</span>
 </span><span id="line-37">    <span class="k">def</span><span class="w"> </span><span class="nf">media_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-38">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;media_type&quot;</span><span class="p">]</span>
+</span><span id="line-38">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">"media_type"</span><span class="p">]</span>
 </span><span id="line-39">
 </span><span id="line-40">    <span class="nd">@property</span>
 </span><span id="line-41">    <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span id="line-42">        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">&quot;size&quot;</span><span class="p">])</span>
+</span><span id="line-42">        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="s2">"size"</span><span class="p">])</span>
 </span><span id="line-43">
 </span><span id="line-44">    <span class="nd">@property</span>
 </span><span id="line-45">    <span class="k">def</span><span class="w"> </span><span class="nf">checksum</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-46">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;checksum&quot;</span><span class="p">)</span>
+</span><span id="line-46">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"checksum"</span><span class="p">)</span>
 </span><span id="line-47">
 </span><span id="line-48">    <span class="nd">@property</span>
 </span><span id="line-49">    <span class="k">def</span><span class="w"> </span><span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-50">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;path&quot;</span><span class="p">:</span>
-</span><span id="line-51">            <span class="n">rel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span>
+</span><span id="line-50">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"path"</span><span class="p">:</span>
+</span><span id="line-51">            <span class="n">rel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span>
 </span><span id="line-52">            <span class="k">if</span> <span class="n">rel</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-53">                <span class="k">return</span> <span class="kc">None</span>
 </span><span id="line-54">            <span class="n">rel_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span>
@@ -254,11 +270,11 @@
 </span><span id="line-56">                <span class="k">return</span> <span class="n">rel_path</span>
 </span><span id="line-57">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-58">                <span class="k">return</span> <span class="n">rel_path</span>
-</span><span id="line-59">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span> <span class="o">/</span> <span class="s2">&quot;_assets&quot;</span> <span class="o">/</span> <span class="s2">&quot;video&quot;</span> <span class="o">/</span> <span class="n">rel_path</span>
+</span><span id="line-59">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache_dir</span> <span class="o">/</span> <span class="s2">"_assets"</span> <span class="o">/</span> <span class="s2">"video"</span> <span class="o">/</span> <span class="n">rel_path</span>
 </span><span id="line-60">
-</span><span id="line-61">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;bytes&quot;</span><span class="p">:</span>
+</span><span id="line-61">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"bytes"</span><span class="p">:</span>
 </span><span id="line-62">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_materialized_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-63">                <span class="n">suffix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extension</span> <span class="ow">or</span> <span class="s2">&quot;.video&quot;</span>
+</span><span id="line-63">                <span class="n">suffix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extension</span> <span class="ow">or</span> <span class="s2">".video"</span>
 </span><span id="line-64">                <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="n">suffix</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
 </span><span id="line-65">                    <span class="n">fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bytes</span><span class="p">)</span>
 </span><span id="line-66">                    <span class="bp">self</span><span class="o">.</span><span class="n">_materialized_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -267,75 +283,75 @@
 </span><span id="line-69">
 </span><span id="line-70">    <span class="nd">@property</span>
 </span><span id="line-71">    <span class="k">def</span><span class="w"> </span><span class="nf">bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-</span><span id="line-72">        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bytes&quot;</span><span class="p">)</span>
+</span><span id="line-72">        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bytes"</span><span class="p">)</span>
 </span><span id="line-73">        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-74">            <span class="k">return</span> <span class="n">data</span>
 </span><span id="line-75">        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
 </span><span id="line-76">        <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-77">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;VideoRef has neither bytes nor a path.&quot;</span><span class="p">)</span>
+</span><span id="line-77">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"VideoRef has neither bytes nor a path."</span><span class="p">)</span>
 </span><span id="line-78">        <span class="k">return</span> <span class="n">path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span></div>
 
 </span><span id="line-79">
 </span><span id="line-80">
 <div class="viewcode-block" id="Video">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Video">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.video.Video">[docs]</a>
 </span><span id="line-81"><span class="k">class</span><span class="w"> </span><span class="nc">Video</span><span class="p">(</span><span class="n">FeatureType</span><span class="p">):</span>
-</span><span id="line-82"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Video feature with validated path, bytes, or specialized frame storage.&quot;&quot;&quot;</span>
+</span><span id="line-82"><span class="w">    </span><span class="sd">"""Video feature with validated path, bytes, or specialized frame storage."""</span>
 </span><span id="line-83">
-</span><span id="line-84">    <span class="n">_DEFAULT_EXTENSIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;.mp4&quot;</span><span class="p">,</span> <span class="s2">&quot;.avi&quot;</span><span class="p">,</span> <span class="s2">&quot;.mov&quot;</span><span class="p">,</span> <span class="s2">&quot;.webm&quot;</span><span class="p">,</span> <span class="s2">&quot;.mkv&quot;</span><span class="p">)</span>
+</span><span id="line-84">    <span class="n">_DEFAULT_EXTENSIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">".mp4"</span><span class="p">,</span> <span class="s2">".avi"</span><span class="p">,</span> <span class="s2">".mov"</span><span class="p">,</span> <span class="s2">".webm"</span><span class="p">,</span> <span class="s2">".mkv"</span><span class="p">)</span>
 </span><span id="line-85">
 </span><span id="line-86">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span id="line-87">        <span class="bp">self</span><span class="p">,</span>
-</span><span id="line-88">        <span class="n">storage</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;path&quot;</span><span class="p">,</span>
+</span><span id="line-88">        <span class="n">storage</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"path"</span><span class="p">,</span>
 </span><span id="line-89">        <span class="n">allowed_extensions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">_DEFAULT_EXTENSIONS</span><span class="p">,</span>
 </span><span id="line-90">    <span class="p">):</span>
-</span><span id="line-91">        <span class="k">if</span> <span class="n">storage</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="s2">&quot;bytes&quot;</span><span class="p">,</span> <span class="s2">&quot;frames&quot;</span><span class="p">):</span>
-</span><span id="line-92">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Video.storage must be one of &#39;path&#39;, &#39;bytes&#39;, or &#39;frames&#39;.&quot;</span><span class="p">)</span>
+</span><span id="line-91">        <span class="k">if</span> <span class="n">storage</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"path"</span><span class="p">,</span> <span class="s2">"bytes"</span><span class="p">,</span> <span class="s2">"frames"</span><span class="p">):</span>
+</span><span id="line-92">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Video.storage must be one of 'path', 'bytes', or 'frames'."</span><span class="p">)</span>
 </span><span id="line-93">        <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">=</span> <span class="n">storage</span>
 </span><span id="line-94">        <span class="bp">self</span><span class="o">.</span><span class="n">allowed_extensions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-</span><span id="line-95">            <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">allowed_extensions</span>
+</span><span id="line-95">            <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">".</span><span class="si">{</span><span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">allowed_extensions</span>
 </span><span id="line-96">        <span class="p">)</span>
 </span><span id="line-97">
 <div class="viewcode-block" id="Video.to_arrow_type">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Video.to_arrow_type">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.video.Video.to_arrow_type">[docs]</a>
 </span><span id="line-98">    <span class="k">def</span><span class="w"> </span><span class="nf">to_arrow_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataType</span><span class="p">:</span>
 </span><span id="line-99">        <span class="k">return</span> <span class="n">pa</span><span class="o">.</span><span class="n">struct</span><span class="p">(</span>
 </span><span id="line-100">            <span class="p">[</span>
-</span><span id="line-101">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">&quot;mode&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
-</span><span id="line-102">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
-</span><span id="line-103">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">&quot;bytes&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">large_binary</span><span class="p">()),</span>
-</span><span id="line-104">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">&quot;extension&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
-</span><span id="line-105">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">&quot;media_type&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
-</span><span id="line-106">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">int64</span><span class="p">()),</span>
-</span><span id="line-107">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">&quot;checksum&quot;</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
+</span><span id="line-101">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"mode"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
+</span><span id="line-102">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"path"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
+</span><span id="line-103">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"bytes"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">large_binary</span><span class="p">()),</span>
+</span><span id="line-104">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"extension"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
+</span><span id="line-105">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"media_type"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
+</span><span id="line-106">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"size"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">int64</span><span class="p">()),</span>
+</span><span id="line-107">                <span class="n">pa</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s2">"checksum"</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">string</span><span class="p">()),</span>
 </span><span id="line-108">            <span class="p">]</span>
 </span><span id="line-109">        <span class="p">)</span></div>
 
 </span><span id="line-110">
 <div class="viewcode-block" id="Video.arrow_metadata">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Video.arrow_metadata">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.video.Video.arrow_metadata">[docs]</a>
 </span><span id="line-111">    <span class="k">def</span><span class="w"> </span><span class="nf">arrow_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">]:</span>
 </span><span id="line-112">        <span class="k">return</span> <span class="p">{</span>
 </span><span id="line-113">            <span class="o">**</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">arrow_metadata</span><span class="p">(),</span>
-</span><span id="line-114">            <span class="sa">b</span><span class="s2">&quot;stable_datasets.video.storage&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
+</span><span id="line-114">            <span class="sa">b</span><span class="s2">"stable_datasets.video.storage"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="o">.</span><span class="n">encode</span><span class="p">(),</span>
 </span><span id="line-115">        <span class="p">}</span></div>
 
 </span><span id="line-116">
 <div class="viewcode-block" id="Video.encode">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Video.encode">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.video.Video.encode">[docs]</a>
 </span><span id="line-117">    <span class="k">def</span><span class="w"> </span><span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 </span><span id="line-118">        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-119">            <span class="k">return</span> <span class="kc">None</span>
-</span><span id="line-120">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">==</span> <span class="s2">&quot;frames&quot;</span><span class="p">:</span>
-</span><span id="line-121">            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Video(storage=&#39;frames&#39;) uses the specialized Lance video-frames layout.&quot;</span><span class="p">)</span>
-</span><span id="line-122">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">==</span> <span class="s2">&quot;path&quot;</span><span class="p">:</span>
+</span><span id="line-120">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">==</span> <span class="s2">"frames"</span><span class="p">:</span>
+</span><span id="line-121">            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Video(storage='frames') uses the specialized Lance video-frames layout."</span><span class="p">)</span>
+</span><span id="line-122">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">==</span> <span class="s2">"path"</span><span class="p">:</span>
 </span><span id="line-123">            <span class="n">path</span><span class="p">,</span> <span class="n">checksum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coerce_path_value</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 </span><span id="line-124">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">checksum</span><span class="o">=</span><span class="n">checksum</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">)</span>
 </span><span id="line-125">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_bytes</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
 </span><span id="line-126">
 <div class="viewcode-block" id="Video.format">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Video.format">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.video.Video.format">[docs]</a>
 </span><span id="line-127">    <span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span>
 </span><span id="line-128">        <span class="bp">self</span><span class="p">,</span>
 </span><span id="line-129">        <span class="n">value</span><span class="p">,</span>
@@ -346,47 +362,47 @@
 </span><span id="line-134">    <span class="p">):</span>
 </span><span id="line-135">        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-136">            <span class="k">return</span> <span class="kc">None</span>
-</span><span id="line-137">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">==</span> <span class="s2">&quot;frames&quot;</span><span class="p">:</span>
-</span><span id="line-138">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+</span><span id="line-137">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">==</span> <span class="s2">"frames"</span><span class="p">:</span>
+</span><span id="line-138">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
 </span><span id="line-139">                <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="line-140">
 </span><span id="line-141">                <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-</span><span id="line-142">            <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="s2">&quot;torch&quot;</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
+</span><span id="line-142">            <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="s2">"torch"</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">):</span>
 </span><span id="line-143">                <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 </span><span id="line-144">
 </span><span id="line-145">                <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 </span><span id="line-146">            <span class="k">return</span> <span class="n">value</span>
-</span><span id="line-147">        <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+</span><span id="line-147">        <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="s2">"raw"</span><span class="p">:</span>
 </span><span id="line-148">            <span class="k">return</span> <span class="n">value</span>
 </span><span id="line-149">        <span class="k">return</span> <span class="n">VideoRef</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">)</span></div>
 
 </span><span id="line-150">
 </span><span id="line-151">    <span class="k">def</span><span class="w"> </span><span class="nf">_coerce_path_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 </span><span id="line-152">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-</span><span id="line-153">            <span class="n">raw_path</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span>
-</span><span id="line-154">            <span class="n">checksum</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;checksum&quot;</span><span class="p">)</span>
+</span><span id="line-153">            <span class="n">raw_path</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span>
+</span><span id="line-154">            <span class="n">checksum</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"checksum"</span><span class="p">)</span>
 </span><span id="line-155">        <span class="k">else</span><span class="p">:</span>
 </span><span id="line-156">            <span class="n">raw_path</span> <span class="o">=</span> <span class="n">value</span>
 </span><span id="line-157">            <span class="n">checksum</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span id="line-158">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">raw_path</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
 </span><span id="line-159">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-</span><span id="line-160">                <span class="s2">&quot;Video(storage=&#39;path&#39;) values must be str, pathlib.Path, or {&#39;path&#39;: ..., &#39;checksum&#39;: ...} mappings.&quot;</span>
+</span><span id="line-160">                <span class="s2">"Video(storage='path') values must be str, pathlib.Path, or {'path': ..., 'checksum': ...} mappings."</span>
 </span><span id="line-161">            <span class="p">)</span>
 </span><span id="line-162">        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">raw_path</span><span class="p">)</span>
 </span><span id="line-163">        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-</span><span id="line-164">            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Video path does not exist or is not a file: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-164">            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Video path does not exist or is not a file: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-165">        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_extension</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span>
 </span><span id="line-166">        <span class="k">return</span> <span class="n">path</span><span class="p">,</span> <span class="n">checksum</span>
 </span><span id="line-167">
 </span><span id="line-168">    <span class="k">def</span><span class="w"> </span><span class="nf">_encode_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
 </span><span id="line-169">        <span class="k">if</span> <span class="n">cache_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-170">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Video(storage=&#39;path&#39;) requires a cache_dir for asset staging.&quot;</span><span class="p">)</span>
+</span><span id="line-170">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Video(storage='path') requires a cache_dir for asset staging."</span><span class="p">)</span>
 </span><span id="line-171">        <span class="n">ext</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 </span><span id="line-172">        <span class="n">digest</span> <span class="o">=</span> <span class="n">_sha256_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 </span><span id="line-173">        <span class="n">checksum</span> <span class="o">=</span> <span class="n">checksum</span> <span class="ow">or</span> <span class="n">digest</span>
-</span><span id="line-174">        <span class="n">asset_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;_assets&quot;</span> <span class="o">/</span> <span class="s2">&quot;video&quot;</span>
+</span><span id="line-174">        <span class="n">asset_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"_assets"</span> <span class="o">/</span> <span class="s2">"video"</span>
 </span><span id="line-175">        <span class="n">asset_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-176">        <span class="n">staged</span> <span class="o">=</span> <span class="n">asset_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">digest</span><span class="si">}{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="line-176">        <span class="n">staged</span> <span class="o">=</span> <span class="n">asset_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">digest</span><span class="si">}{</span><span class="n">ext</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-177">        <span class="k">if</span> <span class="ow">not</span> <span class="n">staged</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
 </span><span id="line-178">            <span class="k">try</span><span class="p">:</span>
 </span><span id="line-179">                <span class="n">os</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">staged</span><span class="p">)</span>
@@ -394,32 +410,32 @@
 </span><span id="line-181">                <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">staged</span><span class="p">)</span>
 </span><span id="line-182">        <span class="n">size</span> <span class="o">=</span> <span class="n">staged</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
 </span><span id="line-183">        <span class="k">return</span> <span class="p">{</span>
-</span><span id="line-184">            <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;path&quot;</span><span class="p">,</span>
-</span><span id="line-185">            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">staged</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-</span><span id="line-186">            <span class="s2">&quot;bytes&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-187">            <span class="s2">&quot;extension&quot;</span><span class="p">:</span> <span class="n">ext</span><span class="p">,</span>
-</span><span id="line-188">            <span class="s2">&quot;media_type&quot;</span><span class="p">:</span> <span class="n">_media_type_for_extension</span><span class="p">(</span><span class="n">ext</span><span class="p">),</span>
-</span><span id="line-189">            <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">),</span>
-</span><span id="line-190">            <span class="s2">&quot;checksum&quot;</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
+</span><span id="line-184">            <span class="s2">"mode"</span><span class="p">:</span> <span class="s2">"path"</span><span class="p">,</span>
+</span><span id="line-185">            <span class="s2">"path"</span><span class="p">:</span> <span class="n">staged</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+</span><span id="line-186">            <span class="s2">"bytes"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-187">            <span class="s2">"extension"</span><span class="p">:</span> <span class="n">ext</span><span class="p">,</span>
+</span><span id="line-188">            <span class="s2">"media_type"</span><span class="p">:</span> <span class="n">_media_type_for_extension</span><span class="p">(</span><span class="n">ext</span><span class="p">),</span>
+</span><span id="line-189">            <span class="s2">"size"</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">size</span><span class="p">),</span>
+</span><span id="line-190">            <span class="s2">"checksum"</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
 </span><span id="line-191">        <span class="p">}</span>
 </span><span id="line-192">
 </span><span id="line-193">    <span class="k">def</span><span class="w"> </span><span class="nf">_encode_bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
 </span><span id="line-194">        <span class="n">checksum</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span id="line-195">        <span class="n">ext</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span id="line-196">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
-</span><span id="line-197">            <span class="n">checksum</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;checksum&quot;</span><span class="p">)</span>
-</span><span id="line-198">            <span class="n">ext</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extension&quot;</span><span class="p">)</span>
-</span><span id="line-199">            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bytes&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-200">                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;bytes&quot;</span><span class="p">]</span>
-</span><span id="line-201">            <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-202">                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;path&quot;</span><span class="p">]</span>
+</span><span id="line-197">            <span class="n">checksum</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"checksum"</span><span class="p">)</span>
+</span><span id="line-198">            <span class="n">ext</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extension"</span><span class="p">)</span>
+</span><span id="line-199">            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bytes"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-200">                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">"bytes"</span><span class="p">]</span>
+</span><span id="line-201">            <span class="k">elif</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-202">                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">"path"</span><span class="p">]</span>
 </span><span id="line-203">            <span class="k">else</span><span class="p">:</span>
-</span><span id="line-204">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Video bytes mapping must contain &#39;bytes&#39; or &#39;path&#39;.&quot;</span><span class="p">)</span>
+</span><span id="line-204">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Video bytes mapping must contain 'bytes' or 'path'."</span><span class="p">)</span>
 </span><span id="line-205">
 </span><span id="line-206">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
 </span><span id="line-207">            <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 </span><span id="line-208">            <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-</span><span id="line-209">                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Video path does not exist or is not a file: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-209">                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Video path does not exist or is not a file: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-210">            <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span> <span class="ow">or</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span>
 </span><span id="line-211">            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_extension</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span>
 </span><span id="line-212">            <span class="n">data</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
@@ -428,49 +444,49 @@
 </span><span id="line-215">            <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_extensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </span><span id="line-216">            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_extension</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span>
 </span><span id="line-217">        <span class="k">else</span><span class="p">:</span>
-</span><span id="line-218">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Video(storage=&#39;bytes&#39;) values must be path-like or bytes-like.&quot;</span><span class="p">)</span>
+</span><span id="line-218">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Video(storage='bytes') values must be path-like or bytes-like."</span><span class="p">)</span>
 </span><span id="line-219">
-</span><span id="line-220">        <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="line-220">        <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">".</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-221">        <span class="n">checksum</span> <span class="o">=</span> <span class="n">checksum</span> <span class="ow">or</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 </span><span id="line-222">        <span class="k">return</span> <span class="p">{</span>
-</span><span id="line-223">            <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;bytes&quot;</span><span class="p">,</span>
-</span><span id="line-224">            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-225">            <span class="s2">&quot;bytes&quot;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
-</span><span id="line-226">            <span class="s2">&quot;extension&quot;</span><span class="p">:</span> <span class="n">ext</span><span class="p">,</span>
-</span><span id="line-227">            <span class="s2">&quot;media_type&quot;</span><span class="p">:</span> <span class="n">_media_type_for_extension</span><span class="p">(</span><span class="n">ext</span><span class="p">),</span>
-</span><span id="line-228">            <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
-</span><span id="line-229">            <span class="s2">&quot;checksum&quot;</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
+</span><span id="line-223">            <span class="s2">"mode"</span><span class="p">:</span> <span class="s2">"bytes"</span><span class="p">,</span>
+</span><span id="line-224">            <span class="s2">"path"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-225">            <span class="s2">"bytes"</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
+</span><span id="line-226">            <span class="s2">"extension"</span><span class="p">:</span> <span class="n">ext</span><span class="p">,</span>
+</span><span id="line-227">            <span class="s2">"media_type"</span><span class="p">:</span> <span class="n">_media_type_for_extension</span><span class="p">(</span><span class="n">ext</span><span class="p">),</span>
+</span><span id="line-228">            <span class="s2">"size"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+</span><span id="line-229">            <span class="s2">"checksum"</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
 </span><span id="line-230">        <span class="p">}</span>
 </span><span id="line-231">
 </span><span id="line-232">    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_extension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-233">        <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="line-233">        <span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">ext</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">".</span><span class="si">{</span><span class="n">ext</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-234">        <span class="k">if</span> <span class="n">ext</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_extensions</span><span class="p">:</span>
-</span><span id="line-235">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported video extension </span><span class="si">{</span><span class="n">ext</span><span class="si">!r}</span><span class="s2">. Allowed: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">allowed_extensions</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-235">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported video extension </span><span class="si">{</span><span class="n">ext</span><span class="si">!r}</span><span class="s2">. Allowed: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">allowed_extensions</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-236">
 <div class="viewcode-block" id="Video.fingerprint_data">
-<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.schema.Video.fingerprint_data">[docs]</a>
+<a class="viewcode-back" href="../../../../stable_datasets.features/#stable_datasets.features.video.Video.fingerprint_data">[docs]</a>
 </span><span id="line-237">    <span class="k">def</span><span class="w"> </span><span class="nf">fingerprint_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-238">        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
 </span><span id="line-239">
 </span><span id="line-240">    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-241">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">==</span> <span class="s2">&quot;path&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_extensions</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEFAULT_EXTENSIONS</span><span class="p">:</span>
-</span><span id="line-242">            <span class="k">return</span> <span class="s2">&quot;Video(storage=&#39;path&#39;)&quot;</span>
-</span><span id="line-243">        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Video(storage=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="si">!r}</span><span class="s2">, allowed_extensions=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">allowed_extensions</span><span class="si">!r}</span><span class="s2">)&quot;</span></div>
+</span><span id="line-241">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage</span> <span class="o">==</span> <span class="s2">"path"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_extensions</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEFAULT_EXTENSIONS</span><span class="p">:</span>
+</span><span id="line-242">            <span class="k">return</span> <span class="s2">"Video(storage='path')"</span>
+</span><span id="line-243">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Video(storage=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">storage</span><span class="si">!r}</span><span class="s2">, allowed_extensions=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">allowed_extensions</span><span class="si">!r}</span><span class="s2">)"</span></div>
 
 </span><span id="line-244">
 </span><span id="line-245">
 </span><span id="line-246"><span class="k">def</span><span class="w"> </span><span class="nf">_sha256_file</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-247">    <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">()</span>
-</span><span id="line-248">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
-</span><span id="line-249">        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">),</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+</span><span id="line-248">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+</span><span id="line-249">        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">),</span> <span class="sa">b</span><span class="s2">""</span><span class="p">):</span>
 </span><span id="line-250">            <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
 </span><span id="line-251">    <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 </span><span id="line-252">
 </span><span id="line-253">
 </span><span id="line-254"><span class="k">def</span><span class="w"> </span><span class="nf">_media_type_for_extension</span><span class="p">(</span><span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-255">    <span class="n">guessed</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;file</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="line-256">    <span class="k">return</span> <span class="n">guessed</span> <span class="ow">or</span> <span class="s2">&quot;application/octet-stream&quot;</span>
+</span><span id="line-255">    <span class="n">guessed</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="sa">f</span><span class="s2">"file</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-256">    <span class="k">return</span> <span class="n">guessed</span> <span class="ow">or</span> <span class="s2">"application/octet-stream"</span>
 </span></code></pre></div>
     </div></div>
           </main>
@@ -504,7 +520,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

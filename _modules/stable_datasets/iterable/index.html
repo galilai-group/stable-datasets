@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.iterable | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../search/" />
   <link rel="index" title="Index" href="../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -194,12 +210,12 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.iterable</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="sd">&quot;&quot;&quot;Iterable dataset for streaming with worker sharding and buffered shuffle.</span>
+<span></span><code><span id="line-1"><span class="sd">"""Iterable dataset for streaming with worker sharding and buffered shuffle.</span>
 </span><span id="line-2">
 </span><span id="line-3"><span class="sd">Provides ``StableIterableDataset`` for efficient streaming in PyTorch</span>
 </span><span id="line-4"><span class="sd">DataLoader with multiple workers.  Supports shard-level worker partitioning</span>
 </span><span id="line-5"><span class="sd">and reservoir-based row-level shuffle.</span>
-</span><span id="line-6"><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="line-6"><span class="sd">"""</span>
 </span><span id="line-7">
 </span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span id="line-9">
@@ -213,7 +229,7 @@
 </span><span id="line-17"><span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
 </span><span id="line-18">
 </span><span id="line-19">    <span class="k">class</span><span class="w"> </span><span class="nc">_IterableBase</span><span class="p">:</span>
-</span><span id="line-20"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Fallback base when PyTorch is not installed.&quot;&quot;&quot;</span>
+</span><span id="line-20"><span class="w">        </span><span class="sd">"""Fallback base when PyTorch is not installed."""</span>
 </span><span id="line-21">
 </span><span id="line-22">        <span class="k">pass</span>
 </span><span id="line-23">
@@ -221,7 +237,7 @@
 <div class="viewcode-block" id="StableIterableDataset">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.iterable.StableIterableDataset">[docs]</a>
 </span><span id="line-25"><span class="k">class</span><span class="w"> </span><span class="nc">StableIterableDataset</span><span class="p">(</span><span class="n">_IterableBase</span><span class="p">):</span>
-</span><span id="line-26"><span class="w">    </span><span class="sd">&quot;&quot;&quot;An iterable-style dataset with worker sharding and buffered shuffle.</span>
+</span><span id="line-26"><span class="w">    </span><span class="sd">"""An iterable-style dataset with worker sharding and buffered shuffle.</span>
 </span><span id="line-27">
 </span><span id="line-28"><span class="sd">    Wraps a ``StableDataset`` for efficient streaming in PyTorch DataLoader</span>
 </span><span id="line-29"><span class="sd">    with multiple workers.  Shards are partitioned across workers so each</span>
@@ -239,7 +255,7 @@
 </span><span id="line-41"><span class="sd">        Size of the reservoir buffer for row-level shuffle.</span>
 </span><span id="line-42"><span class="sd">    transform : callable, optional</span>
 </span><span id="line-43"><span class="sd">        Transform applied to each yielded row dict.</span>
-</span><span id="line-44"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-44"><span class="sd">    """</span>
 </span><span id="line-45">
 </span><span id="line-46">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span id="line-47">        <span class="bp">self</span><span class="p">,</span>
@@ -260,7 +276,7 @@
 <div class="viewcode-block" id="StableIterableDataset.set_epoch">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.iterable.StableIterableDataset.set_epoch">[docs]</a>
 </span><span id="line-62">    <span class="k">def</span><span class="w"> </span><span class="nf">set_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-</span><span id="line-63"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the epoch for varying shuffle seed across epochs.&quot;&quot;&quot;</span>
+</span><span id="line-63"><span class="w">        </span><span class="sd">"""Set the epoch for varying shuffle seed across epochs."""</span>
 </span><span id="line-64">        <span class="bp">self</span><span class="o">.</span><span class="n">_epoch</span> <span class="o">=</span> <span class="n">epoch</span></div>
 
 </span><span id="line-65">
@@ -336,11 +352,11 @@
 </span><span id="line-135">                <span class="k">yield</span> <span class="n">row</span>
 </span><span id="line-136">
 </span><span id="line-137">    <span class="k">def</span><span class="w"> </span><span class="nf">_buffered_shuffle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row_gen</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
-</span><span id="line-138"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Reservoir-based buffered shuffle (Fisher-Yates).</span>
+</span><span id="line-138"><span class="w">        </span><span class="sd">"""Reservoir-based buffered shuffle (Fisher-Yates).</span>
 </span><span id="line-139">
 </span><span id="line-140"><span class="sd">        Fills a buffer from the row generator, then yields random elements</span>
 </span><span id="line-141"><span class="sd">        as new rows arrive to maintain the buffer at capacity.</span>
-</span><span id="line-142"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="line-142"><span class="sd">        """</span>
 </span><span id="line-143">        <span class="n">buffer</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="line-144">        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">row_gen</span><span class="p">:</span>
 </span><span id="line-145">            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buffer</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_size</span><span class="p">:</span>
@@ -392,7 +408,7 @@
     <script src="../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

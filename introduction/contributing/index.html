@@ -26,15 +26,15 @@
 <meta content="Contributing | stable-datasets" name="twitter:title"/>
 <link href="../../_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="../../_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
-<link href="../../_static/theme.css?v=d6d7c91b" rel="stylesheet" type="text/css"/>
+<link href="../../_static/theme.css?v=009055c6" rel="stylesheet" type="text/css"/>
 <link href="../../_static/sphinx-design.min.css?v=95c83b7e" rel="stylesheet" type="text/css"/>
-<link href="../../_static/css/custom.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" rel="stylesheet" type="text/css"/>
-<link href="../../_static/awesome-sphinx-design.css?v=a81faafa" rel="stylesheet" type="text/css"/>
+<link href="../../_static/awesome-sphinx-design.css?v=b41b1d54" rel="stylesheet" type="text/css"/>
 <link href="../../search/" rel="search" title="Search"/>
 <link href="../../genindex/" rel="index" title="Index"/>
+<link href="../../modules/" rel="next" title="stable_datasets"/>
 <link href="../showcase/" rel="prev" title="Showcase"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" @scroll.window="showScrollTop = pageYOffset &gt; 100" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
@@ -92,6 +92,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/medmnist/">MedMNIST</a></li>
@@ -110,13 +111,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../showcase/">Showcase</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../../modules/">stable_datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 </nav>
 </div>
@@ -141,8 +158,70 @@
 <div id="content" role="main">
 <section id="contributing">
 <h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h1>
+<section id="contributing-to-stable-datasets">
+<h2>Contributing to stable-datasets<a class="headerlink" href="#contributing-to-stable-datasets" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#contributing-to-stable-datasets'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
+<section id="adding-a-dataset">
+<h3>Adding a dataset<a class="headerlink" href="#adding-a-dataset" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#adding-a-dataset'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h3>
+<p>Before you start, search <code class="docutils literal notranslate"><span class="pre">stable_datasets/</span></code> and the open pull requests for the dataset, so you don’t duplicate someone else’s work.</p>
+<p>A dataset pull request includes:</p>
+<ol class="arabic simple">
+<li><p><strong>The builder</strong>: <code class="docutils literal notranslate"><span class="pre">stable_datasets/&lt;modality&gt;/&lt;dataset&gt;.py</span></code>, a subclass of <code class="docutils literal notranslate"><span class="pre">BaseDatasetBuilder</span></code> (see “Onboarding new datasets” in the README), exported from that folder’s <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code>. Public classes, methods and functions need docstrings. Name helper modules with a leading underscore, e.g. <code class="docutils literal notranslate"><span class="pre">_my_utils.py</span></code>.</p></li>
+<li><p><strong>Tests</strong>: <code class="docutils literal notranslate"><span class="pre">stable_datasets/tests/&lt;modality&gt;/test_&lt;dataset&gt;.py</span></code>, checking split sizes, example keys and types, and label ranges. See “Tests” below for which markers to use.</p></li>
+<li><p><strong>Docs</strong>: a page at <code class="docutils literal notranslate"><span class="pre">docs/source/datasets/&lt;dataset&gt;.rst</span></code>, listed in <code class="docutils literal notranslate"><span class="pre">docs/source/datasets/index.rst</span></code>, with a teaser figure in <code class="docutils literal notranslate"><span class="pre">docs/source/datasets/teasers/</span></code>. <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">generate_teaser.py</span> <span class="pre">--name</span> <span class="pre">&lt;DatasetClass&gt;</span> <span class="pre">--output</span> <span class="pre">&lt;dataset&gt;_teaser.png</span></code> makes one for image datasets; for other data, make the figure however suits it.</p></li>
+<li><p><strong>Results</strong>: in the pull request description, a metric (e.g. train/val accuracy) from training or evaluating a model on the dataset, with supervised learning or any self-supervised method.</p></li>
+</ol>
 </section>
-</div></div>
+<section id="tests">
+<h3>Tests<a class="headerlink" href="#tests" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#tests'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h3>
+<p>Run the tests that CI runs, or a single dataset’s tests:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pytest<span class="w"> </span>-m<span class="w"> </span><span class="s2">"not large"</span>
+</span><span id="line-2">pytest<span class="w"> </span>stable_datasets/tests/images/test_&lt;dataset&gt;.py
+</span></code></pre></div>
+</div>
+<p>Mark tests by what they need:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">@pytest.mark.large</span></code>: the test downloads more than about 2 GB. These never run in CI (runners have about 14 GB of disk), so the reviewer runs them by hand before merging.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">@pytest.mark.skip(reason="...")</span></code>: the data needs a login or a manual download (e.g. ImageNet or gated ISIC data), so the test can’t run automatically anywhere.</p></li>
+</ul>
+<p>Unknown markers are an error, so a typo like <code class="docutils literal notranslate"><span class="pre">@pytest.mark.larg</span></code> fails right away instead of running a huge download. Declare any new marker in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</p>
+<p>Let builders download to the default cache, which CI clears after each test, or pass pytest’s <code class="docutils literal notranslate"><span class="pre">tmp_path</span></code> as the download directory.</p>
+</section>
+<section id="what-ci-checks">
+<h3>What CI checks<a class="headerlink" href="#what-ci-checks" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#what-ci-checks'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h3>
+<p>On every pull request:</p>
+<ul class="simple">
+<li><p><strong>pre-commit</strong>: formatting and linting with ruff (including docstrings on dataset builders) and a 1 MB limit on added files.</p></li>
+<li><p><strong>Testing</strong>: the tests for the datasets you changed. If you change shared code (anything else under <code class="docutils literal notranslate"><span class="pre">stable_datasets/</span></code>, or <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>), the whole suite runs instead. Tests marked <code class="docutils literal notranslate"><span class="pre">large</span></code> are skipped. In the whole-suite run, a test whose dataset host can’t be reached is reported as skipped rather than failed, since it says nothing about your change; for the datasets you changed, it fails, so re-run the check once the host is back.</p></li>
+<li><p><strong>Docs</strong>: the docs are built, and the check fails on any Sphinx warning.</p></li>
+<li><p><strong>Dataset checklist</strong>: each new builder has a test file and a docs page, and the page is listed in the index.</p></li>
+</ul>
+<p>A maintainer has to approve CI runs for first-time contributors, so checks may not start right away.</p>
+<p>Every night, the whole suite runs on <code class="docutils literal notranslate"><span class="pre">main</span></code>. If any dataset breaks, usually because its host went down or moved, the run opens an issue titled “Nightly dataset tests are failing” and closes it once the run passes again.</p>
+</section>
+<section id="create-a-pull-request">
+<h3>Create a pull request<a class="headerlink" href="#create-a-pull-request" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#create-a-pull-request'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h3>
+<ul class="simple">
+<li><p>Start the title with what it adds, e.g. <code class="docutils literal notranslate"><span class="pre">[Dataset]</span> <span class="pre">Add</span> <span class="pre">GTSRB</span></code>, <code class="docutils literal notranslate"><span class="pre">[Feature]</span> <span class="pre">...</span></code>, <code class="docutils literal notranslate"><span class="pre">[Bugfix]</span> <span class="pre">...</span></code> or <code class="docutils literal notranslate"><span class="pre">[Docs]</span> <span class="pre">...</span></code>.</p></li>
+<li><p>While it isn’t ready for review, add <code class="docutils literal notranslate"><span class="pre">[WIP]</span></code> to the title or open it as a draft.</p></li>
+<li><p>Fill in the pull request template, including your results.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">run</span> <span class="pre">--all-files</span></code> before pushing, or <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">install</span></code> to run it on every commit.</p></li>
+</ul>
+</section>
+</section>
+</section>
+</div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
+<div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
+<ul>
+<li><a :data-current="activeSection === '#contributing-to-stable-datasets'" class="reference internal" href="#contributing-to-stable-datasets">Contributing to stable-datasets</a><ul>
+<li><a :data-current="activeSection === '#adding-a-dataset'" class="reference internal" href="#adding-a-dataset">Adding a dataset</a></li>
+<li><a :data-current="activeSection === '#tests'" class="reference internal" href="#tests">Tests</a></li>
+<li><a :data-current="activeSection === '#what-ci-checks'" class="reference internal" href="#what-ci-checks">What CI checks</a></li>
+<li><a :data-current="activeSection === '#create-a-pull-request'" class="reference internal" href="#create-a-pull-request">Create a pull request</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside>
 </main>
 </div>
 </div><footer class="py-6 border-t border-border md:py-0">
@@ -161,7 +240,7 @@
 <script src="../../_static/documentation_options.js?v=c167d237"></script>
 <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-<script defer="defer" src="../../_static/theme.js?v=5db23cf8"></script>
+<script defer="defer" src="../../_static/theme.js?v=49cc6205"></script>
 <script src="../../_static/design-tabs.js?v=f930bc37"></script>
 </body>
 </html>

@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.timeseries.sonycust | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -207,14 +223,14 @@
 </span><span id="line-11">
 </span><span id="line-12">
 </span><span id="line-13"><span class="n">COARSE_LABELS</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="line-14">    <span class="s2">&quot;engine&quot;</span><span class="p">,</span>
-</span><span id="line-15">    <span class="s2">&quot;machinery-impact&quot;</span><span class="p">,</span>
-</span><span id="line-16">    <span class="s2">&quot;non-machinery-impact&quot;</span><span class="p">,</span>
-</span><span id="line-17">    <span class="s2">&quot;powered-saw&quot;</span><span class="p">,</span>
-</span><span id="line-18">    <span class="s2">&quot;alert-signal&quot;</span><span class="p">,</span>
-</span><span id="line-19">    <span class="s2">&quot;music&quot;</span><span class="p">,</span>
-</span><span id="line-20">    <span class="s2">&quot;human-voice&quot;</span><span class="p">,</span>
-</span><span id="line-21">    <span class="s2">&quot;dog&quot;</span><span class="p">,</span>
+</span><span id="line-14">    <span class="s2">"engine"</span><span class="p">,</span>
+</span><span id="line-15">    <span class="s2">"machinery-impact"</span><span class="p">,</span>
+</span><span id="line-16">    <span class="s2">"non-machinery-impact"</span><span class="p">,</span>
+</span><span id="line-17">    <span class="s2">"powered-saw"</span><span class="p">,</span>
+</span><span id="line-18">    <span class="s2">"alert-signal"</span><span class="p">,</span>
+</span><span id="line-19">    <span class="s2">"music"</span><span class="p">,</span>
+</span><span id="line-20">    <span class="s2">"human-voice"</span><span class="p">,</span>
+</span><span id="line-21">    <span class="s2">"dog"</span><span class="p">,</span>
 </span><span id="line-22"><span class="p">]</span>
 </span><span id="line-23">
 </span><span id="line-24"><span class="n">FINE_LABEL_BLOCKS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">29</span><span class="p">]</span>
@@ -223,59 +239,59 @@
 <div class="viewcode-block" id="SONYCUST">
 <a class="viewcode-back" href="../../../../stable_datasets.timeseries/#stable_datasets.timeseries.sonycust.SONYCUST">[docs]</a>
 </span><span id="line-27"><span class="k">class</span><span class="w"> </span><span class="nc">SONYCUST</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
-</span><span id="line-28"><span class="w">    </span><span class="sd">&quot;&quot;&quot;SONYC Urban Sound Tagging development dataset.&quot;&quot;&quot;</span>
+</span><span id="line-28"><span class="w">    </span><span class="sd">"""SONYC Urban Sound Tagging development dataset."""</span>
 </span><span id="line-29">
-</span><span id="line-30">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-30">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">"1.0.0"</span><span class="p">)</span>
 </span><span id="line-31">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="n">DatasetSource</span><span class="p">(</span>
-</span><span id="line-32">        <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://zenodo.org/records/3233082&quot;</span><span class="p">,</span>
+</span><span id="line-32">        <span class="n">homepage</span><span class="o">=</span><span class="s2">"https://zenodo.org/records/3233082"</span><span class="p">,</span>
 </span><span id="line-33">        <span class="n">assets</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-34">            <span class="s2">&quot;audio&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
-</span><span id="line-35">                <span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://zenodo.org/record/3233082/files/audio-dev.tar.gz?download=1&quot;</span><span class="p">,</span>
-</span><span id="line-36">                <span class="n">fallbacks</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;https://zenodo.org/records/3233082/files/audio-dev.tar.gz&quot;</span><span class="p">],</span>
-</span><span id="line-37">                <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;audio-dev.tar.gz&quot;</span><span class="p">,</span>
+</span><span id="line-34">            <span class="s2">"audio"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
+</span><span id="line-35">                <span class="n">url</span><span class="o">=</span><span class="s2">"https://zenodo.org/record/3233082/files/audio-dev.tar.gz?download=1"</span><span class="p">,</span>
+</span><span id="line-36">                <span class="n">fallbacks</span><span class="o">=</span><span class="p">[</span><span class="s2">"https://zenodo.org/records/3233082/files/audio-dev.tar.gz"</span><span class="p">],</span>
+</span><span id="line-37">                <span class="n">filename</span><span class="o">=</span><span class="s2">"audio-dev.tar.gz"</span><span class="p">,</span>
 </span><span id="line-38">            <span class="p">),</span>
-</span><span id="line-39">            <span class="s2">&quot;annotations&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
-</span><span id="line-40">                <span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://zenodo.org/record/3233082/files/annotations-dev.csv?download=1&quot;</span><span class="p">,</span>
-</span><span id="line-41">                <span class="n">fallbacks</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;https://zenodo.org/records/3233082/files/annotations-dev.csv&quot;</span><span class="p">],</span>
-</span><span id="line-42">                <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;annotations-dev.csv&quot;</span><span class="p">,</span>
+</span><span id="line-39">            <span class="s2">"annotations"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
+</span><span id="line-40">                <span class="n">url</span><span class="o">=</span><span class="s2">"https://zenodo.org/record/3233082/files/annotations-dev.csv?download=1"</span><span class="p">,</span>
+</span><span id="line-41">                <span class="n">fallbacks</span><span class="o">=</span><span class="p">[</span><span class="s2">"https://zenodo.org/records/3233082/files/annotations-dev.csv"</span><span class="p">],</span>
+</span><span id="line-42">                <span class="n">filename</span><span class="o">=</span><span class="s2">"annotations-dev.csv"</span><span class="p">,</span>
 </span><span id="line-43">            <span class="p">),</span>
 </span><span id="line-44">        <span class="p">},</span>
-</span><span id="line-45">        <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;See dataset homepage.&quot;</span><span class="p">,</span>
+</span><span id="line-45">        <span class="n">citation</span><span class="o">=</span><span class="s2">"See dataset homepage."</span><span class="p">,</span>
 </span><span id="line-46">    <span class="p">)</span>
 </span><span id="line-47">
 </span><span id="line-48">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-49">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
-</span><span id="line-50">            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;SONYC Urban Sound Tagging development dataset with fine and coarse multilabel annotations.&quot;</span><span class="p">,</span>
+</span><span id="line-50">            <span class="n">description</span><span class="o">=</span><span class="s2">"SONYC Urban Sound Tagging development dataset with fine and coarse multilabel annotations."</span><span class="p">,</span>
 </span><span id="line-51">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">(</span>
 </span><span id="line-52">                <span class="p">{</span>
-</span><span id="line-53">                    <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">))),</span>
-</span><span id="line-54">                    <span class="s2">&quot;fine_labels&quot;</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)),</span>
-</span><span id="line-55">                    <span class="s2">&quot;coarse_labels&quot;</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)),</span>
-</span><span id="line-56">                    <span class="s2">&quot;fine_label_names&quot;</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">)),</span>
-</span><span id="line-57">                    <span class="s2">&quot;coarse_label_names&quot;</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">)),</span>
-</span><span id="line-58">                    <span class="s2">&quot;relative_path&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
-</span><span id="line-59">                    <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">),</span>
-</span><span id="line-60">                    <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;string&quot;</span><span class="p">)),</span>
+</span><span id="line-53">                    <span class="s2">"series"</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">"float32"</span><span class="p">))),</span>
+</span><span id="line-54">                    <span class="s2">"fine_labels"</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">)),</span>
+</span><span id="line-55">                    <span class="s2">"coarse_labels"</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">)),</span>
+</span><span id="line-56">                    <span class="s2">"fine_label_names"</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">"string"</span><span class="p">)),</span>
+</span><span id="line-57">                    <span class="s2">"coarse_label_names"</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">"string"</span><span class="p">)),</span>
+</span><span id="line-58">                    <span class="s2">"relative_path"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"string"</span><span class="p">),</span>
+</span><span id="line-59">                    <span class="s2">"filename"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"string"</span><span class="p">),</span>
+</span><span id="line-60">                    <span class="s2">"metadata"</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">"string"</span><span class="p">)),</span>
 </span><span id="line-61">                <span class="p">}</span>
 </span><span id="line-62">            <span class="p">),</span>
 </span><span id="line-63">            <span class="n">supervised_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="line-64">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
-</span><span id="line-65">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-64">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"homepage"</span><span class="p">],</span>
+</span><span id="line-65">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"citation"</span><span class="p">],</span>
 </span><span id="line-66">        <span class="p">)</span>
 </span><span id="line-67">
 </span><span id="line-68">    <span class="k">def</span><span class="w"> </span><span class="nf">_split_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-69">        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source</span><span class="p">()</span>
 </span><span id="line-70">        <span class="n">audio_path</span><span class="p">,</span> <span class="n">annotations_path</span> <span class="o">=</span> <span class="n">bulk_download</span><span class="p">(</span>
 </span><span id="line-71">            <span class="p">[</span>
-</span><span id="line-72">                <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_download_info</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="s2">&quot;audio&quot;</span><span class="p">],</span> <span class="n">asset_name</span><span class="o">=</span><span class="s2">&quot;audio&quot;</span><span class="p">),</span>
-</span><span id="line-73">                <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_download_info</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="s2">&quot;assets&quot;</span><span class="p">][</span><span class="s2">&quot;annotations&quot;</span><span class="p">],</span> <span class="n">asset_name</span><span class="o">=</span><span class="s2">&quot;annotations&quot;</span><span class="p">),</span>
+</span><span id="line-72">                <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_download_info</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="s2">"assets"</span><span class="p">][</span><span class="s2">"audio"</span><span class="p">],</span> <span class="n">asset_name</span><span class="o">=</span><span class="s2">"audio"</span><span class="p">),</span>
+</span><span id="line-73">                <span class="bp">self</span><span class="o">.</span><span class="n">_normalize_download_info</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="s2">"assets"</span><span class="p">][</span><span class="s2">"annotations"</span><span class="p">],</span> <span class="n">asset_name</span><span class="o">=</span><span class="s2">"annotations"</span><span class="p">),</span>
 </span><span id="line-74">            <span class="p">],</span>
 </span><span id="line-75">            <span class="n">dest_folder</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_raw_download_dir</span><span class="p">,</span>
 </span><span id="line-76">        <span class="p">)</span>
 </span><span id="line-77">        <span class="k">return</span> <span class="p">[</span>
 </span><span id="line-78">            <span class="n">SplitGenerator</span><span class="p">(</span>
 </span><span id="line-79">                <span class="n">name</span><span class="o">=</span><span class="n">Split</span><span class="o">.</span><span class="n">TRAIN</span><span class="p">,</span>
-</span><span id="line-80">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;audio_path&quot;</span><span class="p">:</span> <span class="n">audio_path</span><span class="p">,</span> <span class="s2">&quot;annotations_path&quot;</span><span class="p">:</span> <span class="n">annotations_path</span><span class="p">,</span> <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span><span class="p">},</span>
+</span><span id="line-80">                <span class="n">gen_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"audio_path"</span><span class="p">:</span> <span class="n">audio_path</span><span class="p">,</span> <span class="s2">"annotations_path"</span><span class="p">:</span> <span class="n">annotations_path</span><span class="p">,</span> <span class="s2">"split"</span><span class="p">:</span> <span class="s2">"train"</span><span class="p">},</span>
 </span><span id="line-81">            <span class="p">)</span>
 </span><span id="line-82">        <span class="p">]</span>
 </span><span id="line-83">
@@ -284,19 +300,19 @@
 </span><span id="line-86">
 </span><span id="line-87">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">audio_path</span><span class="p">,</span> <span class="n">annotations_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
 </span><span id="line-88">        <span class="k">del</span> <span class="n">split</span>
-</span><span id="line-89">        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">annotations_path</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+</span><span id="line-89">        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">annotations_path</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
 </span><span id="line-90">            <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
 </span><span id="line-91">            <span class="n">header</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
 </span><span id="line-92">            <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
 </span><span id="line-93">
 </span><span id="line-94">        <span class="n">fine_label_names</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">33</span><span class="p">]</span>
-</span><span id="line-95">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">audio_path</span><span class="p">,</span> <span class="s2">&quot;r:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
+</span><span id="line-95">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">audio_path</span><span class="p">,</span> <span class="s2">"r:gz"</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
 </span><span id="line-96">            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
 </span><span id="line-97">                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">33</span><span class="p">:</span>
 </span><span id="line-98">                    <span class="k">continue</span>
-</span><span id="line-99">                <span class="n">relative_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="line-99">                <span class="n">relative_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
 </span><span id="line-100">                <span class="n">member</span> <span class="o">=</span> <span class="n">_find_member</span><span class="p">(</span><span class="n">archive</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span>
-</span><span id="line-101">                <span class="n">fine_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">33</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+</span><span id="line-101">                <span class="n">fine_labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">33</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">)</span>
 </span><span id="line-102">                <span class="n">coarse_labels</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span id="line-103">                <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">FINE_LABEL_BLOCKS</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">FINE_LABEL_BLOCKS</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
 </span><span id="line-104">                    <span class="n">coarse_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">fine_labels</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
@@ -306,25 +322,25 @@
 </span><span id="line-108">                <span class="k">yield</span> <span class="p">(</span>
 </span><span id="line-109">                    <span class="n">idx</span><span class="p">,</span>
 </span><span id="line-110">                    <span class="p">{</span>
-</span><span id="line-111">                        <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="n">wav_bytes_to_series</span><span class="p">(</span><span class="n">extracted</span><span class="o">.</span><span class="n">read</span><span class="p">()),</span>
-</span><span id="line-112">                        <span class="s2">&quot;fine_labels&quot;</span><span class="p">:</span> <span class="n">fine_labels</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
-</span><span id="line-113">                        <span class="s2">&quot;coarse_labels&quot;</span><span class="p">:</span> <span class="n">coarse_labels</span><span class="p">,</span>
-</span><span id="line-114">                        <span class="s2">&quot;fine_label_names&quot;</span><span class="p">:</span> <span class="n">fine_label_names</span><span class="p">,</span>
-</span><span id="line-115">                        <span class="s2">&quot;coarse_label_names&quot;</span><span class="p">:</span> <span class="n">COARSE_LABELS</span><span class="p">,</span>
-</span><span id="line-116">                        <span class="s2">&quot;relative_path&quot;</span><span class="p">:</span> <span class="n">relative_path</span><span class="p">,</span>
-</span><span id="line-117">                        <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-</span><span id="line-118">                        <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[:</span><span class="mi">4</span><span class="p">],</span>
+</span><span id="line-111">                        <span class="s2">"series"</span><span class="p">:</span> <span class="n">wav_bytes_to_series</span><span class="p">(</span><span class="n">extracted</span><span class="o">.</span><span class="n">read</span><span class="p">()),</span>
+</span><span id="line-112">                        <span class="s2">"fine_labels"</span><span class="p">:</span> <span class="n">fine_labels</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+</span><span id="line-113">                        <span class="s2">"coarse_labels"</span><span class="p">:</span> <span class="n">coarse_labels</span><span class="p">,</span>
+</span><span id="line-114">                        <span class="s2">"fine_label_names"</span><span class="p">:</span> <span class="n">fine_label_names</span><span class="p">,</span>
+</span><span id="line-115">                        <span class="s2">"coarse_label_names"</span><span class="p">:</span> <span class="n">COARSE_LABELS</span><span class="p">,</span>
+</span><span id="line-116">                        <span class="s2">"relative_path"</span><span class="p">:</span> <span class="n">relative_path</span><span class="p">,</span>
+</span><span id="line-117">                        <span class="s2">"filename"</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span id="line-118">                        <span class="s2">"metadata"</span><span class="p">:</span> <span class="n">row</span><span class="p">[:</span><span class="mi">4</span><span class="p">],</span>
 </span><span id="line-119">                    <span class="p">},</span>
 </span><span id="line-120">                <span class="p">)</span></div>
 
 </span><span id="line-121">
 </span><span id="line-122">
 </span><span id="line-123"><span class="k">def</span><span class="w"> </span><span class="nf">_find_member</span><span class="p">(</span><span class="n">archive</span><span class="p">:</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">TarFile</span><span class="p">,</span> <span class="n">suffix</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">TarInfo</span><span class="p">:</span>
-</span><span id="line-124">    <span class="n">suffix</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+</span><span id="line-124">    <span class="n">suffix</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
 </span><span id="line-125">    <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">archive</span><span class="o">.</span><span class="n">getmembers</span><span class="p">():</span>
 </span><span id="line-126">        <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">suffix</span><span class="p">):</span>
 </span><span id="line-127">            <span class="k">return</span> <span class="n">member</span>
-</span><span id="line-128">    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find </span><span class="si">{</span><span class="n">suffix</span><span class="si">!r}</span><span class="s2"> in </span><span class="si">{</span><span class="n">archive</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-128">    <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Could not find </span><span class="si">{</span><span class="n">suffix</span><span class="si">!r}</span><span class="s2"> in </span><span class="si">{</span><span class="n">archive</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></code></pre></div>
     </div></div>
           </main>
@@ -358,7 +374,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

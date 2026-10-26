@@ -28,13 +28,12 @@
 <meta content="stable-datasets" name="twitter:title"/>
 <link href="_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
-<link href="_static/theme.css?v=d6d7c91b" rel="stylesheet" type="text/css"/>
+<link href="_static/theme.css?v=009055c6" rel="stylesheet" type="text/css"/>
 <link href="_static/sphinx-design.min.css?v=95c83b7e" rel="stylesheet" type="text/css"/>
-<link href="_static/css/custom.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" rel="stylesheet" type="text/css"/>
-<link href="_static/awesome-sphinx-design.css?v=a81faafa" rel="stylesheet" type="text/css"/>
+<link href="_static/awesome-sphinx-design.css?v=b41b1d54" rel="stylesheet" type="text/css"/>
 <link href="search/" rel="search" title="Search"/>
 <link href="genindex/" rel="index" title="Index"/>
 <link href="datasets/" rel="next" title="Datasets"/>
@@ -94,6 +93,7 @@
 <li class="toctree-l2"><a class="reference internal" href="datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets/medmnist/">MedMNIST</a></li>
@@ -112,13 +112,29 @@
 <li class="toctree-l2"><a class="reference internal" href="datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="modules/">stable_datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
+<li class="toctree-l2"><a class="reference internal" href="stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 </nav>
 </div>
@@ -160,6 +176,7 @@ pip</label><div class="sd-tab-content docutils">
 </span></code></pre></div>
 </div>
 
+
 <section id="citation">
 <h2>Citation<a class="headerlink" href="#citation" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citation'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <p>If you find this library useful in your research, please consider citing us:</p>
@@ -198,7 +215,7 @@ pip</label><div class="sd-tab-content docutils">
 <script src="_static/documentation_options.js?v=c167d237"></script>
 <script src="_static/doctools.js?v=fd6eb6e6"></script>
 <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
-<script defer="defer" src="_static/theme.js?v=5db23cf8"></script>
+<script defer="defer" src="_static/theme.js?v=49cc6205"></script>
 <script src="_static/design-tabs.js?v=f930bc37"></script>
 </body>
 </html>

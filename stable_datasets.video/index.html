@@ -26,15 +26,15 @@
 <meta content="stable_datasets.video package | stable-datasets" name="twitter:title"/>
 <link href="../_static/pygments.css?v=3efa2d9f" rel="stylesheet" type="text/css"/>
 <link href="../_static/pygments_dark.css" id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css"/>
-<link href="../_static/theme.css?v=d6d7c91b" rel="stylesheet" type="text/css"/>
+<link href="../_static/theme.css?v=009055c6" rel="stylesheet" type="text/css"/>
 <link href="../_static/sphinx-design.min.css?v=95c83b7e" rel="stylesheet" type="text/css"/>
-<link href="../_static/css/custom.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" rel="stylesheet" type="text/css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" rel="stylesheet" type="text/css"/>
-<link href="../_static/awesome-sphinx-design.css?v=a81faafa" rel="stylesheet" type="text/css"/>
+<link href="../_static/awesome-sphinx-design.css?v=b41b1d54" rel="stylesheet" type="text/css"/>
 <link href="../search/" rel="search" title="Search"/>
 <link href="../genindex/" rel="index" title="Index"/>
+<link href="../stable_datasets.timeseries/" rel="prev" title="stable_datasets.timeseries package"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" @scroll.window="showScrollTop = pageYOffset &gt; 100" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -91,6 +91,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/medmnist/">MedMNIST</a></li>
@@ -109,13 +110,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../modules/">stable_datasets<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
+<li class="toctree-l2 current"><a class="reference internal" href="../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 </nav>
 </div>
@@ -135,6 +152,8 @@
 <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z"></path>
 </svg>
 </a>
+<div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../modules/">stable_datasets</a>
+<div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../stable_datasets/">stable_datasets package</a>
 <div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">stable_datasets.video package</span>
 </nav>
 <div id="content" role="main">
@@ -192,45 +211,6 @@ with small home quotas.</p>
 <section id="module-stable_datasets.video">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-stable_datasets.video" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#module-stable_datasets.video'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></h2>
 <p>Video dataset builders.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="stable_datasets.video.MovingMNIST">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MovingMNIST</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_video</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stable_datasets/video/moving_mnist/#MovingMNIST"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stable_datasets.video.MovingMNIST" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#stable_datasets.video.MovingMNIST'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></dt>
-<dd><p>Bases: <a class="reference internal" href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder" title="stable_datasets.utils.BaseDatasetBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDatasetBuilder</span></code></a></p>
-<p>Moving MNIST (test split only).</p>
-<p>10,000 sequences of 20 grayscale frames at 64x64. The canonical artifact has
-no class labels; training data is conventionally generated procedurally from
-MNIST digits, which is out of scope here.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="stable_datasets.video.MovingMNIST.SOURCE">
-<span class="sig-name descname"><span class="pre">SOURCE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetSource" title="stable_datasets.schema.DatasetSource"><span class="pre">DatasetSource</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">DatasetSource(homepage='http://www.cs.toronto.edu/~nitish/unsupervised_video/',</span> <span class="pre">assets=mappingproxy({'test':</span> <span class="pre">DownloadInfo(url='http://www.cs.toronto.edu/~nitish/unsupervised_video/mnist_test_seq.npy',</span> <span class="pre">fallbacks=[],</span> <span class="pre">checksum=None,</span> <span class="pre">filename=None)}),</span> <span class="pre">citation='@inproceedings{srivastava2015unsupervised,\n</span>            <span class="pre">title={Unsupervised</span> <span class="pre">Learning</span> <span class="pre">of</span> <span class="pre">Video</span> <span class="pre">Representations</span> <span class="pre">using</span> <span class="pre">LSTMs},\n</span>            <span class="pre">author={Srivastava,</span> <span class="pre">Nitish</span> <span class="pre">and</span> <span class="pre">Mansimov,</span> <span class="pre">Elman</span> <span class="pre">and</span> <span class="pre">Salakhutdinov,</span> <span class="pre">Ruslan},\n</span>            <span class="pre">booktitle={ICML},\n</span>            <span class="pre">year={2015}\n</span>        <span class="pre">}',</span> <span class="pre">license='',</span> <span class="pre">checksums=None)</span></span><a class="headerlink" href="#stable_datasets.video.MovingMNIST.SOURCE" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#stable_datasets.video.MovingMNIST.SOURCE'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></dt>
-<dd></dd></dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="stable_datasets.video.MovingMNIST.VERSION">
-<span class="sig-name descname"><span class="pre">VERSION</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Version" title="stable_datasets.schema.Version"><span class="pre">Version</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Version('1.0.0')</span></span><a class="headerlink" href="#stable_datasets.video.MovingMNIST.VERSION" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#stable_datasets.video.MovingMNIST.VERSION'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></dt>
-<dd></dd></dl>
-</dd></dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="stable_datasets.video.SSv2">
-<span class="sig-name descname"><span class="pre">SSv2</span></span><a class="headerlink" href="#stable_datasets.video.SSv2" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#stable_datasets.video.SSv2'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></dt>
-<dd><p>alias of <a class="reference internal" href="#stable_datasets.video.something_something_v2.SomethingSomethingV2" title="stable_datasets.video.something_something_v2.SomethingSomethingV2"><code class="xref py py-class docutils literal notranslate"><span class="pre">SomethingSomethingV2</span></code></a></p>
-</dd></dl>
-<dl class="py class">
-<dt class="sig sig-object py" id="stable_datasets.video.SomethingSomethingV2">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SomethingSomethingV2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">storage_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_video</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/stable_datasets/video/something_something_v2/#SomethingSomethingV2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stable_datasets.video.SomethingSomethingV2" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#stable_datasets.video.SomethingSomethingV2'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></dt>
-<dd><p>Bases: <a class="reference internal" href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder" title="stable_datasets.utils.BaseDatasetBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDatasetBuilder</span></code></a></p>
-<p>Something-Something V2 action-recognition videos.</p>
-<p>The Qualcomm package is large. Set <code class="docutils literal notranslate"><span class="pre">STABLE_DATASETS_CACHE_DIR</span></code> or pass
-<code class="docutils literal notranslate"><span class="pre">download_dir=</span></code> / <code class="docutils literal notranslate"><span class="pre">processed_cache_dir=</span></code> before loading it on machines
-with small home quotas.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="stable_datasets.video.SomethingSomethingV2.SOURCE">
-<span class="sig-name descname"><span class="pre">SOURCE</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.DatasetSource" title="stable_datasets.schema.DatasetSource"><span class="pre">DatasetSource</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Mapping</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">DatasetSource(homepage='https://developer.qualcomm.com/software/ai-datasets/something-something',</span> <span class="pre">assets=mappingproxy({'video_part_00':</span> <span class="pre">DownloadInfo(url='https://apigwx-aws.qualcomm.com/qsc/public/v1/api/download/software/dataset/AIDataset/Something-Something-V2/20bn-something-something-v2-00',</span> <span class="pre">fallbacks=[],</span> <span class="pre">checksum=None,</span> <span class="pre">filename='20bn-something-something-v2-00'),</span> <span class="pre">'video_part_01':</span> <span class="pre">DownloadInfo(url='https://apigwx-aws.qualcomm.com/qsc/public/v1/api/download/software/dataset/AIDataset/Something-Something-V2/20bn-something-something-v2-01',</span> <span class="pre">fallbacks=[],</span> <span class="pre">checksum=None,</span> <span class="pre">filename='20bn-something-something-v2-01'),</span> <span class="pre">'labels':</span> <span class="pre">DownloadInfo(url='https://softwarecenter.qualcomm.com/api/download/software/dataset/AIDataset/Something-Something-V2/20bn-something-something-download-package-labels.zip',</span> <span class="pre">fallbacks=[],</span> <span class="pre">checksum=None,</span> <span class="pre">filename='20bn-something-something-download-package-labels.zip')}),</span> <span class="pre">citation='@inproceedings{goyal2017something,\n</span>  <span class="pre">title={The</span> <span class="pre">"Something</span> <span class="pre">Something"</span> <span class="pre">Video</span> <span class="pre">Database</span> <span class="pre">for</span> <span class="pre">Learning</span> <span class="pre">and</span> <span class="pre">Evaluating</span> <span class="pre">Visual</span> <span class="pre">Common</span> <span class="pre">Sense},\n</span>  <span class="pre">author={Goyal,</span> <span class="pre">Raghav</span> <span class="pre">and</span> <span class="pre">Ebrahimi</span> <span class="pre">Kahou,</span> <span class="pre">Samira</span> <span class="pre">and</span> <span class="pre">Michalski,</span> <span class="pre">Vincent</span> <span class="pre">and</span> <span class="pre">Materzynska,</span> <span class="pre">Joanna</span> <span class="pre">and</span> <span class="pre">Westphal,</span> <span class="pre">Susanne</span> <span class="pre">and</span> <span class="pre">Kim,</span> <span class="pre">Heuna</span> <span class="pre">and</span> <span class="pre">Haenel,</span> <span class="pre">Valentin</span> <span class="pre">and</span> <span class="pre">Fruend,</span> <span class="pre">Ingo</span> <span class="pre">and</span> <span class="pre">Yianilos,</span> <span class="pre">Peter</span> <span class="pre">and</span> <span class="pre">Mueller-Freitag,</span> <span class="pre">Moritz</span> <span class="pre">and</span> <span class="pre">others},\n</span>  <span class="pre">booktitle={Proceedings</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">IEEE</span> <span class="pre">International</span> <span class="pre">Conference</span> <span class="pre">on</span> <span class="pre">Computer</span> <span class="pre">Vision},\n</span>  <span class="pre">pages={5842--5850},\n</span>  <span class="pre">year={2017}\n}',</span> <span class="pre">license="Qualcomm</span> <span class="pre">data</span> <span class="pre">license</span> <span class="pre">agreement</span> <span class="pre">for</span> <span class="pre">research</span> <span class="pre">use.</span> <span class="pre">Users</span> <span class="pre">must</span> <span class="pre">obtain</span> <span class="pre">and</span> <span class="pre">use</span> <span class="pre">the</span> <span class="pre">dataset</span> <span class="pre">under</span> <span class="pre">Qualcomm's</span> <span class="pre">terms.",</span> <span class="pre">checksums=None)</span></span><a class="headerlink" href="#stable_datasets.video.SomethingSomethingV2.SOURCE" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#stable_datasets.video.SomethingSomethingV2.SOURCE'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></dt>
-<dd></dd></dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="stable_datasets.video.SomethingSomethingV2.VERSION">
-<span class="sig-name descname"><span class="pre">VERSION</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="../stable_datasets/#stable_datasets.schema.Version" title="stable_datasets.schema.Version"><span class="pre">Version</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Version('2.0.0')</span></span><a class="headerlink" href="#stable_datasets.video.SomethingSomethingV2.VERSION" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#stable_datasets.video.SomethingSomethingV2.VERSION'"><svg height="1em" viewbox="0 0 24 24" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"></path></svg></a></dt>
-<dd></dd></dl>
-</dd></dl>
 </section>
 </section>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
@@ -254,20 +234,7 @@ with small home quotas.</p>
 </li>
 </ul>
 </li>
-<li><a :data-current="activeSection === '#module-stable_datasets.video'" class="reference internal" href="#module-stable_datasets.video">Module contents</a><ul>
-<li><a :data-current="activeSection === '#stable_datasets.video.MovingMNIST'" class="reference internal" href="#stable_datasets.video.MovingMNIST"><code class="docutils literal notranslate"><span class="pre">MovingMNIST</span></code></a><ul>
-<li><a :data-current="activeSection === '#stable_datasets.video.MovingMNIST.SOURCE'" class="reference internal" href="#stable_datasets.video.MovingMNIST.SOURCE"><code class="docutils literal notranslate"><span class="pre">MovingMNIST.SOURCE</span></code></a></li>
-<li><a :data-current="activeSection === '#stable_datasets.video.MovingMNIST.VERSION'" class="reference internal" href="#stable_datasets.video.MovingMNIST.VERSION"><code class="docutils literal notranslate"><span class="pre">MovingMNIST.VERSION</span></code></a></li>
-</ul>
-</li>
-<li><a :data-current="activeSection === '#stable_datasets.video.SSv2'" class="reference internal" href="#stable_datasets.video.SSv2"><code class="docutils literal notranslate"><span class="pre">SSv2</span></code></a></li>
-<li><a :data-current="activeSection === '#stable_datasets.video.SomethingSomethingV2'" class="reference internal" href="#stable_datasets.video.SomethingSomethingV2"><code class="docutils literal notranslate"><span class="pre">SomethingSomethingV2</span></code></a><ul>
-<li><a :data-current="activeSection === '#stable_datasets.video.SomethingSomethingV2.SOURCE'" class="reference internal" href="#stable_datasets.video.SomethingSomethingV2.SOURCE"><code class="docutils literal notranslate"><span class="pre">SomethingSomethingV2.SOURCE</span></code></a></li>
-<li><a :data-current="activeSection === '#stable_datasets.video.SomethingSomethingV2.VERSION'" class="reference internal" href="#stable_datasets.video.SomethingSomethingV2.VERSION"><code class="docutils literal notranslate"><span class="pre">SomethingSomethingV2.VERSION</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li><a :data-current="activeSection === '#module-stable_datasets.video'" class="reference internal" href="#module-stable_datasets.video">Module contents</a></li>
 </ul>
 </div>
 </aside>
@@ -289,7 +256,7 @@ with small home quotas.</p>
 <script src="../_static/documentation_options.js?v=c167d237"></script>
 <script src="../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-<script defer="defer" src="../_static/theme.js?v=5db23cf8"></script>
+<script defer="defer" src="../_static/theme.js?v=49cc6205"></script>
 <script src="../_static/design-tabs.js?v=f930bc37"></script>
 </body>
 </html>

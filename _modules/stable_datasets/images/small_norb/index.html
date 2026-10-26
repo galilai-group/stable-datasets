@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.images.small_norb | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../../search/" />
   <link rel="index" title="Index" href="../../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -207,15 +223,15 @@
 </span><span id="line-11">    <span class="n">magic</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 </span><span id="line-12">    <span class="n">ndim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">4</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 </span><span id="line-13">    <span class="n">eff_dim</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">ndim</span><span class="p">)</span>
-</span><span id="line-14">    <span class="n">raw_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s2">&quot;int32&quot;</span><span class="p">,</span> <span class="n">eff_dim</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+</span><span id="line-14">    <span class="n">raw_dims</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="s2">"int32"</span><span class="p">,</span> <span class="n">eff_dim</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
 </span><span id="line-15">
 </span><span id="line-16">    <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">raw_dims</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">)]</span>
 </span><span id="line-17">
 </span><span id="line-18">    <span class="n">dtype_map</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-19">        <span class="mi">507333717</span><span class="p">:</span> <span class="s2">&quot;int8&quot;</span><span class="p">,</span>
-</span><span id="line-20">        <span class="mi">507333716</span><span class="p">:</span> <span class="s2">&quot;int32&quot;</span><span class="p">,</span>
-</span><span id="line-21">        <span class="mi">507333713</span><span class="p">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
-</span><span id="line-22">        <span class="mi">507333715</span><span class="p">:</span> <span class="s2">&quot;double&quot;</span><span class="p">,</span>
+</span><span id="line-19">        <span class="mi">507333717</span><span class="p">:</span> <span class="s2">"int8"</span><span class="p">,</span>
+</span><span id="line-20">        <span class="mi">507333716</span><span class="p">:</span> <span class="s2">"int32"</span><span class="p">,</span>
+</span><span id="line-21">        <span class="mi">507333713</span><span class="p">:</span> <span class="s2">"float"</span><span class="p">,</span>
+</span><span id="line-22">        <span class="mi">507333715</span><span class="p">:</span> <span class="s2">"double"</span><span class="p">,</span>
 </span><span id="line-23">    <span class="p">}</span>
 </span><span id="line-24">    <span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype_map</span><span class="p">[</span><span class="n">magic</span><span class="p">]</span>
 </span><span id="line-25">
@@ -224,10 +240,10 @@
 </span><span id="line-28">
 </span><span id="line-29">
 </span><span id="line-30"><span class="k">def</span><span class="w"> </span><span class="nf">_load_small_norb_from_zip</span><span class="p">(</span><span class="n">zip_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-</span><span id="line-31">    <span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">zip_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
-</span><span id="line-32">        <span class="n">dat_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;-dat.mat&quot;</span><span class="p">))</span>
-</span><span id="line-33">        <span class="n">cat_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;-cat.mat&quot;</span><span class="p">))</span>
-</span><span id="line-34">        <span class="n">info_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;-info.mat&quot;</span><span class="p">))</span>
+</span><span id="line-31">    <span class="k">with</span> <span class="n">ZipFile</span><span class="p">(</span><span class="n">zip_path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
+</span><span id="line-32">        <span class="n">dat_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"-dat.mat"</span><span class="p">))</span>
+</span><span id="line-33">        <span class="n">cat_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"-cat.mat"</span><span class="p">))</span>
+</span><span id="line-34">        <span class="n">info_name</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"-info.mat"</span><span class="p">))</span>
 </span><span id="line-35">
 </span><span id="line-36">        <span class="n">dat_bytes</span> <span class="o">=</span> <span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">dat_name</span><span class="p">)</span>
 </span><span id="line-37">        <span class="n">cat_bytes</span> <span class="o">=</span> <span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">cat_name</span><span class="p">)</span>
@@ -249,22 +265,22 @@
 <div class="viewcode-block" id="SmallNORB">
 <a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.small_norb.SmallNORB">[docs]</a>
 </span><span id="line-53"><span class="k">class</span><span class="w"> </span><span class="nc">SmallNORB</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
-</span><span id="line-54"><span class="w">    </span><span class="sd">&quot;&quot;&quot;SmallNORB dataset: 96x96 stereo images with 5 known factors.&quot;&quot;&quot;</span>
+</span><span id="line-54"><span class="w">    </span><span class="sd">"""SmallNORB dataset: 96x96 stereo images with 5 known factors."""</span>
 </span><span id="line-55">
-</span><span id="line-56">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+</span><span id="line-56">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">"1.0.0"</span><span class="p">)</span>
 </span><span id="line-57">
 </span><span id="line-58">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="n">DatasetSource</span><span class="p">(</span>
-</span><span id="line-59">        <span class="n">homepage</span><span class="o">=</span><span class="s2">&quot;https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/&quot;</span><span class="p">,</span>
+</span><span id="line-59">        <span class="n">homepage</span><span class="o">=</span><span class="s2">"https://cs.nyu.edu/~ylclab/data/norb-v1.0-small/"</span><span class="p">,</span>
 </span><span id="line-60">        <span class="n">assets</span><span class="o">=</span><span class="p">{</span>
-</span><span id="line-61">            <span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
-</span><span id="line-62">                <span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://huggingface.co/datasets/randall-lab/small-norb/resolve/main/smallnorb-train.zip&quot;</span>
+</span><span id="line-61">            <span class="s2">"train"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
+</span><span id="line-62">                <span class="n">url</span><span class="o">=</span><span class="s2">"https://huggingface.co/datasets/randall-lab/small-norb/resolve/main/smallnorb-train.zip"</span>
 </span><span id="line-63">            <span class="p">),</span>
-</span><span id="line-64">            <span class="s2">&quot;test&quot;</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
-</span><span id="line-65">                <span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://huggingface.co/datasets/randall-lab/small-norb/resolve/main/smallnorb-test.zip&quot;</span>
+</span><span id="line-64">            <span class="s2">"test"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
+</span><span id="line-65">                <span class="n">url</span><span class="o">=</span><span class="s2">"https://huggingface.co/datasets/randall-lab/small-norb/resolve/main/smallnorb-test.zip"</span>
 </span><span id="line-66">            <span class="p">),</span>
 </span><span id="line-67">        <span class="p">},</span>
-</span><span id="line-68">        <span class="n">license</span><span class="o">=</span><span class="s2">&quot;Apache-2.0&quot;</span><span class="p">,</span>
-</span><span id="line-69">        <span class="n">citation</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;@inproceedings{lecun2004learning,</span>
+</span><span id="line-68">        <span class="n">license</span><span class="o">=</span><span class="s2">"Apache-2.0"</span><span class="p">,</span>
+</span><span id="line-69">        <span class="n">citation</span><span class="o">=</span><span class="s2">"""@inproceedings{lecun2004learning,</span>
 </span><span id="line-70"><span class="s2">  title={Learning methods for generic object recognition with invariance to pose and lighting},</span>
 </span><span id="line-71"><span class="s2">  author={LeCun, Yann and Huang, Fu Jie and Bottou, Leon},</span>
 </span><span id="line-72"><span class="s2">  booktitle={Proceedings of the 2004 IEEE Computer Society Conference on Computer Vision and Pattern Recognition, 2004. CVPR 2004.},</span>
@@ -272,54 +288,54 @@
 </span><span id="line-74"><span class="s2">  pages={II--104},</span>
 </span><span id="line-75"><span class="s2">  year=</span><span class="si">{2004}</span><span class="s2">,</span>
 </span><span id="line-76"><span class="s2">  organization=</span><span class="si">{IEEE}</span>
-</span><span id="line-77"><span class="s2">}&quot;&quot;&quot;</span><span class="p">,</span>
+</span><span id="line-77"><span class="s2">}"""</span><span class="p">,</span>
 </span><span id="line-78">    <span class="p">)</span>
 </span><span id="line-79">
 </span><span id="line-80">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span id="line-81">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
 </span><span id="line-82">            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
-</span><span id="line-83">                <span class="s2">&quot;SmallNORB dataset: stereo pair images of 3D toy objects, used for learning object recognition &quot;</span>
-</span><span id="line-84">                <span class="s2">&quot;robust to pose and lighting. Each image pair corresponds to a combination of 5 factors: &quot;</span>
-</span><span id="line-85">                <span class="s2">&quot;category, instance, elevation, azimuth, lighting.&quot;</span>
+</span><span id="line-83">                <span class="s2">"SmallNORB dataset: stereo pair images of 3D toy objects, used for learning object recognition "</span>
+</span><span id="line-84">                <span class="s2">"robust to pose and lighting. Each image pair corresponds to a combination of 5 factors: "</span>
+</span><span id="line-85">                <span class="s2">"category, instance, elevation, azimuth, lighting."</span>
 </span><span id="line-86">            <span class="p">),</span>
 </span><span id="line-87">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">(</span>
 </span><span id="line-88">                <span class="p">{</span>
-</span><span id="line-89">                    <span class="s2">&quot;left_image&quot;</span><span class="p">:</span> <span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-90">                    <span class="s2">&quot;right_image&quot;</span><span class="p">:</span> <span class="n">Image</span><span class="p">(),</span>
-</span><span id="line-91">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">)),</span>
-</span><span id="line-92">                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
-</span><span id="line-93">                    <span class="s2">&quot;instance&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
-</span><span id="line-94">                    <span class="s2">&quot;elevation&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
-</span><span id="line-95">                    <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
-</span><span id="line-96">                    <span class="s2">&quot;lighting&quot;</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">&quot;int32&quot;</span><span class="p">),</span>
+</span><span id="line-89">                    <span class="s2">"left_image"</span><span class="p">:</span> <span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-90">                    <span class="s2">"right_image"</span><span class="p">:</span> <span class="n">Image</span><span class="p">(),</span>
+</span><span id="line-91">                    <span class="s2">"label"</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">(</span><span class="n">Value</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">)),</span>
+</span><span id="line-92">                    <span class="s2">"category"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">),</span>
+</span><span id="line-93">                    <span class="s2">"instance"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">),</span>
+</span><span id="line-94">                    <span class="s2">"elevation"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">),</span>
+</span><span id="line-95">                    <span class="s2">"azimuth"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">),</span>
+</span><span id="line-96">                    <span class="s2">"lighting"</span><span class="p">:</span> <span class="n">Value</span><span class="p">(</span><span class="s2">"int32"</span><span class="p">),</span>
 </span><span id="line-97">                <span class="p">}</span>
 </span><span id="line-98">            <span class="p">),</span>
-</span><span id="line-99">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;left_image&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">),</span>
-</span><span id="line-100">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;homepage&quot;</span><span class="p">],</span>
-</span><span id="line-101">            <span class="n">license</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;license&quot;</span><span class="p">],</span>
-</span><span id="line-102">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">&quot;citation&quot;</span><span class="p">],</span>
+</span><span id="line-99">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">"left_image"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">),</span>
+</span><span id="line-100">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"homepage"</span><span class="p">],</span>
+</span><span id="line-101">            <span class="n">license</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"license"</span><span class="p">],</span>
+</span><span id="line-102">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"citation"</span><span class="p">],</span>
 </span><span id="line-103">        <span class="p">)</span>
 </span><span id="line-104">
 </span><span id="line-105">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
 </span><span id="line-106">        <span class="n">images_left</span><span class="p">,</span> <span class="n">images_right</span><span class="p">,</span> <span class="n">features</span> <span class="o">=</span> <span class="n">_load_small_norb_from_zip</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">data_path</span><span class="p">))</span>
 </span><span id="line-107">
 </span><span id="line-108">        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">images_left</span><span class="p">)):</span>
-</span><span id="line-109">            <span class="n">left_img</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">images_left</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;L&quot;</span><span class="p">)</span>
-</span><span id="line-110">            <span class="n">right_img</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">images_right</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;L&quot;</span><span class="p">)</span>
+</span><span id="line-109">            <span class="n">left_img</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">images_left</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"L"</span><span class="p">)</span>
+</span><span id="line-110">            <span class="n">right_img</span> <span class="o">=</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">images_right</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"L"</span><span class="p">)</span>
 </span><span id="line-111">
 </span><span id="line-112">            <span class="n">factors</span> <span class="o">=</span> <span class="n">features</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 </span><span id="line-113">
 </span><span id="line-114">            <span class="k">yield</span> <span class="p">(</span>
 </span><span id="line-115">                <span class="n">idx</span><span class="p">,</span>
 </span><span id="line-116">                <span class="p">{</span>
-</span><span id="line-117">                    <span class="s2">&quot;left_image&quot;</span><span class="p">:</span> <span class="n">left_img</span><span class="p">,</span>
-</span><span id="line-118">                    <span class="s2">&quot;right_image&quot;</span><span class="p">:</span> <span class="n">right_img</span><span class="p">,</span>
-</span><span id="line-119">                    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="n">factors</span><span class="p">,</span>
-</span><span id="line-120">                    <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-</span><span id="line-121">                    <span class="s2">&quot;instance&quot;</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-</span><span id="line-122">                    <span class="s2">&quot;elevation&quot;</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
-</span><span id="line-123">                    <span class="s2">&quot;azimuth&quot;</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-</span><span id="line-124">                    <span class="s2">&quot;lighting&quot;</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
+</span><span id="line-117">                    <span class="s2">"left_image"</span><span class="p">:</span> <span class="n">left_img</span><span class="p">,</span>
+</span><span id="line-118">                    <span class="s2">"right_image"</span><span class="p">:</span> <span class="n">right_img</span><span class="p">,</span>
+</span><span id="line-119">                    <span class="s2">"label"</span><span class="p">:</span> <span class="n">factors</span><span class="p">,</span>
+</span><span id="line-120">                    <span class="s2">"category"</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span id="line-121">                    <span class="s2">"instance"</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+</span><span id="line-122">                    <span class="s2">"elevation"</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+</span><span id="line-123">                    <span class="s2">"azimuth"</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+</span><span id="line-124">                    <span class="s2">"lighting"</span><span class="p">:</span> <span class="n">factors</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span>
 </span><span id="line-125">                <span class="p">},</span>
 </span><span id="line-126">            <span class="p">)</span></div>
 
@@ -356,7 +372,7 @@
     <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>

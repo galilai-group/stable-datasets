@@ -28,13 +28,12 @@
   <meta name="twitter:title" content="stable_datasets.samplers | stable-datasets" />
   <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=3efa2d9f" />
   <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../_static/pygments_dark.css" />
-  <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=d6d7c91b" />
+  <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=009055c6" />
   <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=95c83b7e" />
-  <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
-  <link rel="stylesheet" type="text/css" href="../../../_static/awesome-sphinx-design.css?v=a81faafa" />
+  <link rel="stylesheet" type="text/css" href="../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
   <link rel="search" title="Search" href="../../../search/" />
   <link rel="index" title="Index" href="../../../genindex/" />
 </head>
@@ -127,6 +126,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/cars196/">CARS-196</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/not_mnist/">not-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/medmnist/">MedMNIST</a></li>
@@ -145,13 +145,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/hasy_v2/">HASYv2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/face_pointing/">Face Pointing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/linnaeus5/">Linnaeus 5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../datasets/small_norb/">SmallNORB</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../introduction/quickstart/">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../introduction/showcase/">Showcase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
 </ul>
 
 </nav>
@@ -194,9 +210,9 @@
 
     <div id="content" role="main">
       <h1>Source code for stable_datasets.samplers</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="sd">&quot;&quot;&quot;Backend-aware samplers for :class:`StableDataset`.</span>
+<span></span><code><span id="line-1"><span class="sd">"""Backend-aware samplers for :class:`StableDataset`.</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="sd">PyTorch&#39;s :class:`~torch.utils.data.DataLoader` constructs a</span>
+</span><span id="line-3"><span class="sd">PyTorch's :class:`~torch.utils.data.DataLoader` constructs a</span>
 </span><span id="line-4"><span class="sd">:class:`~torch.utils.data.RandomSampler` when ``shuffle=True`` is</span>
 </span><span id="line-5"><span class="sd">passed. That sampler yields indices in a full-random permutation</span>
 </span><span id="line-6"><span class="sd">regardless of the underlying storage backend. For file-backed</span>
@@ -207,15 +223,15 @@
 </span><span id="line-11"><span class="sd">This module exposes samplers that yield indices in shard-aware</span>
 </span><span id="line-12"><span class="sd">orderings, preserving the classical PyTorch API (``DataLoader(ds,</span>
 </span><span id="line-13"><span class="sd">sampler=...)``) while providing a sampler that matches the</span>
-</span><span id="line-14"><span class="sd">backend&#39;s access-pattern preferences:</span>
+</span><span id="line-14"><span class="sd">backend's access-pattern preferences::</span>
 </span><span id="line-15">
 </span><span id="line-16"><span class="sd">    from stable_datasets.samplers import ShardShuffleSampler</span>
 </span><span id="line-17">
-</span><span id="line-18"><span class="sd">    ds = CIFAR10(split=&quot;train&quot;, storage_format=&quot;lance&quot;)</span>
+</span><span id="line-18"><span class="sd">    ds = CIFAR10(split="train", storage_format="lance")</span>
 </span><span id="line-19"><span class="sd">    sampler = ShardShuffleSampler(ds, seed=42)</span>
 </span><span id="line-20"><span class="sd">    loader = DataLoader(ds, batch_size=128, sampler=sampler,</span>
 </span><span id="line-21"><span class="sd">                        num_workers=8, persistent_workers=True,</span>
-</span><span id="line-22"><span class="sd">                        multiprocessing_context=&quot;spawn&quot;)</span>
+</span><span id="line-22"><span class="sd">                        multiprocessing_context="spawn")</span>
 </span><span id="line-23">
 </span><span id="line-24"><span class="sd">``DataLoader(ds, shuffle=True)`` continues to work unchanged for</span>
 </span><span id="line-25"><span class="sd">users who need bit-exact full-random ordering (e.g. classification</span>
@@ -223,12 +239,12 @@
 </span><span id="line-27">
 </span><span id="line-28"><span class="sd">See also</span>
 </span><span id="line-29"><span class="sd">--------</span>
-</span><span id="line-30"><span class="sd">``torch.utils.data.Sampler`` : base class.</span>
-</span><span id="line-31"><span class="sd">``lance.sampler.ShardedFragmentSampler`` : Lance&#39;s own fragment</span>
-</span><span id="line-32"><span class="sd">   sampler for its native :class:`lance.torch.data.LanceDataset`</span>
-</span><span id="line-33"><span class="sd">   integration. ``ShardShuffleSampler`` is the nearest equivalent</span>
-</span><span id="line-34"><span class="sd">   exposed through the StableDataset backend protocol.</span>
-</span><span id="line-35"><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="line-30"><span class="sd">torch.utils.data.Sampler : base class.</span>
+</span><span id="line-31"><span class="sd">lance.sampler.ShardedFragmentSampler : Lance's own fragment</span>
+</span><span id="line-32"><span class="sd">    sampler for its native :class:`lance.torch.data.LanceDataset`</span>
+</span><span id="line-33"><span class="sd">    integration. ``ShardShuffleSampler`` is the nearest equivalent</span>
+</span><span id="line-34"><span class="sd">    exposed through the StableDataset backend protocol.</span>
+</span><span id="line-35"><span class="sd">"""</span>
 </span><span id="line-36">
 </span><span id="line-37"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span id="line-38">
@@ -242,19 +258,19 @@
 <div class="viewcode-block" id="ShardShuffleSampler">
 <a class="viewcode-back" href="../../../stable_datasets/#stable_datasets.samplers.ShardShuffleSampler">[docs]</a>
 </span><span id="line-46"><span class="k">class</span><span class="w"> </span><span class="nc">ShardShuffleSampler</span><span class="p">(</span><span class="n">Sampler</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
-</span><span id="line-47"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield indices in shard-shuffled order.</span>
+</span><span id="line-47"><span class="w">    </span><span class="sd">"""Yield indices in shard-shuffled order.</span>
 </span><span id="line-48">
 </span><span id="line-49"><span class="sd">    The shard (or Lance fragment) order is randomized each epoch.</span>
 </span><span id="line-50"><span class="sd">    Within each shard, indices are yielded in an order controlled</span>
 </span><span id="line-51"><span class="sd">    by ``within_shard``:</span>
 </span><span id="line-52">
-</span><span id="line-53"><span class="sd">    * ``&quot;random&quot;`` (default): indices inside a shard are themselves</span>
+</span><span id="line-53"><span class="sd">    * ``"random"`` (default): indices inside a shard are themselves</span>
 </span><span id="line-54"><span class="sd">      permuted. Shuffle quality is closer to full-random while</span>
 </span><span id="line-55"><span class="sd">      still preserving per-shard I/O locality (all samples from</span>
 </span><span id="line-56"><span class="sd">      shard *k* are emitted before any sample from shard *k+1*).</span>
 </span><span id="line-57"><span class="sd">      Recommended for scientific training where shuffle quality</span>
 </span><span id="line-58"><span class="sd">      matters.</span>
-</span><span id="line-59"><span class="sd">    * ``&quot;sequential&quot;``: indices inside a shard are yielded in on-</span>
+</span><span id="line-59"><span class="sd">    * ``"sequential"``: indices inside a shard are yielded in on-</span>
 </span><span id="line-60"><span class="sd">      disk order. Maximally I/O-friendly but shuffle quality is</span>
 </span><span id="line-61"><span class="sd">      coarse at the shard level. Matches the behaviour of</span>
 </span><span id="line-62"><span class="sd">      ``lance.sampler.ShardedFragmentSampler``.</span>
@@ -267,8 +283,8 @@
 </span><span id="line-69"><span class="sd">        ranges. Non-file-backed datasets fall back to a single</span>
 </span><span id="line-70"><span class="sd">        shard covering the full dataset.</span>
 </span><span id="line-71"><span class="sd">    seed : int, default 0</span>
-</span><span id="line-72"><span class="sd">        Base seed; the epoch is XOR&#39;d in via :meth:`set_epoch`.</span>
-</span><span id="line-73"><span class="sd">    within_shard : {&quot;random&quot;, &quot;sequential&quot;}, default &quot;random&quot;</span>
+</span><span id="line-72"><span class="sd">        Base seed; the epoch is XOR'd in via :meth:`set_epoch`.</span>
+</span><span id="line-73"><span class="sd">    within_shard : {"random", "sequential"}, default "random"</span>
 </span><span id="line-74"><span class="sd">        Within-shard row ordering.</span>
 </span><span id="line-75">
 </span><span id="line-76"><span class="sd">    Notes</span>
@@ -276,22 +292,22 @@
 </span><span id="line-78"><span class="sd">    *Epoch handling*: call :meth:`set_epoch` before each epoch when</span>
 </span><span id="line-79"><span class="sd">    using :class:`~torch.utils.data.distributed.DistributedSampler`</span>
 </span><span id="line-80"><span class="sd">    or any other stateful epoch pattern, so the random permutation</span>
-</span><span id="line-81"><span class="sd">    differs between epochs. Mirrors PyTorch&#39;s own convention.</span>
+</span><span id="line-81"><span class="sd">    differs between epochs. Mirrors PyTorch's own convention.</span>
 </span><span id="line-82">
 </span><span id="line-83"><span class="sd">    *Fork-safety*: the sampler holds only integers and a seed; it</span>
 </span><span id="line-84"><span class="sd">    pickles trivially and is safe to use with ``num_workers&gt;0`` and</span>
-</span><span id="line-85"><span class="sd">    ``multiprocessing_context=&quot;spawn&quot;``.</span>
-</span><span id="line-86"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="line-85"><span class="sd">    ``multiprocessing_context="spawn"``.</span>
+</span><span id="line-86"><span class="sd">    """</span>
 </span><span id="line-87">
 </span><span id="line-88">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span id="line-89">        <span class="bp">self</span><span class="p">,</span>
 </span><span id="line-90">        <span class="n">dataset</span><span class="p">,</span>
 </span><span id="line-91">        <span class="o">*</span><span class="p">,</span>
 </span><span id="line-92">        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
-</span><span id="line-93">        <span class="n">within_shard</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;sequential&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;random&quot;</span><span class="p">,</span>
+</span><span id="line-93">        <span class="n">within_shard</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"random"</span><span class="p">,</span> <span class="s2">"sequential"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"random"</span><span class="p">,</span>
 </span><span id="line-94">    <span class="p">):</span>
-</span><span id="line-95">        <span class="k">if</span> <span class="n">within_shard</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;random&quot;</span><span class="p">,</span> <span class="s2">&quot;sequential&quot;</span><span class="p">):</span>
-</span><span id="line-96">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;within_shard must be &#39;random&#39; or &#39;sequential&#39;, got </span><span class="si">{</span><span class="n">within_shard</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-95">        <span class="k">if</span> <span class="n">within_shard</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"random"</span><span class="p">,</span> <span class="s2">"sequential"</span><span class="p">):</span>
+</span><span id="line-96">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"within_shard must be 'random' or 'sequential', got </span><span class="si">{</span><span class="n">within_shard</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
 </span><span id="line-97">        <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
 </span><span id="line-98">        <span class="bp">self</span><span class="o">.</span><span class="n">_seed</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
 </span><span id="line-99">        <span class="bp">self</span><span class="o">.</span><span class="n">_within_shard</span> <span class="o">=</span> <span class="n">within_shard</span>
@@ -300,20 +316,20 @@
 </span><span id="line-102">
 </span><span id="line-103">    <span class="nd">@staticmethod</span>
 </span><span id="line-104">    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_shard_ranges</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
-</span><span id="line-105"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return [(start, end_exclusive), ...] per shard.</span>
+</span><span id="line-105"><span class="w">        </span><span class="sd">"""Return [(start, end_exclusive), ...] per shard.</span>
 </span><span id="line-106">
 </span><span id="line-107"><span class="sd">        File-backed backends with ``num_shards`` and per-shard row</span>
 </span><span id="line-108"><span class="sd">        counts are partitioned into contiguous per-shard ranges. For</span>
 </span><span id="line-109"><span class="sd">        other backends (e.g. in-memory tables, indexed views), the whole</span>
 </span><span id="line-110"><span class="sd">        dataset becomes a single shard.</span>
-</span><span id="line-111"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="line-111"><span class="sd">        """</span>
 </span><span id="line-112">        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
-</span><span id="line-113">        <span class="n">backend</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s2">&quot;_backend&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span id="line-114">        <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;is_file_backed&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+</span><span id="line-113">        <span class="n">backend</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s2">"_backend"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-114">        <span class="k">if</span> <span class="n">backend</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">"is_file_backed"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
 </span><span id="line-115">            <span class="k">return</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
 </span><span id="line-116">
 </span><span id="line-117">        <span class="c1"># Accept both public and private per-shard row-count attributes.</span>
-</span><span id="line-118">        <span class="n">shard_row_counts</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;shard_row_counts&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">&quot;_shard_row_counts&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-118">        <span class="n">shard_row_counts</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">"shard_row_counts"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">backend</span><span class="p">,</span> <span class="s2">"_shard_row_counts"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span id="line-119">        <span class="k">if</span> <span class="n">shard_row_counts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="line-120">            <span class="c1"># Lance fragments provide shard row counts when available.</span>
 </span><span id="line-121">            <span class="k">try</span><span class="p">:</span>
@@ -350,7 +366,7 @@
 </span><span id="line-149">        <span class="k">for</span> <span class="n">shard_idx</span> <span class="ow">in</span> <span class="n">shard_order</span><span class="p">:</span>
 </span><span id="line-150">            <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shard_ranges</span><span class="p">[</span><span class="n">shard_idx</span><span class="p">]</span>
 </span><span id="line-151">            <span class="n">shard_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
-</span><span id="line-152">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_within_shard</span> <span class="o">==</span> <span class="s2">&quot;random&quot;</span><span class="p">:</span>
+</span><span id="line-152">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_within_shard</span> <span class="o">==</span> <span class="s2">"random"</span><span class="p">:</span>
 </span><span id="line-153">                <span class="n">rng</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">shard_indices</span><span class="p">)</span>
 </span><span id="line-154">            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">shard_indices</span><span class="p">:</span>
 </span><span id="line-155">                <span class="k">yield</span> <span class="nb">int</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span></div>
@@ -388,7 +404,7 @@
     <script src="../../../_static/documentation_options.js?v=c167d237"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script defer="defer" src="../../../_static/theme.js?v=5db23cf8"></script>
+    <script defer="defer" src="../../../_static/theme.js?v=49cc6205"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
     
 </body>
