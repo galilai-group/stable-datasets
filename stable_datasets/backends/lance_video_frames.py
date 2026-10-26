@@ -274,7 +274,7 @@ class LanceVideoFramesBackend:
                     global_unique_rows.append(row_id)
 
         all_blobs = self._dataset.take(global_unique_rows, columns=["bytes"]).column("bytes").to_pylist()
-        blob_by_row = {row_id: blob for row_id, blob in zip(global_unique_rows, all_blobs, strict=False)}
+        blob_by_row = dict(zip(global_unique_rows, all_blobs, strict=False))
 
         out: list[dict | None] = [None] * len(normalized)
         for vi, reqs in requests_by_video.items():
