@@ -85,9 +85,10 @@ class LanceVideoFramesBackend:
     logical dataset exposes deterministic frame windows as samples.
     """
 
-    # For decoded video windows, converting large numpy tensors through
-    # Table.from_pylist in batched take() is slower than per-row fetch.
-    prefer_batched_take: bool = False
+    # This backend supports a direct batched row path (get_rows) used by
+    # StableDataset.__getitems__, so batched loading amortizes storage calls
+    # without forcing expensive Arrow table materialization of video tensors.
+    prefer_batched_take: bool = True
 
     def __init__(
         self,
@@ -181,6 +182,9 @@ class LanceVideoFramesBackend:
 
     def get_row(self, idx: int) -> dict:
         return self._rows_for_indices([idx])[0]
+
+    def get_rows(self, indices: np.ndarray | list[int]) -> list[dict]:
+        return self._rows_for_indices(indices)
 
     def take(self, indices: np.ndarray | list[int]) -> pa.Table:
         rows = self._rows_for_indices(indices)

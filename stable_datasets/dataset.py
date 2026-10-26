@@ -224,27 +224,30 @@ class StableDataset:
         (Arrow's shape).
         """
         prefer_batched = getattr(self._backend, "prefer_batched_take", False)
-        if self._has_binary_cols and not prefer_batched:
-            rows = []
-            sample_indices = []
-            for idx in indices:
-                normalized = self._normalize_index(int(idx))
-                physical = int(self._indices[normalized]) if self._indices is not None else normalized
-                rows.append(self._formatter.format_row(self._backend.get_row(physical)))
-                sample_indices.append(normalized)
+        idx_array = np.asarray(indices, dtype=np.int64)
+        sample_indices = [self._normalize_index(int(idx)) for idx in idx_array.tolist()]
+        if self._indices is not None:
+            physical_indices = self._indices[np.asarray(sample_indices, dtype=np.int64)]
+        else:
+            physical_indices = np.asarray(sample_indices, dtype=np.int64)
+
+        if self._has_binary_cols and prefer_batched and hasattr(self._backend, "get_rows"):
+            rows = [self._formatter.format_row(row) for row in self._backend.get_rows(physical_indices)]
             rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
             if self._transform is not None:
                 rows = [self._transform(row) for row in rows]
             return rows
 
-        idx_array = np.asarray(indices, dtype=np.int64)
-        sample_indices = [self._normalize_index(int(idx)) for idx in idx_array.tolist()]
-        if self._indices is not None:
-            idx_array = self._indices[np.asarray(sample_indices, dtype=np.int64)]
-        else:
-            idx_array = np.asarray(sample_indices, dtype=np.int64)
+        if self._has_binary_cols and not prefer_batched:
+            rows = []
+            for sample_idx, physical in zip(sample_indices, physical_indices.tolist(), strict=False):
+                rows.append(self._formatter.format_row(self._backend.get_row(int(physical))))
+            rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
+            if self._transform is not None:
+                rows = [self._transform(row) for row in rows]
+            return rows
 
-        batch_table = self._backend.take(idx_array)
+        batch_table = self._backend.take(physical_indices)
         rows = self._formatter.format_batch(batch_table)
         rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
 
