@@ -85,7 +85,9 @@ class LanceVideoFramesBackend:
     logical dataset exposes deterministic frame windows as samples.
     """
 
-    prefer_batched_take: bool = True
+    # For decoded video windows, converting large numpy tensors through
+    # Table.from_pylist in batched take() is slower than per-row fetch.
+    prefer_batched_take: bool = False
 
     def __init__(
         self,
