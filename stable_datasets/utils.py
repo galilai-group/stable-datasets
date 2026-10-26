@@ -56,22 +56,6 @@ def _default_processed_cache_dir() -> Path:
     return Path(os.path.expanduser(_get_cache_dir())) / "processed"
 
 
-class HostUnreachableError(RuntimeError):
-    """Every candidate URL failed with a network error: a timeout, DNS failure, refused connection or 5xx/429 reply.
-
-    Unlike a 404 or a checksum mismatch, this usually means the host is down, not that the
-    dataset's URL or code is wrong.
-    """
-
-
-def _is_network_error(error: Exception) -> bool:
-    """Whether *error* means the host couldn't be reached, not that the URL or file is wrong."""
-    if isinstance(error, requests.HTTPError):
-        status = error.response.status_code if error.response is not None else None
-        return status is not None and (status >= 500 or status == 429)
-    return isinstance(error, (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError))
-
-
 class BaseDatasetBuilder:
     """
     Base class for stable-datasets builders.
@@ -520,6 +504,22 @@ class BaseDatasetBuilder:
         except Exception:
             pass
         return result
+
+
+class HostUnreachableError(RuntimeError):
+    """Every candidate URL failed with a network error: a timeout, DNS failure, refused connection or 5xx/429 reply.
+
+    Unlike a 404 or a checksum mismatch, this usually means the host is down, not that the
+    dataset's URL or code is wrong.
+    """
+
+
+def _is_network_error(error: Exception) -> bool:
+    """Whether *error* means the host couldn't be reached, not that the URL or file is wrong."""
+    if isinstance(error, requests.HTTPError):
+        status = error.response.status_code if error.response is not None else None
+        return status is not None and (status >= 500 or status == 429)
+    return isinstance(error, (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError))
 
 
 def bulk_download(
