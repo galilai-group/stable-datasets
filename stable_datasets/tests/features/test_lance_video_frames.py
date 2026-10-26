@@ -172,3 +172,47 @@ def test_lance_video_frames_iter_batches_uses_chunked_take():
     rows = pa.Table.from_batches(batches).to_pylist()
     assert [row["sample_idx"] for row in rows] == [0, 1]
     assert fake_ds.take_calls == [[0, 1, 2, 3]]
+
+
+def test_lance_video_frames_take_prefetches_multi_video_rows_in_single_wave():
+    from stable_datasets.backends.lance_video_frames import LanceVideoFramesBackend
+
+    backend = LanceVideoFramesBackend.__new__(LanceVideoFramesBackend)
+    backend.window_length = 2
+    backend.frame_skip = 0
+    backend.hop_size = 1
+    backend._stride = 1
+    backend._span = 2
+    backend._batch_readahead = 1
+    backend._iter_batch_size = 4
+    backend._uri = None
+    backend._videos = [
+        {"path": "v0.mp4", "start_row": 0, "H": 2, "W": 2, "metadata": {"label": 7}},
+        {"path": "v1.mp4", "start_row": 10, "H": 2, "W": 2, "metadata": {"label": 9}},
+    ]
+    backend._seg_vid = np.array([0, 1], dtype=np.int64)
+    backend._seg_start = np.array([0, 0], dtype=np.int64)
+    backend._per_video = [1, 1]
+
+    blobs = {
+        0: b"a0",
+        1: b"a1",
+        10: b"b0",
+        11: b"b1",
+    }
+    fake_ds = _FakeDataset(blobs)
+    backend._ds = fake_ds
+
+    def _fake_decode(blobs_in, height, width):
+        del height, width
+        decoded = np.empty((len(blobs_in), 2, 2, 3), dtype=np.uint8)
+        for i, blob in enumerate(blobs_in):
+            decoded[i] = int(blob[-1])
+        return decoded
+
+    backend._decode_blobs = _fake_decode
+
+    rows = backend.get_rows([1, 0])
+    assert [row["video_idx"] for row in rows] == [1, 0]
+    assert [row["frame_indices"] for row in rows] == [[0, 1], [0, 1]]
+    assert fake_ds.take_calls == [[10, 11, 0, 1]]

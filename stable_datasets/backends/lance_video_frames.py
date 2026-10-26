@@ -250,6 +250,10 @@ class LanceVideoFramesBackend:
 
         normalized = [self._normalize_index(i) for i in requested]
         requests_by_video: dict[int, list[tuple[int, int, list[int], list[int]]]] = {}
+        unique_rows_by_video: dict[int, list[int]] = {}
+        seen_rows_by_video: dict[int, set[int]] = {}
+        global_unique_rows: list[int] = []
+        global_seen: set[int] = set()
 
         for out_pos, idx in enumerate(normalized):
             vi = int(self._seg_vid[idx])
@@ -259,17 +263,23 @@ class LanceVideoFramesBackend:
             row_ids = [row0 + frame_idx for frame_idx in frame_indices]
             requests_by_video.setdefault(vi, []).append((out_pos, idx, frame_indices, row_ids))
 
+            video_rows = unique_rows_by_video.setdefault(vi, [])
+            video_seen = seen_rows_by_video.setdefault(vi, set())
+            for row_id in row_ids:
+                if row_id not in video_seen:
+                    video_seen.add(row_id)
+                    video_rows.append(row_id)
+                if row_id not in global_seen:
+                    global_seen.add(row_id)
+                    global_unique_rows.append(row_id)
+
+        all_blobs = self._dataset.take(global_unique_rows, columns=["bytes"]).column("bytes").to_pylist()
+        blob_by_row = {row_id: blob for row_id, blob in zip(global_unique_rows, all_blobs, strict=False)}
+
         out: list[dict | None] = [None] * len(normalized)
         for vi, reqs in requests_by_video.items():
-            ordered_unique_rows: list[int] = []
-            seen_rows: set[int] = set()
-            for _, _, _, row_ids in reqs:
-                for row_id in row_ids:
-                    if row_id not in seen_rows:
-                        seen_rows.add(row_id)
-                        ordered_unique_rows.append(row_id)
-
-            blobs = self._dataset.take(ordered_unique_rows, columns=["bytes"]).column("bytes").to_pylist()
+            ordered_unique_rows = unique_rows_by_video[vi]
+            blobs = [blob_by_row[row_id] for row_id in ordered_unique_rows]
             decoded_frames = self._decode_blobs(
                 blobs,
                 int(self._videos[vi]["H"]),
