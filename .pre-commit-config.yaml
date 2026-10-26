@@ -54,11 +54,4 @@ repos:
   #       types_or: [markdown, yaml, json]
   #       exclude: ^docs/
 
-  # Check docstrings
-  - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.3.0
-    hooks:
-      - id: pydocstyle
-        additional_dependencies: [tomli]
-        args: [--convention=google]
-        exclude: ".*" # ^(tests/|docs/)
+  # Docstrings are checked by ruff (D101/D102/D103 in pyproject.toml).

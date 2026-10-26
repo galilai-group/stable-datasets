@@ -86,7 +86,7 @@ Usage Example
 Related Datasets
 ----------------
 
-- :doc:`mnist`: The original handwritten digit dataset
+- **MNIST**: The original handwritten digit dataset
 - **EMNIST**: Extended MNIST including both digits and handwritten letters
 - **Fashion-MNIST**: A replacement for MNIST consisting of clothing items
 
