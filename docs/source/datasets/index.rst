@@ -51,6 +51,7 @@ Available Datasets
    cifar10_c
    cifar100_c
    cars196
+   clevr
    dtd
    not_mnist
    fashion_mnist
