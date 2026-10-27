@@ -22,7 +22,7 @@ pytest stable_datasets/tests/images/test_<dataset>.py
 
 Mark tests by what they need:
 
-- `@pytest.mark.large`: the test downloads more than about 2 GB. These never run in CI (runners have about 14 GB of disk), so the reviewer runs them by hand before merging.
+- `@pytest.mark.large`: the test downloads more than about 10 GB. These never run in CI, so the reviewer runs them by hand before merging.
 - `@pytest.mark.skip(reason="...")`: the data needs a login or a manual download (e.g. ImageNet or gated ISIC data), so the test can't run automatically anywhere.
 
 Unknown markers are an error, so a typo like `@pytest.mark.larg` fails right away instead of running a huge download. Declare any new marker in `pyproject.toml`.

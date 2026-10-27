@@ -259,4 +259,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for what a dataset pull request should in
 pytest -q -m "not large"
 ```
 
-`-m "not large"` skips tests that download more than about 2 GB, as CI does. For targeted work, run the relevant subset under `stable_datasets/tests/`.
+`-m "not large"` skips tests that download more than about 10 GB, as CI does. For targeted work, run the relevant subset under `stable_datasets/tests/`.

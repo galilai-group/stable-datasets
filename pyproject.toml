@@ -107,7 +107,7 @@ addopts = "--strict-markers"
 
 # Custom markers
 markers = [
-    "large: downloads more than ~2 GB, so it never runs in CI; run it by hand before merging",
+    "large: downloads more than ~10 GB, so it never runs in CI; run it by hand before merging",
 ]
 
 #####################
