@@ -12,6 +12,8 @@ from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
 _BASE_URL = "http://vision.stanford.edu/Datasets/"
+# Internet Archive snapshots of the official files, byte-identical (SHA-256 below).
+_ARCHIVE_URL = "https://web.archive.org/web/{}id_/" + _BASE_URL
 # Fixed alphabetical mapping shared by training and test samples.
 _CLASS_NAMES = (
     "applauding",
@@ -89,8 +91,16 @@ class Stanford40(BaseDatasetBuilder):
   year={2011}
 }""",
         assets={
-            "images": DownloadInfo(url=_BASE_URL + "Stanford40_JPEGImages.zip"),
-            "splits": DownloadInfo(url=_BASE_URL + "Stanford40_ImageSplits.zip"),
+            "images": DownloadInfo(
+                url=_BASE_URL + "Stanford40_JPEGImages.zip",
+                fallbacks=[_ARCHIVE_URL.format("20240804122919") + "Stanford40_JPEGImages.zip"],
+                checksum="sha256:a1a08cb27345e33680f3a33f9cf2214be4c0989b9b3365692ca5903b733ba2a9",
+            ),
+            "splits": DownloadInfo(
+                url=_BASE_URL + "Stanford40_ImageSplits.zip",
+                fallbacks=[_ARCHIVE_URL.format("20240804115240") + "Stanford40_ImageSplits.zip"],
+                checksum="sha256:cc04534f632fd613ffeaff716018baa52ff471959c33179ef5d41bf6360474e5",
+            ),
         },
         license="Unknown",
     )

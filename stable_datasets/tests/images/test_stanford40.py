@@ -78,6 +78,15 @@ def test_metadata():
     assert builder._candidate_splits() == ["train", "test"]
 
 
+def test_assets_have_checksummed_archive_fallbacks():
+    for asset in Stanford40.SOURCE["assets"].values():
+        assert asset.url.startswith("http://vision.stanford.edu/Datasets/")
+        assert len(asset.fallbacks) == 1
+        assert asset.fallbacks[0].startswith("https://web.archive.org/web/")
+        assert asset.fallbacks[0].endswith(asset.url.rsplit("/", 1)[1])
+        assert asset.checksum.startswith("sha256:")
+
+
 @pytest.mark.parametrize(
     "train,test,error",
     [

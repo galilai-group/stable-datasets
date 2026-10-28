@@ -109,6 +109,7 @@ References
 - `Source images <http://vision.stanford.edu/Datasets/Stanford40_JPEGImages.zip>`_
 - `Official split files <http://vision.stanford.edu/Datasets/Stanford40_ImageSplits.zip>`_
 - `Paper <https://people.csail.mit.edu/khosla/papers/iccv2011_yao_full.pdf>`_
+- Archived copies of the official files (used as checksummed fallbacks): `images <https://web.archive.org/web/20240804122919id_/http://vision.stanford.edu/Datasets/Stanford40_JPEGImages.zip>`_, `splits <https://web.archive.org/web/20240804115240id_/http://vision.stanford.edu/Datasets/Stanford40_ImageSplits.zip>`_
 - License: Unknown
 
 The official dataset page does not publish a license or terms of use. The
