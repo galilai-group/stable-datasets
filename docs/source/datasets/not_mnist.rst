@@ -22,6 +22,10 @@ Split sizes:
 - **Train**: 60,000 images
 - **Test**: 10,000 images
 
+.. image:: teasers/not_mnist_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 

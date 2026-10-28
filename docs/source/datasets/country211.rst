@@ -18,6 +18,10 @@ The Country211 dataset is designed for country classification based on images. I
 - **Validation**: 10,550 images (50 per class)
 - **Test**: 21,100 images (100 per class)
 
+.. image:: teasers/country211_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 

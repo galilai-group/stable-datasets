@@ -6,10 +6,9 @@ Usage:
 For each new module under ``stable_datasets/{images,timeseries,video,tabular}/``:
 
 - a test file under ``stable_datasets/tests/`` imports it (or a class from it),
-- each builder class in it is mentioned on a page under ``docs/source/datasets/``, and
-- that page is listed in ``docs/source/datasets/index.rst``.
-
-Teaser images aren't checked, since they're hard to make for audio and time-series data.
+- each builder class in it is mentioned on a page under ``docs/source/datasets/``,
+- that page is listed in ``docs/source/datasets/index.rst``, and
+- it shows a teaser figure (``.. image::`` or ``.. figure::``) from ``docs/source/datasets/teasers/``.
 """
 
 import argparse
@@ -44,6 +43,21 @@ def index_entries() -> set[str]:
     return {m.group(1) for m in re.finditer(r"^\s+([A-Za-z0-9_\-]+)\s*$", index.read_text(encoding="utf-8"), re.M)}
 
 
+_FIGURE_RE = re.compile(r"^\s*\.\. (?:image|figure)::\s*(\S+)", re.M)
+
+
+def shows_teaser(text: str) -> bool:
+    """Whether a docs page shows a figure that exists under ``docs/source/datasets/teasers/``."""
+    teasers = (ROOT / DOCS_DATASETS_DIR / "teasers").resolve()
+    for target in _FIGURE_RE.findall(text):
+        # Sphinx resolves a leading "/" from the docs source folder, anything else from the page's folder.
+        base = ROOT / "docs/source" if target.startswith("/") else ROOT / DOCS_DATASETS_DIR
+        path = (base / target.lstrip("/")).resolve()
+        if teasers in path.parents and path.is_file():
+            return True
+    return False
+
+
 def check(new_modules: list[tuple[str, str, str]]) -> list[tuple[str, str]]:
     """Return ``(path, problem)`` pairs for the new modules ``(path, folder, module)``."""
     pages, listed = docs_pages(), index_entries()
@@ -73,10 +87,20 @@ def check(new_modules: list[tuple[str, str, str]]) -> list[tuple[str, str]]:
                 problems.append(
                     (path, f"`{cls}` isn't mentioned on any page in `{DOCS_DATASETS_DIR}/`; add a docs page for it")
                 )
-            elif not any(stem in listed for stem in on_pages):
-                pages_list = ", ".join(f"`{s}`" for s in on_pages)
+                continue
+            pages_list = ", ".join(f"`{s}`" for s in on_pages)
+            listed_pages = [stem for stem in on_pages if stem in listed]
+            if not listed_pages:
                 problems.append(
                     (path, f"the docs page for `{cls}` ({pages_list}) isn't listed in `{DOCS_DATASETS_DIR}/index.rst`")
+                )
+            elif not any(shows_teaser(pages[stem]) for stem in listed_pages):
+                problems.append(
+                    (
+                        path,
+                        f"the docs page for `{cls}` ({pages_list}) doesn't show a teaser figure "
+                        f"from `{DOCS_DATASETS_DIR}/teasers/`",
+                    )
                 )
     return problems
 

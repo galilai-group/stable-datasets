@@ -36,7 +36,7 @@ On every pull request:
 - **pre-commit**: formatting and linting with ruff (including docstrings on dataset builders) and a 1 MB limit on added files.
 - **Testing**: the tests for the datasets you changed. If you change shared code (anything else under `stable_datasets/`, or `pyproject.toml`), the whole suite runs instead. Tests marked `large` are skipped. In the whole-suite run, a test whose dataset host can't be reached is reported as skipped rather than failed, since it says nothing about your change; for the datasets you changed, it fails, so re-run the check once the host is back.
 - **Docs**: the docs are built, and the check fails on any Sphinx warning.
-- **Dataset checklist**: each new builder has a test file and a docs page, and the page is listed in the index.
+- **Dataset checklist**: each new builder has a test file and a docs page, the page is listed in the index, and it shows a teaser figure from `docs/source/datasets/teasers/`.
 
 A maintainer has to approve CI runs for first-time contributors, so checks may not start right away.
 
