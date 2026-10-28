@@ -41,6 +41,7 @@ from .not_mnist import NotMNIST
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
 from .shapes3d import Shapes3D
+from .sign_language_digits import SignLanguageDigits
 from .small_norb import SmallNORB
 from .stl10 import STL10
 from .svhn import SVHN
@@ -85,6 +86,7 @@ __all__ = [
     "NotMNIST",
     "RockPaperScissor",
     "Shapes3D",
+    "SignLanguageDigits",
     "SmallNORB",
     "STL10",
     "SVHN",

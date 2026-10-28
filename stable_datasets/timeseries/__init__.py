@@ -5,6 +5,7 @@ from .birdvox_dcase_20k import BirdVoxDCASE20k
 from .CatsDogs import CatsDogs
 from .freefield1010 import Freefield1010
 from .fsd_kaggle_2018 import FSDKaggle2018
+from .fsdd import FSDD
 from .groove_MIDI import GrooveMIDI
 from .gtzan import GTZAN
 from .JapaneseVowels import JapaneseVowels
@@ -25,6 +26,7 @@ __all__ = [
     "BirdVoxDCASE20k",
     "CatsDogs",
     "Freefield1010",
+    "FSDD",
     "FSDKaggle2018",
     "GrooveMIDI",
     "GTZAN",

@@ -74,6 +74,13 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   sign_language_digits
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Time-Series / Audio Datasets
+
+   fsdd
 
 .. toctree::
    :maxdepth: 1

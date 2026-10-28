@@ -1,0 +1,363 @@
+{
+  "artifacts": {
+    "checkpoint": "checkpoints/best-validation.ckpt",
+    "metrics_csv": "metrics.csv"
+  },
+  "config": {
+    "experiment": {
+      "audio_preprocessing": {
+        "amplitude": "builder float32 PCM counts divided by 32768.0 before the model",
+        "batch_layout": "[B, 1, T_max]",
+        "cropping": null,
+        "input_layout": "[T, 1]",
+        "pooling": "masked mean and max after propagated convolution lengths",
+        "sample_rate_hz": 8000
+      },
+      "class_counts": {
+        "test": [
+          30,
+          30,
+          30,
+          30,
+          30,
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "train": [
+          240,
+          240,
+          240,
+          240,
+          240,
+          240,
+          240,
+          240,
+          240,
+          240
+        ],
+        "validation": [
+          30,
+          30,
+          30,
+          30,
+          30,
+          30,
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      "experiment_split": {
+        "speaker_independent": false,
+        "test": "official test, utterance index 0-4",
+        "train": "official train, utterance index 10-49",
+        "validation": "official train, utterance index 5-9"
+      },
+      "manifests": {
+        "test": "manifest_test.csv",
+        "train": "manifest_train.csv",
+        "validation": "manifest_validation.csv"
+      },
+      "official_splits": {
+        "test": "utterance index 0-4",
+        "train": "utterance index 5-49"
+      },
+      "source_revision": "26eb9aaf76e81b692f806f9140c2d2777410d7a1",
+      "split_counts": {
+        "test": 300,
+        "train": 2400,
+        "validation": 300
+      }
+    },
+    "training": {
+      "batch_size": 64,
+      "dataset": "fsdd",
+      "device": "cpu",
+      "epochs": 15,
+      "learning_rate": 0.001,
+      "max_eval_batches": null,
+      "max_train_batches": null,
+      "num_workers": 0,
+      "seed": 42,
+      "smoke_test": false,
+      "weight_decay": 0.0001
+    }
+  },
+  "engine": {
+    "data": "stable_pretraining.data.DataModule",
+    "module": "stable_pretraining.Module",
+    "optimizer": "AdamW",
+    "runner": "stable_pretraining.Manager",
+    "scheduler": {
+      "T_max": 570,
+      "type": "CosineAnnealingLR"
+    },
+    "trainer": "lightning.Trainer"
+  },
+  "history": [
+    {
+      "elapsed_seconds": 8.422119915951043,
+      "epoch": 1,
+      "train": {
+        "accuracy": 0.09791667014360428,
+        "loss": 2.3050637245178223,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.11666666716337204,
+        "loss": 2.3021788597106934,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 14.031235250178725,
+      "epoch": 2,
+      "train": {
+        "accuracy": 0.10958333313465118,
+        "loss": 2.298457384109497,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.11666666716337204,
+        "loss": 2.286496877670288,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 19.869661041069776,
+      "epoch": 3,
+      "train": {
+        "accuracy": 0.17125000059604645,
+        "loss": 2.222511053085327,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.18666666746139526,
+        "loss": 2.085479736328125,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 25.523992291186005,
+      "epoch": 4,
+      "train": {
+        "accuracy": 0.26249998807907104,
+        "loss": 1.9165812730789185,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.30000001192092896,
+        "loss": 1.7878470420837402,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 30.909376999828964,
+      "epoch": 5,
+      "train": {
+        "accuracy": 0.3474999964237213,
+        "loss": 1.7050909996032715,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.3466666638851166,
+        "loss": 1.6536709070205688,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 36.66782358288765,
+      "epoch": 6,
+      "train": {
+        "accuracy": 0.3766666650772095,
+        "loss": 1.6146900653839111,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.3633333444595337,
+        "loss": 1.5728638172149658,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 43.29708741605282,
+      "epoch": 7,
+      "train": {
+        "accuracy": 0.4045833349227905,
+        "loss": 1.544830560684204,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.3466666638851166,
+        "loss": 1.5314526557922363,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 49.68418537499383,
+      "epoch": 8,
+      "train": {
+        "accuracy": 0.40833333134651184,
+        "loss": 1.5108590126037598,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.3866666555404663,
+        "loss": 1.4936766624450684,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 56.56906874990091,
+      "epoch": 9,
+      "train": {
+        "accuracy": 0.43166667222976685,
+        "loss": 1.4642421007156372,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.39666667580604553,
+        "loss": 1.4742064476013184,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 63.44963812502101,
+      "epoch": 10,
+      "train": {
+        "accuracy": 0.44749999046325684,
+        "loss": 1.436153769493103,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.41333332657814026,
+        "loss": 1.4453694820404053,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 69.97097691614181,
+      "epoch": 11,
+      "train": {
+        "accuracy": 0.46291667222976685,
+        "loss": 1.4177274703979492,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.41999998688697815,
+        "loss": 1.4301761388778687,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 75.09196466580033,
+      "epoch": 12,
+      "train": {
+        "accuracy": 0.4529166519641876,
+        "loss": 1.404344916343689,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.41999998688697815,
+        "loss": 1.4187933206558228,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 79.96925987489522,
+      "epoch": 13,
+      "train": {
+        "accuracy": 0.4620833396911621,
+        "loss": 1.3967372179031372,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.4166666567325592,
+        "loss": 1.4189153909683228,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 84.90528408298269,
+      "epoch": 14,
+      "train": {
+        "accuracy": 0.4662500023841858,
+        "loss": 1.3899180889129639,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.4333333373069763,
+        "loss": 1.418016791343689,
+        "samples": 300
+      }
+    },
+    {
+      "elapsed_seconds": 89.80740337492898,
+      "epoch": 15,
+      "train": {
+        "accuracy": 0.4658333361148834,
+        "loss": 1.3875701427459717,
+        "samples": 2400
+      },
+      "validation": {
+        "accuracy": 0.4399999976158142,
+        "loss": 1.4169224500656128,
+        "samples": 300
+      }
+    }
+  ],
+  "model": {
+    "class": "TinyAudioCNN",
+    "trainable_parameters": 22986
+  },
+  "runtime": {
+    "command": [
+      "python",
+      "examples/validate_digits.py",
+      "--dataset",
+      "fsdd",
+      "--epochs",
+      "15",
+      "--batch-size",
+      "64",
+      "--device",
+      "cpu",
+      "--cache-dir",
+      "/private/tmp/stable-datasets-fsdd-validation",
+      "--output-dir",
+      "benchmark-runs/digit-validation"
+    ],
+    "device": "cpu",
+    "finished_at_utc": "2026-10-23T20:35:14.908808+00:00",
+    "platform": "macOS-26.5.2-arm64-arm-64bit",
+    "seconds": 90.3420119159855,
+    "started_at_utc": "2026-10-23T20:33:44.547310+00:00"
+  },
+  "selection": {
+    "best_epoch": 15,
+    "best_validation": {
+      "accuracy": 0.4399999976158142,
+      "loss": 1.4169224500656128,
+      "samples": 300
+    },
+    "metric": "validation/accuracy"
+  },
+  "test": {
+    "accuracy": 0.4699999988079071,
+    "loss": 1.3970504999160767,
+    "samples": 300
+  },
+  "versions": {
+    "lightning": "2.6.6",
+    "numpy": "2.5.4",
+    "pillow": "13.0.0",
+    "python": "3.12.6",
+    "stable_datasets": "0.0.0a1",
+    "stable_pretraining": "0.1.9.dev10+gab836bf69",
+    "torch": "2.14.1"
+  }
+}
