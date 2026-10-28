@@ -194,7 +194,7 @@
 <li><p><strong>pre-commit</strong>: formatting and linting with ruff (including docstrings on dataset builders) and a 1 MB limit on added files.</p></li>
 <li><p><strong>Testing</strong>: the tests for the datasets you changed. If you change shared code (anything else under <code class="docutils literal notranslate"><span class="pre">stable_datasets/</span></code>, or <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>), the whole suite runs instead. Tests marked <code class="docutils literal notranslate"><span class="pre">large</span></code> are skipped. In the whole-suite run, a test whose dataset host can’t be reached is reported as skipped rather than failed, since it says nothing about your change; for the datasets you changed, it fails, so re-run the check once the host is back.</p></li>
 <li><p><strong>Docs</strong>: the docs are built, and the check fails on any Sphinx warning.</p></li>
-<li><p><strong>Dataset checklist</strong>: each new builder has a test file and a docs page, and the page is listed in the index.</p></li>
+<li><p><strong>Dataset checklist</strong>: each new builder has a test file and a docs page, the page is listed in the index, and it shows a teaser figure from <code class="docutils literal notranslate"><span class="pre">docs/source/datasets/teasers/</span></code>.</p></li>
 </ul>
 <p>A maintainer has to approve CI runs for first-time contributors, so checks may not start right away.</p>
 <p>Every night, the whole suite runs on <code class="docutils literal notranslate"><span class="pre">main</span></code>. If any dataset breaks, usually because its host went down or moved, the run opens an issue titled “Nightly dataset tests are failing” and closes it once the run passes again.</p>
