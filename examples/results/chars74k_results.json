@@ -1,0 +1,27 @@
+{
+  "dataset": "Chars74K EnglishHnd",
+  "model": "SmallCNN",
+  "seed": 42,
+  "epochs": 10,
+  "batch_size": 32,
+  "learning_rate": 0.001,
+  "image_size": 64,
+  "device": "mps",
+  "split_method": "sample_id_modulo_5",
+  "train_samples": 2728,
+  "test_samples": 682,
+  "train_losses": [
+    4.112311,
+    3.189518,
+    2.146843,
+    1.479643,
+    1.055182,
+    0.771811,
+    0.570399,
+    0.458428,
+    0.366074,
+    0.310989
+  ],
+  "test_loss": 2.038063,
+  "test_accuracy": 64.5161
+}

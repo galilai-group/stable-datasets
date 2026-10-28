@@ -1,0 +1,18 @@
+{
+  "dataset": "Sign Language MNIST",
+  "model": "SmallCNN",
+  "seed": 42,
+  "epochs": 3,
+  "batch_size": 64,
+  "learning_rate": 0.001,
+  "device": "mps",
+  "train_samples": 27455,
+  "test_samples": 7172,
+  "train_losses": [
+    1.25432,
+    0.168525,
+    0.031558
+  ],
+  "test_loss": 0.413395,
+  "test_accuracy": 89.0407
+}

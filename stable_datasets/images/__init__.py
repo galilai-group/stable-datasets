@@ -6,6 +6,7 @@ from .awa2 import AWA2
 from .beans import Beans
 from .cars3d import Cars3D
 from .cars196 import Cars196
+from .chars74k import Chars74K
 from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
 from .cifar100 import CIFAR100
@@ -41,6 +42,7 @@ from .not_mnist import NotMNIST
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
 from .shapes3d import Shapes3D
+from .sign_language_mnist import SignLanguageMNIST
 from .small_norb import SmallNORB
 from .stl10 import STL10
 from .svhn import SVHN
@@ -90,4 +92,6 @@ __all__ = [
     "SVHN",
     "TinyImagenet",
     "TinyImagenetC",
+    "SignLanguageMNIST",
+    "Chars74K",
 ]

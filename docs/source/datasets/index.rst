@@ -51,6 +51,7 @@ Available Datasets
    cifar10_c
    cifar100_c
    cars196
+   chars74k
    coil100
    dtd
    not_mnist
@@ -60,6 +61,7 @@ Available Datasets
    awa2
    beans
    stl10
+   sign_language_mnist
    tiny_imagenet
    tiny_imagenet_c
    e_mnist
