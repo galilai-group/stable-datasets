@@ -221,6 +221,7 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
         builder_kwargs={"config_name": "mnist"},
     ),
     "fashionmnist": _gray("fashionmnist", "FashionMNIST", 10, mean=[0.2860], std=[0.3530]),
+    "fer2013": _gray("fer2013", "FER2013", 7, mean=[0.5077], std=[0.2550], builder_name="FER2013"),
     "kmnist": _gray("kmnist", "KMNIST", 10, mean=[0.1918], std=[0.3483]),
     "pneumoniamnist": _gray(
         "pneumoniamnist",

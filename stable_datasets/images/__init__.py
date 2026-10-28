@@ -22,6 +22,7 @@ from .dtd import DTD
 from .e_mnist import EMNIST
 from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
+from .fer2013 import FER2013
 
 # from .celeb_a import CelebA
 from .fgvc_aircraft import FGVCAircraft
@@ -71,6 +72,7 @@ __all__ = [
     "EMNIST",
     "FacePointing",
     "FashionMNIST",
+    "FER2013",
     "FGVCAircraft",
     "Flowers102",
     "Galaxy10Decal",

@@ -55,6 +55,7 @@ Available Datasets
    dtd
    not_mnist
    fashion_mnist
+   fer2013
    k_mnist
    medmnist
    awa2
