@@ -74,6 +74,8 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   brain_tumor_mri
+   lc25000
 
 .. toctree::
    :maxdepth: 1
