@@ -10,15 +10,15 @@ training images and 12,630 test images, for 51,839 images in total. There is no
 validation split. Labels retain the benchmark's integer class IDs, 0 through 42;
 the ``ClassLabel`` names are the corresponding numeric strings.
 
-The original images are PPM files with variable width and height. They are
-decoded as RGB without resizing, cropping, padding, or normalization. The
-dataset's cache stores them as PNG while preserving their pixels and dimensions.
+The original benchmark images are PPM files with variable width and height.
+The downloaded Parquet copy stores them as PNG. The builder decodes them as RGB
+without resizing, cropping, padding, or normalization. Their decoded pixels
+and dimensions match the official images.
 
-The training ZIP includes per-class annotation CSVs, but labels are read from
-the image class directories. The test image ZIP includes annotations without
-labels; the builder matches test images to the separate ground-truth CSV by
-filename. Width, height, and sign-region coordinates remain in the source files
-and are not exposed as dataset columns.
+The Parquet files contain the official training and labeled test splits. The
+builder reads their image and label columns. Width, height, and sign-region
+coordinates are also present in the source files but are not exposed as dataset
+columns.
 
 .. image:: teasers/gtsrb_teaser.png
    :align: center
@@ -68,10 +68,12 @@ The `maintained benchmark distribution
 <https://github.com/houbensebastian/GermanTrafficSignBenchmarks>`_ links to
 the `official ERDA/SID GTSRB archive
 <https://sid.erda.dk/public/archives/daaeac0d7ce1152aea9b61d9f1e19370/published-archive.html>`_.
-The archive provides ``GTSRB_Final_Training_Images.zip``,
-``GTSRB_Final_Test_Images.zip``, and ``GTSRB_Final_Test_GT.zip``. The benchmark
-downloads moved to external hosting in 2019. The benchmark and archive do not
-state a license suitable for the dataset license field, so it is left empty.
+This builder downloads a `community-hosted Parquet copy on Hugging Face
+<https://huggingface.co/datasets/ilee0022/GTSRB>`_ at a pinned revision.
+All 51,839 images were compared locally with the official ZIPs: split
+membership, labels, dimensions, and decoded RGB pixels matched. The benchmark
+and official archive do not state a license suitable for the dataset license
+field, so it is left empty.
 
 Citation
 --------
