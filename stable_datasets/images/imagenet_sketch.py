@@ -32,7 +32,7 @@ class ImageNetSketch(BaseDatasetBuilder):
                       booktitle={Advances in Neural Information Processing Systems},
                       pages={10506--10518},
                       year={2019}}""",
-        license="Unknown (not specified by the authors)",
+        license="MIT",
     )
 
     def _info(self):

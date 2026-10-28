@@ -95,44 +95,6 @@ Usage Example
             correct += (logits.argmax(dim=1) == batch["label"]).sum().item()
     print(f"Top-1 accuracy: {correct / len(ds):.2%}")
 
-Validation
-----------
-
-Top-1 accuracy (%) of pretrained timm models evaluated on all 50,889 images with timm's eval transform (``examples/validate_imagenet_v2_sketch.py``), compared with timm's ``results-sketch.csv``.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 40 20 20 20
-
-   * - Model
-     - This builder
-     - timm reference
-     - Difference
-   * - ``resnet50.tv_in1k``
-     - 24.096
-     - 24.064
-     - +0.032
-   * - ``resnet18.tv_in1k``
-     - 20.226
-     - 20.238
-     - -0.012
-
-**Linear probe.** ``examples/probe_imagenet_sketch.py`` trains a linear classifier on frozen ``resnet50.tv_in1k`` features (timm eval transform, no augmentation). It holds out about 20% of each class for validation, keeping near-duplicates together so no drawing appears in both splits. The weight decay is chosen on an inner split of the training rows. This gives 41,227 training and 9,662 validation images; the validation images cover 990 classes, since 10 classes consist of a single repeated drawing and stay in training.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 50 25 25
-
-   * - Classifier on frozen ``resnet50.tv_in1k`` features
-     - Train top-1
-     - Val top-1
-   * - ImageNet-1K head (not trained on sketches)
-     - 23.89
-     - 24.95
-   * - Linear probe trained on the train split
-     - 97.12
-     - 44.11
-
 Related Datasets
 ----------------
 
@@ -146,7 +108,7 @@ References
 - Paper: `Learning Robust Global Representations by Penalizing Local Predictive Power <https://arxiv.org/abs/1905.13549>`_ (NeurIPS 2019)
 - Homepage: https://github.com/HaohanWang/ImageNet-Sketch
 - Hugging Face dataset: https://huggingface.co/datasets/songweig/imagenet_sketch
-- License: Unknown (not specified by the authors)
+- License: MIT (as stated in the authors' repository)
 
 Citation
 --------

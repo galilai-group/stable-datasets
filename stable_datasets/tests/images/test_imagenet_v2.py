@@ -1,7 +1,7 @@
 """Tests for the ImageNetV2 builder.
 
 The offline tests build a tiny fake copy of the real archive layout, so they need no
-download. The last test is marked ``large`` and checks the three real 1.2 GB archives.
+download. The last test downloads the three real 1.2 GB archives and checks them.
 """
 
 import io
@@ -170,7 +170,6 @@ def test_features_match_imagenet_1k():
     assert repr(features) == repr(imagenet_1k_features)
 
 
-@pytest.mark.large
 @pytest.mark.parametrize("config_name", ["matched-frequency", "threshold-0.7", "top-images"])
 def test_imagenet_v2_real_dataset(config_name):
     ds = ImageNetV2(split="test", config_name=config_name)

@@ -121,51 +121,6 @@ Usage Example
 
     print(f"Top-1 accuracy: {correct / len(ds):.2%}")
 
-Validation
-----------
-
-Top-1 accuracy (%) of pretrained timm models evaluated on this builder with timm's eval transform (``examples/validate_imagenet_v2_sketch.py``). The reference is timm's ``results-imagenetv2-matched-frequency.csv``; timm publishes no numbers for the other two variants.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 28 24 16 16 16
-
-   * - Model
-     - ``config_name``
-     - This builder
-     - timm reference
-     - Difference
-   * - ``resnet50.tv_in1k``
-     - ``matched-frequency``
-     - 63.15
-     - 63.19
-     - -0.04
-   * - ``resnet18.tv_in1k``
-     - ``matched-frequency``
-     - 57.28
-     - 57.35
-     - -0.07
-   * - ``resnet50.tv_in1k``
-     - ``threshold-0.7``
-     - 72.31
-     -
-     -
-   * - ``resnet18.tv_in1k``
-     - ``threshold-0.7``
-     - 66.54
-     -
-     -
-   * - ``resnet50.tv_in1k``
-     - ``top-images``
-     - 77.62
-     -
-     -
-   * - ``resnet18.tv_in1k``
-     - ``top-images``
-     - 72.87
-     -
-     -
-
 Related Datasets
 ----------------
 

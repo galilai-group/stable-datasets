@@ -1,7 +1,7 @@
 """Tests for the ImageNet-Sketch builder.
 
 All tests except the last run offline on a tiny zip with the layout of the real
-ImageNet-Sketch.zip. The last test is marked ``large`` and checks the real 7.6 GB dataset.
+ImageNet-Sketch.zip. The last test downloads the real 7.6 GB archive and checks it.
 """
 
 import io
@@ -148,7 +148,6 @@ def test_unknown_class_folder_raises(tmp_path):
         list(builder._generate_examples(data_path=zip_path, split="test"))
 
 
-@pytest.mark.large
 def test_imagenet_sketch_real_dataset():
     ds = ImageNetSketch(split="test")
 
