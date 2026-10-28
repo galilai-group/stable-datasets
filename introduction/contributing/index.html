@@ -181,7 +181,7 @@
 </div>
 <p>Mark tests by what they need:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">@pytest.mark.large</span></code>: the test downloads more than about 2 GB. These never run in CI (runners have about 14 GB of disk), so the reviewer runs them by hand before merging.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">@pytest.mark.large</span></code>: the test downloads more than about 10 GB. These never run in CI, so the reviewer runs them by hand before merging.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">@pytest.mark.skip(reason="...")</span></code>: the data needs a login or a manual download (e.g. ImageNet or gated ISIC data), so the test can’t run automatically anywhere.</p></li>
 </ul>
 <p>Unknown markers are an error, so a typo like <code class="docutils literal notranslate"><span class="pre">@pytest.mark.larg</span></code> fails right away instead of running a huge download. Declare any new marker in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</p>
