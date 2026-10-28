@@ -8,8 +8,10 @@ from .cars3d import Cars3D
 from .cars196 import Cars196
 from .cifar10 import CIFAR10
 from .cifar10_c import CIFAR10C
+from .cifar10_n import CIFAR10N
 from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
+from .cifar100_n import CIFAR100N
 from .clevrer import CLEVRER
 from .coil100 import COIL100
 from .country211 import Country211
@@ -57,8 +59,10 @@ __all__ = [
     "Cars3D",
     "CIFAR10",
     "CIFAR10C",
+    "CIFAR10N",
     "CIFAR100",
     "CIFAR100C",
+    "CIFAR100N",
     "CLEVRER",
     "COIL100",
     "Country211",

@@ -1,4 +1,4 @@
-Datasets
+﻿Datasets
 ========
 
 This section provides detailed documentation for all datasets available in stable-datasets.
@@ -50,6 +50,8 @@ Available Datasets
    cifar100
    cifar10_c
    cifar100_c
+   cifar10_n
+   cifar100_n
    cars196
    coil100
    dtd
@@ -96,3 +98,5 @@ Available Datasets
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
+
+

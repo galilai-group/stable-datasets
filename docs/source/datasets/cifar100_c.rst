@@ -117,6 +117,8 @@ Related Datasets
 - :doc:`cifar100`: Original clean CIFAR-100 dataset for training
 - :doc:`cifar10`: Simplified version with 10 classes
 - :doc:`cifar10_c`: Corrupted version of CIFAR-10 for robustness evaluation
+- :doc:`cifar10_n`: CIFAR-10 with real-world human annotations
+- :doc:`cifar100_n`: CIFAR-100 with real-world human annotations
 
 References
 ----------

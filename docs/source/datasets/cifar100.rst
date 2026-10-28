@@ -70,6 +70,8 @@ Related Datasets
 - :doc:`cifar10`: Simplified version with 10 classes, sharing the same image dimensions
 - **CIFAR-10-C**: Corrupted version of CIFAR-10 for testing robustness (available in stable-datasets as ``cifar10_c``)
 - **CIFAR-100-C**: Corrupted version of CIFAR-100 (available in stable-datasets as ``cifar100_c``)
+- :doc:`cifar10_n`: CIFAR-10 with real-world human annotations
+- :doc:`cifar100_n`: CIFAR-100 with real-world human annotations
 
 References
 ----------
