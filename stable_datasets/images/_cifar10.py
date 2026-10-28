@@ -22,9 +22,7 @@ CIFAR10_LABELS = [
 def validate_cifar10_arrays(images: np.ndarray, labels: np.ndarray, *, dataset_name: str) -> None:
     """Validate the image and label contract shared by CIFAR-10 variants."""
     if images.ndim != 4 or images.shape[1:] != (32, 32, 3):
-        raise ValueError(
-            f"{dataset_name} images must have shape (N, 32, 32, 3), got {images.shape}."
-        )
+        raise ValueError(f"{dataset_name} images must have shape (N, 32, 32, 3), got {images.shape}.")
     if images.dtype != np.uint8:
         raise ValueError(f"{dataset_name} images must use uint8 pixels, got {images.dtype}.")
     if labels.ndim != 1 or len(images) != len(labels):
