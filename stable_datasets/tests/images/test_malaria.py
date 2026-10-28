@@ -1,8 +1,5 @@
 """Offline fixture tests and full-download validation for Malaria."""
 
-# Tests call builder internals that are not part of the public dataset API.
-# pylint: disable=protected-access
-
 import csv
 import io
 from collections import Counter
@@ -39,8 +36,7 @@ def _require_dataset(value: object) -> StableDataset:
     """Narrow a builder result to the single split it returns."""
     if not isinstance(value, StableDataset):
         raise TypeError("Expected a StableDataset")
-    # Lookup keeps Pylint from treating the result as the Malaria builder.
-    return vars()["value"]
+    return value
 
 
 def _assert_rgb_image(image: object, size: tuple[int, int]) -> None:
@@ -57,8 +53,7 @@ def _require_dataset_dict(value: object) -> StableDatasetDict:
     """Narrow a builder result to the split mapping it returns."""
     if not isinstance(value, StableDatasetDict):
         raise TypeError("Expected a StableDatasetDict")
-    # Lookup keeps Pylint from treating the result as the Malaria builder.
-    return vars()["value"]
+    return value
 
 
 @pytest.fixture(name="malaria_assets")
@@ -293,12 +288,8 @@ def test_malaria_rejects_invalid_images(tmp_path, malaria_assets, filename, cont
         )
 
 
-@pytest.mark.large
 def test_malaria_dataset(tmp_path):
-    """Test the `Malaria` dataset.
-
-    This test is large and should be skipped in the CI.
-    """
+    """Validate all 27,558 real cell crops and their NIH patient mappings."""
     ds_all = StableDatasetDict(
         Malaria(
             processed_cache_dir=tmp_path / "processed",

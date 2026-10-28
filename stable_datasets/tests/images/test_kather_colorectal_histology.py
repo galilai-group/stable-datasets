@@ -1,8 +1,5 @@
 """Offline fixtures and full-download validation for Kather histology tiles."""
 
-# Tests exercise builder internals as well as the public dataset API.
-# pylint: disable=protected-access
-
 import io
 from collections import Counter
 from zipfile import ZipFile
@@ -263,7 +260,6 @@ def test_kather_rejects_invalid_tiles(tmp_path, filename, content, message):
         list(_builder()._generate_examples(data_path=archive_path, split="train"))
 
 
-@pytest.mark.large
 def test_kather_colorectal_histology_dataset(tmp_path):
     """Validate all 5,000 real tiles; requires downloading the 246 MiB archive."""
     datasets = StableDatasetDict(
