@@ -74,6 +74,8 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   caltech101
+   mnist_m
 
 .. toctree::
    :maxdepth: 1
