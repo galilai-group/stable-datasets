@@ -33,6 +33,7 @@ from .imagenet_1k import ImageNet1K
 from .imagenet_10 import Imagenette
 from .imagenet_100 import ImageNet100
 from .k_mnist import KMNIST
+from .kitti_distance import KITTIDistance
 from .linnaeus5 import Linnaeus5
 from .med_mnist import MedMNIST
 from .not_mnist import NotMNIST
@@ -79,6 +80,7 @@ __all__ = [
     "ImageNet1K",
     "ImageNet100",
     "Imagenette",
+    "KITTIDistance",
     "KMNIST",
     "Linnaeus5",
     "MedMNIST",

@@ -55,6 +55,7 @@ Available Datasets
    dtd
    not_mnist
    fashion_mnist
+   kitti_distance
    k_mnist
    medmnist
    awa2
