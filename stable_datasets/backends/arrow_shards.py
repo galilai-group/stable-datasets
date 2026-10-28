@@ -226,6 +226,15 @@ class ArrowBackend:
             return len(self._shard_paths)
         return 0
 
+    @property
+    def shard_row_counts(self) -> list[int]:
+        """Row count of each shard, in shard order."""
+        if self._shard_row_counts is not None:
+            return list(self._shard_row_counts)
+        if self._shard_paths is not None:
+            return [self._mmap_ipc(p, upgrade_binary=False).num_rows for p in self._shard_paths]
+        return []
+
     # -- Pickle / DataLoader compatibility ------------------------------------
 
     def __getstate__(self):

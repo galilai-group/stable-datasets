@@ -139,6 +139,10 @@ class LanceVideoFramesBackend:
         return 1
 
     @property
+    def shard_row_counts(self) -> list[int]:
+        return [self.num_rows]
+
+    @property
     def is_file_backed(self) -> bool:
         return True
 

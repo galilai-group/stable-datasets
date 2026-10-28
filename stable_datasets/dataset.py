@@ -244,14 +244,7 @@ class StableDataset:
         else:
             idx_array = np.asarray(sample_indices, dtype=np.int64)
 
-        batch_table = self._backend.take(idx_array)
-        rows = self._formatter.format_batch(batch_table)
-        rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
-
-        if self._transform is not None:
-            rows = [self._transform(row) for row in rows]
-
-        return rows
+        return self._format_table(self._backend.take(idx_array), sample_indices)
 
     def __iter__(self):
         """Iterate over all rows, yielding decoded dicts."""
@@ -275,16 +268,29 @@ class StableDataset:
         """Format Arrow batches in bulk and yield individual rows."""
         sample_offset = 0
         for batch in batch_iter:
-            # Use batch formatting: one to_pydict() + column-wise decode
-            rows = self._formatter.format_batch(batch)
-            sample_indices = list(range(sample_offset, sample_offset + len(rows)))
-            rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
-            sample_offset += len(rows)
-            if self._transform is not None:
-                for row in rows:
-                    yield self._transform(row)
-            else:
-                yield from rows
+            sample_indices = list(range(sample_offset, sample_offset + batch.num_rows))
+            sample_offset += batch.num_rows
+            yield from self._format_table(batch, sample_indices)
+
+    def _iter_positions(self, positions, chunk_size: int = 1024):
+        """Yield the rows at the logical ``positions``.
+
+        Read each chunk of rows with one batched ``take``. Apply the same
+        format, video decode and transform steps as ``__getitems__``.
+        """
+        positions = np.asarray(positions, dtype=np.int64)
+        for start in range(0, len(positions), chunk_size):
+            chunk = positions[start : start + chunk_size]
+            physical = self._indices[chunk] if self._indices is not None else chunk
+            yield from self._format_table(self._backend.take(physical), chunk.tolist())
+
+    def _format_table(self, table, sample_indices: list[int]) -> list[dict]:
+        """Format, decode and transform the rows of an Arrow table or batch."""
+        rows = self._formatter.format_batch(table)
+        rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
+        if self._transform is not None:
+            rows = [self._transform(row) for row in rows]
+        return rows
 
     # -- Selection / shuffling / filtering ------------------------------------
 

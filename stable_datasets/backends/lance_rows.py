@@ -96,6 +96,11 @@ class LanceBackend:
         return self._cached_num_shards
 
     @property
+    def shard_row_counts(self) -> list[int]:
+        """Row count of each fragment, in fragment order."""
+        return [fragment.count_rows() for fragment in self._dataset.get_fragments()]
+
+    @property
     def is_file_backed(self) -> bool:
         return True
 
