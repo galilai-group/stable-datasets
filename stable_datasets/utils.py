@@ -678,7 +678,8 @@ def download(
             for candidate_url in candidate_urls:
                 try:
                     with requests.Session() as session:
-                        session.headers.update({"User-Agent": "stable-datasets"})
+                        # Ask for the file as stored, so hosts that compress on the fly send plain bytes.
+                        session.headers.update({"User-Agent": "stable-datasets", "Accept-Encoding": "identity"})
 
                         # Resume from partial download if .tmp exists
                         existing_size = tmp.stat().st_size if tmp.exists() else 0
@@ -722,7 +723,9 @@ def download(
                                     disable=not progress_bar,
                                 ) as bar,
                             ):
-                                for chunk in response.iter_content(chunk_size=8192):
+                                # Save the bytes as sent: some hosts label a .tgz "Content-Encoding: gzip",
+                                # and decoding it would store a .tar that fails the size check.
+                                for chunk in response.raw.stream(8192, decode_content=False):
                                     if not chunk:
                                         continue
                                     f.write(chunk)
