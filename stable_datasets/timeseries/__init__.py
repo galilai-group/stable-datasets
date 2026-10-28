@@ -73,3 +73,6 @@ __all__ = [
 # https://github.com/YashNita/Animal-Sound-Dataset
 # pd.read_csv('https://archive.ics.uci.edu/ml/machine-learning-databases/00291/airfoil_self_noise.dat', sep="\t", names = ['Frequency','Angle of attack','Chord length','Free-stream velocity','Suction/side','Scaled/sound'])
 # https://dagshub.com/DagsHub/audio-datasets/src/main/voice_gender_detection
+from .librispeech import LibriSpeech
+
+__all__ = ["LibriSpeech"]
