@@ -8,12 +8,14 @@ from .fsd_kaggle_2018 import FSDKaggle2018
 from .groove_MIDI import GrooveMIDI
 from .gtzan import GTZAN
 from .JapaneseVowels import JapaneseVowels
+from .mhealth import MHEALTH
 from .MosquitoSound import MosquitoSound
 from .Phoneme import Phoneme
 from .picidae import Picidae
 from .seizures_neonatal import SeizuresNeonatal
 from .sonycust import SONYCUST
 from .speech_commands import SpeechCommands
+from .uci_har import UCIHAR
 from .UrbanSound import UrbanSound
 from .vocalset import VocalSet
 from .VoiceGenderDetection import VoiceGenderDetection
@@ -29,12 +31,14 @@ __all__ = [
     "GrooveMIDI",
     "GTZAN",
     "JapaneseVowels",
+    "MHEALTH",
     "MosquitoSound",
     "Phoneme",
     "Picidae",
     "SeizuresNeonatal",
     "SONYCUST",
     "SpeechCommands",
+    "UCIHAR",
     "UrbanSound",
     "VoiceGenderDetection",
     "VocalSet",
