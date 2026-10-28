@@ -40,7 +40,7 @@ def _builder():
 
 
 def test_dense_samples(archives):
-    rows = list(_builder()._generate_examples(archives[0]))
+    rows = list(_builder()._generate_examples(archives[0], "train"))
     assert [key for key, _ in rows] == [0, 1]
     assert [sample["label"] for _, sample in rows] == [0, 9]
 
@@ -56,7 +56,7 @@ def test_dense_samples(archives):
 
 def test_sparse_and_unordered_features(tmp_path):
     path = _write_bz2(tmp_path / "sparse.bz2", "2 256:1 17:-1 1:0.5\n")
-    rows = list(_builder()._generate_examples(path))
+    rows = list(_builder()._generate_examples(path, "train"))
     assert len(rows) == 1
     assert rows[0][1]["label"] == 1
     # Omitted LIBSVM features are zero before scaling (127 after scaling).
@@ -70,7 +70,7 @@ def test_sparse_and_unordered_features(tmp_path):
 @pytest.mark.parametrize("source_label", range(1, 11))
 def test_label_mapping(tmp_path, source_label):
     path = _write_bz2(tmp_path / "labels.bz2", f"{source_label} 1:-1\n")
-    rows = list(_builder()._generate_examples(path))
+    rows = list(_builder()._generate_examples(path, "train"))
     assert rows[0][1]["label"] == source_label - 1
 
 
@@ -96,7 +96,7 @@ def test_invalid_samples(tmp_path, bad_row):
     # Put the error on line 2 to verify the diagnostic identifies its location.
     path = _write_bz2(tmp_path / "bad.bz2", "1 1:0\n" + bad_row + "\n")
     with pytest.raises(ValueError, match="Invalid USPS sample at line 2"):
-        list(_builder()._generate_examples(path))
+        list(_builder()._generate_examples(path, "train"))
 
 
 def test_loading_and_cache_reuse(archives, tmp_path, monkeypatch):
@@ -107,7 +107,7 @@ def test_loading_and_cache_reuse(archives, tmp_path, monkeypatch):
         assert len(specs) == 2
         return list(archives)
 
-    monkeypatch.setattr("stable_datasets.images.usps.bulk_download", fake_download)
+    monkeypatch.setattr("stable_datasets.utils.bulk_download", fake_download)
     kwargs = {
         "download_dir": tmp_path / "raw",
         "processed_cache_dir": tmp_path / "processed",
@@ -135,7 +135,7 @@ def test_loading_and_cache_reuse(archives, tmp_path, monkeypatch):
     def no_download(*args, **kwargs):
         pytest.fail("Loading a fully cached dataset must not download again")
 
-    monkeypatch.setattr("stable_datasets.images.usps.bulk_download", no_download)
+    monkeypatch.setattr("stable_datasets.utils.bulk_download", no_download)
     reopened = USPS(split="test", **kwargs)
     assert len(reopened) == 1
     assert reopened[0]["label"] == 4
@@ -151,6 +151,7 @@ def test_usps_metadata():
     assert info.description
     assert info.homepage == USPS.SOURCE["homepage"]
     assert info.citation == USPS.SOURCE["citation"]
+    assert info.license == USPS.SOURCE["license"] == "Unknown"
     assert info.supervised_keys == ("image", "label")
     assert set(info.features) == {"image", "label"}
     assert info.features["label"].names == [str(i) for i in range(10)]

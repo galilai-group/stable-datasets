@@ -1,4 +1,4 @@
-"""Offline Stanford40 tests plus an explicitly marked real-data check."""
+"""Offline Stanford40 tests plus a real-data check."""
 
 import io
 import zipfile
@@ -7,7 +7,7 @@ from collections import Counter
 import pytest
 from PIL import Image
 
-from stable_datasets.images.stanford40 import Stanford40
+from stable_datasets.images.stanford40 import Stanford40, _to_rgb_bytes
 
 
 def _builder():
@@ -65,6 +65,7 @@ def test_metadata():
     assert info.description
     assert info.homepage == Stanford40.SOURCE["homepage"]
     assert info.citation == Stanford40.SOURCE["citation"]
+    assert info.license == Stanford40.SOURCE["license"] == "Unknown"
     assert info.supervised_keys == ("image", "label")
     assert set(info.features) == {"image", "label"}
     names = info.features["label"].names
@@ -96,6 +97,31 @@ def test_invalid_split_contents(tmp_path, train, test, error):
     path = _write_splits(tmp_path / "bad.zip", train, test)
     with zipfile.ZipFile(path) as archive, pytest.raises(ValueError, match=error):
         _builder()._read_splits(archive)
+
+
+def _jpeg(mode, size, color):
+    buffer = io.BytesIO()
+    Image.new(mode, size, color=color).save(buffer, format="JPEG")
+    return buffer.getvalue()
+
+
+def test_rgb_jpeg_bytes_are_kept_unchanged():
+    data = _jpeg("RGB", (6, 4), (10, 20, 30))
+    assert _to_rgb_bytes(data) is data
+
+
+@pytest.mark.parametrize("mode,color", [("L", 128), ("CMYK", (0, 50, 100, 0))])
+def test_non_rgb_images_are_converted_to_rgb(tmp_path, mode, color):
+    images_path = tmp_path / "images.zip"
+    with zipfile.ZipFile(images_path, "w") as archive:
+        archive.writestr("JPEGImages/feeding_a_horse_191.jpg", _jpeg(mode, (7, 5), color))
+        archive.writestr("JPEGImages/applauding_001.jpg", _jpeg("RGB", (7, 5), (1, 2, 3)))
+    splits_path = _write_splits(tmp_path / "splits.zip", ["feeding_a_horse_191.jpg"], ["applauding_001.jpg"])
+    ((_, sample),) = _builder()._generate_examples(images_path, splits_path, "train")
+    with Image.open(io.BytesIO(sample["image"])) as image:
+        assert image.mode == "RGB"
+        assert image.size == (7, 5)
+    assert sample["label"] == 9
 
 
 def test_unknown_split(archives):
@@ -151,7 +177,6 @@ def test_loading_and_cache_reuse(archives, tmp_path, monkeypatch):
         Stanford40(split="validation", **kwargs)
 
 
-@pytest.mark.large
 def test_stanford40_real_data():
     """Download if needed; decode every image and check official split sizes."""
     datasets = Stanford40()
@@ -165,6 +190,7 @@ def test_stanford40_real_data():
             assert set(sample) == {"image", "label"}, context
             assert isinstance(sample["image"], Image.Image), context
             sample["image"].load()
+            assert sample["image"].mode == "RGB", context
             width, height = sample["image"].size
             assert width > 0 and height > 0, context
             label = sample["label"]

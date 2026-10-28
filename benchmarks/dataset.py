@@ -143,12 +143,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     "imagenet": _rgb("imagenet", "ImageNet", 1000, builder_name="ImageNet1K", include_in_results=False),
     "imagenette": _rgb("imagenette", "Imagenette", 10),
     "rockpaperscissor": _rgb("rockpaperscissor", "Rock-Paper-Scissors", 3),
-    "stanford40": _rgb(
-        "stanford40",
-        "Stanford40",
-        40,
-        builder_name="Stanford40",
-    ),
     "stl10": _rgb("stl10", "STL-10", 10, mean=[0.4467, 0.4398, 0.4066], std=[0.2603, 0.2566, 0.2713]),
     "svhn": _rgb("svhn", "SVHN", 10, mean=[0.4377, 0.4438, 0.4728], std=[0.1980, 0.2010, 0.1970]),
     "tinyimagenet": _rgb("tinyimagenet", "Tiny ImageNet", 200, builder_name="TinyImagenet", include_in_results=False),
@@ -228,14 +222,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     ),
     "fashionmnist": _gray("fashionmnist", "FashionMNIST", 10, mean=[0.2860], std=[0.3530]),
     "kmnist": _gray("kmnist", "KMNIST", 10, mean=[0.1918], std=[0.3483]),
-    "usps": _gray(
-        "usps",
-        "USPS",
-        10,
-        builder_name="USPS",
-        mean=[0.2469],
-        std=[0.2989],
-    ),
     "pneumoniamnist": _gray(
         "pneumoniamnist",
         "PneumoniaMNIST",

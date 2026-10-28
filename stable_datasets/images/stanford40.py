@@ -1,7 +1,10 @@
 """Stanford 40 Actions with the official suggested train/test split."""
 
+import io
 import zipfile
 from pathlib import PurePosixPath
+
+from PIL import Image as PILImage
 
 from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.splits import Split, SplitGenerator
@@ -54,13 +57,25 @@ _CLASS_NAMES = (
 )
 
 
+def _to_rgb_bytes(data):
+    """Return JPEG bytes unchanged if RGB; otherwise convert to RGB and encode losslessly as PNG."""
+    with PILImage.open(io.BytesIO(data)) as image:
+        if image.mode == "RGB":
+            return data
+        buffer = io.BytesIO()
+        image.convert("RGB").save(buffer, format="PNG")
+        return buffer.getvalue()
+
+
 class Stanford40(BaseDatasetBuilder):
     """40 human actions in still images: 4,000 training and 5,532 test images.
 
     Images retain their full frame and original resolution. Bounding boxes
     are not used. Resize and normalize at training time. Class IDs follow
     the alphabetical order of the original action names, including spelling
-    and capitalization. No additional validation split is created.
+    and capitalization. No additional validation split is created. All
+    images are RGB: the few non-RGB source files (e.g. the grayscale
+    ``feeding_a_horse_191.jpg``) are converted to RGB.
     """
 
     VERSION = Version("1.0.0")
@@ -77,6 +92,7 @@ class Stanford40(BaseDatasetBuilder):
             "images": DownloadInfo(url=_BASE_URL + "Stanford40_JPEGImages.zip"),
             "splits": DownloadInfo(url=_BASE_URL + "Stanford40_ImageSplits.zip"),
         },
+        license="Unknown",
     )
 
     def _info(self):
@@ -84,11 +100,12 @@ class Stanford40(BaseDatasetBuilder):
             description=(
                 "Stanford40 contains 9,532 still images of 40 human actions, "
                 "using the official suggested split of 4,000 training and "
-                "5,532 test images. Images are full-frame, without bounding-box crops."
+                "5,532 test images. Images are full-frame RGB, without bounding-box crops."
             ),
             features=Features({"image": Image(), "label": ClassLabel(names=list(_CLASS_NAMES))}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
+            license=self.SOURCE["license"],
             citation=self.SOURCE["citation"],
         )
 
@@ -142,7 +159,7 @@ class Stanford40(BaseDatasetBuilder):
                 yield (
                     filename,
                     {
-                        "image": images_archive.read(f"JPEGImages/{filename}"),
+                        "image": _to_rgb_bytes(images_archive.read(f"JPEGImages/{filename}")),
                         "label": label_ids[action],
                     },
                 )

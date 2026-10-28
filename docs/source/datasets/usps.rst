@@ -105,6 +105,12 @@ References
 - `Training data <https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/usps.bz2>`_
 - `Test data <https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/usps.t.bz2>`_
 - `torchvision USPS implementation <https://docs.pytorch.org/vision/stable/_modules/torchvision/datasets/usps.html>`_
+- License: Unknown
+
+Neither the LIBSVM dataset page nor the original release from CEDAR (SUNY
+Buffalo) publishes a license or terms of use. Check with the data provider
+for applicable use terms, and cite the reference below when using the
+dataset.
 
 Citation
 --------

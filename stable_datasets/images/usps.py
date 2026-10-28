@@ -3,8 +3,7 @@ import bz2
 import numpy as np
 
 from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
-from stable_datasets.splits import Split, SplitGenerator
-from stable_datasets.utils import BaseDatasetBuilder, bulk_download
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class USPS(BaseDatasetBuilder):
@@ -28,6 +27,7 @@ class USPS(BaseDatasetBuilder):
             "train": DownloadInfo(url="https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/usps.bz2"),
             "test": DownloadInfo(url="https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/multiclass/usps.t.bz2"),
         },
+        license="Unknown",
     )
 
     def _info(self):
@@ -41,19 +41,11 @@ class USPS(BaseDatasetBuilder):
             features=Features({"image": Image(), "label": ClassLabel(num_classes=10)}),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
+            license=self.SOURCE["license"],
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self):
-        assets = self._source()["assets"]
-        local_paths = bulk_download(list(assets.values()), dest_folder=self._raw_download_dir)
-        paths = dict(zip(assets.keys(), local_paths))
-        return [
-            SplitGenerator(name=Split.TRAIN, gen_kwargs={"data_path": paths["train"]}),
-            SplitGenerator(name=Split.TEST, gen_kwargs={"data_path": paths["test"]}),
-        ]
-
-    def _generate_examples(self, data_path):
+    def _generate_examples(self, data_path, split):
         with bz2.open(data_path, "rt", encoding="ascii") as stream:
             for index, line in enumerate(stream):
                 fields = line.split()

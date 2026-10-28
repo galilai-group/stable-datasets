@@ -21,8 +21,11 @@ This loader uses the official train/test split files:
 - **Train**: 4,000 images (100 per class)
 - **Test**: 5,532 images
 
-Images are returned at their original resolution. The loader uses the full
-images; it does not load the bounding-box annotations or crop to the person.
+Images are returned as RGB at their original resolution. The source archive
+contains one grayscale JPEG (``feeding_a_horse_191.jpg``); the loader
+converts it, and any other non-RGB image, to RGB so every example has three
+channels. The loader uses the full images; it does not load the
+bounding-box annotations or crop to the person.
 Labels are zero-based indices into alphabetically sorted action names.
 No separate validation split is provided.
 
@@ -46,7 +49,7 @@ the following keys:
      - Description
    * - ``image``
      - ``PIL.Image.Image``
-     - Full action image at its original resolution.
+     - Full RGB action image at its original resolution.
    * - ``label``
      - ``int``
      - Action class index (0-39).
@@ -106,6 +109,13 @@ References
 - `Source images <http://vision.stanford.edu/Datasets/Stanford40_JPEGImages.zip>`_
 - `Official split files <http://vision.stanford.edu/Datasets/Stanford40_ImageSplits.zip>`_
 - `Paper <https://people.csail.mit.edu/khosla/papers/iccv2011_yao_full.pdf>`_
+- License: Unknown
+
+The official dataset page does not publish a license or terms of use. The
+images were collected from the web, so copyright remains with the original
+owners. Check with the data provider for applicable use terms, and cite the
+paper below when using the dataset.
+
 
 Citation
 --------

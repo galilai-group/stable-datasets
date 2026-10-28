@@ -150,13 +150,6 @@ params:
   fgvcaircraft_manufacturer:
     batch_size: 256
     max_epochs: 300
-  # Added with Stanford40 / USPS (tiers copied from kmnist / dtd)
-  usps:
-    batch_size: 256
-    max_epochs: 150
-  stanford40:
-    batch_size: 256
-    max_epochs: 300
 
 vit_optimizer:
   type: AdamW
