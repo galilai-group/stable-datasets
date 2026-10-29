@@ -20,7 +20,7 @@ This builder defines train as subjects 1–6 (6,840 windows) and test as subject
 Each sample contains ``series`` (time-major float32, shape ``(125, 45)``),
 ``label`` (zero-based activity index), and ``subject_id`` (original source ID).
 Sampling rate is 25 Hz. No extra normalization or windowing is performed.
-Class and channel order are exposed as ``ACTIVITY_NAMES`` and ``CHANNEL_NAMES``.
+Class and channel order are exposed as ``CLASS_NAMES`` and ``CHANNEL_NAMES``.
 The original ``segment_id`` is preserved. IDs are metadata, not classifier features.
 
 Usage
@@ -39,22 +39,16 @@ The first call downloads the official archive and prepares both cached splits.
 Later calls reuse the processed cache. Nested sequences can remain Python lists
 under formatting; convert explicitly with NumPy or ``torch.as_tensor``.
 
-Train/evaluation example
-------------------------
+Citation
+--------
 
-From the repository root, run::
+.. code-block:: bibtex
 
-    python examples/activity_recognition.py --output-dir results/activity
-
-The example trains a fixed random forest on per-channel statistics, checks subject
-isolation, and reports accuracy, balanced accuracy, macro-F1 and confusion matrices
-against a majority-class baseline. Test data is never used for fitting or tuning.
-This is a pipeline validation baseline, not a claim of state-of-the-art performance.
-Please cite the original dataset using the citation on its official UCI page.
-
-Reproduce the teaser
---------------------
-
-With ``matplotlib`` installed, run from the repository root::
-
-    python examples/generate_sensor_teasers.py --output-dir docs/source/datasets/teasers
+    @misc{daily_and_sports_activities_256,
+      author = {Barshan, Billur and Altun, Kerem},
+      title = {Daily and Sports Activities},
+      year = {2010},
+      publisher = {UCI Machine Learning Repository},
+      doi = {10.24432/C5C59F},
+      url = {https://doi.org/10.24432/C5C59F}
+    }

@@ -1,6 +1,7 @@
 """Offline parsing, schema and cache checks for all robot tasks."""
 
 import zipfile
+from collections import Counter
 
 import numpy as np
 import pytest
@@ -34,7 +35,7 @@ def test_every_configuration_preserves_axes_and_labels(tmp_path, config):
     obj = builder(config)
     names = RobotExecutionFailures.CLASS_NAMES[config]
     path = archive(tmp_path, {f"nested/{config}.data": record(names[0]) + record(names[-1]), "a.out": "unused"})
-    rows = list(obj._generate_examples(path, "all"))
+    rows = list(obj._generate_examples(path, "train"))
     assert obj.info.features["label"].names == list(names)
     assert [key for key, row in rows] == [0, 1]
     assert [row["label"] for key, row in rows] == [0, len(names) - 1]
@@ -63,16 +64,16 @@ def test_every_configuration_preserves_axes_and_labels(tmp_path, config):
 def test_rejects_malformed_records(tmp_path, content):
     path = archive(tmp_path, {"lp1.data": content})
     with pytest.raises(ValueError):
-        list(builder()._generate_examples(path, "all"))
+        list(builder()._generate_examples(path, "train"))
 
 
 def test_rejects_missing_duplicate_members_and_invalid_split(tmp_path):
     obj = builder()
     for members in [{"other.data": record()}, {"a/lp1.data": record(), "b/lp1.data": record()}]:
         with pytest.raises(ValueError, match="exactly one"):
-            list(obj._generate_examples(archive(tmp_path, members), "all"))
+            list(obj._generate_examples(archive(tmp_path, members), "train"))
     with pytest.raises(ValueError, match="unsplit"):
-        list(obj._generate_examples(None, "train"))
+        list(obj._generate_examples(None, "all"))
     with pytest.raises(ValueError):
         builder("not-a-task")
 
@@ -86,7 +87,7 @@ def test_cache_keeps_configurations_separate(tmp_path, monkeypatch):
         return [path]
 
     monkeypatch.setattr("stable_datasets.utils.bulk_download", download)
-    kwargs = {"processed_cache_dir": tmp_path / "cache", "download_dir": tmp_path / "raw", "split": "all"}
+    kwargs = {"processed_cache_dir": tmp_path / "cache", "download_dir": tmp_path / "raw", "split": "train"}
     first = RobotExecutionFailures(config_name="lp1", **kwargs)
     third = RobotExecutionFailures(config_name="lp3", **kwargs)
     assert first[0]["label"] == 0 and third[0]["label"] == 3
@@ -95,3 +96,47 @@ def test_cache_keeps_configurations_separate(tmp_path, monkeypatch):
     monkeypatch.setattr("stable_datasets.utils.bulk_download", lambda *a, **k: pytest.fail("Downloaded cached data"))
     reloaded = RobotExecutionFailures(config_name="lp3", **kwargs)
     assert reloaded[0]["label"] == 3 and len(calls) == 2
+
+
+@pytest.fixture(scope="module")
+def official_cache(tmp_path_factory):
+    """Share one genuine UCI download across all five configurations."""
+    root = tmp_path_factory.mktemp("official_robot")
+    return {"processed_cache_dir": root / "cache", "download_dir": root / "raw"}
+
+
+@pytest.mark.parametrize(
+    ("config", "counts"),
+    [
+        ("lp1", [21, 17, 34, 16]),
+        ("lp2", [20, 7, 6, 5, 9]),
+        ("lp3", [20, 15, 9, 3]),
+        ("lp4", [24, 72, 21]),
+        ("lp5", [44, 26, 47, 21, 26]),
+    ],
+)
+def test_official_download_counts_and_exact_measurements(official_cache, config, counts):
+    """Validate real archive members, every label and all 90 measurements."""
+    dataset = RobotExecutionFailures(config_name=config, **official_cache)
+    assert set(dataset) == {"train"}
+    data = dataset["train"]
+    assert len(data) == sum(counts)
+    archives = list(official_cache["download_dir"].glob("*.zip"))
+    assert len(archives) == 1
+    with zipfile.ZipFile(archives[0]) as archive:
+        lines = [line.strip() for line in archive.read(f"{config}.data").decode("ascii").splitlines() if line.strip()]
+    assert len(lines) == 16 * sum(counts)
+    observed = Counter()
+    for index, row in enumerate(data):
+        block = lines[index * 16 : (index + 1) * 16]
+        expected = np.array([[int(value) for value in line.split()] for line in block[1:]], dtype=np.float32)
+        actual = np.asarray(row["series"], dtype=np.float32)
+        assert actual.shape == (15, 6) and np.isfinite(actual).all()
+        np.testing.assert_array_equal(actual, expected)
+        assert RobotExecutionFailures.CLASS_NAMES[config][row["label"]] == block[0]
+        assert row["sample_id"] == index
+        observed[row["label"]] += 1
+    assert observed == dict(enumerate(counts))
+    reloaded = RobotExecutionFailures(config_name=config, split="train", **official_cache)
+    assert len(reloaded) == len(data)
+    assert reloaded[-1] == data[-1]

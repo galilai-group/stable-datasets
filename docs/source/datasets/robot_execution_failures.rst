@@ -34,7 +34,7 @@ Five configurations retain the source learning problems and their own label spac
 * ``lp4``: approach to ungrasp, 117 records, 3 classes.
 * ``lp5``: motion with part, 164 records, 5 classes.
 
-Each exposes only ``all``. The source has no official train/test split or
+Each exposes only ``train``. The source has no official train/test split or
 session/robot identifiers. Do not pool tasks as interchangeable labels.
 Some identical signal windows occur across tasks; they are preserved.
 Only the selected text member is read; bundled executables are never run.
@@ -47,7 +47,7 @@ Usage
     import numpy as np
     from stable_datasets.timeseries import RobotExecutionFailures
 
-    dataset = RobotExecutionFailures(config_name="lp1", split="all")
+    dataset = RobotExecutionFailures(config_name="lp1", split="train")
     signal = np.asarray(dataset[0]["series"], dtype=np.float32)
     labels = RobotExecutionFailures.CLASS_NAMES["lp1"]
 
@@ -55,28 +55,16 @@ All configurations share one checksum-verified raw archive, with separate
 processed caches. Nested sequences may remain lists under formatting; convert
 explicitly with NumPy or ``torch.as_tensor``.
 
-Evaluation example
-------------------
+Citation
+--------
 
-From the repository root::
+.. code-block:: bibtex
 
-    python examples/robot_failure_classification.py --output-dir results/robot
-
-The example evaluates a fixed 200-tree random forest against a majority baseline,
-using per-channel mean/std/min/max features. Each task is evaluated independently
-with three-fold StratifiedGroupKFold, seed 42. Exact duplicate signal windows
-are grouped using their signal bytes, independently of labels. Every record
-receives one out-of-fold prediction. No model selection uses evaluation folds.
-JSON reports contain fold membership, predictions, accuracy, balanced accuracy,
-macro-F1 and confusion matrices.
-
-These are small-sample pipeline checks. Hidden session dependence cannot be ruled
-out because the source lacks session IDs. No claim is made about new robots,
-new sessions, state-of-the-art performance, or self-supervised learning gains.
-
-Reproduce the teaser
---------------------
-
-With ``matplotlib`` installed, run from the repository root::
-
-    python examples/generate_sensor_teasers.py --output-dir docs/source/datasets/teasers
+    @misc{robot_execution_failures_138,
+      author = {Lopes, Luis and Camarinha-Matos, Luis},
+      title = {Robot Execution Failures},
+      year = {1998},
+      publisher = {UCI Machine Learning Repository},
+      doi = {10.24432/C5M89N},
+      url = {https://doi.org/10.24432/C5M89N}
+    }

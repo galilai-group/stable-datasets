@@ -27,7 +27,7 @@ class DailyAndSportsActivities(BaseDatasetBuilder):
     identifiers are retained; activity labels are zero-based.
     """
 
-    VERSION = Version("1.0.0")
+    VERSION = Version("1.0.1")
     SOURCE = DatasetSource(
         homepage="https://archive.ics.uci.edu/dataset/256/daily+and+sports+activities",
         assets={
@@ -37,10 +37,14 @@ class DailyAndSportsActivities(BaseDatasetBuilder):
             )
             for split in ("train", "test")
         },
-        citation=(
-            "Barshan, B. & Altun, K. (2010). Daily and Sports Activities [Dataset]. "
-            "UCI Machine Learning Repository. https://doi.org/10.24432/C5C59F."
-        ),
+        citation="""@misc{daily_and_sports_activities_256,
+  author = {Barshan, Billur and Altun, Kerem},
+  title = {Daily and Sports Activities},
+  year = {2010},
+  publisher = {UCI Machine Learning Repository},
+  doi = {10.24432/C5C59F},
+  url = {https://doi.org/10.24432/C5C59F}
+}""",
         license="CC BY 4.0",
     )
     SAMPLE_RATE = 25
@@ -66,7 +70,6 @@ class DailyAndSportsActivities(BaseDatasetBuilder):
         "jumping",
         "basketball",
     )
-    ACTIVITY_NAMES = CLASS_NAMES
     CHANNEL_NAMES = tuple(
         f"{unit}_{sensor}_{axis}"
         for unit in ("torso", "right_arm", "left_arm", "right_leg", "left_leg")

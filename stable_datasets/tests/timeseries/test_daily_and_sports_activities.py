@@ -2,6 +2,7 @@
 
 import io
 import zipfile
+from collections import Counter
 
 import numpy as np
 import pytest
@@ -115,3 +116,40 @@ def test_cache_reload_and_formats(tmp_path, monkeypatch):
     reloaded = DailyAndSportsActivities(split="test", processed_cache_dir=tmp_path / "cache")
     assert len(calls) == 1
     assert reloaded[0]["label"] == 18
+
+
+def test_official_download_and_full_subject_split(tmp_path):
+    """Exercise the real 163 MB UCI download and all original windows."""
+    raw = tmp_path / "raw"
+    kwargs = {"processed_cache_dir": tmp_path / "cache", "download_dir": raw}
+    dataset = DailyAndSportsActivities(**kwargs)
+    assert set(dataset) == {"train", "test"}
+    assert len(dataset["train"]) == 6840
+    assert len(dataset["test"]) == 2280
+    archives = list(raw.glob("*.zip"))
+    assert len(archives) == 1
+    with zipfile.ZipFile(archives[0]) as archive:
+        for split, subjects, per_class in [("train", set(range(1, 7)), 360), ("test", {7, 8}, 120)]:
+            counts, people, identifiers = Counter(), set(), set()
+            for row in dataset[split]:
+                signal = np.asarray(row["series"], dtype=np.float32)
+                assert signal.shape == (125, 45) and np.isfinite(signal).all()
+                assert 0 <= row["label"] < 19
+                assert 1 <= row["segment_id"] <= 60
+                counts[row["label"]] += 1
+                people.add(row["subject_id"])
+                identifiers.add((row["label"], row["subject_id"], row["segment_id"]))
+            assert counts == dict.fromkeys(range(19), per_class)
+            assert people == subjects
+            assert len(identifiers) == len(dataset[split])
+            for index in [0, len(dataset[split]) - 1]:
+                row = dataset[split][index]
+                suffix = f"a{row['label'] + 1:02d}/p{row['subject_id']}/s{row['segment_id']:02d}.txt"
+                members = [name for name in archive.namelist() if name.endswith(suffix)]
+                assert len(members) == 1
+                with archive.open(members[0]) as stream:
+                    expected = np.loadtxt(stream, delimiter=",", dtype=np.float32)
+                np.testing.assert_array_equal(np.asarray(row["series"], dtype=np.float32), expected)
+    reloaded = DailyAndSportsActivities(split="test", **kwargs)
+    assert len(reloaded) == 2280
+    assert reloaded[0] == dataset["test"][0]
