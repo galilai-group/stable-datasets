@@ -3,6 +3,7 @@
 from .audiomnist import AudioMNIST
 from .birdvox_dcase_20k import BirdVoxDCASE20k
 from .CatsDogs import CatsDogs
+from .electricity_hourly import ElectricityHourly
 from .Forex import Forex
 from .freefield1010 import Freefield1010
 from .fsd_kaggle_2018 import FSDKaggle2018
@@ -16,6 +17,7 @@ from .seizures_neonatal import SeizuresNeonatal
 from .sonycust import SONYCUST
 from .SP500 import SP500
 from .speech_commands import SpeechCommands
+from .uber_tlc import UberTLC
 from .UrbanSound import UrbanSound
 from .vocalset import VocalSet
 from .VoiceGenderDetection import VoiceGenderDetection
@@ -27,6 +29,7 @@ __all__ = [
     "AudioMNIST",
     "BirdVoxDCASE20k",
     "CatsDogs",
+    "ElectricityHourly",
     "Freefield1010",
     "FSDKaggle2018",
     "GrooveMIDI",
@@ -38,6 +41,7 @@ __all__ = [
     "SeizuresNeonatal",
     "SONYCUST",
     "SpeechCommands",
+    "UberTLC",
     "UrbanSound",
     "VoiceGenderDetection",
     "VocalSet",

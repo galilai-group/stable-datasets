@@ -1,7 +1,11 @@
 import numpy as np
+import pytest
 from PIL import Image
 
 from stable_datasets.images import Country211
+
+
+pytestmark = pytest.mark.large
 
 
 def test_country211_dataset():
