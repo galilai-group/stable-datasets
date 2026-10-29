@@ -122,4 +122,3 @@ class Forex(BaseDatasetBuilder):
                 "close": float(row.close),
                 "volume": int(row.volume),
             }
-
