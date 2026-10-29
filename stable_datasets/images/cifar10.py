@@ -9,7 +9,7 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 class CIFAR10(BaseDatasetBuilder):
     """Image classification.
-    The `CIFAR-10 < https: // www.cs.toronto.edu/~kriz/cifar.html >`_ dataset
+    The `CIFAR-10 <https://www.cs.toronto.edu/~kriz/cifar.html>`_ dataset
     was collected by Alex Krizhevsky, Vinod Nair, and Geoffrey
     Hinton. It consists of 60000 32x32 colour images in 10 classes, with
     6000 images per class. There are 50000 training images and 10000 test images.
