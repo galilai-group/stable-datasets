@@ -169,8 +169,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
         std=[0.2731, 0.2659, 0.2797],
     ),
     "imagenet100": _rgb("imagenet100", "ImageNet-100", 100, builder_name="ImageNet100"),
-    "grocerystore": _rgb("grocerystore", "Grocery Store", 81),
-    "plantdoc": _rgb("plantdoc", "PlantDoc", 28),
     # Grayscale datasets (1-channel) — includes character/line-art datasets
     # whose images are visually binary (ink-on-paper) regardless of source channel count.
     "arabiccharacters": _gray("arabiccharacters", "Arabic Characters", 28, mean=[0.1030], std=[0.3040]),
