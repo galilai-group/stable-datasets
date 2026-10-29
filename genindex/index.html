@@ -164,6 +164,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/linnaeus5/">Linnaeus 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/horse_or_human/">Horses vs. Humans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/semeion/">Semeion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/malaria/">Malaria Cell Images</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/kather_colorectal_histology/">Kather Colorectal Histology</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/sun397/">SUN-397</a></li>
@@ -663,14 +665,16 @@
 </li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.high_gamma.HighGamma">HighGamma (class in stable_datasets.timeseries.high_gamma)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.homepage">homepage (DatasetInfo attribute)</a>
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource.homepage">(DatasetSource attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
+      <li><a href="../stable_datasets.images/#stable_datasets.images.horse_or_human.HorseOrHuman">HorseOrHuman (class in stable_datasets.images.horse_or_human)</a>
+</li>
       <li><a href="../stable_datasets/#stable_datasets.utils.HostUnreachableError">HostUnreachableError</a>
 </li>
   </ul></td>
@@ -930,6 +934,8 @@
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.hasy_v2">stable_datasets.images.hasy_v2</a>
 </li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.horse_or_human">stable_datasets.images.horse_or_human</a>
+</li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenet_10">stable_datasets.images.imagenet_10</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenet_100">stable_datasets.images.imagenet_100</a>
@@ -971,6 +977,8 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.places365_small">stable_datasets.images.places365_small</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.rock_paper_scissor">stable_datasets.images.rock_paper_scissor</a>
+</li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.semeion">stable_datasets.images.semeion</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.shapes3d">stable_datasets.images.shapes3d</a>
 </li>
@@ -1236,6 +1244,8 @@
 </li>
       <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.select">select() (StableDataset method)</a>
 </li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.semeion.Semeion">Semeion (class in stable_datasets.images.semeion)</a>
+</li>
       <li><a href="../stable_datasets.features/#stable_datasets.features.base.Sequence">Sequence (class in stable_datasets.features.base)</a>
 </li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels.SEQUENCE_LENGTH">SEQUENCE_LENGTH (JapaneseVowels attribute)</a>
@@ -1385,6 +1395,8 @@
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.high_gamma.HighGamma.SOURCE">(HighGamma attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.horse_or_human.HorseOrHuman.SOURCE">(HorseOrHuman attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_100.ImageNet100.SOURCE">(ImageNet100 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_1k.ImageNet1K.SOURCE">(ImageNet1K attribute)</a>
@@ -1432,6 +1444,8 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor.SOURCE">(RockPaperScissor attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.seizures_neonatal.SeizuresNeonatal.SOURCE">(SeizuresNeonatal attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.semeion.Semeion.SOURCE">(Semeion attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.shapes3d.Shapes3D.SOURCE">(Shapes3D attribute)</a>
 </li>
@@ -1676,8 +1690,6 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cifar100_c">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li>
     stable_datasets.images.cifar10_c
 
@@ -1685,6 +1697,8 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cifar10_c">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li>
     stable_datasets.images.cinic10
 
@@ -1847,6 +1861,13 @@
 </li>
       </ul></li>
       <li>
+    stable_datasets.images.horse_or_human
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.horse_or_human">module</a>
+</li>
+      </ul></li>
+      <li>
     stable_datasets.images.imagenet_10
 
       <ul style="list-style-type:none">
@@ -1991,6 +2012,13 @@
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.rock_paper_scissor">module</a>
+</li>
+      </ul></li>
+      <li>
+    stable_datasets.images.semeion
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.semeion">module</a>
 </li>
       </ul></li>
       <li>
@@ -2521,6 +2549,8 @@
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.high_gamma.HighGamma.VERSION">(HighGamma attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.horse_or_human.HorseOrHuman.VERSION">(HorseOrHuman attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_100.ImageNet100.VERSION">(ImageNet100 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_1k.ImageNet1K.VERSION">(ImageNet1K attribute)</a>
@@ -2572,6 +2602,8 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor.VERSION">(RockPaperScissor attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.seizures_neonatal.SeizuresNeonatal.VERSION">(SeizuresNeonatal attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.semeion.Semeion.VERSION">(Semeion attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.shapes3d.Shapes3D.VERSION">(Shapes3D attribute)</a>
 </li>
