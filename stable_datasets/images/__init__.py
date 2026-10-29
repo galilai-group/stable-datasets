@@ -16,6 +16,7 @@ from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .cinic10 import CINIC10
 from .clevrer import CLEVRER
+from .coil20 import COIL20
 from .coil100 import COIL100
 from .country211 import Country211
 from .cub200 import CUB200
@@ -51,6 +52,7 @@ from .imagewoof import Imagewoof
 from .k_mnist import KMNIST
 from .k_mnist49 import KMNIST49
 from .kather_colorectal_histology import KatherColorectalHistology
+from .kth_tips import KTHTIPS
 from .linnaeus5 import Linnaeus5
 from .malaria import Malaria
 from .med_mnist import MedMNIST
@@ -95,6 +97,7 @@ __all__ = [
     "CIFAR100C",
     "CINIC10",
     "CLEVRER",
+    "COIL20",
     "COIL100",
     "Country211",
     "CUB200",
@@ -127,6 +130,7 @@ __all__ = [
     "TFFlowers",
     "Imagewoof",
     "KMNIST",
+    "KTHTIPS",
     "KMNIST49",
     "KatherColorectalHistology",
     "Linnaeus5",
