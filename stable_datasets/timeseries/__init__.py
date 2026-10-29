@@ -3,6 +3,7 @@
 from .audiomnist import AudioMNIST
 from .birdvox_dcase_20k import BirdVoxDCASE20k
 from .CatsDogs import CatsDogs
+from .Forex import Forex
 from .freefield1010 import Freefield1010
 from .fsd_kaggle_2018 import FSDKaggle2018
 from .groove_MIDI import GrooveMIDI
@@ -13,16 +14,16 @@ from .Phoneme import Phoneme
 from .picidae import Picidae
 from .seizures_neonatal import SeizuresNeonatal
 from .sonycust import SONYCUST
+from .SP500 import SP500
 from .speech_commands import SpeechCommands
 from .UrbanSound import UrbanSound
 from .vocalset import VocalSet
 from .VoiceGenderDetection import VoiceGenderDetection
 from .warblr import Warblr
-from .SP500 import SP500
-from .Forex import Forex
 
 
 __all__ = [
+    "Forex",
     "AudioMNIST",
     "BirdVoxDCASE20k",
     "CatsDogs",
