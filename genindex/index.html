@@ -142,6 +142,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/stl10/">STL-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/tiny_imagenet/">Tiny ImageNet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/tiny_imagenet_c/">Tiny ImageNet-C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/imagenet_v2/">ImageNetV2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/imagenet_sketch/">ImageNet-Sketch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/imagenet_a/">ImageNet-A</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/imagenet_r/">ImageNet-R</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/e_mnist/">EMNIST</a></li>
@@ -307,6 +309,8 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.BUILDER_CONFIGS">(HASYv2 attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_v2.ImageNetV2.BUILDER_CONFIGS">(ImageNetV2 attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagewoof.Imagewoof.BUILDER_CONFIGS">(Imagewoof attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.med_mnist.MedMNIST.BUILDER_CONFIGS">(MedMNIST attribute)</a>
@@ -444,6 +448,8 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.flowers17.Flowers17.DEFAULT_CONFIG_NAME">(Flowers17 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.DEFAULT_CONFIG_NAME">(HASYv2 attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_v2.ImageNetV2.DEFAULT_CONFIG_NAME">(ImageNetV2 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.sun397.SUN397.DEFAULT_CONFIG_NAME">(SUN397 attribute)</a>
 </li>
@@ -681,22 +687,28 @@
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_r.ImageNetR">ImageNetR (class in stable_datasets.images.imagenet_r)</a>
 </li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_sketch.ImageNetSketch">ImageNetSketch (class in stable_datasets.images.imagenet_sketch)</a>
+</li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_10.Imagenette">Imagenette (class in stable_datasets.images.imagenet_10)</a>
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenette.Imagenette">(class in stable_datasets.images.imagenette)</a>
 </li>
       </ul></li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_v2.ImageNetV2">ImageNetV2 (class in stable_datasets.images.imagenet_v2)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_v2.ImageNetV2Config">ImageNetV2Config (class in stable_datasets.images.imagenet_v2)</a>
+</li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.imagewoof.Imagewoof">Imagewoof (class in stable_datasets.images.imagewoof)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.info">info (BaseDatasetBuilder property)</a>
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.info">(StableDataset property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.int2str">int2str() (ClassLabel method)</a>
 </li>
       <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.is_file_backed">is_file_backed (ArrowBackend property)</a>
@@ -922,6 +934,10 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenet_a">stable_datasets.images.imagenet_a</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenet_r">stable_datasets.images.imagenet_r</a>
+</li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenet_sketch">stable_datasets.images.imagenet_sketch</a>
+</li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenet_v2">stable_datasets.images.imagenet_v2</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenette">stable_datasets.images.imagenette</a>
 </li>
@@ -1370,6 +1386,8 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_r.ImageNetR.SOURCE">(ImageNetR attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_sketch.ImageNetSketch.SOURCE">(ImageNetSketch attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_10.Imagenette.SOURCE">(Imagenette attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenette.Imagenette.SOURCE">[1]</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagewoof.Imagewoof.SOURCE">(Imagewoof attribute)</a>
@@ -1644,8 +1662,6 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cifar100">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li>
     stable_datasets.images.cifar100_c
 
@@ -1653,6 +1669,8 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cifar100_c">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li>
     stable_datasets.images.cifar10_c
 
@@ -1847,6 +1865,20 @@
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenet_r">module</a>
+</li>
+      </ul></li>
+      <li>
+    stable_datasets.images.imagenet_sketch
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenet_sketch">module</a>
+</li>
+      </ul></li>
+      <li>
+    stable_datasets.images.imagenet_v2
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagenet_v2">module</a>
 </li>
       </ul></li>
       <li>
@@ -2481,7 +2513,11 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_r.ImageNetR.VERSION">(ImageNetR attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_sketch.ImageNetSketch.VERSION">(ImageNetSketch attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_10.Imagenette.VERSION">(Imagenette attribute)</a>, <a href="../stable_datasets.images/#stable_datasets.images.imagenette.Imagenette.VERSION">[1]</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_v2.ImageNetV2.VERSION">(ImageNetV2 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagewoof.Imagewoof.VERSION">(Imagewoof attribute)</a>
 </li>
