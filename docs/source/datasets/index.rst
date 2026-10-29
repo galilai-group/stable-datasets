@@ -46,12 +46,15 @@ Available Datasets
 
    arabic_characters
    arabic_digits
+   caltech256
    cifar10
    cifar100
    cifar10_c
    cifar100_c
    cars196
+   coil100
    dtd
+   not_mnist
    fashion_mnist
    k_mnist
    medmnist
@@ -60,9 +63,13 @@ Available Datasets
    stl10
    tiny_imagenet
    tiny_imagenet_c
+   imagenet_a
+   imagenet_r
    e_mnist
    fgvc_aircraft
+   flowers17
    flowers102
+   imagewoof
    food101
    cub200
    country211
@@ -70,15 +77,31 @@ Available Datasets
    hasy_v2
    face_pointing
    rock_paper_scissor
+   svhn
    linnaeus5
    stanford40
    usps
+   oxford_iiit_pet
+   eurosat
 
 .. toctree::
    :maxdepth: 1
    :caption: Video Datasets
 
    something_something_v2
+   clevrer
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Disentanglement Datasets
+
+   dsprites
+   dsprites_color
+   dsprites_noise
+   dsprites_scream
+   shapes3d
+   cars3d
+   small_norb
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
