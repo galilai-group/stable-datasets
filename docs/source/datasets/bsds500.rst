@@ -23,6 +23,10 @@ Every human segmentation is given in two forms:
 - a **region map**: each pixel holds the number of the region it belongs to (1, 2, 3, ...)
 - a **boundary map**: 1 on region edges, 0 elsewhere
 
+.. image:: teasers/bsds500_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 
