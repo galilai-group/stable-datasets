@@ -11,7 +11,7 @@ A dataset pull request includes:
 3. **Docs**: a page at `docs/source/datasets/<dataset>.rst`, listed in `docs/source/datasets/index.rst`, with a teaser figure in `docs/source/datasets/teasers/`. `python generate_teaser.py --name <DatasetClass> --output <dataset>_teaser.png` makes one for image datasets; for other data, make the figure however suits it.
 4. **Results**: in the pull request description, a metric (e.g. train/val accuracy) from training or evaluating a model on the dataset, with supervised learning or any self-supervised method.
 
-Download from the dataset's original source when it's available. If an exact copy of the same files is also hosted elsewhere (e.g. on Zenodo), add it as a fallback with `DownloadInfo(url=..., fallbacks=[...])`. Fallbacks are tried in order only when the original can't be downloaded, so the dataset still loads while the original host is down. Set `checksum` too, so a fallback has to serve the same file.
+Download from the dataset's original source when it's available. If an exact copy of the same files is also hosted elsewhere, add it as a fallback with `DownloadInfo(url=..., fallbacks=[...])`. Zenodo is a good place to look, and so is the Internet Archive's Wayback Machine, which often has a capture of the original URL: `https://web.archive.org/web/<timestamp>id_/<original URL>` serves the file exactly as the original server sent it. Fallbacks are tried in order only when the original can't be downloaded, so the dataset still loads while the original host is down. Set `checksum` too, so a fallback has to serve the same file.
 
 ## Tests
 
