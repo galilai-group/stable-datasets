@@ -1,7 +1,6 @@
 
-from pathlib import Path
+"""S&P 500 daily stock prices with chronological splits."""
 
-import kagglehub
 import numpy as np
 import pandas as pd
 
@@ -9,92 +8,63 @@ from stable_datasets.schema import (
     DatasetInfo,
     DatasetSource,
     Features,
-    Sequence,
     Value,
     Version,
 )
-from stable_datasets.utils import BaseDatasetBuilder
 from stable_datasets.splits import Split, SplitGenerator
-
-
-SEQUENCE_LENGTH = 30
-PRICE_COLUMNS = ["open", "high", "low", "close"]
-
-
-def make_windows(stock_data, sequence_length=SEQUENCE_LENGTH):
-    """Convert one stock's daily observations into time-series windows."""
-
-    stock_data = stock_data.sort_values("date")
-
-    prices = stock_data[PRICE_COLUMNS].to_numpy(dtype=np.float32)
-    volumes = stock_data["volume"].to_numpy(dtype=np.float32)
-
-    windows = []
-
-    for start in range(len(stock_data) - sequence_length + 1):
-        end = start + sequence_length
-
-        price_window = prices[start:end]
-        volume_window = volumes[start:end]
-
-        # Express prices relative to the first day's closing price.
-        initial_price = price_window[0, 3]
-
-        if initial_price <= 0 or not np.isfinite(initial_price):
-            continue
-
-        normalized_prices = price_window / initial_price - 1.0
-
-        # Compress the scale of trading volume.
-        log_volume = np.log1p(volume_window)
-
-        window = np.column_stack(
-            [normalized_prices, log_volume]
-        ).astype(np.float32)
-
-        if np.isfinite(window).all():
-            windows.append(window)
-
-    return windows
+from stable_datasets.utils import BaseDatasetBuilder, download
 
 
 class SP500(BaseDatasetBuilder):
-    """S&P 500 daily stock prices as multivariate time series."""
+    """Raw daily OHLCV observations for S&P 500 stocks."""
 
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
         homepage="https://www.kaggle.com/datasets/camnugent/sandp500",
-        assets={},
-        citation="S&P 500 Stock Data, Kaggle (camnugent).",
+        assets={
+            "data": (
+                "https://raw.githubusercontent.com/"
+                "plotly/datasets/master/all_stocks_5yr.csv"
+            ),
+        },
+        citation="""@misc{nugent_sp500,
+  author = {Nugent, Cam},
+  title = {S&P 500 Stock Data},
+  howpublished = {Kaggle},
+  url = {https://www.kaggle.com/datasets/camnugent/sandp500}
+}""",
+        license="CC0-1.0",
     )
 
     def _info(self):
         return DatasetInfo(
             description=(
-                "S&P 500 historical stock prices represented "
-                "as 30-day multivariate time-series windows."
+                "Daily S&P 500 stock observations, including "
+                "date, ticker, OHLC prices, and trading volume. "
+                "Split chronologically into 70% training, "
+                "15% validation, and 15% testing."
             ),
             features=Features({
-                "series": Sequence(Sequence(Value("float32"))),
+                "date": Value("string"),
+                "ticker": Value("string"),
+                "open": Value("float32"),
+                "high": Value("float32"),
+                "low": Value("float32"),
+                "close": Value("float32"),
+                "volume": Value("int64"),
             }),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],
         )
 
     def _split_generators(self):
-        """Download the S&P 500 dataset and define chronological splits."""
+        """Download the CSV using stable-datasets' cache."""
 
-        dataset_dir = Path(
-            kagglehub.dataset_download("camnugent/sandp500")
+        data_path = download(
+            self._source()["assets"]["data"],
+            dest_folder=self._raw_download_dir,
         )
-
-        data_path = dataset_dir / "all_stocks_5yr.csv"
-
-        if not data_path.is_file():
-            raise FileNotFoundError(
-                f"Could not find all_stocks_5yr.csv in {dataset_dir}"
-            )
 
         return [
             SplitGenerator(
@@ -112,23 +82,25 @@ class SP500(BaseDatasetBuilder):
         ]
 
     def _candidate_splits(self):
-        """Return the available dataset splits."""
-
         return [
             Split.TRAIN,
             Split.VALIDATION,
             Split.TEST,
         ]
 
-    
     def _generate_examples(self, data_path, split):
-        """Generate 30-day sequences using common chronological splits."""
+        """Yield raw daily observations in chronological splits."""
 
         df = pd.read_csv(data_path, parse_dates=["date"])
-        df = df.sort_values(["Name", "date"])
+        df = df.sort_values(["date", "Name"])
 
-        # Establish shared date boundaries across all stocks.
-        unique_dates = np.sort(df["date"].dropna().unique())
+        required = [
+            "date", "Name", "open", "high",
+            "low", "close", "volume",
+        ]
+        df = df.dropna(subset=required)
+
+        unique_dates = np.sort(df["date"].unique())
 
         train_end = int(len(unique_dates) * 0.70)
         val_end = int(len(unique_dates) * 0.85)
@@ -142,21 +114,18 @@ class SP500(BaseDatasetBuilder):
         else:
             raise ValueError(f"Unknown split: {split}")
 
-        if len(allowed_dates) == 0:
-            return
+        subset = df[df["date"].isin(allowed_dates)]
 
-        start_date = allowed_dates[0]
-        end_date = allowed_dates[-1]
-
-        subset = df[
-            (df["date"] >= start_date)
-            & (df["date"] <= end_date)
-        ]
-
-        example_id = 0
-
-        for _, stock_data in subset.groupby("Name"):
-            windows = make_windows(stock_data)
+        for example_id, row in enumerate(subset.itertuples(index=False)):
+            yield example_id, {
+                "date": row.date.strftime("%Y-%m-%d"),
+                "ticker": str(row.Name),
+                "open": float(row.open),
+                "high": float(row.high),
+                "low": float(row.low),
+                "close": float(row.close),
+                "volume": int(row.volume),
+            }
 
             for window in windows:
                 yield example_id, {"series": window}
