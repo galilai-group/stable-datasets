@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en" data-content_root="../../../../"
+  x-data="{ darkMode: $persist(window.matchMedia('(prefers-color-scheme: dark)').matches), activeSection: ''}"
+  :class="{ 'dark' : darkMode === true }">
+
+<head>
+  <script>
+    (function () {
+      // Set initial color scheme
+      if ((localStorage.getItem("_x_darkMode") === "true") || (window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+
+      // Watch for media preference changes
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
+        localStorage.setItem("_x_darkMode", event.matches);
+        document.documentElement.classList.toggle("dark", event.matches);
+      });
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#030711" />
+  
+  <title>stable_datasets.images.imagenet_a | stable-datasets</title>
+  <meta property="og:title" content="stable_datasets.images.imagenet_a | stable-datasets" />
+  <meta name="twitter:title" content="stable_datasets.images.imagenet_a | stable-datasets" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=3efa2d9f" />
+  <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../../../../_static/pygments_dark.css" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/theme.css?v=009055c6" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
+  <link rel="stylesheet" type="text/css" href="../../../../_static/awesome-sphinx-design.css?v=b41b1d54" />
+  <link rel="search" title="Search" href="../../../../search/" />
+  <link rel="index" title="Index" href="../../../../genindex/" />
+</head>
+
+<body x-data="{ showSidebar: false, showScrollTop: false }"
+  class="min-h-screen font-sans antialiased bg-background text-foreground" :class="{ 'overflow-hidden': showSidebar }"@scroll.window="showScrollTop = pageYOffset > 100">
+  <div x-cloak x-show="showSidebar"
+    class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden"
+    @click.self="showSidebar = false"></div><div id="page" class="relative flex flex-col min-h-screen"><a href="#content"
+      class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100">
+      Skip to content
+    </a><header class="sticky top-0 z-40 w-full border-b shadow-xs border-border bg-background/90 backdrop-blur"><div class="container flex items-center h-14">
+    <div class="hidden mr-4 md:flex">
+      <a href="../../../../" class="flex items-center mr-6"><span class="hidden font-bold sm:inline-block text-clip whitespace-nowrap">stable-datasets</span>
+      </a></div><button
+      class="inline-flex items-center justify-center h-10 px-0 py-2 mr-2 text-base font-medium transition-colors rounded-md hover:text-accent-foreground hover:bg-transparent md:hidden"
+      type="button" @click="showSidebar = true">
+      <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 96 960 960" aria-hidden="true"
+        fill="currentColor">
+        <path
+          d="M152.587 825.087q-19.152 0-32.326-13.174t-13.174-32.326q0-19.152 13.174-32.326t32.326-13.174h440q19.152 0 32.326 13.174t13.174 32.326q0 19.152-13.174 32.326t-32.326 13.174h-440Zm0-203.587q-19.152 0-32.326-13.174T107.087 576q0-19.152 13.174-32.326t32.326-13.174h320q19.152 0 32.326 13.174T518.087 576q0 19.152-13.174 32.326T472.587 621.5h-320Zm0-203.587q-19.152 0-32.326-13.174t-13.174-32.326q0-19.152 13.174-32.326t32.326-13.174h440q19.152 0 32.326 13.174t13.174 32.326q0 19.152-13.174 32.326t-32.326 13.174h-440ZM708.913 576l112.174 112.174q12.674 12.674 12.674 31.826t-12.674 31.826Q808.413 764.5 789.261 764.5t-31.826-12.674l-144-144Q600 594.391 600 576t13.435-31.826l144-144q12.674-12.674 31.826-12.674t31.826 12.674q12.674 12.674 12.674 31.826t-12.674 31.826L708.913 576Z" />
+      </svg>
+      <span class="sr-only">Toggle navigation menu</span>
+    </button>
+    <div class="flex items-center justify-between flex-1 gap-2 sm:gap-4 md:justify-end">
+      <div class="flex-1 w-full md:w-auto md:flex-none"><form id="searchbox"
+      action="../../../../search/"
+      method="get"
+      class="relative flex items-center group"
+      @keydown.k.window.meta="$refs.search.focus()">
+  <input x-ref="search"
+          name="q"
+          id="search-input"
+          type="search"
+          aria-label="Search the docs"
+          placeholder="Search ..."
+          class="inline-flex items-center font-medium transition-colors bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background border border-input hover:bg-accent focus:bg-accent hover:text-accent-foreground focus:text-accent-foreground hover:placeholder-accent-foreground py-2 px-4 relative h-9 w-full justify-start rounded-[0.5rem] text-sm text-muted-foreground sm:pr-12 md:w-40 lg:w-64" />
+  <kbd class="pointer-events-none absolute right-1.5 top-2 hidden h-5 select-none text-muted-foreground items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex group-hover:bg-accent group-hover:text-accent-foreground">
+    <span class="text-xs">⌘</span>
+    K
+  </kbd>
+</form>
+      </div>
+      <nav class="flex items-center gap-1">
+        <a href="https://github.com/rbalestr-lab/stable-datasets" title="Visit repository on GitHub" rel="noopener nofollow">
+          <div
+            class="inline-flex items-center justify-center px-0 text-sm font-medium transition-colors rounded-md hover:bg-accent hover:text-accent-foreground h-9 w-9">
+            <svg height="26px" style="margin-top:-2px;display:inline" viewBox="0 0 45 44" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M22.477.927C10.485.927.76 10.65.76 22.647c0 9.596 6.223 17.736 14.853 20.608 1.087.2 1.483-.47 1.483-1.047 0-.516-.019-1.881-.03-3.693-6.04 1.312-7.315-2.912-7.315-2.912-.988-2.51-2.412-3.178-2.412-3.178-1.972-1.346.149-1.32.149-1.32 2.18.154 3.327 2.24 3.327 2.24 1.937 3.318 5.084 2.36 6.321 1.803.197-1.403.759-2.36 1.379-2.903-4.823-.548-9.894-2.412-9.894-10.734 0-2.37.847-4.31 2.236-5.828-.224-.55-.969-2.759.214-5.748 0 0 1.822-.584 5.972 2.226 1.732-.482 3.59-.722 5.437-.732 1.845.01 3.703.25 5.437.732 4.147-2.81 5.967-2.226 5.967-2.226 1.185 2.99.44 5.198.217 5.748 1.392 1.517 2.232 3.457 2.232 5.828 0 8.344-5.078 10.18-9.916 10.717.779.67 1.474 1.996 1.474 4.021 0 2.904-.027 5.247-.027 5.96 0 .58.392 1.256 1.493 1.044C37.981 40.375 44.2 32.24 44.2 22.647c0-11.996-9.726-21.72-21.722-21.72" fill="currentColor"/></svg>
+          </div>
+        </a>
+        
+        <button @click="darkMode = !darkMode"
+          class="relative inline-flex items-center justify-center px-0 text-sm font-medium transition-colors rounded-md hover:bg-accent hover:text-accent-foreground h-9 w-9"
+          type="button"
+          title="Toggle color scheme">
+          <svg xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 96 960 960" fill="currentColor"
+            class="absolute transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0">
+            <path
+              d="M480 685q45.456 0 77.228-31.772Q589 621.456 589 576q0-45.456-31.772-77.228Q525.456 467 480 467q-45.456 0-77.228 31.772Q371 530.544 371 576q0 45.456 31.772 77.228Q434.544 685 480 685Zm0 91q-83 0-141.5-58.5T280 576q0-83 58.5-141.5T480 376q83 0 141.5 58.5T680 576q0 83-58.5 141.5T480 776ZM80 621.5q-19.152 0-32.326-13.174T34.5 576q0-19.152 13.174-32.326T80 530.5h80q19.152 0 32.326 13.174T205.5 576q0 19.152-13.174 32.326T160 621.5H80Zm720 0q-19.152 0-32.326-13.174T754.5 576q0-19.152 13.174-32.326T800 530.5h80q19.152 0 32.326 13.174T925.5 576q0 19.152-13.174 32.326T880 621.5h-80Zm-320-320q-19.152 0-32.326-13.174T434.5 256v-80q0-19.152 13.174-32.326T480 130.5q19.152 0 32.326 13.174T525.5 176v80q0 19.152-13.174 32.326T480 301.5Zm0 720q-19.152 0-32.326-13.17Q434.5 995.152 434.5 976v-80q0-19.152 13.174-32.326T480 850.5q19.152 0 32.326 13.174T525.5 896v80q0 19.152-13.174 32.33-13.174 13.17-32.326 13.17ZM222.174 382.065l-43-42Q165.5 327.391 166 308.239t13.174-33.065q13.435-13.674 32.587-13.674t32.065 13.674l42.239 43q12.674 13.435 12.555 31.706-.12 18.272-12.555 31.946-12.674 13.674-31.445 13.413-18.772-.261-32.446-13.174Zm494 494.761-42.239-43q-12.674-13.435-12.674-32.087t12.674-31.565Q686.609 756.5 705.38 757q18.772.5 32.446 13.174l43 41.761Q794.5 824.609 794 843.761t-13.174 33.065Q767.391 890.5 748.239 890.5t-32.065-13.674Zm-42-494.761Q660.5 369.391 661 350.62q.5-18.772 13.174-32.446l41.761-43Q728.609 261.5 747.761 262t33.065 13.174q13.674 13.435 13.674 32.587t-13.674 32.065l-43 42.239q-13.435 12.674-31.706 12.555-18.272-.12-31.946-12.555Zm-495 494.761Q165.5 863.391 165.5 844.239t13.674-32.065l43-42.239q13.435-12.674 32.087-12.674t31.565 12.674Q299.5 782.609 299 801.38q-.5 18.772-13.174 32.446l-41.761 43Q231.391 890.5 212.239 890t-33.065-13.174ZM480 576Z" />
+          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" height="16" width="16" viewBox="0 96 960 960" fill="currentColor"
+            class="absolute transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100">
+            <path
+              d="M480 936q-151 0-255.5-104.5T120 576q0-138 90-239.5T440 218q25-3 39 18t-1 44q-17 26-25.5 55t-8.5 61q0 90 63 153t153 63q31 0 61.5-9t54.5-25q21-14 43-1.5t19 39.5q-14 138-117.5 229T480 936Zm0-80q88 0 158-48.5T740 681q-20 5-40 8t-40 3q-123 0-209.5-86.5T364 396q0-20 3-40t8-40q-78 32-126.5 102T200 576q0 116 82 198t198 82Zm-10-270Z" />
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </div>
+</header>
+
+    <div class="flex-1"><div
+        class="container md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10"><aside id="left-sidebar"
+  class="fixed inset-y-0 left-0 md:top-14 z-50 md:z-30 bg-background md:bg-transparent transition-all duration-100 -translate-x-full md:translate-x-0 ml-0 p-6 md:p-0 md:-ml-2 md:h-[calc(100vh-3.5rem)] w-5/6 md:w-full overflow-y-auto border-r border-border md:sticky"
+  :aria-hidden="!showSidebar" :class="{ 'translate-x-0': showSidebar }">
+
+    <a href="../../../../" class="justify-start text-sm md:!hidden bg-background"><span class="font-bold text-clip whitespace-nowrap">stable-datasets</span>
+    </a>
+
+    <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0">
+      <div class="overflow-y-auto h-full w-full relative pr-6"><nav class="table w-full min-w-full my-6 lg:my-8">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../datasets/">Datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/arabic_characters/">Arabic Characters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/arabic_digits/">Arabic Digits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar10/">CIFAR-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100/">CIFAR-100</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar10_c/">CIFAR-10-C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cifar100_c/">CIFAR-100-C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars196/">CARS-196</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/coil100/">COIL-100 (Columbia Object Image Library)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/not_mnist/">not-MNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fashion_mnist/">Fashion-MNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/k_mnist/">Kuzushiji-MNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/medmnist/">MedMNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/awa2/">AWA2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/beans/">Beans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/stl10/">STL-10</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/tiny_imagenet/">Tiny ImageNet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/tiny_imagenet_c/">Tiny ImageNet-C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/imagenet_a/">ImageNet-A</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/imagenet_r/">ImageNet-R</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/e_mnist/">EMNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/fgvc_aircraft/">FGVC Aircraft</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/flowers102/">Flowers102</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/food101/">Food-101</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cub200/">CUB-200</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/country211/">Country-211</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/galaxy10/">Galaxy10 DECaLS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/hasy_v2/">HASYv2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/face_pointing/">Face Pointing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/linnaeus5/">Linnaeus 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/oxford_iiit_pet/">Oxford-IIIT Pet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/eurosat/">EuroSAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/something_something_v2/">Something-Something V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/clevrer/">CLEVRER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites/">dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_color/">Color dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_noise/">Noisy dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/dsprites_scream/">Scream dSprites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/shapes3d/">Shapes3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/cars3d/">Cars3D</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../datasets/small_norb/">SmallNORB</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../introduction/quickstart/">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../introduction/showcase/">Showcase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../introduction/contributing/">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules/">stable_datasets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../stable_datasets/">stable_datasets package</a></li>
+</ul>
+</li>
+</ul>
+
+</nav>
+      </div>
+    </div>
+    <button type="button" @click="showSidebar = false"
+      class="absolute md:hidden right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100">
+      <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 96 960 960" fill="currentColor"
+        stroke="none" class="h-4 w-4">
+        <path
+          d="M480 632 284 828q-11 11-28 11t-28-11q-11-11-11-28t11-28l196-196-196-196q-11-11-11-28t11-28q11-11 28-11t28 11l196 196 196-196q11-11 28-11t28 11q11 11 11 28t-11 28L536 576l196 196q11 11 11 28t-11 28q-11 11-28 11t-28-11L480 632Z" />
+      </svg>
+    </button>
+  </aside>
+          <main class="relative py-6 lg:gap-10 lg:py-8 xl:grid xl:grid-cols-[1fr_300px]">
+<div class="w-full min-w-0 mx-auto">
+<nav aria-label="breadcrumbs"
+     class="flex items-center mb-4 space-x-1 text-sm text-muted-foreground">
+  <a class="overflow-hidden text-ellipsis whitespace-nowrap hover:text-foreground"
+     href="../../../../">
+    <span class="hidden md:inline">stable-datasets</span>
+    <svg xmlns="http://www.w3.org/2000/svg"
+         height="18"
+         width="18"
+         viewBox="0 96 960 960"
+         aria-label="Home"
+         fill="currentColor"
+         stroke="none"
+         class="md:hidden">
+      <path d="M240 856h120V616h240v240h120V496L480 316 240 496v360Zm-80 80V456l320-240 320 240v480H520V696h-80v240H160Zm320-350Z" />
+    </svg>
+  </a>
+  
+<div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap"
+       href="../../../">Module code</a>
+    
+<div class="mr-1">/</div><span aria-current="page"
+        class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">stable_datasets.images.imagenet_a</span>
+</nav>
+
+    <div id="content" role="main">
+      <h1>Source code for stable_datasets.images.imagenet_a</h1><div class="highlight"><pre>
+<span></span><code><span id="line-1"><span class="sd">"""ImageNet-A: natural adversarial examples for 200 ImageNet classes."""</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+</span><span id="line-4"><span class="kn">import</span><span class="w"> </span><span class="nn">tarfile</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">PILImage</span>
+</span><span id="line-7">
+</span><span id="line-8"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.images._imagenet_wnids</span><span class="w"> </span><span class="kn">import</span> <span class="n">WNID_TO_IDX</span>
+</span><span id="line-9"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassLabel</span><span class="p">,</span> <span class="n">DatasetInfo</span><span class="p">,</span> <span class="n">DatasetSource</span><span class="p">,</span> <span class="n">DownloadInfo</span><span class="p">,</span> <span class="n">Features</span><span class="p">,</span> <span class="n">Version</span>
+</span><span id="line-10"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">ImageFeature</span>
+</span><span id="line-11"><span class="kn">from</span><span class="w"> </span><span class="nn">stable_datasets.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDatasetBuilder</span>
+</span><span id="line-12">
+</span><span id="line-13">
+</span><span id="line-14"><span class="c1"># The 200 ImageNet classes used by ImageNet-A as (WordNet ID, readable name) pairs, copied</span>
+</span><span id="line-15"><span class="c1"># from the README.txt shipped inside the official archive. They are sorted by WordNet ID,</span>
+</span><span id="line-16"><span class="c1"># which is the same order as the canonical ImageNet-1K list, so label i means entry i here.</span>
+</span><span id="line-17"><span class="n">_IMAGENET_A_CLASSES</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="line-18">    <span class="p">(</span><span class="s2">"n01498041"</span><span class="p">,</span> <span class="s2">"stingray"</span><span class="p">),</span>
+</span><span id="line-19">    <span class="p">(</span><span class="s2">"n01531178"</span><span class="p">,</span> <span class="s2">"goldfinch"</span><span class="p">),</span>
+</span><span id="line-20">    <span class="p">(</span><span class="s2">"n01534433"</span><span class="p">,</span> <span class="s2">"junco"</span><span class="p">),</span>
+</span><span id="line-21">    <span class="p">(</span><span class="s2">"n01558993"</span><span class="p">,</span> <span class="s2">"American robin"</span><span class="p">),</span>
+</span><span id="line-22">    <span class="p">(</span><span class="s2">"n01580077"</span><span class="p">,</span> <span class="s2">"jay"</span><span class="p">),</span>
+</span><span id="line-23">    <span class="p">(</span><span class="s2">"n01614925"</span><span class="p">,</span> <span class="s2">"bald eagle"</span><span class="p">),</span>
+</span><span id="line-24">    <span class="p">(</span><span class="s2">"n01616318"</span><span class="p">,</span> <span class="s2">"vulture"</span><span class="p">),</span>
+</span><span id="line-25">    <span class="p">(</span><span class="s2">"n01631663"</span><span class="p">,</span> <span class="s2">"newt"</span><span class="p">),</span>
+</span><span id="line-26">    <span class="p">(</span><span class="s2">"n01641577"</span><span class="p">,</span> <span class="s2">"American bullfrog"</span><span class="p">),</span>
+</span><span id="line-27">    <span class="p">(</span><span class="s2">"n01669191"</span><span class="p">,</span> <span class="s2">"box turtle"</span><span class="p">),</span>
+</span><span id="line-28">    <span class="p">(</span><span class="s2">"n01677366"</span><span class="p">,</span> <span class="s2">"green iguana"</span><span class="p">),</span>
+</span><span id="line-29">    <span class="p">(</span><span class="s2">"n01687978"</span><span class="p">,</span> <span class="s2">"agama"</span><span class="p">),</span>
+</span><span id="line-30">    <span class="p">(</span><span class="s2">"n01694178"</span><span class="p">,</span> <span class="s2">"chameleon"</span><span class="p">),</span>
+</span><span id="line-31">    <span class="p">(</span><span class="s2">"n01698640"</span><span class="p">,</span> <span class="s2">"American alligator"</span><span class="p">),</span>
+</span><span id="line-32">    <span class="p">(</span><span class="s2">"n01735189"</span><span class="p">,</span> <span class="s2">"garter snake"</span><span class="p">),</span>
+</span><span id="line-33">    <span class="p">(</span><span class="s2">"n01770081"</span><span class="p">,</span> <span class="s2">"harvestman"</span><span class="p">),</span>
+</span><span id="line-34">    <span class="p">(</span><span class="s2">"n01770393"</span><span class="p">,</span> <span class="s2">"scorpion"</span><span class="p">),</span>
+</span><span id="line-35">    <span class="p">(</span><span class="s2">"n01774750"</span><span class="p">,</span> <span class="s2">"tarantula"</span><span class="p">),</span>
+</span><span id="line-36">    <span class="p">(</span><span class="s2">"n01784675"</span><span class="p">,</span> <span class="s2">"centipede"</span><span class="p">),</span>
+</span><span id="line-37">    <span class="p">(</span><span class="s2">"n01819313"</span><span class="p">,</span> <span class="s2">"sulphur-crested cockatoo"</span><span class="p">),</span>
+</span><span id="line-38">    <span class="p">(</span><span class="s2">"n01820546"</span><span class="p">,</span> <span class="s2">"lorikeet"</span><span class="p">),</span>
+</span><span id="line-39">    <span class="p">(</span><span class="s2">"n01833805"</span><span class="p">,</span> <span class="s2">"hummingbird"</span><span class="p">),</span>
+</span><span id="line-40">    <span class="p">(</span><span class="s2">"n01843383"</span><span class="p">,</span> <span class="s2">"toucan"</span><span class="p">),</span>
+</span><span id="line-41">    <span class="p">(</span><span class="s2">"n01847000"</span><span class="p">,</span> <span class="s2">"duck"</span><span class="p">),</span>
+</span><span id="line-42">    <span class="p">(</span><span class="s2">"n01855672"</span><span class="p">,</span> <span class="s2">"goose"</span><span class="p">),</span>
+</span><span id="line-43">    <span class="p">(</span><span class="s2">"n01882714"</span><span class="p">,</span> <span class="s2">"koala"</span><span class="p">),</span>
+</span><span id="line-44">    <span class="p">(</span><span class="s2">"n01910747"</span><span class="p">,</span> <span class="s2">"jellyfish"</span><span class="p">),</span>
+</span><span id="line-45">    <span class="p">(</span><span class="s2">"n01914609"</span><span class="p">,</span> <span class="s2">"sea anemone"</span><span class="p">),</span>
+</span><span id="line-46">    <span class="p">(</span><span class="s2">"n01924916"</span><span class="p">,</span> <span class="s2">"flatworm"</span><span class="p">),</span>
+</span><span id="line-47">    <span class="p">(</span><span class="s2">"n01944390"</span><span class="p">,</span> <span class="s2">"snail"</span><span class="p">),</span>
+</span><span id="line-48">    <span class="p">(</span><span class="s2">"n01985128"</span><span class="p">,</span> <span class="s2">"crayfish"</span><span class="p">),</span>
+</span><span id="line-49">    <span class="p">(</span><span class="s2">"n01986214"</span><span class="p">,</span> <span class="s2">"hermit crab"</span><span class="p">),</span>
+</span><span id="line-50">    <span class="p">(</span><span class="s2">"n02007558"</span><span class="p">,</span> <span class="s2">"flamingo"</span><span class="p">),</span>
+</span><span id="line-51">    <span class="p">(</span><span class="s2">"n02009912"</span><span class="p">,</span> <span class="s2">"great egret"</span><span class="p">),</span>
+</span><span id="line-52">    <span class="p">(</span><span class="s2">"n02037110"</span><span class="p">,</span> <span class="s2">"oystercatcher"</span><span class="p">),</span>
+</span><span id="line-53">    <span class="p">(</span><span class="s2">"n02051845"</span><span class="p">,</span> <span class="s2">"pelican"</span><span class="p">),</span>
+</span><span id="line-54">    <span class="p">(</span><span class="s2">"n02077923"</span><span class="p">,</span> <span class="s2">"sea lion"</span><span class="p">),</span>
+</span><span id="line-55">    <span class="p">(</span><span class="s2">"n02085620"</span><span class="p">,</span> <span class="s2">"Chihuahua"</span><span class="p">),</span>
+</span><span id="line-56">    <span class="p">(</span><span class="s2">"n02099601"</span><span class="p">,</span> <span class="s2">"Golden Retriever"</span><span class="p">),</span>
+</span><span id="line-57">    <span class="p">(</span><span class="s2">"n02106550"</span><span class="p">,</span> <span class="s2">"Rottweiler"</span><span class="p">),</span>
+</span><span id="line-58">    <span class="p">(</span><span class="s2">"n02106662"</span><span class="p">,</span> <span class="s2">"German Shepherd Dog"</span><span class="p">),</span>
+</span><span id="line-59">    <span class="p">(</span><span class="s2">"n02110958"</span><span class="p">,</span> <span class="s2">"pug"</span><span class="p">),</span>
+</span><span id="line-60">    <span class="p">(</span><span class="s2">"n02119022"</span><span class="p">,</span> <span class="s2">"red fox"</span><span class="p">),</span>
+</span><span id="line-61">    <span class="p">(</span><span class="s2">"n02123394"</span><span class="p">,</span> <span class="s2">"Persian cat"</span><span class="p">),</span>
+</span><span id="line-62">    <span class="p">(</span><span class="s2">"n02127052"</span><span class="p">,</span> <span class="s2">"lynx"</span><span class="p">),</span>
+</span><span id="line-63">    <span class="p">(</span><span class="s2">"n02129165"</span><span class="p">,</span> <span class="s2">"lion"</span><span class="p">),</span>
+</span><span id="line-64">    <span class="p">(</span><span class="s2">"n02133161"</span><span class="p">,</span> <span class="s2">"American black bear"</span><span class="p">),</span>
+</span><span id="line-65">    <span class="p">(</span><span class="s2">"n02137549"</span><span class="p">,</span> <span class="s2">"mongoose"</span><span class="p">),</span>
+</span><span id="line-66">    <span class="p">(</span><span class="s2">"n02165456"</span><span class="p">,</span> <span class="s2">"ladybug"</span><span class="p">),</span>
+</span><span id="line-67">    <span class="p">(</span><span class="s2">"n02174001"</span><span class="p">,</span> <span class="s2">"rhinoceros beetle"</span><span class="p">),</span>
+</span><span id="line-68">    <span class="p">(</span><span class="s2">"n02177972"</span><span class="p">,</span> <span class="s2">"weevil"</span><span class="p">),</span>
+</span><span id="line-69">    <span class="p">(</span><span class="s2">"n02190166"</span><span class="p">,</span> <span class="s2">"fly"</span><span class="p">),</span>
+</span><span id="line-70">    <span class="p">(</span><span class="s2">"n02206856"</span><span class="p">,</span> <span class="s2">"bee"</span><span class="p">),</span>
+</span><span id="line-71">    <span class="p">(</span><span class="s2">"n02219486"</span><span class="p">,</span> <span class="s2">"ant"</span><span class="p">),</span>
+</span><span id="line-72">    <span class="p">(</span><span class="s2">"n02226429"</span><span class="p">,</span> <span class="s2">"grasshopper"</span><span class="p">),</span>
+</span><span id="line-73">    <span class="p">(</span><span class="s2">"n02231487"</span><span class="p">,</span> <span class="s2">"stick insect"</span><span class="p">),</span>
+</span><span id="line-74">    <span class="p">(</span><span class="s2">"n02233338"</span><span class="p">,</span> <span class="s2">"cockroach"</span><span class="p">),</span>
+</span><span id="line-75">    <span class="p">(</span><span class="s2">"n02236044"</span><span class="p">,</span> <span class="s2">"mantis"</span><span class="p">),</span>
+</span><span id="line-76">    <span class="p">(</span><span class="s2">"n02259212"</span><span class="p">,</span> <span class="s2">"leafhopper"</span><span class="p">),</span>
+</span><span id="line-77">    <span class="p">(</span><span class="s2">"n02268443"</span><span class="p">,</span> <span class="s2">"dragonfly"</span><span class="p">),</span>
+</span><span id="line-78">    <span class="p">(</span><span class="s2">"n02279972"</span><span class="p">,</span> <span class="s2">"monarch butterfly"</span><span class="p">),</span>
+</span><span id="line-79">    <span class="p">(</span><span class="s2">"n02280649"</span><span class="p">,</span> <span class="s2">"small white"</span><span class="p">),</span>
+</span><span id="line-80">    <span class="p">(</span><span class="s2">"n02281787"</span><span class="p">,</span> <span class="s2">"gossamer-winged butterfly"</span><span class="p">),</span>
+</span><span id="line-81">    <span class="p">(</span><span class="s2">"n02317335"</span><span class="p">,</span> <span class="s2">"starfish"</span><span class="p">),</span>
+</span><span id="line-82">    <span class="p">(</span><span class="s2">"n02325366"</span><span class="p">,</span> <span class="s2">"cottontail rabbit"</span><span class="p">),</span>
+</span><span id="line-83">    <span class="p">(</span><span class="s2">"n02346627"</span><span class="p">,</span> <span class="s2">"porcupine"</span><span class="p">),</span>
+</span><span id="line-84">    <span class="p">(</span><span class="s2">"n02356798"</span><span class="p">,</span> <span class="s2">"fox squirrel"</span><span class="p">),</span>
+</span><span id="line-85">    <span class="p">(</span><span class="s2">"n02361337"</span><span class="p">,</span> <span class="s2">"marmot"</span><span class="p">),</span>
+</span><span id="line-86">    <span class="p">(</span><span class="s2">"n02410509"</span><span class="p">,</span> <span class="s2">"bison"</span><span class="p">),</span>
+</span><span id="line-87">    <span class="p">(</span><span class="s2">"n02445715"</span><span class="p">,</span> <span class="s2">"skunk"</span><span class="p">),</span>
+</span><span id="line-88">    <span class="p">(</span><span class="s2">"n02454379"</span><span class="p">,</span> <span class="s2">"armadillo"</span><span class="p">),</span>
+</span><span id="line-89">    <span class="p">(</span><span class="s2">"n02486410"</span><span class="p">,</span> <span class="s2">"baboon"</span><span class="p">),</span>
+</span><span id="line-90">    <span class="p">(</span><span class="s2">"n02492035"</span><span class="p">,</span> <span class="s2">"white-headed capuchin"</span><span class="p">),</span>
+</span><span id="line-91">    <span class="p">(</span><span class="s2">"n02504458"</span><span class="p">,</span> <span class="s2">"African bush elephant"</span><span class="p">),</span>
+</span><span id="line-92">    <span class="p">(</span><span class="s2">"n02655020"</span><span class="p">,</span> <span class="s2">"pufferfish"</span><span class="p">),</span>
+</span><span id="line-93">    <span class="p">(</span><span class="s2">"n02669723"</span><span class="p">,</span> <span class="s2">"academic gown"</span><span class="p">),</span>
+</span><span id="line-94">    <span class="p">(</span><span class="s2">"n02672831"</span><span class="p">,</span> <span class="s2">"accordion"</span><span class="p">),</span>
+</span><span id="line-95">    <span class="p">(</span><span class="s2">"n02676566"</span><span class="p">,</span> <span class="s2">"acoustic guitar"</span><span class="p">),</span>
+</span><span id="line-96">    <span class="p">(</span><span class="s2">"n02690373"</span><span class="p">,</span> <span class="s2">"airliner"</span><span class="p">),</span>
+</span><span id="line-97">    <span class="p">(</span><span class="s2">"n02701002"</span><span class="p">,</span> <span class="s2">"ambulance"</span><span class="p">),</span>
+</span><span id="line-98">    <span class="p">(</span><span class="s2">"n02730930"</span><span class="p">,</span> <span class="s2">"apron"</span><span class="p">),</span>
+</span><span id="line-99">    <span class="p">(</span><span class="s2">"n02777292"</span><span class="p">,</span> <span class="s2">"balance beam"</span><span class="p">),</span>
+</span><span id="line-100">    <span class="p">(</span><span class="s2">"n02782093"</span><span class="p">,</span> <span class="s2">"balloon"</span><span class="p">),</span>
+</span><span id="line-101">    <span class="p">(</span><span class="s2">"n02787622"</span><span class="p">,</span> <span class="s2">"banjo"</span><span class="p">),</span>
+</span><span id="line-102">    <span class="p">(</span><span class="s2">"n02793495"</span><span class="p">,</span> <span class="s2">"barn"</span><span class="p">),</span>
+</span><span id="line-103">    <span class="p">(</span><span class="s2">"n02797295"</span><span class="p">,</span> <span class="s2">"wheelbarrow"</span><span class="p">),</span>
+</span><span id="line-104">    <span class="p">(</span><span class="s2">"n02802426"</span><span class="p">,</span> <span class="s2">"basketball"</span><span class="p">),</span>
+</span><span id="line-105">    <span class="p">(</span><span class="s2">"n02814860"</span><span class="p">,</span> <span class="s2">"lighthouse"</span><span class="p">),</span>
+</span><span id="line-106">    <span class="p">(</span><span class="s2">"n02815834"</span><span class="p">,</span> <span class="s2">"beaker"</span><span class="p">),</span>
+</span><span id="line-107">    <span class="p">(</span><span class="s2">"n02837789"</span><span class="p">,</span> <span class="s2">"bikini"</span><span class="p">),</span>
+</span><span id="line-108">    <span class="p">(</span><span class="s2">"n02879718"</span><span class="p">,</span> <span class="s2">"bow"</span><span class="p">),</span>
+</span><span id="line-109">    <span class="p">(</span><span class="s2">"n02883205"</span><span class="p">,</span> <span class="s2">"bow tie"</span><span class="p">),</span>
+</span><span id="line-110">    <span class="p">(</span><span class="s2">"n02895154"</span><span class="p">,</span> <span class="s2">"breastplate"</span><span class="p">),</span>
+</span><span id="line-111">    <span class="p">(</span><span class="s2">"n02906734"</span><span class="p">,</span> <span class="s2">"broom"</span><span class="p">),</span>
+</span><span id="line-112">    <span class="p">(</span><span class="s2">"n02948072"</span><span class="p">,</span> <span class="s2">"candle"</span><span class="p">),</span>
+</span><span id="line-113">    <span class="p">(</span><span class="s2">"n02951358"</span><span class="p">,</span> <span class="s2">"canoe"</span><span class="p">),</span>
+</span><span id="line-114">    <span class="p">(</span><span class="s2">"n02980441"</span><span class="p">,</span> <span class="s2">"castle"</span><span class="p">),</span>
+</span><span id="line-115">    <span class="p">(</span><span class="s2">"n02992211"</span><span class="p">,</span> <span class="s2">"cello"</span><span class="p">),</span>
+</span><span id="line-116">    <span class="p">(</span><span class="s2">"n02999410"</span><span class="p">,</span> <span class="s2">"chain"</span><span class="p">),</span>
+</span><span id="line-117">    <span class="p">(</span><span class="s2">"n03014705"</span><span class="p">,</span> <span class="s2">"chest"</span><span class="p">),</span>
+</span><span id="line-118">    <span class="p">(</span><span class="s2">"n03026506"</span><span class="p">,</span> <span class="s2">"Christmas stocking"</span><span class="p">),</span>
+</span><span id="line-119">    <span class="p">(</span><span class="s2">"n03124043"</span><span class="p">,</span> <span class="s2">"cowboy boot"</span><span class="p">),</span>
+</span><span id="line-120">    <span class="p">(</span><span class="s2">"n03125729"</span><span class="p">,</span> <span class="s2">"cradle"</span><span class="p">),</span>
+</span><span id="line-121">    <span class="p">(</span><span class="s2">"n03187595"</span><span class="p">,</span> <span class="s2">"rotary dial telephone"</span><span class="p">),</span>
+</span><span id="line-122">    <span class="p">(</span><span class="s2">"n03196217"</span><span class="p">,</span> <span class="s2">"digital clock"</span><span class="p">),</span>
+</span><span id="line-123">    <span class="p">(</span><span class="s2">"n03223299"</span><span class="p">,</span> <span class="s2">"doormat"</span><span class="p">),</span>
+</span><span id="line-124">    <span class="p">(</span><span class="s2">"n03250847"</span><span class="p">,</span> <span class="s2">"drumstick"</span><span class="p">),</span>
+</span><span id="line-125">    <span class="p">(</span><span class="s2">"n03255030"</span><span class="p">,</span> <span class="s2">"dumbbell"</span><span class="p">),</span>
+</span><span id="line-126">    <span class="p">(</span><span class="s2">"n03291819"</span><span class="p">,</span> <span class="s2">"envelope"</span><span class="p">),</span>
+</span><span id="line-127">    <span class="p">(</span><span class="s2">"n03325584"</span><span class="p">,</span> <span class="s2">"feather boa"</span><span class="p">),</span>
+</span><span id="line-128">    <span class="p">(</span><span class="s2">"n03355925"</span><span class="p">,</span> <span class="s2">"flagpole"</span><span class="p">),</span>
+</span><span id="line-129">    <span class="p">(</span><span class="s2">"n03384352"</span><span class="p">,</span> <span class="s2">"forklift"</span><span class="p">),</span>
+</span><span id="line-130">    <span class="p">(</span><span class="s2">"n03388043"</span><span class="p">,</span> <span class="s2">"fountain"</span><span class="p">),</span>
+</span><span id="line-131">    <span class="p">(</span><span class="s2">"n03417042"</span><span class="p">,</span> <span class="s2">"garbage truck"</span><span class="p">),</span>
+</span><span id="line-132">    <span class="p">(</span><span class="s2">"n03443371"</span><span class="p">,</span> <span class="s2">"goblet"</span><span class="p">),</span>
+</span><span id="line-133">    <span class="p">(</span><span class="s2">"n03444034"</span><span class="p">,</span> <span class="s2">"go-kart"</span><span class="p">),</span>
+</span><span id="line-134">    <span class="p">(</span><span class="s2">"n03445924"</span><span class="p">,</span> <span class="s2">"golf cart"</span><span class="p">),</span>
+</span><span id="line-135">    <span class="p">(</span><span class="s2">"n03452741"</span><span class="p">,</span> <span class="s2">"grand piano"</span><span class="p">),</span>
+</span><span id="line-136">    <span class="p">(</span><span class="s2">"n03483316"</span><span class="p">,</span> <span class="s2">"hair dryer"</span><span class="p">),</span>
+</span><span id="line-137">    <span class="p">(</span><span class="s2">"n03584829"</span><span class="p">,</span> <span class="s2">"clothes iron"</span><span class="p">),</span>
+</span><span id="line-138">    <span class="p">(</span><span class="s2">"n03590841"</span><span class="p">,</span> <span class="s2">"jack-o'-lantern"</span><span class="p">),</span>
+</span><span id="line-139">    <span class="p">(</span><span class="s2">"n03594945"</span><span class="p">,</span> <span class="s2">"jeep"</span><span class="p">),</span>
+</span><span id="line-140">    <span class="p">(</span><span class="s2">"n03617480"</span><span class="p">,</span> <span class="s2">"kimono"</span><span class="p">),</span>
+</span><span id="line-141">    <span class="p">(</span><span class="s2">"n03666591"</span><span class="p">,</span> <span class="s2">"lighter"</span><span class="p">),</span>
+</span><span id="line-142">    <span class="p">(</span><span class="s2">"n03670208"</span><span class="p">,</span> <span class="s2">"limousine"</span><span class="p">),</span>
+</span><span id="line-143">    <span class="p">(</span><span class="s2">"n03717622"</span><span class="p">,</span> <span class="s2">"manhole cover"</span><span class="p">),</span>
+</span><span id="line-144">    <span class="p">(</span><span class="s2">"n03720891"</span><span class="p">,</span> <span class="s2">"maraca"</span><span class="p">),</span>
+</span><span id="line-145">    <span class="p">(</span><span class="s2">"n03721384"</span><span class="p">,</span> <span class="s2">"marimba"</span><span class="p">),</span>
+</span><span id="line-146">    <span class="p">(</span><span class="s2">"n03724870"</span><span class="p">,</span> <span class="s2">"mask"</span><span class="p">),</span>
+</span><span id="line-147">    <span class="p">(</span><span class="s2">"n03775071"</span><span class="p">,</span> <span class="s2">"mitten"</span><span class="p">),</span>
+</span><span id="line-148">    <span class="p">(</span><span class="s2">"n03788195"</span><span class="p">,</span> <span class="s2">"mosque"</span><span class="p">),</span>
+</span><span id="line-149">    <span class="p">(</span><span class="s2">"n03804744"</span><span class="p">,</span> <span class="s2">"nail"</span><span class="p">),</span>
+</span><span id="line-150">    <span class="p">(</span><span class="s2">"n03837869"</span><span class="p">,</span> <span class="s2">"obelisk"</span><span class="p">),</span>
+</span><span id="line-151">    <span class="p">(</span><span class="s2">"n03840681"</span><span class="p">,</span> <span class="s2">"ocarina"</span><span class="p">),</span>
+</span><span id="line-152">    <span class="p">(</span><span class="s2">"n03854065"</span><span class="p">,</span> <span class="s2">"organ"</span><span class="p">),</span>
+</span><span id="line-153">    <span class="p">(</span><span class="s2">"n03888257"</span><span class="p">,</span> <span class="s2">"parachute"</span><span class="p">),</span>
+</span><span id="line-154">    <span class="p">(</span><span class="s2">"n03891332"</span><span class="p">,</span> <span class="s2">"parking meter"</span><span class="p">),</span>
+</span><span id="line-155">    <span class="p">(</span><span class="s2">"n03935335"</span><span class="p">,</span> <span class="s2">"piggy bank"</span><span class="p">),</span>
+</span><span id="line-156">    <span class="p">(</span><span class="s2">"n03982430"</span><span class="p">,</span> <span class="s2">"billiard table"</span><span class="p">),</span>
+</span><span id="line-157">    <span class="p">(</span><span class="s2">"n04019541"</span><span class="p">,</span> <span class="s2">"hockey puck"</span><span class="p">),</span>
+</span><span id="line-158">    <span class="p">(</span><span class="s2">"n04033901"</span><span class="p">,</span> <span class="s2">"quill"</span><span class="p">),</span>
+</span><span id="line-159">    <span class="p">(</span><span class="s2">"n04039381"</span><span class="p">,</span> <span class="s2">"racket"</span><span class="p">),</span>
+</span><span id="line-160">    <span class="p">(</span><span class="s2">"n04067472"</span><span class="p">,</span> <span class="s2">"reel"</span><span class="p">),</span>
+</span><span id="line-161">    <span class="p">(</span><span class="s2">"n04086273"</span><span class="p">,</span> <span class="s2">"revolver"</span><span class="p">),</span>
+</span><span id="line-162">    <span class="p">(</span><span class="s2">"n04099969"</span><span class="p">,</span> <span class="s2">"rocking chair"</span><span class="p">),</span>
+</span><span id="line-163">    <span class="p">(</span><span class="s2">"n04118538"</span><span class="p">,</span> <span class="s2">"rugby ball"</span><span class="p">),</span>
+</span><span id="line-164">    <span class="p">(</span><span class="s2">"n04131690"</span><span class="p">,</span> <span class="s2">"salt shaker"</span><span class="p">),</span>
+</span><span id="line-165">    <span class="p">(</span><span class="s2">"n04133789"</span><span class="p">,</span> <span class="s2">"sandal"</span><span class="p">),</span>
+</span><span id="line-166">    <span class="p">(</span><span class="s2">"n04141076"</span><span class="p">,</span> <span class="s2">"saxophone"</span><span class="p">),</span>
+</span><span id="line-167">    <span class="p">(</span><span class="s2">"n04146614"</span><span class="p">,</span> <span class="s2">"school bus"</span><span class="p">),</span>
+</span><span id="line-168">    <span class="p">(</span><span class="s2">"n04147183"</span><span class="p">,</span> <span class="s2">"schooner"</span><span class="p">),</span>
+</span><span id="line-169">    <span class="p">(</span><span class="s2">"n04179913"</span><span class="p">,</span> <span class="s2">"sewing machine"</span><span class="p">),</span>
+</span><span id="line-170">    <span class="p">(</span><span class="s2">"n04208210"</span><span class="p">,</span> <span class="s2">"shovel"</span><span class="p">),</span>
+</span><span id="line-171">    <span class="p">(</span><span class="s2">"n04235860"</span><span class="p">,</span> <span class="s2">"sleeping bag"</span><span class="p">),</span>
+</span><span id="line-172">    <span class="p">(</span><span class="s2">"n04252077"</span><span class="p">,</span> <span class="s2">"snowmobile"</span><span class="p">),</span>
+</span><span id="line-173">    <span class="p">(</span><span class="s2">"n04252225"</span><span class="p">,</span> <span class="s2">"snowplow"</span><span class="p">),</span>
+</span><span id="line-174">    <span class="p">(</span><span class="s2">"n04254120"</span><span class="p">,</span> <span class="s2">"soap dispenser"</span><span class="p">),</span>
+</span><span id="line-175">    <span class="p">(</span><span class="s2">"n04270147"</span><span class="p">,</span> <span class="s2">"spatula"</span><span class="p">),</span>
+</span><span id="line-176">    <span class="p">(</span><span class="s2">"n04275548"</span><span class="p">,</span> <span class="s2">"spider web"</span><span class="p">),</span>
+</span><span id="line-177">    <span class="p">(</span><span class="s2">"n04310018"</span><span class="p">,</span> <span class="s2">"steam locomotive"</span><span class="p">),</span>
+</span><span id="line-178">    <span class="p">(</span><span class="s2">"n04317175"</span><span class="p">,</span> <span class="s2">"stethoscope"</span><span class="p">),</span>
+</span><span id="line-179">    <span class="p">(</span><span class="s2">"n04344873"</span><span class="p">,</span> <span class="s2">"couch"</span><span class="p">),</span>
+</span><span id="line-180">    <span class="p">(</span><span class="s2">"n04347754"</span><span class="p">,</span> <span class="s2">"submarine"</span><span class="p">),</span>
+</span><span id="line-181">    <span class="p">(</span><span class="s2">"n04355338"</span><span class="p">,</span> <span class="s2">"sundial"</span><span class="p">),</span>
+</span><span id="line-182">    <span class="p">(</span><span class="s2">"n04366367"</span><span class="p">,</span> <span class="s2">"suspension bridge"</span><span class="p">),</span>
+</span><span id="line-183">    <span class="p">(</span><span class="s2">"n04376876"</span><span class="p">,</span> <span class="s2">"syringe"</span><span class="p">),</span>
+</span><span id="line-184">    <span class="p">(</span><span class="s2">"n04389033"</span><span class="p">,</span> <span class="s2">"tank"</span><span class="p">),</span>
+</span><span id="line-185">    <span class="p">(</span><span class="s2">"n04399382"</span><span class="p">,</span> <span class="s2">"teddy bear"</span><span class="p">),</span>
+</span><span id="line-186">    <span class="p">(</span><span class="s2">"n04442312"</span><span class="p">,</span> <span class="s2">"toaster"</span><span class="p">),</span>
+</span><span id="line-187">    <span class="p">(</span><span class="s2">"n04456115"</span><span class="p">,</span> <span class="s2">"torch"</span><span class="p">),</span>
+</span><span id="line-188">    <span class="p">(</span><span class="s2">"n04482393"</span><span class="p">,</span> <span class="s2">"tricycle"</span><span class="p">),</span>
+</span><span id="line-189">    <span class="p">(</span><span class="s2">"n04507155"</span><span class="p">,</span> <span class="s2">"umbrella"</span><span class="p">),</span>
+</span><span id="line-190">    <span class="p">(</span><span class="s2">"n04509417"</span><span class="p">,</span> <span class="s2">"unicycle"</span><span class="p">),</span>
+</span><span id="line-191">    <span class="p">(</span><span class="s2">"n04532670"</span><span class="p">,</span> <span class="s2">"viaduct"</span><span class="p">),</span>
+</span><span id="line-192">    <span class="p">(</span><span class="s2">"n04540053"</span><span class="p">,</span> <span class="s2">"volleyball"</span><span class="p">),</span>
+</span><span id="line-193">    <span class="p">(</span><span class="s2">"n04554684"</span><span class="p">,</span> <span class="s2">"washing machine"</span><span class="p">),</span>
+</span><span id="line-194">    <span class="p">(</span><span class="s2">"n04562935"</span><span class="p">,</span> <span class="s2">"water tower"</span><span class="p">),</span>
+</span><span id="line-195">    <span class="p">(</span><span class="s2">"n04591713"</span><span class="p">,</span> <span class="s2">"wine bottle"</span><span class="p">),</span>
+</span><span id="line-196">    <span class="p">(</span><span class="s2">"n04606251"</span><span class="p">,</span> <span class="s2">"shipwreck"</span><span class="p">),</span>
+</span><span id="line-197">    <span class="p">(</span><span class="s2">"n07583066"</span><span class="p">,</span> <span class="s2">"guacamole"</span><span class="p">),</span>
+</span><span id="line-198">    <span class="p">(</span><span class="s2">"n07695742"</span><span class="p">,</span> <span class="s2">"pretzel"</span><span class="p">),</span>
+</span><span id="line-199">    <span class="p">(</span><span class="s2">"n07697313"</span><span class="p">,</span> <span class="s2">"cheeseburger"</span><span class="p">),</span>
+</span><span id="line-200">    <span class="p">(</span><span class="s2">"n07697537"</span><span class="p">,</span> <span class="s2">"hot dog"</span><span class="p">),</span>
+</span><span id="line-201">    <span class="p">(</span><span class="s2">"n07714990"</span><span class="p">,</span> <span class="s2">"broccoli"</span><span class="p">),</span>
+</span><span id="line-202">    <span class="p">(</span><span class="s2">"n07718472"</span><span class="p">,</span> <span class="s2">"cucumber"</span><span class="p">),</span>
+</span><span id="line-203">    <span class="p">(</span><span class="s2">"n07720875"</span><span class="p">,</span> <span class="s2">"bell pepper"</span><span class="p">),</span>
+</span><span id="line-204">    <span class="p">(</span><span class="s2">"n07734744"</span><span class="p">,</span> <span class="s2">"mushroom"</span><span class="p">),</span>
+</span><span id="line-205">    <span class="p">(</span><span class="s2">"n07749582"</span><span class="p">,</span> <span class="s2">"lemon"</span><span class="p">),</span>
+</span><span id="line-206">    <span class="p">(</span><span class="s2">"n07753592"</span><span class="p">,</span> <span class="s2">"banana"</span><span class="p">),</span>
+</span><span id="line-207">    <span class="p">(</span><span class="s2">"n07760859"</span><span class="p">,</span> <span class="s2">"custard apple"</span><span class="p">),</span>
+</span><span id="line-208">    <span class="p">(</span><span class="s2">"n07768694"</span><span class="p">,</span> <span class="s2">"pomegranate"</span><span class="p">),</span>
+</span><span id="line-209">    <span class="p">(</span><span class="s2">"n07831146"</span><span class="p">,</span> <span class="s2">"carbonara"</span><span class="p">),</span>
+</span><span id="line-210">    <span class="p">(</span><span class="s2">"n09229709"</span><span class="p">,</span> <span class="s2">"bubble"</span><span class="p">),</span>
+</span><span id="line-211">    <span class="p">(</span><span class="s2">"n09246464"</span><span class="p">,</span> <span class="s2">"cliff"</span><span class="p">),</span>
+</span><span id="line-212">    <span class="p">(</span><span class="s2">"n09472597"</span><span class="p">,</span> <span class="s2">"volcano"</span><span class="p">),</span>
+</span><span id="line-213">    <span class="p">(</span><span class="s2">"n09835506"</span><span class="p">,</span> <span class="s2">"baseball player"</span><span class="p">),</span>
+</span><span id="line-214">    <span class="p">(</span><span class="s2">"n11879895"</span><span class="p">,</span> <span class="s2">"rapeseed"</span><span class="p">),</span>
+</span><span id="line-215">    <span class="p">(</span><span class="s2">"n12057211"</span><span class="p">,</span> <span class="s2">"yellow lady's slipper"</span><span class="p">),</span>
+</span><span id="line-216">    <span class="p">(</span><span class="s2">"n12144580"</span><span class="p">,</span> <span class="s2">"corn"</span><span class="p">),</span>
+</span><span id="line-217">    <span class="p">(</span><span class="s2">"n12267677"</span><span class="p">,</span> <span class="s2">"acorn"</span><span class="p">),</span>
+</span><span id="line-218"><span class="p">]</span>
+</span><span id="line-219">
+</span><span id="line-220"><span class="n">IMAGENET_A_WNIDS</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">wnid</span> <span class="k">for</span> <span class="n">wnid</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_IMAGENET_A_CLASSES</span><span class="p">]</span>
+</span><span id="line-221"><span class="n">IMAGENET_A_CLASS_NAMES</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_IMAGENET_A_CLASSES</span><span class="p">]</span>
+</span><span id="line-222">
+</span><span id="line-223"><span class="c1"># IMAGENET_A_TO_IN1K[i] is the ImageNet-1K class index of ImageNet-A label i.</span>
+</span><span id="line-224"><span class="c1"># Use it to evaluate a 1000-way ImageNet classifier: keep only these 200 logits.</span>
+</span><span id="line-225"><span class="n">IMAGENET_A_TO_IN1K</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">WNID_TO_IDX</span><span class="p">[</span><span class="n">wnid</span><span class="p">]</span> <span class="k">for</span> <span class="n">wnid</span> <span class="ow">in</span> <span class="n">IMAGENET_A_WNIDS</span><span class="p">]</span>
+</span><span id="line-226">
+</span><span id="line-227"><span class="n">_WNID_TO_LABEL</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">wnid</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">wnid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">IMAGENET_A_WNIDS</span><span class="p">)}</span>
+</span><span id="line-228">
+</span><span id="line-229">
+<div class="viewcode-block" id="ImageNetA">
+<a class="viewcode-back" href="../../../../stable_datasets.images/#stable_datasets.images.imagenet_a.ImageNetA">[docs]</a>
+</span><span id="line-230"><span class="k">class</span><span class="w"> </span><span class="nc">ImageNetA</span><span class="p">(</span><span class="n">BaseDatasetBuilder</span><span class="p">):</span>
+</span><span id="line-231"><span class="w">    </span><span class="sd">"""ImageNet-A: 7,500 real-world photos that standard ImageNet classifiers get wrong.</span>
+</span><span id="line-232">
+</span><span id="line-233"><span class="sd">    ImageNet-A is an evaluation-only robustness benchmark, so it has a single ``test``</span>
+</span><span id="line-234"><span class="sd">    split. Labels are integers in [0, 200): label ``i`` is the class</span>
+</span><span id="line-235"><span class="sd">    ``IMAGENET_A_CLASS_NAMES[i]`` with WordNet ID ``IMAGENET_A_WNIDS[i]``, and</span>
+</span><span id="line-236"><span class="sd">    ``IMAGENET_A_TO_IN1K[i]`` is its ImageNet-1K index.</span>
+</span><span id="line-237"><span class="sd">    """</span>
+</span><span id="line-238">
+</span><span id="line-239">    <span class="n">VERSION</span> <span class="o">=</span> <span class="n">Version</span><span class="p">(</span><span class="s2">"1.0.0"</span><span class="p">)</span>
+</span><span id="line-240">
+</span><span id="line-241">    <span class="n">SOURCE</span> <span class="o">=</span> <span class="n">DatasetSource</span><span class="p">(</span>
+</span><span id="line-242">        <span class="n">homepage</span><span class="o">=</span><span class="s2">"https://github.com/hendrycks/natural-adv-examples"</span><span class="p">,</span>
+</span><span id="line-243">        <span class="n">assets</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-244">            <span class="s2">"test"</span><span class="p">:</span> <span class="n">DownloadInfo</span><span class="p">(</span>
+</span><span id="line-245">                <span class="n">url</span><span class="o">=</span><span class="s2">"https://people.eecs.berkeley.edu/~hendrycks/imagenet-a.tar"</span><span class="p">,</span>
+</span><span id="line-246">                <span class="n">checksum</span><span class="o">=</span><span class="s2">"sha256:3bb3632277e6ba6392ea64c02ddbf4dd2266c9caffd6bc09c9656d28f012589e"</span><span class="p">,</span>
+</span><span id="line-247">            <span class="p">),</span>
+</span><span id="line-248">        <span class="p">},</span>
+</span><span id="line-249">        <span class="n">citation</span><span class="o">=</span><span class="s2">"""@article{hendrycks2021nae,</span>
+</span><span id="line-250"><span class="s2">                      title={Natural Adversarial Examples},</span>
+</span><span id="line-251"><span class="s2">                      author={Dan Hendrycks and Kevin Zhao and Steven Basart and Jacob Steinhardt and Dawn Song},</span>
+</span><span id="line-252"><span class="s2">                      journal=</span><span class="si">{CVPR}</span><span class="s2">,</span>
+</span><span id="line-253"><span class="s2">                      year=</span><span class="si">{2021}</span><span class="s2">}"""</span><span class="p">,</span>
+</span><span id="line-254">        <span class="n">license</span><span class="o">=</span><span class="s2">"MIT"</span><span class="p">,</span>
+</span><span id="line-255">    <span class="p">)</span>
+</span><span id="line-256">
+</span><span id="line-257">    <span class="k">def</span><span class="w"> </span><span class="nf">_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-258">        <span class="k">return</span> <span class="n">DatasetInfo</span><span class="p">(</span>
+</span><span id="line-259">            <span class="n">description</span><span class="o">=</span><span class="s2">"""ImageNet-A contains 7,500 unmodified, real-world photos from 200 ImageNet classes,</span>
+</span><span id="line-260"><span class="s2">                selected because standard ImageNet classifiers misclassify them. It is a test-only benchmark</span>
+</span><span id="line-261"><span class="s2">                for robustness to naturally occurring hard examples."""</span><span class="p">,</span>
+</span><span id="line-262">            <span class="n">features</span><span class="o">=</span><span class="n">Features</span><span class="p">(</span>
+</span><span id="line-263">                <span class="p">{</span>
+</span><span id="line-264">                    <span class="s2">"image"</span><span class="p">:</span> <span class="n">ImageFeature</span><span class="p">(),</span>
+</span><span id="line-265">                    <span class="s2">"label"</span><span class="p">:</span> <span class="n">ClassLabel</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="n">IMAGENET_A_CLASS_NAMES</span><span class="p">),</span>
+</span><span id="line-266">                <span class="p">}</span>
+</span><span id="line-267">            <span class="p">),</span>
+</span><span id="line-268">            <span class="n">supervised_keys</span><span class="o">=</span><span class="p">(</span><span class="s2">"image"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">),</span>
+</span><span id="line-269">            <span class="n">homepage</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"homepage"</span><span class="p">],</span>
+</span><span id="line-270">            <span class="n">citation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"citation"</span><span class="p">],</span>
+</span><span id="line-271">            <span class="n">license</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">[</span><span class="s2">"license"</span><span class="p">],</span>
+</span><span id="line-272">        <span class="p">)</span>
+</span><span id="line-273">
+</span><span id="line-274">    <span class="k">def</span><span class="w"> </span><span class="nf">_generate_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_path</span><span class="p">,</span> <span class="n">split</span><span class="p">):</span>
+</span><span id="line-275">        <span class="c1"># Archive layout: imagenet-a/&lt;wnid&gt;/&lt;file&gt;.jpg (plus README.txt and folder entries).</span>
+</span><span id="line-276">        <span class="c1"># File names encode a model's wrong predictions, so the label comes only from the folder.</span>
+</span><span id="line-277">        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s2">"r:*"</span><span class="p">)</span> <span class="k">as</span> <span class="n">archive</span><span class="p">:</span>
+</span><span id="line-278">            <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">archive</span><span class="p">:</span>
+</span><span id="line-279">                <span class="k">if</span> <span class="ow">not</span> <span class="n">member</span><span class="o">.</span><span class="n">isfile</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">".jpg"</span><span class="p">,</span> <span class="s2">".jpeg"</span><span class="p">)):</span>
+</span><span id="line-280">                    <span class="k">continue</span>
+</span><span id="line-281">
+</span><span id="line-282">                <span class="n">wnid</span> <span class="o">=</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+</span><span id="line-283">                <span class="n">label</span> <span class="o">=</span> <span class="n">_WNID_TO_LABEL</span><span class="p">[</span><span class="n">wnid</span><span class="p">]</span>  <span class="c1"># KeyError on an unexpected folder: fail loudly</span>
+</span><span id="line-284">
+</span><span id="line-285">                <span class="n">image_bytes</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">extractfile</span><span class="p">(</span><span class="n">member</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span><span id="line-286">                <span class="k">with</span> <span class="n">PILImage</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">))</span> <span class="k">as</span> <span class="n">img</span><span class="p">:</span>
+</span><span id="line-287">                    <span class="c1"># Keep the original JPEG bytes when already RGB; convert anything else.</span>
+</span><span id="line-288">                    <span class="n">image</span> <span class="o">=</span> <span class="n">image_bytes</span> <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"RGB"</span> <span class="k">else</span> <span class="n">img</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">"RGB"</span><span class="p">)</span>
+</span><span id="line-289">
+</span><span id="line-290">                <span class="k">yield</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="s2">"image"</span><span class="p">:</span> <span class="n">image</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">:</span> <span class="n">label</span><span class="p">}</span></div>
+
+</span></code></pre></div>
+    </div></div>
+          </main>
+        </div>
+      </div><footer class="py-6 border-t border-border md:py-0">
+    <div class="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
+      <div class="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
+        <p class="text-sm leading-loose text-center text-muted-foreground md:text-left">© 2026&nbsp;Built with <a class="font-medium underline underline-offset-4"
+    href="https://www.sphinx-doc.org"
+    rel="noreferrer">Sphinx 9.0.4</a></p>
+</div>
+</div>
+</footer>
+    </div><button id="scrolltop"
+        x-cloak
+        @click="window.scrollTo({top: 0, behavior: 'smooth'})"
+        class="fixed bottom-8 right-8 p-2 z-10 rounded-sm bg-gray-700 text-xs text-white transition-all duration-1000 hover:bg-gray-950 focus:bg-gray-950"
+        :class="{'opacity-0 invisible' : !showScrollTop}"
+>
+  <svg xmlns="http://www.w3.org/2000/svg"
+       height="14"
+       viewBox="0 96 960 960"
+       width="14"
+       class="inline fill-current mb-[2px]"
+       aria-hidden="true">
+    <path d="M450 896V370L202 618l-42-42 320-320 320 320-42 42-248-248v526h-60Z" />
+  </svg>
+  Back to top
+</button>
+    
+    <script src="../../../../_static/documentation_options.js?v=c167d237"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script defer="defer" src="../../../../_static/theme.js?v=49cc6205"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    
+</body>
+
+</html>
