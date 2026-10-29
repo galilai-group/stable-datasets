@@ -23,6 +23,10 @@ In the original files, annotators painted the object red (and, in ``two_objects`
 
    In ``two_objects``, labels 1 and 2 are not matched across annotators: the same object can be red in one annotation and blue in another. Of the 182 annotations that follow an image's first annotation, 68 have the two objects swapped relative to it. Before combining annotators (for example by majority vote), match the objects first, e.g. by swapping labels 1 and 2 in an annotation when that makes it overlap better with the first one.
 
+.. image:: teasers/weizmann_seg_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 
