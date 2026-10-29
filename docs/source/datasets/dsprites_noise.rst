@@ -22,7 +22,7 @@ The dataset contains **all possible combinations** of six latent factors of vari
 - **Image resolution**: 64×64x3 (binary object with noisy background)
 
 Latent Factors of Variation
---------------------------
+---------------------------
 
 The dataset is generated from six independent latent factors, consistent with the original dSprites specification.  
 In this noisy variant, **no additional latent factor is introduced**; background noise is applied independently of the ground-truth factors.
@@ -118,7 +118,7 @@ Usage Example
     ds_torch = ds.with_format("torch")
 
 Why No Train/Test Split?
------------------------
+------------------------
 
 The Noisy dSprites dataset does not define an official train/test split.  
 It is intended for **representation learning research**, where models are trained to capture underlying factors of variation rather than to generalize across semantic classes.
