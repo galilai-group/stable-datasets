@@ -1,105 +1,137 @@
+"""Tests for the SP500 dataset."""
+
 import numpy as np
+import pandas as pd
 
-from stable_datasets.timeseries.SP500 import make_windows
-from stable_datasets.timeseries.SP500 import SP500
 from stable_datasets.splits import Split
+from stable_datasets.timeseries.SP500 import SP500
 
 
-def test_make_windows():
-    import pandas as pd
+def create_sample_data(tmp_path, n_days=100, n_stocks=2):
+    """Create synthetic daily stock observations."""
 
-    dates = pd.date_range("2020-01-01", periods=35)
+    dates = pd.date_range("2020-01-01", periods=n_days)
+    tickers = ["AAPL", "MSFT"][:n_stocks]
 
-    df = pd.DataFrame({
-        "date": dates,
-        "open": np.arange(100, 135),
-        "high": np.arange(101, 136),
-        "low": np.arange(99, 134),
-        "close": np.arange(100, 135),
-        "volume": np.full(35, 1000),
-    })
+    rows = []
 
-    windows = make_windows(df, sequence_length=30)
+    for ticker in tickers:
+        for i, date in enumerate(dates):
+            rows.append(
+                {
+                    "date": date,
+                    "Name": ticker,
+                    "open": 100.0 + i,
+                    "high": 102.0 + i,
+                    "low": 99.0 + i,
+                    "close": 101.0 + i,
+                    "volume": 1000 + i,
+                }
+            )
 
-    # 35 days produce 6 overlapping 30-day windows.
-    assert len(windows) == 6
+    df = pd.DataFrame(rows)
 
-    # Each window has 30 days and 5 features.
-    assert windows[0].shape == (30, 5)
+    csv_path = tmp_path / "stocks.csv"
+    df.to_csv(csv_path, index=False)
 
-    # The first day's closing price is the normalization reference.
-    assert windows[0][0, 3] == 0.0
-
-    # No missing or infinite values.
-    assert np.isfinite(windows[0]).all()
-
-
-
+    return csv_path
 
 
 def test_sp500_generate_examples(tmp_path):
-    import pandas as pd
+    """Check that examples preserve raw financial data."""
 
-    # Create 120 days of synthetic stock data.
-    df = pd.DataFrame({
-        "date": pd.date_range("2020-01-01", periods=120),
-        "open": range(100, 220),
-        "high": range(101, 221),
-        "low": range(99, 219),
-        "close": range(100, 220),
-        "volume": [1000] * 120,
-        "Name": ["AAPL"] * 120,
-    })
+    csv_path = create_sample_data(tmp_path)
 
-    csv_path = tmp_path / "stocks.csv"
-    df.to_csv(csv_path, index=False)
-
-    # Bypass the downloader to test example generation directly.
     builder = object.__new__(SP500)
 
-    train_examples = list(
-        builder._generate_examples(csv_path, Split.TRAIN)
-    )
+    examples = list(builder._generate_examples(csv_path, Split.TRAIN))
 
-    assert len(train_examples) > 0
+    # 70 training dates, with 2 stocks per date.
+    assert len(examples) == 140
 
-    for _, example in train_examples:
-        assert example["series"].shape == (30, 5)
-        assert np.isfinite(example["series"]).all()
+    for _, example in examples:
+        assert set(example.keys()) == {
+            "date",
+            "ticker",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+        }
 
+        assert isinstance(example["date"], str)
+        assert isinstance(example["ticker"], str)
 
+        assert example["ticker"] in {"AAPL", "MSFT"}
 
+        for column in ("open", "high", "low", "close"):
+            assert np.isfinite(example[column])
 
+        assert example["volume"] >= 0
+
+    # Verify the original values were not normalized.
+    first = examples[0][1]
+
+    assert first["date"] == "2020-01-01"
+    assert first["ticker"] == "AAPL"
+    assert first["open"] == 100.0
+    assert first["high"] == 102.0
+    assert first["low"] == 99.0
+    assert first["close"] == 101.0
+    assert first["volume"] == 1000
 
 
 def test_sp500_chronological_splits(tmp_path):
-    import numpy as np
-    import pandas as pd
+    """Check chronological splitting without date overlap."""
 
-    # Use enough dates for 30-day windows in every split.
-    dates = pd.date_range("2020-01-01", periods=300)
-
-    df = pd.DataFrame({
-        "date": list(dates) * 2,
-        "open": list(range(100, 400)) * 2,
-        "high": list(range(101, 401)) * 2,
-        "low": list(range(99, 399)) * 2,
-        "close": list(range(100, 400)) * 2,
-        "volume": [1000] * 600,
-        "Name": ["AAPL"] * 300 + ["MSFT"] * 300,
-    })
-
-    csv_path = tmp_path / "stocks.csv"
-    df.to_csv(csv_path, index=False)
+    csv_path = create_sample_data(tmp_path)
 
     builder = object.__new__(SP500)
 
-    for split in (Split.TRAIN, Split.VALIDATION, Split.TEST):
-        examples = list(builder._generate_examples(csv_path, split))
+    train = list(builder._generate_examples(csv_path, Split.TRAIN))
+    validation = list(builder._generate_examples(csv_path, Split.VALIDATION))
+    test = list(builder._generate_examples(csv_path, Split.TEST))
 
-        assert len(examples) > 0
+    # 100 dates, 2 stocks per date.
+    assert len(train) == 140
+    assert len(validation) == 30
+    assert len(test) == 30
 
-        for _, example in examples:
-            series = np.asarray(example["series"])
-            assert series.shape == (30, 5)
-            assert np.isfinite(series).all()
+    train_dates = {example["date"] for _, example in train}
+    val_dates = {example["date"] for _, example in validation}
+    test_dates = {example["date"] for _, example in test}
+
+    # No overlap between splits.
+    assert train_dates.isdisjoint(val_dates)
+    assert train_dates.isdisjoint(test_dates)
+    assert val_dates.isdisjoint(test_dates)
+
+    # Strict chronological ordering.
+    assert max(train_dates) < min(val_dates)
+    assert max(val_dates) < min(test_dates)
+
+
+def test_sp500_real_data():
+    """Check that the real SP500 dataset loads correctly."""
+
+    dataset = SP500(split="train")
+
+    assert len(dataset) > 0
+
+    example = dataset[0]
+
+    assert set(example.keys()) == {
+        "date",
+        "ticker",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+    }
+
+    assert example["open"] > 0
+    assert example["high"] >= example["low"]
+    assert example["close"] > 0
+    assert example["volume"] >= 0

@@ -1,4 +1,3 @@
-
 """Daily EUR/USD forex dataset from Hugging Face."""
 
 import pandas as pd
@@ -10,8 +9,8 @@ from stable_datasets.schema import (
     Value,
     Version,
 )
-from stable_datasets.utils import BaseDatasetBuilder, download
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.utils import BaseDatasetBuilder, download
 
 
 class Forex(BaseDatasetBuilder):
@@ -23,9 +22,7 @@ class Forex(BaseDatasetBuilder):
         homepage="https://huggingface.co/datasets/Yllvar/fx-historical-data",
         assets={
             "data": (
-                "https://huggingface.co/datasets/"
-                "Yllvar/fx-historical-data/resolve/main/"
-                "EURUSD/EURUSD_D1.parquet"
+                "https://huggingface.co/datasets/Yllvar/fx-historical-data/resolve/main/EURUSD/EURUSD_D1.parquet"
             ),
         },
         citation="""@misc{yllvar_forex,
@@ -45,15 +42,17 @@ class Forex(BaseDatasetBuilder):
                 "tick volume. Observations are split chronologically "
                 "into 70% training, 15% validation, and 15% testing."
             ),
-            features=Features({
-                "date": Value("string"),
-                "pair": Value("string"),
-                "open": Value("float64"),
-                "high": Value("float64"),
-                "low": Value("float64"),
-                "close": Value("float64"),
-                "volume": Value("int64"),
-            }),
+            features=Features(
+                {
+                    "date": Value("string"),
+                    "pair": Value("string"),
+                    "open": Value("float64"),
+                    "high": Value("float64"),
+                    "low": Value("float64"),
+                    "close": Value("float64"),
+                    "volume": Value("int64"),
+                }
+            ),
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],
         )
@@ -94,8 +93,12 @@ class Forex(BaseDatasetBuilder):
         df["date"] = pd.to_datetime(df["date"], utc=True)
 
         required = [
-            "date", "open", "high",
-            "low", "close", "volume",
+            "date",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
         ]
         df = df.dropna(subset=required)
         df = df.sort_values("date").drop_duplicates("date")
@@ -113,12 +116,15 @@ class Forex(BaseDatasetBuilder):
             raise ValueError(f"Unknown split: {split}")
 
         for index, row in enumerate(subset.itertuples(index=False)):
-            yield index, {
-                "date": row.date.isoformat(),
-                "pair": "EURUSD",
-                "open": float(row.open),
-                "high": float(row.high),
-                "low": float(row.low),
-                "close": float(row.close),
-                "volume": int(row.volume),
-            }
+            yield (
+                index,
+                {
+                    "date": row.date.isoformat(),
+                    "pair": "EURUSD",
+                    "open": float(row.open),
+                    "high": float(row.high),
+                    "low": float(row.low),
+                    "close": float(row.close),
+                    "volume": int(row.volume),
+                },
+            )
