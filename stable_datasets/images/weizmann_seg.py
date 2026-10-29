@@ -63,6 +63,9 @@ class WeizmannSegmentation(BaseDatasetBuilder):
                          author={Alpert, Sharon and Galun, Meirav and Basri, Ronen and Brandt, Achi},
                          booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition},
                          year={2007}}""",
+        # No standard license: the download page restricts use to research and says the images
+        # come from royalty-free collections, without permission from the copyright holders.
+        license="Research use only (custom terms, see the dataset website)",
     )
 
     def _info(self):
@@ -78,6 +81,7 @@ class WeizmannSegmentation(BaseDatasetBuilder):
             ),
             supervised_keys=None,
             homepage=self.SOURCE["homepage"],
+            license=self.SOURCE["license"],
             citation=self.SOURCE["citation"],
         )
 

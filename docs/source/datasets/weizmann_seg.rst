@@ -83,6 +83,13 @@ References
 
 - Official website: https://www.wisdom.weizmann.ac.il/~vision/Seg_Evaluation_DB/
 - Download page: https://www.wisdom.weizmann.ac.il/~vision/Seg_Evaluation_DB/dl.html
+- License: research use only (custom terms, no standard license)
+
+The dataset website does not publish a standard license. Its disclaimer makes the
+database available for research purposes only. The images were taken from
+royalty-free image collections without permission from the original copyright
+holders, and users agree to follow the terms of use of each image's source site.
+Users also agree to cite Alpert et al. (2007), below.
 
 Citation
 --------
