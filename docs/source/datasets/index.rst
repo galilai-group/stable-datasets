@@ -99,6 +99,12 @@ Available Datasets
 
 .. toctree::
    :maxdepth: 1
+   :caption: Image Segmentation Datasets
+
+   weizmann_seg
+
+.. toctree::
+   :maxdepth: 1
    :caption: Time Series Forecasting Datasets
 
    electricity_hourly
@@ -107,12 +113,6 @@ Available Datasets
 .. toctree::
    :maxdepth: 1
    :caption: Video Datasets
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Image Segmentation Datasets
-   
-   weizmann_seg
 
    something_something_v2
    clevrer
