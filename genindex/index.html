@@ -127,6 +127,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cifar100_c/">CIFAR-100-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cinic10/">CINIC-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cars196/">CARS-196</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/cct20/">Caltech Camera Traps (CCT20)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/coil100/">COIL-100 (Columbia Object Image Library)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/dtd/">Describable Textures Dataset (DTD)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/not_mnist/">not-MNIST</a></li>
@@ -136,6 +137,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/patch_camelyon/">PatchCamelyon</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/awa2/">AWA2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/beans/">Beans</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/deep_weeds/">DeepWeeds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/stl10/">STL-10</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/tiny_imagenet/">Tiny ImageNet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/tiny_imagenet_c/">Tiny ImageNet-C</a></li>
@@ -291,6 +293,8 @@
       <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.BUILDER_CONFIGS">BUILDER_CONFIGS (BaseDatasetBuilder attribute)</a>
 
       <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#stable_datasets.images.deep_weeds.DeepWeeds.BUILDER_CONFIGS">(DeepWeeds attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.e_mnist.EMNIST.BUILDER_CONFIGS">(EMNIST attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.fgvc_aircraft.FGVCAircraft.BUILDER_CONFIGS">(FGVCAircraft attribute)</a>
@@ -348,6 +352,8 @@
       <li><a href="../stable_datasets.images/#stable_datasets.images.cassava.cassava">cassava (class in stable_datasets.images.cassava)</a>
 </li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.CatsDogs">CatsDogs (class in stable_datasets.timeseries.CatsDogs)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.cct20.CCT20">CCT20 (class in stable_datasets.images.cct20)</a>
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.celeb_a.CelebA">CelebA (class in stable_datasets.images.celeb_a)</a>
 </li>
@@ -422,6 +428,8 @@
 </li>
       <li><a href="../stable_datasets/#stable_datasets.schema.VideoDecodeConfig.decoder">decoder (VideoDecodeConfig attribute)</a>
 </li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.deep_weeds.DeepWeeds">DeepWeeds (class in stable_datasets.images.deep_weeds)</a>
+</li>
       <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.DEFAULT_CONFIG_NAME">DEFAULT_CONFIG_NAME (BaseDatasetBuilder attribute)</a>
 
       <ul style="list-style-type:none">
@@ -434,14 +442,14 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.sun397.SUN397.DEFAULT_CONFIG_NAME">(SUN397 attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets/#stable_datasets.schema.BuilderConfig.description">description (BuilderConfig attribute)</a>
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets/#stable_datasets.schema.DatasetInfo.description">(DatasetInfo attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets/#stable_datasets.cache.detect_cache_format">detect_cache_format() (in module stable_datasets.cache)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.cache.detect_cache_layout">detect_cache_layout() (in module stable_datasets.cache)</a>
@@ -831,6 +839,8 @@
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cassava">stable_datasets.images.cassava</a>
 </li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.cct20">stable_datasets.images.cct20</a>
+</li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.celeb_a">stable_datasets.images.celeb_a</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cifar10">stable_datasets.images.cifar10</a>
@@ -850,6 +860,8 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.country211">stable_datasets.images.country211</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cub200">stable_datasets.images.cub200</a>
+</li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.deep_weeds">stable_datasets.images.deep_weeds</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.dsprites">stable_datasets.images.dsprites</a>
 </li>
@@ -1248,6 +1260,8 @@
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.CatsDogs.SOURCE">(CatsDogs attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cct20.CCT20.SOURCE">(CCT20 attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.celeb_a.CelebA.SOURCE">(CelebA attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10.CIFAR10.SOURCE">(CIFAR10 attribute)</a>
@@ -1269,6 +1283,8 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.cub200.CUB200.SOURCE">(CUB200 attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.dclde.DCLDE.SOURCE">(DCLDE attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.deep_weeds.DeepWeeds.SOURCE">(DeepWeeds attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites.DSprites.SOURCE">(DSprites attribute)</a>
 </li>
@@ -1561,6 +1577,13 @@
 </li>
       </ul></li>
       <li>
+    stable_datasets.images.cct20
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.cct20">module</a>
+</li>
+      </ul></li>
+      <li>
     stable_datasets.images.celeb_a
 
       <ul style="list-style-type:none">
@@ -1630,6 +1653,13 @@
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cub200">module</a>
+</li>
+      </ul></li>
+      <li>
+    stable_datasets.images.deep_weeds
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.deep_weeds">module</a>
 </li>
       </ul></li>
       <li>
@@ -2297,6 +2327,8 @@
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.CatsDogs.CatsDogs.VERSION">(CatsDogs attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.cct20.CCT20.VERSION">(CCT20 attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.celeb_a.CelebA.VERSION">(CelebA attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.cifar10.CIFAR10.VERSION">(CIFAR10 attribute)</a>
@@ -2322,6 +2354,8 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.cub200.CUB200.VERSION">(CUB200 attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.dclde.DCLDE.VERSION">(DCLDE attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.deep_weeds.DeepWeeds.VERSION">(DeepWeeds attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.dsprites.DSprites.VERSION">(DSprites attribute)</a>
 </li>
