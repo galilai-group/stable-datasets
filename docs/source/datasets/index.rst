@@ -84,11 +84,14 @@ Available Datasets
    stanford_dogs
    country211
    galaxy10
+   gtsrb
    hasy_v2
    face_pointing
    rock_paper_scissor
    svhn
    linnaeus5
+   horse_or_human
+   semeion
    malaria
    kather_colorectal_histology
    sun397
@@ -102,6 +105,7 @@ Available Datasets
    :caption: Image Segmentation Datasets
 
    weizmann_seg
+   bsds500
 
 .. toctree::
    :maxdepth: 1
