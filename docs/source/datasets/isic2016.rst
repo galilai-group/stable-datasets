@@ -74,7 +74,9 @@ Citation
 .. code-block:: bibtex
 
    @article{gutman2016skin,
-       title={Skin Lesion Analysis toward Melanoma Detection: A Challenge at ISBI 2016},
+       title={Skin Lesion Analysis toward Melanoma Detection: A Challenge at the International
+              Symposium on Biomedical Imaging (ISBI) 2016, hosted by the International Skin
+              Imaging Collaboration (ISIC)},
        author={Gutman, David and Codella, Noel C. F. and Celebi, Emre and Helba, Brian
                and Marchetti, Michael and Mishra, Nabin and Halpern, Allan},
        journal={arXiv preprint arXiv:1605.01397}, year={2016}

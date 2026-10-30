@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-from stable_datasets.images.isic2016 import ISIC2016
-from stable_datasets.images.scene8 import Scene8
-
 from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
 from .awa2 import AWA2
@@ -52,6 +49,7 @@ from .imagenet_sketch import ImageNetSketch
 from .imagenet_v2 import ImageNetV2
 from .imagewoof import Imagewoof
 from .intel_image_classification import IntelImageClassification
+from .isic2016 import ISIC2016
 from .k_mnist import KMNIST
 from .k_mnist49 import KMNIST49
 from .kather_colorectal_histology import KatherColorectalHistology
@@ -70,6 +68,7 @@ from .plant_village import PlantVillage
 
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
+from .scene8 import Scene8
 from .semeion import Semeion
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
@@ -86,8 +85,6 @@ from .weizmann_seg import WeizmannSegmentation
 
 
 __all__ = [
-    "ISIC2016",
-    "Scene8",
     "ArabicCharacters",
     "ArabicDigits",
     "AWA2",
@@ -134,6 +131,7 @@ __all__ = [
     "ImageNetR",
     "Imagenette",
     "IntelImageClassification",
+    "ISIC2016",
     "TFFlowers",
     "Imagewoof",
     "KMNIST",
@@ -150,6 +148,7 @@ __all__ = [
     "PatchCamelyon",
     "OxfordIIITPet",
     "RockPaperScissor",
+    "Scene8",
     "Semeion",
     "Shapes3D",
     "SmallNORB",

@@ -44,9 +44,6 @@ Available Datasets
    :maxdepth: 1
    :caption: Image Classification Datasets
 
-   scene8
-   isic2016
-
    arabic_characters
    arabic_digits
    caltech256
@@ -108,6 +105,8 @@ Available Datasets
    patternnet
    pacs
    office_home
+   scene8
+   isic2016
 
 .. toctree::
    :maxdepth: 1

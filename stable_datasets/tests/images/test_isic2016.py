@@ -1,4 +1,4 @@
-"""Offline ISIC2016 label joins, error handling and real cache tests."""
+"""Real-download integration and offline parser error tests for ISIC2016."""
 
 import csv
 import io
@@ -25,7 +25,6 @@ def original_assets(tmp_path):
                 payloads[image_id] = buffer.getvalue()
                 archive.writestr(f"{prefix}/{image_id}.jpg", payloads[image_id])
         csv_path = tmp_path / f"ISBI2016_ISIC_Part3_{prefix}_GroundTruth.csv"
-        # Reverse archive order so an incorrect positional join is observable.
         rows = (
             "ISIC_0000001,malignant\nISIC_0000002,benign\n"
             if prefix == "Training"
