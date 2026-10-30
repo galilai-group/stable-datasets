@@ -27,12 +27,14 @@ class Fruits360(BaseDatasetBuilder):
             "train": DownloadInfo(url=_URL, checksum=_CHECKSUM),
             "test": DownloadInfo(url=_URL, checksum=_CHECKSUM),
         },
-        citation="""@misc{oltean2017fruits360,
-                title        = {Fruits-360 dataset},
-                author       = {Oltean, Mihai},
-                year         = {2017},
-                howpublished = {\\url{https://github.com/fruits-360}},
-                note         = {Version 2026.10.18.2} }
+        citation="""@article{muresan2018fruit,
+                title   = {Fruit recognition from images using deep learning},
+                author  = {Mure{\\c{s}}an, Horea and Oltean, Mihai},
+                journal = {Acta Universitatis Sapientiae, Informatica},
+                volume  = {10},
+                number  = {1},
+                pages   = {26--42},
+                year    = {2018} }
         """,
     )
 

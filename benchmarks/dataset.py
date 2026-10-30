@@ -117,13 +117,6 @@ def _timeseries(
 DATASET_CONFIGS: dict[str, DatasetConfig] = {
     # RGB datasets (3-channel, ImageNet stats unless overridden)
     "beans": _rgb("beans", "Beans", 3, include_in_results=False),
-    "belgiumtsc": _rgb(
-        "belgiumtsc",
-        "BelgiumTSC",
-        62,
-        mean=[0.4256, 0.3872, 0.3912],
-        std=[0.2936, 0.2869, 0.2996],
-    ),
     "awa2": _rgb("awa2", "AWA2", 50),
     "cifar10": _rgb("cifar10", "CIFAR-10", 10, mean=[0.4914, 0.4822, 0.4465], std=[0.247, 0.2435, 0.2616]),
     "cifar100": _rgb("cifar100", "CIFAR-100", 100, mean=[0.5071, 0.4867, 0.4408], std=[0.2675, 0.2565, 0.2761]),
@@ -147,13 +140,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     ),
     "flowers102": _rgb("flowers102", "Flowers-102", 102, mean=[0.4344, 0.3830, 0.2954], std=[0.2937, 0.2458, 0.2726]),
     "food101": _rgb("food101", "Food-101", 101),
-    "fruits360": _rgb(
-        "fruits360",
-        "Fruits-360",
-        274,
-        mean=[0.6515, 0.5617, 0.5069],
-        std=[0.3271, 0.3743, 0.4009],
-    ),
     "imagenet": _rgb("imagenet", "ImageNet", 1000, builder_name="ImageNet1K", include_in_results=False),
     "imagenette": _rgb("imagenette", "Imagenette", 10),
     "rockpaperscissor": _rgb("rockpaperscissor", "Rock-Paper-Scissors", 3),
