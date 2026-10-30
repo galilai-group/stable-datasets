@@ -18,6 +18,8 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 
 class EMNISTConfig(BuilderConfig):
+    """Config for one EMNIST split (``byclass``, ``bymerge``, ``balanced``, ``letters``, ``digits`` or ``mnist``)."""
+
     def __init__(self, variant, **kwargs):
         super().__init__(version=Version("1.0.0"), **kwargs)
         self.variant = variant

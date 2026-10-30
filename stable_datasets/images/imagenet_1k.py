@@ -106,6 +106,11 @@ def _find_devkit_member(tf: tarfile.TarFile, suffix: str) -> tarfile.TarInfo:
 
 
 class ImageNet1K(_ImageNetArchiveMixin, BaseDatasetBuilder):
+    """ImageNet-1K (ILSVRC 2012): 1,000 classes, built from the official train/val tars and devkit.
+
+    Labels are integers in [0, 1000), where label i corresponds to ``IN1K_CLASSES[i]`` (wnids sorted alphabetically).
+    """
+
     VERSION = Version("3.0.0")
     SOURCE = DatasetSource(
         homepage="https://www.image-net.org/challenges/LSVRC/2012/",
