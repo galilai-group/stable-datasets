@@ -8,6 +8,12 @@ from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import DatasetInfo, Features, Value, Video, VideoDecodeConfig, VideoRef
 
 
+def _require_lance_dataset_api():
+    lance = pytest.importorskip("lance")
+    if not hasattr(lance, "dataset") or not hasattr(lance, "write_dataset"):
+        pytest.skip("Installed 'lance' module does not expose dataset/write_dataset APIs")
+
+
 def _video_file(tmp_path: Path, name: str = "clip.mp4", data: bytes = b"fake mp4 bytes") -> Path:
     path = tmp_path / name
     path.write_bytes(data)
@@ -91,7 +97,7 @@ def test_video_ref_is_storage_only(tmp_path):
 
 
 def test_video_roundtrip_matches_arrow_and_lance(tmp_path):
-    pytest.importorskip("lance")
+    _require_lance_dataset_api()
     source = _video_file(tmp_path, data=b"same content")
     features = Features({"video": Video(storage="path"), "label": Value("int32")})
     info = DatasetInfo(features=features)
