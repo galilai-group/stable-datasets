@@ -11,23 +11,32 @@ from stable_datasets.schema import (
     Image,
     Version,
 )
-from stable_datasets.splits import Split, SplitGenerator
-from stable_datasets.utils import BaseDatasetBuilder, bulk_download
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class OlivettiFaces(BaseDatasetBuilder):
-    """Olivetti Faces dataset for 40-class face classification."""
+    """Build the Olivetti Faces dataset for identity classification.
+
+    The dataset contains 400 grayscale 64x64 images of 40 individuals,
+    with 10 images per individual.
+
+    This builder defines a deterministic split of 320 training images
+    and 80 test images, using 8 training and 2 test images per identity.
+    This split is not an official split provided by the original source.
+    """
 
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
+        license="Unknown",
         homepage="https://scikit-learn.org/stable/datasets/real_world.html#olivetti-faces-dataset",
         citation="""@misc{olivettifaces,
             title={The Olivetti Faces Dataset},
             howpublished={AT&T Laboratories Cambridge}
         }""",
         assets={
-            "data": DownloadInfo(url="https://ndownloader.figshare.com/files/5976027"),
+            "train": DownloadInfo(url="https://ndownloader.figshare.com/files/5976027"),
+            "test": DownloadInfo(url="https://ndownloader.figshare.com/files/5976027"),
         },
     )
 
@@ -50,32 +59,6 @@ class OlivettiFaces(BaseDatasetBuilder):
             homepage=self.SOURCE["homepage"],
             citation=self.SOURCE["citation"],
         )
-
-    def _split_generators(self):
-        assets = self._source()["assets"]
-        local_paths = bulk_download(
-            list(assets.values()),
-            dest_folder=self._raw_download_dir,
-        )
-
-        data_path = local_paths[0]
-
-        return [
-            SplitGenerator(
-                name=Split.TRAIN,
-                gen_kwargs={
-                    "data_path": data_path,
-                    "split": "train",
-                },
-            ),
-            SplitGenerator(
-                name=Split.TEST,
-                gen_kwargs={
-                    "data_path": data_path,
-                    "split": "test",
-                },
-            ),
-        ]
 
     def _generate_examples(self, data_path, split):
         """Generate grayscale images and identity labels."""
@@ -100,7 +83,7 @@ class OlivettiFaces(BaseDatasetBuilder):
             if split == "test" and position < 8:
                 continue
 
-            pil_image = PILImage.fromarray(image, mode="L")
+            pil_image = PILImage.fromarray(image)
 
             yield (
                 idx,

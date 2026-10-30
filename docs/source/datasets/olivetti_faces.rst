@@ -81,7 +81,6 @@ A 1-nearest-neighbor classifier achieved 88.75% accuracy on the
 80-image test split (71 correct predictions). This is a basic
 classification validation experiment, not a benchmark claim.
 
-See ``docs/olivetti-optdigits-validation.md`` for more details.
 
 References
 ----------
@@ -100,3 +99,14 @@ Citation
         title={The Olivetti Faces Dataset},
         howpublished={AT&T Laboratories Cambridge}
     }
+
+License Information
+-------------------
+
+The original dataset is attributed to AT&T Laboratories Cambridge.
+The source documentation requests attribution when using the images,
+but does not specify an explicit license for the dataset itself.
+
+The dataset license is therefore recorded as Unknown. This does not
+imply that the dataset is in the public domain or available for
+unrestricted redistribution.

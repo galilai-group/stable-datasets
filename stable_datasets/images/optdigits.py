@@ -10,16 +10,24 @@ from stable_datasets.schema import (
     Image,
     Version,
 )
-from stable_datasets.splits import Split, SplitGenerator
-from stable_datasets.utils import BaseDatasetBuilder, bulk_download
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class Optdigits(BaseDatasetBuilder):
-    """UCI Optical Recognition of Handwritten Digits dataset."""
+    """Build the UCI Optical Recognition of Handwritten Digits dataset.
+
+    The dataset contains 5,620 grayscale 8x8 handwritten digit samples
+    across 10 classes.
+
+    It preserves the official UCI split of 3,823 training samples and
+    1,797 test samples. Original pixel intensities range from 0 to 16
+    and are converted to 8-bit grayscale images.
+    """
 
     VERSION = Version("1.0.0")
 
     SOURCE = DatasetSource(
+        license="CC BY 4.0",
         homepage="https://archive.ics.uci.edu/dataset/80/optical+recognition+of+handwritten+digits",
         citation="""@misc{uci_optdigits,
             title={Optical Recognition of Handwritten Digits},
@@ -58,28 +66,7 @@ class Optdigits(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _split_generators(self):
-        assets = self._source()["assets"]
-
-        local_paths = bulk_download(
-            list(assets.values()),
-            dest_folder=self._raw_download_dir,
-        )
-
-        paths = dict(zip(assets.keys(), local_paths))
-
-        return [
-            SplitGenerator(
-                name=Split.TRAIN,
-                gen_kwargs={"data_path": paths["train"]},
-            ),
-            SplitGenerator(
-                name=Split.TEST,
-                gen_kwargs={"data_path": paths["test"]},
-            ),
-        ]
-
-    def _generate_examples(self, data_path):
+    def _generate_examples(self, data_path, split):
         """Generate 8x8 grayscale images and digit labels."""
 
         data = np.loadtxt(

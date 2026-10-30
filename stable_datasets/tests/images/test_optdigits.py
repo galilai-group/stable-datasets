@@ -1,7 +1,33 @@
 import numpy as np
+import pytest
+import requests
 from PIL import Image
 
 from stable_datasets.images import Optdigits
+
+
+def download_source_or_skip(source_info):
+    """Use the shared download cache and skip unreachable sources."""
+    from stable_datasets.utils import download
+
+    try:
+        return download(source_info)
+    except RuntimeError as error:
+        current = error
+
+        while current is not None:
+            if isinstance(
+                current,
+                (
+                    requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout,
+                ),
+            ):
+                pytest.skip(f"Dataset source unreachable: {error}")
+
+            current = current.__cause__ or current.__context__
+
+        raise
 
 
 def test_optdigits_dataset():
@@ -40,20 +66,20 @@ def test_optdigits_dataset():
 
 
 def test_optdigits_source_consistency():
-    """Compare all samples with the official UCI source files."""
-    from io import BytesIO
-    from urllib.request import urlopen
+    """Compare all 5,620 examples against cached UCI source files."""
 
-    base_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/optdigits/"
-
-    for split, filename, expected_count in [
-        ("train", "optdigits.tra", 3823),
-        ("test", "optdigits.tes", 1797),
+    for split, expected_count in [
+        ("train", 3823),
+        ("test", 1797),
     ]:
-        with urlopen(base_url + filename, timeout=120) as response:
-            source_bytes = response.read()
+        source_info = Optdigits.SOURCE["assets"][split]
+        source_path = download_source_or_skip(source_info)
 
-        source_data = np.loadtxt(BytesIO(source_bytes), delimiter=",", dtype=np.int32)
+        source_data = np.loadtxt(
+            source_path,
+            delimiter=",",
+            dtype=np.int32,
+        )
 
         dataset = Optdigits(split=split)
 
@@ -62,6 +88,7 @@ def test_optdigits_source_consistency():
 
         for index in range(expected_count):
             raw_pixels = source_data[index, :-1].reshape(8, 8)
+
             expected_image = np.rint(raw_pixels * (255.0 / 16.0)).astype(np.uint8)
 
             sample = dataset[index]

@@ -84,7 +84,6 @@ A 1-nearest-neighbor classifier achieved 97.89% accuracy on the
 1,797-sample test split (1,759 correct predictions). This is a basic
 classification validation experiment, not a benchmark claim.
 
-See ``docs/olivetti-optdigits-validation.md`` for more details.
 
 References
 ----------
