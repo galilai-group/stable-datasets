@@ -116,7 +116,6 @@ def test_public_api_and_cache_reopen(tmp_path, monkeypatch):
     assert reopened[0]["nist_global_index"] == 110000
 
 
-@pytest.mark.large
 def test_qmnist_real_download(tmp_path):
     datasets = QMNIST(download_dir=tmp_path / "raw", processed_cache_dir=tmp_path / "processed")
     assert {split: len(ds) for split, ds in datasets.items()} == {

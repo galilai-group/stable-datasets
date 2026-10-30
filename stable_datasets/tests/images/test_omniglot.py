@@ -55,7 +55,9 @@ def test_public_api_tensor_range_and_cache(tmp_path, monkeypatch):
     bg, pixels = _archive(tmp_path, "background")
     ev, _ = _archive(tmp_path, "evaluation")
     paths = {Omniglot.SOURCE.assets["background"].url: bg, Omniglot.SOURCE.assets["evaluation"].url: ev}
-    monkeypatch.setattr("stable_datasets.images.omniglot.download", lambda asset, **kwargs: paths[asset.url])
+    monkeypatch.setattr(
+        "stable_datasets.utils.bulk_download", lambda assets, **kwargs: [paths[asset.url] for asset in assets]
+    )
     kwargs = {"download_dir": tmp_path / "raw", "processed_cache_dir": tmp_path / "processed"}
     datasets = Omniglot(**kwargs)
     assert {key: len(value) for key, value in datasets.items()} == {"background": 3, "evaluation": 1}
@@ -68,11 +70,10 @@ def test_public_api_tensor_range_and_cache(tmp_path, monkeypatch):
     def no_download(*args, **kwargs):
         pytest.fail("Reopening a complete processed cache must not download")
 
-    monkeypatch.setattr("stable_datasets.images.omniglot.download", no_download)
+    monkeypatch.setattr("stable_datasets.utils.bulk_download", no_download)
     assert Omniglot(split="evaluation", **kwargs)[0]["label"] == 964
 
 
-@pytest.mark.large
 def test_omniglot_real_download(tmp_path):
     datasets = Omniglot(download_dir=tmp_path / "raw", processed_cache_dir=tmp_path / "processed")
     assert {key: len(value) for key, value in datasets.items()} == {"background": 19280, "evaluation": 13180}
