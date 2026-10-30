@@ -52,23 +52,27 @@ When accessing an example using ``ds[i]``, you will receive a dictionary with th
 Corruption Types
 ----------------
 
-Configs are listed in the order used by the MNIST-C paper:
+Configs grouped by corruption type:
 
 **Noise:**
+
 - ``shot_noise``
 - ``impulse_noise``
 
 **Blur:**
+
 - ``glass_blur``
 - ``motion_blur``
 
 **Affine:**
+
 - ``shear``
 - ``scale``
 - ``rotate``
 - ``translate``
 
 **Digital:**
+
 - ``brightness``
 - ``stripe``
 - ``dotted_line``
@@ -76,10 +80,12 @@ Configs are listed in the order used by the MNIST-C paper:
 - ``canny_edges``
 
 **Weather:**
+
 - ``fog``
 - ``spatter``
 
 **Reference:**
+
 - ``identity`` (clean MNIST, no corruption)
 
 Usage Example
@@ -114,85 +120,6 @@ Usage Example
     for config in MNISTC.BUILDER_CONFIGS:
         test_data = MNISTC(config_name=config.name, split="test")
         # ... evaluate on corrupted images ...
-
-Robustness Benchmark
---------------------
-
-The SSL benchmark follows the MNIST-C protocol: train on clean data, test on each corruption. The ``mnistc`` benchmark entry pretrains on the clean ``identity`` config and fits the online linear probe alongside it. ``benchmarks/robustness/mnist_c.py`` then reloads that run's frozen backbone and linear probe and reports top-1 accuracy on the clean test set and on each of the 15 corrupted test sets, along with the relative drop from clean accuracy.
-
-.. code-block:: bash
-
-    # 1. Train on clean MNIST-C (identity)
-    python -m benchmarks.run model=simclr dataset=mnistc
-
-    # 2. Evaluate the trained backbone + linear probe on every corruption
-    python -m benchmarks.robustness.mnist_c \
-        --checkpoint <checkpoint.dir>/simclr_vit_small_patch16_224_mnistc/last.ckpt
-
-Accuracy uses the same metric and validation transform as the benchmark's ``eval/linear_probe_top1``, so the clean row reproduces the training run's final linear-probe accuracy.
-
-**Validation results.** SimCLR with a ViT-S/16 backbone, trained from scratch for 150 epochs on clean MNIST-C with the default harness config (batch size 256, one seed, final epoch). The run ends at 96.2% online linear-probe and 93.5% k-NN top-1 on the clean test set. Top-1 is the benchmark's class-balanced ``MulticlassAccuracy``; relative drop is ``1 - top1 / clean_top1``.
-
-.. list-table::
-   :header-rows: 1
-   :widths: 40 30 30
-
-   * - Corruption
-     - Top-1 (%)
-     - Relative drop (%)
-   * - ``identity`` (clean)
-     - 96.22
-     - 0.00
-   * - ``shot_noise``
-     - 64.00
-     - 33.49
-   * - ``impulse_noise``
-     - 28.85
-     - 70.02
-   * - ``glass_blur``
-     - 29.37
-     - 69.48
-   * - ``motion_blur``
-     - 54.75
-     - 43.10
-   * - ``shear``
-     - 91.65
-     - 4.75
-   * - ``scale``
-     - 83.29
-     - 13.44
-   * - ``rotate``
-     - 81.78
-     - 15.00
-   * - ``brightness``
-     - 12.51
-     - 87.00
-   * - ``translate``
-     - 95.83
-     - 0.40
-   * - ``stripe``
-     - 23.80
-     - 75.26
-   * - ``fog``
-     - 11.56
-     - 87.98
-   * - ``spatter``
-     - 60.11
-     - 37.53
-   * - ``dotted_line``
-     - 83.09
-     - 13.65
-   * - ``zigzag``
-     - 52.52
-     - 45.41
-   * - ``canny_edges``
-     - 38.88
-     - 59.60
-   * - **Mean over 15 corruptions**
-     - **54.13**
-     - **43.74**
-
-Geometric corruptions (``translate``, ``shear``, ``rotate``, ``scale``) cost little, since the SSL augmentations include crops. Corruptions that change global intensity (``fog``, ``brightness``) or add dense high-frequency patterns (``impulse_noise``, ``glass_blur``, ``stripe``) bring the probe close to chance (10%).
 
 Related Datasets
 ----------------

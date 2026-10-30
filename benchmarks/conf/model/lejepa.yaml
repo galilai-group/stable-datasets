@@ -108,12 +108,6 @@ params:
   hasyv2:
     batch_size: 256
     max_epochs: 189
-  mnistc:
-    batch_size: 256
-    max_epochs: 189
-  caltech101silhouettes:
-    batch_size: 256
-    max_epochs: 189
   # Medium-hard — ×4
   awa2:
     batch_size: 256
