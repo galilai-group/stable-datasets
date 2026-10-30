@@ -142,7 +142,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     "food101": _rgb("food101", "Food-101", 101),
     "imagenet": _rgb("imagenet", "ImageNet", 1000, builder_name="ImageNet1K", include_in_results=False),
     "imagenette": _rgb("imagenette", "Imagenette", 10),
-    "renderedsst2": _rgb("renderedsst2", "Rendered SST2", 2, mean=[0.9664] * 3, std=[0.0847] * 3),
     "rockpaperscissor": _rgb("rockpaperscissor", "Rock-Paper-Scissors", 3),
     "stl10": _rgb("stl10", "STL-10", 10, mean=[0.4467, 0.4398, 0.4066], std=[0.2603, 0.2566, 0.2713]),
     "svhn": _rgb("svhn", "SVHN", 10, mean=[0.4377, 0.4438, 0.4728], std=[0.1980, 0.2010, 0.1970]),
@@ -223,7 +222,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     ),
     "fashionmnist": _gray("fashionmnist", "FashionMNIST", 10, mean=[0.2860], std=[0.3530]),
     "kmnist": _gray("kmnist", "KMNIST", 10, mean=[0.1918], std=[0.3483]),
-    "oraclemnist": _gray("oraclemnist", "Oracle-MNIST", 10, mean=[0.2327], std=[0.2841]),
     "pneumoniamnist": _gray(
         "pneumoniamnist",
         "PneumoniaMNIST",

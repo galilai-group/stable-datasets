@@ -20,7 +20,7 @@ The dataset contains **all possible combinations** of six latent factors of vari
 - **Image resolution**: 64×64 (binary)
 
 Latent Factors of Variation
---------------------------
+---------------------------
 
 The dataset is generated from six independent latent factors:
 
@@ -111,7 +111,7 @@ Usage Example
 
 
 Why No Train/Test Split?
------------------------
+------------------------
 
 The dSprites dataset does not define an official train/test split.  
 It is intended for **representation learning research**, where models are trained to capture underlying factors of variation rather than to generalize across semantic classes.
