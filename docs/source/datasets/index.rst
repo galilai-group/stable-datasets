@@ -48,17 +48,21 @@ Available Datasets
    arabic_digits
    caltech256
    cifar10
+   cifar10_1
+   cifar10_2
    cifar100
    cifar10_c
    cifar100_c
    cinic10
    cars196
+   coil20
    cct20
    coil100
    dtd
    not_mnist
    fashion_mnist
    k_mnist
+   kth_tips
    k_mnist49
    medmnist
    patch_camelyon
@@ -73,23 +77,32 @@ Available Datasets
    imagenet_a
    imagenet_r
    e_mnist
+   eth80
+   mnist_c
    fgvc_aircraft
    flowers17
    flowers102
    tf_flowers
    imagewoof
    food101
+   freiburg_groceries
    fmd
    cub200
    stanford_dogs
    country211
+   cmu_faces
+   defungi
    galaxy10
    gtsrb
    hasy_v2
    face_pointing
+   olivetti_faces
+   optdigits
    rock_paper_scissor
    svhn
    linnaeus5
+   fruits360
+   belgium_tsc
    plant_village
    intel_image_classification
    horse_or_human
@@ -105,6 +118,7 @@ Available Datasets
    patternnet
    pacs
    office_home
+   caltech101_silhouettes
    scene8
    isic2016
 
@@ -114,6 +128,17 @@ Available Datasets
 
    weizmann_seg
    bsds500
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Time Series Classification Datasets
+
+   basic_motions
+   epilepsy
+   hand_movement_direction
+   natops
+   racket_sports
+   uwave_gesture_library
 
 .. toctree::
    :maxdepth: 1
