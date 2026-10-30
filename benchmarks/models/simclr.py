@@ -35,7 +35,7 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
     module = spt.Module(
         backbone=backbone,
         projector=projector,
-        forward=forward.simclr_forward,
+        forward=forward.simclr,
         simclr_loss=spt.losses.NTXEntLoss(temperature=cfg.model.loss.temperature),
         optim=build_optim_config(cfg.model),
     )

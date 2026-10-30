@@ -1,7 +1,11 @@
 import numpy as np
+import pytest
 from PIL import Image
 
 from stable_datasets.images import AWA2
+
+
+pytestmark = pytest.mark.large
 
 
 def test_awa2_dataset():
