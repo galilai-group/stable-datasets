@@ -83,30 +83,6 @@ Fields
   not a globally identified writer.
 * ``filename``: original path relative to the split's image root.
 
-Validation
-----------
-
-.. code-block:: bash
-
-   pytest stable_datasets/tests/images/test_omniglot.py -m "not large"
-   pytest stable_datasets/tests/images/test_omniglot.py -m large
-   python examples/validate_qmnist_omniglot.py omniglot --output omniglot_validation.json
-   python examples/validate_qmnist_omniglot.py omniglot --omniglot-method cnn --output omniglot_cnn.json
-
-The example uses the authors' 20 fixed within-alphabet, 20-way one-shot tasks.
-It verifies every task image against a decoded evaluation sample from this
-builder, then uses the authors' Modified Hausdorff Distance nearest-neighbor
-baseline. This nonparametric baseline has no learned weights or training
-epochs. It does not replace the official tasks with randomly generated ones.
-
-The optional ``cnn`` baseline trains a small supervised network on the 964
-background classes, then uses its 64-dimensional features and Euclidean nearest
-neighbors on the same official tasks. Only this example resizes inputs to 28 x
-28 using bilinear interpolation; stored data remain unchanged. Default training
-choices are 5 epochs, Adam at 0.001, batch size 256, and seed 0. These are explicit
-lightweight validation choices, not the paper's model or tuned hyperparameters.
-The final model is evaluated once, without evaluation-based model selection.
-
 License and citation
 --------------------
 

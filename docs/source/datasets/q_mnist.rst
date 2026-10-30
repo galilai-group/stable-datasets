@@ -88,20 +88,6 @@ big-endian int32 extended label file:
 * ``duplicate``: official duplicate field (zero in the QMNIST train/test release).
 * ``unused``: official unused field, retained without reinterpretation.
 
-Validation
-----------
-
-.. code-block:: bash
-
-   pytest stable_datasets/tests/images/test_q_mnist.py -m "not large"
-   pytest stable_datasets/tests/images/test_q_mnist.py -m large
-   python examples/validate_qmnist_omniglot.py qmnist --output qmnist_validation.json
-
-The example trains a small supervised CNN on ``train`` and evaluates the final
-model on ``test10k`` and ``test50k``. It records its configuration and results;
-it is a loader-validation baseline, not a reproduction of the paper's LeNet-5
-experiment or a claim of state-of-the-art accuracy.
-
 License and citation
 --------------------
 
