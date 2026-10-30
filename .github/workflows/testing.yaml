@@ -12,14 +12,63 @@ on:
   push:
     branches: ["main"]
     tags: ["**"]
+  schedule:
+    # Nightly full run (06:00 UTC). NightlyReport opens an issue when datasets break.
+    - cron: "0 6 * * *"
+
+concurrency:
+  # A new push to a PR cancels that PR's previous run. Runs on main are never cancelled.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Decides what to run: the full suite (split across jobs) when shared code changes,
+  # only the affected test files when just datasets change, nothing for docs-only changes.
+  SelectTests:
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.select.outputs.mode }}
+      tests: ${{ steps.select.outputs.tests }}
+      shards: ${{ steps.select.outputs.shards }}
+    steps:
+      - name: Checking Out Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Pick tests for the changed files
+        id: select
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            # The checkout is GitHub's merge of the PR into main, so its first parent is main.
+            python .github/scripts/select_tests.py --base HEAD^1
+          elif [ "$EVENT" = "push" ] && [ "$REF_TYPE" = "branch" ] && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            python .github/scripts/select_tests.py --base "$BEFORE"
+          else
+            # Nightly, manual and tag runs (and pushes we can't diff) test everything.
+            python .github/scripts/select_tests.py --full
+          fi
+
   Test:
+    needs: SelectTests
+    if: needs.SelectTests.outputs.mode != 'none'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: ${{ fromJSON(needs.SelectTests.outputs.shards) }}
+    env:
+      MODE: ${{ needs.SelectTests.outputs.mode }}
+      TESTS: ${{ needs.SelectTests.outputs.tests }}
 
     steps:
       - name: Checking Out Repository
@@ -38,6 +87,7 @@ jobs:
 
       # Shared timing history across branches/PRs (restore-only)
       - name: Restore pytest-split durations cache (shared)
+        if: env.MODE == 'full'
         uses: actions/cache/restore@v4
         with:
           path: .test_durations
@@ -45,35 +95,56 @@ jobs:
           restore-keys: |
             pytest-split-${{ runner.os }}-py310-
 
-      - name: Run tests (pytest-split shard) and write coverage data
+      - name: Run all tests (shard ${{ matrix.shard }} of ${{ strategy.job-total }})
+        if: env.MODE == 'full'
+        env:
+          # On PRs and pushes, an unrelated dataset host being down shouldn't fail the run, so those
+          # tests are reported as skipped. The nightly run leaves this off and reports them as failures.
+          STABLE_DATASETS_SKIP_UNREACHABLE_HOSTS: ${{ (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_type == 'branch')) && '1' || '' }}
         run: |
-          set -o pipefail
-
+          set +e
           pytest stable_datasets/ \
             -m "not large" \
             --verbose \
             --durations=0 \
-            --splits 4 \
+            --splits ${{ strategy.job-total }} \
             --group ${{ matrix.shard }} \
             --splitting-algorithm least_duration \
             --store-durations \
+            --clean-durations \
+            --junitxml=junit-${{ matrix.shard }}.xml \
             --cov=stable_datasets \
             --cov-report=term-missing:skip-covered \
             --cov-report=term
+          code=$?
+          set -e
+          # Name the coverage file per shard so MergeCoverage can combine them.
+          if [ -f .coverage ]; then
+            mv .coverage .coverage.${{ matrix.shard }}
+          fi
+          exit $code
 
-            ls -la .test_durations .coverage* || true
-            find . -maxdepth 2 -name ".coverage*" -print || true
+      - name: Check that the package imports
+        if: env.MODE == 'targeted'
+        run: python -c "import stable_datasets"
 
-            echo "=== normalize coverage filename for sharding ==="
-            if [ -f ".coverage" ]; then
-              mv .coverage .coverage.${{ matrix.shard }}
-            fi
-
-            echo "=== final files to upload ==="
-            ls -la .coverage.${{ matrix.shard }} .test_durations || true
+      - name: Run tests for the changed files
+        if: env.MODE == 'targeted' && env.TESTS != ''
+        run: |
+          set +e
+          # TESTS is the space-separated list of test files picked by select_tests.py.
+          pytest $TESTS -m "not large" --verbose --durations=0
+          code=$?
+          set -e
+          # Exit code 5 means every selected test was deselected (all marked large), not a failure.
+          if [ $code -eq 5 ]; then
+            echo "All selected tests are marked large, so none run in CI."
+            exit 0
+          fi
+          exit $code
 
       - name: Upload shard artifacts
-        if: always()
+        if: ${{ !cancelled() && env.MODE == 'full' }}
         uses: actions/upload-artifact@v4
         with:
           name: shard-${{ matrix.shard }}
@@ -81,11 +152,13 @@ jobs:
           path: |
             .coverage.${{ matrix.shard }}
             .test_durations
+            junit-${{ matrix.shard }}.xml
 
+  # Coverage and the shared test timings only make sense for full runs.
   MergeCoverage:
     runs-on: ubuntu-latest
-    needs: [Test]
-    if: always()
+    needs: [SelectTests, Test]
+    if: ${{ !cancelled() && needs.SelectTests.outputs.mode == 'full' }}
 
     steps:
       - name: Checking Out Repository
@@ -95,19 +168,21 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-          cache: "pip"
 
-      - name: Install merge dependencies
+      - name: Install coverage
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev,benchmarks]"
+          pip install "coverage[toml]"
 
       - name: Download all shard artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: shard-*
           path: artifacts
 
-      # Merge durations from shards into a single .test_durations
+      # Merge durations from shards into a single .test_durations. Each shard stores only the
+      # tests it ran (--clean-durations); a shard that wrote the whole restored file would
+      # overwrite the fresh timings of the shards merged before it with the old ones.
       - name: Merge test durations from shards
         run: |
           python -c "
@@ -130,13 +205,13 @@ jobs:
           print(f'Merged {len(merged)} test durations')
           "
 
-      # Save the merged durations for future runs (save-only)
+      # Save the merged durations for future runs (save-only). Save them even when tests failed:
+      # a failed test's timing is still valid, and with this many hosts some download is usually down.
       - name: Save merged pytest-split durations cache
-        if: needs.Test.result == 'success'
         uses: actions/cache/save@v4
         with:
           path: .test_durations
-          key: pytest-split-${{ runner.os }}-py310-${{ github.run_id }}
+          key: pytest-split-${{ runner.os }}-py310-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Combine coverage and generate reports
         run: |
@@ -160,8 +235,57 @@ jobs:
             });
 
       - name: Upload coverage HTML report
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: htmlcov/
+
+  # Keeps one open issue while the nightly run fails, and closes it once the run passes again.
+  NightlyReport:
+    runs-on: ubuntu-latest
+    needs: Test
+    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+
+    steps:
+      - name: Checking Out Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Download test reports
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: shard-*
+          path: artifacts
+
+      - name: Summarize failures
+        id: report
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TESTS_RESULT: ${{ needs.Test.result }}
+        run: python .github/scripts/nightly_report.py artifacts --run-url "$RUN_URL" --tests-result "$TESTS_RESULT" > issue.md
+
+      - name: Open, update or close the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          FAILED: ${{ steps.report.outputs.failed }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Nightly dataset tests are failing"
+          number=$(gh issue list --state open --search "in:title \"$title\"" --json number,title \
+            --jq "map(select(.title == \"$title\"))[0].number // empty")
+          if [ "$FAILED" = "true" ]; then
+            if [ -n "$number" ]; then
+              gh issue comment "$number" --body-file issue.md
+            else
+              gh issue create --title "$title" --body-file issue.md
+            fi
+          elif [ -n "$number" ]; then
+            gh issue close "$number" --comment "The [nightly run]($RUN_URL) passed again."
+          fi
