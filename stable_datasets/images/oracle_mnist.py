@@ -66,6 +66,10 @@ class OracleMNIST(BaseDatasetBuilder):
             license="Apache-2.0",
         )
 
+    def _candidate_splits(self):
+        """Oracle-MNIST has four raw assets but two logical splits, so the cache is keyed by train/test."""
+        return [Split.TRAIN, Split.TEST]
+
     def _split_generators(self):
         source = self._source()
         assets = source["assets"]

@@ -50,3 +50,25 @@ def test_oracle_mnist_dataset(split, expected_num_samples, expected_counts):
     assert counts == expected_counts, f"Expected {split} class counts {expected_counts}, got {counts}."
 
     print(f"All Oracle-MNIST {split} dataset tests passed successfully!")
+
+
+def test_oracle_mnist_reuses_processed_cache(tmp_path, monkeypatch):
+    kwargs = {"download_dir": tmp_path / "raw", "processed_cache_dir": tmp_path / "processed"}
+    first = OracleMNIST(split="test", **kwargs)
+    assert len(first) == 3000
+    builder = object.__new__(OracleMNIST)
+    OracleMNIST.__init__(builder)
+    assert builder._candidate_splits() == ["train", "test"]
+
+    def no_download(*args, **kwargs):
+        pytest.fail("Loading a fully cached dataset must not download again")
+
+    # Delete the raw files and block downloads: the split must load from the processed cache.
+    for path in (tmp_path / "raw").rglob("*"):
+        if path.is_file():
+            path.unlink()
+    monkeypatch.setattr("stable_datasets.images.oracle_mnist.bulk_download", no_download)
+    monkeypatch.setattr("stable_datasets.utils.bulk_download", no_download)
+    reopened = OracleMNIST(split="test", **kwargs)
+    assert len(reopened) == 3000
+    assert set(reopened[0].keys()) == {"image", "label"}
