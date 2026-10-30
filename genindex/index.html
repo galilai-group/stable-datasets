@@ -164,6 +164,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/rock_paper_scissor/">Rock Paper Scissor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/svhn/">The Street View House Numbers Dataset (SVHN)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/linnaeus5/">Linnaeus 5</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/plant_village/">PlantVillage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/intel_image_classification/">Intel Image Classification</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/horse_or_human/">Horses vs. Humans</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/semeion/">Semeion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/malaria/">Malaria Cell Images</a></li>
@@ -334,6 +336,8 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.pacs.PACS.BUILDER_CONFIGS">(PACS attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.plant_village.PlantVillage.BUILDER_CONFIGS">(PlantVillage attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.sun397.SUN397.BUILDER_CONFIGS">(SUN397 attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.uber_tlc.UberTLC.BUILDER_CONFIGS">(UberTLC attribute)</a>
@@ -414,9 +418,11 @@
         <li><a href="../stable_datasets/#stable_datasets.schema.DatasetSource.citation">(DatasetSource attribute)</a>
 </li>
       </ul></li>
-      <li><a href="../stable_datasets.images/#stable_datasets.images.office_home.OfficeHome.CLASS_NAMES">CLASS_NAMES (OfficeHome attribute)</a>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.intel_image_classification.IntelImageClassification.CLASS_NAMES">CLASS_NAMES (IntelImageClassification attribute)</a>
 
       <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#stable_datasets.images.office_home.OfficeHome.CLASS_NAMES">(OfficeHome attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.pacs.PACS.CLASS_NAMES">(PACS attribute)</a>
 </li>
       </ul></li>
@@ -487,6 +493,8 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.office_home.OfficeHome.DEFAULT_CONFIG_NAME">(OfficeHome attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.pacs.PACS.DEFAULT_CONFIG_NAME">(PACS attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.plant_village.PlantVillage.DEFAULT_CONFIG_NAME">(PlantVillage attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.sun397.SUN397.DEFAULT_CONFIG_NAME">(SUN397 attribute)</a>
 </li>
@@ -732,6 +740,8 @@
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets.features/#stable_datasets.features.image.Image">Image (class in stable_datasets.features.image)</a>
 </li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.plant_village.PlantVillage.IMAGE_ARCHIVE">IMAGE_ARCHIVE (PlantVillage attribute)</a>
+</li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_100.ImageNet100">ImageNet100 (class in stable_datasets.images.imagenet_100)</a>
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_1k.ImageNet1K">ImageNet1K (class in stable_datasets.images.imagenet_1k)</a>
@@ -763,6 +773,8 @@
 </li>
       </ul></li>
       <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.int2str">int2str() (ClassLabel method)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.intel_image_classification.IntelImageClassification">IntelImageClassification (class in stable_datasets.images.intel_image_classification)</a>
 </li>
       <li><a href="../stable_datasets.backends/#stable_datasets.backends.arrow_shards.ArrowBackend.is_file_backed">is_file_backed (ArrowBackend property)</a>
 
@@ -1004,6 +1016,8 @@
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.imagewoof">stable_datasets.images.imagewoof</a>
 </li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.intel_image_classification">stable_datasets.images.intel_image_classification</a>
+</li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.k_mnist">stable_datasets.images.k_mnist</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.k_mnist49">stable_datasets.images.k_mnist49</a>
@@ -1031,6 +1045,8 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.patternnet">stable_datasets.images.patternnet</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.places365_small">stable_datasets.images.places365_small</a>
+</li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.plant_village">stable_datasets.images.plant_village</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.rock_paper_scissor">stable_datasets.images.rock_paper_scissor</a>
 </li>
@@ -1220,11 +1236,13 @@
 </li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.Phoneme.Phoneme">Phoneme (class in stable_datasets.timeseries.Phoneme)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.picidae.Picidae">Picidae (class in stable_datasets.timeseries.picidae)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets.images/#stable_datasets.images.places365_small.Places365Small">Places365Small (class in stable_datasets.images.places365_small)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.plant_village.PlantVillage">PlantVillage (class in stable_datasets.images.plant_village)</a>
 </li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.electricity_hourly.ElectricityHourly.PREDICTION_LENGTH">PREDICTION_LENGTH (ElectricityHourly attribute)</a>
 </li>
@@ -1479,6 +1497,8 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagewoof.Imagewoof.SOURCE">(Imagewoof attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.intel_image_classification.IntelImageClassification.SOURCE">(IntelImageClassification attribute)</a>
+</li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels.SOURCE">(JapaneseVowels attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.kather_colorectal_histology.KatherColorectalHistology.SOURCE">(KatherColorectalHistology attribute)</a>
@@ -1514,6 +1534,8 @@
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.picidae.Picidae.SOURCE">(Picidae attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.places365_small.Places365Small.SOURCE">(Places365Small attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.plant_village.PlantVillage.SOURCE">(PlantVillage attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor.SOURCE">(RockPaperScissor attribute)</a>
 </li>
@@ -1565,6 +1587,8 @@
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.speech_commands.SpeechCommands">SpeechCommands (class in stable_datasets.timeseries.speech_commands)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.splits.Split">Split (class in stable_datasets.splits)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.intel_image_classification.IntelImageClassification.SPLIT_SEED">SPLIT_SEED (IntelImageClassification attribute)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.splits.SplitGenerator">SplitGenerator (class in stable_datasets.splits)</a>
 </li>
@@ -2021,6 +2045,13 @@
 </li>
       </ul></li>
       <li>
+    stable_datasets.images.intel_image_classification
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.intel_image_classification">module</a>
+</li>
+      </ul></li>
+      <li>
     stable_datasets.images.k_mnist
 
       <ul style="list-style-type:none">
@@ -2116,6 +2147,13 @@
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.places365_small">module</a>
+</li>
+      </ul></li>
+      <li>
+    stable_datasets.images.plant_village
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.plant_village">module</a>
 </li>
       </ul></li>
       <li>
@@ -2560,6 +2598,8 @@
 </li>
       <li><a href="../stable_datasets/#stable_datasets.splits.Split.VALIDATION">VALIDATION (Split attribute)</a>
 </li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.intel_image_classification.IntelImageClassification.VALIDATION_FRACTION">VALIDATION_FRACTION (IntelImageClassification attribute)</a>
+</li>
       <li><a href="../stable_datasets.features/#stable_datasets.features.base.Value">Value (class in stable_datasets.features.base)</a>
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.arabic_characters.ArabicCharacters.VERSION">VERSION (ArabicCharacters attribute)</a>
@@ -2689,6 +2729,8 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagewoof.Imagewoof.VERSION">(Imagewoof attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.intel_image_classification.IntelImageClassification.VERSION">(IntelImageClassification attribute)</a>
+</li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.JapaneseVowels.JapaneseVowels.VERSION">(JapaneseVowels attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.kather_colorectal_histology.KatherColorectalHistology.VERSION">(KatherColorectalHistology attribute)</a>
@@ -2726,6 +2768,8 @@
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.picidae.Picidae.VERSION">(Picidae attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.places365_small.Places365Small.VERSION">(Places365Small attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.plant_village.PlantVillage.VERSION">(PlantVillage attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.rock_paper_scissor.RockPaperScissor.VERSION">(RockPaperScissor attribute)</a>
 </li>
