@@ -1,33 +1,8 @@
 import numpy as np
-import pytest
-import requests
 from PIL import Image
 
 from stable_datasets.images import Optdigits
-
-
-def download_source_or_skip(source_info):
-    """Use the shared download cache and skip unreachable sources."""
-    from stable_datasets.utils import download
-
-    try:
-        return download(source_info)
-    except RuntimeError as error:
-        current = error
-
-        while current is not None:
-            if isinstance(
-                current,
-                (
-                    requests.exceptions.ConnectionError,
-                    requests.exceptions.Timeout,
-                ),
-            ):
-                pytest.skip(f"Dataset source unreachable: {error}")
-
-            current = current.__cause__ or current.__context__
-
-        raise
+from stable_datasets.utils import download
 
 
 def test_optdigits_dataset():
@@ -73,7 +48,7 @@ def test_optdigits_source_consistency():
         ("test", 1797),
     ]:
         source_info = Optdigits.SOURCE["assets"][split]
-        source_path = download_source_or_skip(source_info)
+        source_path = download(source_info)
 
         source_data = np.loadtxt(
             source_path,

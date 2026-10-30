@@ -1,35 +1,10 @@
 from collections import Counter
 
 import numpy as np
-import pytest
-import requests
 from PIL import Image
 
 from stable_datasets.images import OlivettiFaces
-
-
-def download_source_or_skip(source_info):
-    """Use the shared download cache and skip unreachable sources."""
-    from stable_datasets.utils import download
-
-    try:
-        return download(source_info)
-    except RuntimeError as error:
-        current = error
-
-        while current is not None:
-            if isinstance(
-                current,
-                (
-                    requests.exceptions.ConnectionError,
-                    requests.exceptions.Timeout,
-                ),
-            ):
-                pytest.skip(f"Dataset source unreachable: {error}")
-
-            current = current.__cause__ or current.__context__
-
-        raise
+from stable_datasets.utils import download
 
 
 def test_olivetti_faces_dataset():
@@ -81,7 +56,7 @@ def test_olivetti_faces_source_consistency():
     from scipy.io import loadmat
 
     source_info = OlivettiFaces.SOURCE["assets"]["train"]
-    source_path = download_source_or_skip(source_info)
+    source_path = download(source_info)
 
     raw_faces = loadmat(source_path)["faces"]
     assert raw_faces.shape == (4096, 400)
