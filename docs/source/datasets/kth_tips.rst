@@ -10,7 +10,9 @@ Overview
 
 KTH-TIPS contains 810 color images of 10 materials photographed under
 different scales, poses, and lighting conditions. Each material has 81
-images. The cropped color images are 200 × 200 pixels.
+images. The cropped color images are 200 × 200 pixels, except 63 that are
+not square (154-277 × 113-193 pixels): brown bread at scales 6-9 and cracker
+at scales 7-9, which were too small to crop at 200 × 200.
 
 The source dataset does not provide an official train/test split. The
 ``train`` split in this builder contains all 810 images.
@@ -28,7 +30,7 @@ Each ``ds[i]`` returns:
      - Description
    * - ``image``
      - ``PIL.Image.Image``
-     - 200 × 200 RGB image
+     - RGB image, 200 × 200 except for 63 images (see Overview)
    * - ``label``
      - ``int``
      - Material class ID from 0 to 9
