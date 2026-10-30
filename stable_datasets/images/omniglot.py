@@ -16,8 +16,7 @@ from stable_datasets.schema import (
     Value,
     Version,
 )
-from stable_datasets.splits import SplitGenerator
-from stable_datasets.utils import BaseDatasetBuilder, download
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 _BASE_URL = "https://raw.githubusercontent.com/brendenlake/omniglot/057f034baf2ecb8530bc5710e5a23584d2a519cc/python/"
@@ -75,15 +74,6 @@ class Omniglot(BaseDatasetBuilder):
             citation=self.SOURCE.citation,
             license=self.SOURCE.license,
         )
-
-    def _split_generators(self):
-        return [
-            SplitGenerator(
-                name=split,
-                gen_kwargs={"data_path": download(asset, dest_folder=self._raw_download_dir), "split": split},
-            )
-            for split, asset in self.SOURCE.assets.items()
-        ]
 
     def _generate_examples(self, data_path, split):
         if split not in ("background", "evaluation"):
