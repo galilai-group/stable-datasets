@@ -13,6 +13,26 @@ this is not an official training partition.
    One example per class, selected by the first image ID in each class.
    Source images are resized for display without cropping or changing labels.
 
+Data Structure
+--------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 20 60
+
+   * - Key
+     - Type
+     - Description
+   * - ``image``
+     - PIL.Image.Image
+     - RGB PIL image, 256 x 256 pixels
+   * - ``label``
+     - int
+     - Integer class ID (0--7)
+   * - ``image_id``
+     - str
+     - Original filename stem, unique within the dataset
+
 Usage
 -----
 
@@ -24,31 +44,20 @@ Usage
    sample = ds[0]  # image: PIL image, label: int, image_id: str
    print(ds.features["label"].names)
 
-   # Use the original ZIP without downloading it again.
-   ds = Scene8(split="train", archive_path="/data/scene8.zip")
+   # Standard library options control cache locations.
+   ds = Scene8(split="train", download_dir="/data/downloads",
+               processed_cache_dir="/data/processed")
 
 Class IDs follow the fixed order ``coast``, ``forest``, ``highway``, ``insidecity``,
 ``mountain``, ``opencountry``, ``street``, and ``tallbuilding``. Rows are sorted
 by image ID. Standard caching, formatting, and transforms are supported.
 
-Testing and validation
-----------------------
+Testing
+-------
 
-Offline tests check class parsing, invalid inputs, original image bytes, and
-cache reopening. The complete source audit verified every image. See
-:download:`recorded data checks <audits/scene8_isic2016_protocol_review.json>`.
-
-The evaluation example creates approximately 60% fitting, 20% validation, and
-20% test partitions. Identical RGB images stay in the same partition:
-
-* ``insidecity_urb992`` / ``tallbuilding_urb992`` have conflicting source labels.
-* ``mountain_sclos4`` / ``mountain_sharp59`` share the mountain label.
-
-Both original records and labels remain in the builder. Grouping prevents these
-pairs crossing evaluation partitions; it does not rule out near-duplicates.
-The main validation uses frozen DINO features and a trained linear classifier.
-See the :doc:`integration report <experiments/scene8_isic2016/REPORT>` for the
-setup, results, and short reproduction workflow.
+The tests download the original release through the standard dataset API and
+check split sizes, class counts, image decoding, stable IDs, and cache reopening.
+Offline parser tests additionally check invalid inputs and label matching.
 
 Source and terms
 ----------------
@@ -60,5 +69,17 @@ The original page does not specify a dataset-wide license. The library's code
 license does not grant a license to redistribute the images. Download checksums
 identify the locally audited release rather than publisher signatures.
 
-Reference: Aude Oliva and Antonio Torralba, *Modeling the shape of the scene:
-A holistic representation of the spatial envelope*, IJCV 42, 145--175, 2001.
+Citation
+--------
+
+.. code-block:: bibtex
+
+   @article{oliva2001modeling,
+       title={Modeling the shape of the scene: A holistic representation of the spatial envelope},
+       author={Oliva, Aude and Torralba, Antonio},
+       journal={International Journal of Computer Vision},
+       volume={42}, pages={145--175}, year={2001}
+   }
+
+Known exact-pixel duplicates are retained as source records. Evaluation code
+should group duplicate images within partitions and avoid train/test leakage.

@@ -1,7 +1,7 @@
 """Original Spatial Envelope eight-category outdoor scene collection."""
 
 import zipfile
-from pathlib import Path, PurePosixPath
+from pathlib import PurePosixPath
 
 from stable_datasets.schema import (
     ClassLabel,
@@ -13,16 +13,17 @@ from stable_datasets.schema import (
     Value,
     Version,
 )
-from stable_datasets.splits import Split, SplitGenerator
-from stable_datasets.utils import BaseDatasetBuilder, download
+from stable_datasets.splits import Split
+from stable_datasets.utils import BaseDatasetBuilder
 
 
 class Scene8(BaseDatasetBuilder):
-    """Load all 2,688 original images as ``train``, without inventing a split.
+    """Spatial Envelope outdoor scene classification dataset.
 
-    ``archive_path`` optionally supplies an already downloaded original ZIP.
-    Images, including duplicates and conflicting labels, are preserved verbatim.
-    Experimental partitions belong to the evaluation protocol, not this builder.
+    Contains 2,688 RGB images at 256 x 256 pixels across eight categories:
+    coast, forest, highway, insidecity, mountain, opencountry, street, and
+    tallbuilding. The original collection has no official partition; all
+    images are exposed as train. Published by Oliva and Torralba (2001).
     """
 
     VERSION = Version("1.0.0")
@@ -44,10 +45,6 @@ class Scene8(BaseDatasetBuilder):
         license="Not specified on the original dataset page; consult the publisher.",
     )
 
-    def __init__(self, archive_path=None, **kwargs):
-        self.archive_path = Path(archive_path) if archive_path is not None else None
-        super().__init__(**kwargs)
-
     def _info(self):
         return DatasetInfo(
             description="Spatial Envelope: 2,688 RGB outdoor scene images in eight classes. No official partition.",
@@ -59,12 +56,6 @@ class Scene8(BaseDatasetBuilder):
             citation=self.SOURCE.citation,
             license=self.SOURCE.license,
         )
-
-    def _split_generators(self):
-        path = self.archive_path
-        if path is None:
-            path = download(self.SOURCE.assets["train"], dest_folder=self._raw_download_dir)
-        return [SplitGenerator(Split.TRAIN, {"data_path": path, "split": Split.TRAIN})]
 
     def _generate_examples(self, data_path, split):
         if split != Split.TRAIN:

@@ -1,8 +1,12 @@
 """Offline ISIC2016 label joins, error handling and real cache tests."""
 
+import csv
 import io
 import zipfile
+from collections import Counter
+from pathlib import Path
 
+import numpy as np
 import pytest
 from PIL import Image
 
@@ -29,25 +33,6 @@ def original_assets(tmp_path):
         )
         csv_path.write_text(rows, encoding="utf-8")
     return tmp_path, payloads
-
-
-def test_isic2016_join_and_cold_warm_cache(original_assets, monkeypatch):
-    root, payloads = original_assets
-    kwargs = {"data_dir": root, "processed_cache_dir": root / "processed"}
-    datasets = ISIC2016(**kwargs)
-    assert set(datasets) == {"train", "test"}
-    assert [row["label"] for row in datasets["train"]] == [1, 0]
-    assert [row["label"] for row in datasets["test"]] == [0, 1]
-    for ds in datasets.values():
-        assert ds.features["label"].names == ["benign", "malignant"]
-        for row in ds.with_format("raw"):
-            assert row["image"] == payloads[row["image_id"]]
-        assert ds[0]["image"].size == (8, 6)
-    monkeypatch.setattr(ISIC2016, "_split_generators", lambda self: pytest.fail("cache hit rebuilt raw sources"))
-    reopened = ISIC2016(**kwargs)
-    assert reopened["test"].with_format("raw")[0]["image"] == payloads["ISIC_0000003"]
-    with pytest.raises(ValueError, match="Split 'validation' not found"):
-        ISIC2016(split="validation", **kwargs)
 
 
 @pytest.mark.parametrize(
@@ -80,21 +65,56 @@ def test_isic2016_rejects_image_label_mismatch(original_assets):
         )
 
 
-def test_isic2016_missing_local_asset(tmp_path):
-    with pytest.raises(FileNotFoundError, match="Missing original"):
-        ISIC2016(data_dir=tmp_path, processed_cache_dir=tmp_path / "processed")
+@pytest.fixture(scope="module")
+def real_isic2016(tmp_path_factory):
+    """Use the public download path, not local assets or mocks."""
+    root = tmp_path_factory.mktemp("real_isic2016")
+    return ISIC2016(download_dir=root / "downloads", processed_cache_dir=root / "processed"), root
 
 
-def test_isic2016_download_assets_are_not_splits(original_assets, monkeypatch):
-    root, _ = original_assets
-    calls = []
-
-    def bulk_download(assets, dest_folder):
-        assets = list(assets)
-        calls.extend(assets)
-        return [root / asset.url.rsplit("/", 1)[1] for asset in assets]
-
-    monkeypatch.setattr("stable_datasets.images.isic2016.bulk_download", bulk_download)
-    result = ISIC2016(processed_cache_dir=root / "downloaded")
-    assert set(result) == {"train", "test"}
-    assert len(calls) == 4
+@pytest.mark.parametrize(
+    "split,size,counts,prefix",
+    [
+        ("train", 900, [727, 173], "Training"),
+        ("test", 379, [304, 75], "Test"),
+    ],
+)
+def test_isic2016_real_dataset(real_isic2016, split, size, counts, prefix):
+    datasets, root = real_isic2016
+    assert set(datasets) == {"train", "test"}
+    ds = datasets[split]
+    assert len(ds) == size
+    assert ds.features["label"].names == ["benign", "malignant"]
+    labels = ds.table.column("label").to_pylist()
+    ids = ds.table.column("image_id").to_pylist()
+    assert Counter(labels) == dict(enumerate(counts))
+    assert len(set(ids)) == size and ids == sorted(ids)
+    # The common downloader inserts a URL hash into each cached filename.
+    csv_paths = list((root / "downloads").glob(f"ISBI2016_ISIC_Part3_{prefix}_GroundTruth.*.csv"))
+    assert len(csv_paths) == 1
+    path = csv_paths[0]
+    with path.open(newline="", encoding="utf-8-sig") as stream:
+        source = list(csv.reader(stream))
+    encoding = {"benign": 0, "malignant": 1} if split == "train" else {"0.0": 0, "1.0": 1}
+    assert len(source) == size and {r[1] for r in source} == set(encoding)
+    expected = {r[0]: encoding[r[1]] for r in source}
+    assert dict(zip(ids, labels)) == expected
+    archive_paths = list((root / "downloads").glob(f"ISBI2016_ISIC_Part3_{prefix}_Data.*.zip"))
+    assert len(archive_paths) == 1
+    archive_path = archive_paths[0]
+    with zipfile.ZipFile(archive_path) as archive:
+        members = {Path(n).stem: n for n in archive.namelist() if n.lower().endswith(".jpg")}
+        assert set(members) == set(ids)
+        for label in (0, 1):
+            index = labels.index(label)
+            sample = ds[index]
+            assert set(sample) == {"image", "label", "image_id"}
+            assert isinstance(sample["image"], Image.Image) and sample["image"].mode == "RGB"
+            assert np.asarray(sample["image"]).dtype == np.uint8
+            assert min(sample["image"].size) > 0
+            assert ds.with_format("raw")[index]["image"] == archive.read(members[sample["image_id"]])
+    assert not set(datasets["train"].table.column("image_id").to_pylist()) & set(
+        datasets["test"].table.column("image_id").to_pylist()
+    )
+    reopened = ISIC2016(split=split, download_dir=root / "downloads", processed_cache_dir=root / "processed")
+    assert reopened.with_format("raw")[0] == ds.with_format("raw")[0]

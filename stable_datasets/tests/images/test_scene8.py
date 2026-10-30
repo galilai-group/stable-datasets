@@ -1,12 +1,42 @@
-"""Offline parser and real Arrow cache checks for Scene8."""
+"""Real-download integration and offline parsing tests for Scene8."""
 
 import io
 import zipfile
+from collections import Counter
 
+import numpy as np
 import pytest
 from PIL import Image
 
 from stable_datasets.images import Scene8
+
+
+def test_scene8_real_dataset(tmp_path):
+    """Download the published archive and verify the original collection."""
+    kwargs = {"download_dir": tmp_path / "downloads", "processed_cache_dir": tmp_path / "processed"}
+    data = Scene8(**kwargs)
+    assert set(data) == {"train"}
+    ds = data["train"]
+    assert len(ds) == 2688
+    assert ds.features["label"].names == list(Scene8.CLASS_NAMES)
+    labels = ds.table.column("label").to_pylist()
+    assert Counter(labels) == dict(enumerate([360, 328, 260, 308, 374, 410, 292, 356]))
+    ids = ds.table.column("image_id").to_pylist()
+    assert len(set(ids)) == len(ds) and ids == sorted(ids)
+    # One real image from every class checks archive parsing and decoding.
+    for label in range(8):
+        sample = ds[labels.index(label)]
+        assert set(sample) == {"image", "label", "image_id"}
+        assert sample["image_id"].startswith(Scene8.CLASS_NAMES[label] + "_")
+        assert isinstance(sample["image"], Image.Image)
+        assert sample["image"].mode == "RGB" and sample["image"].size == (256, 256)
+        assert np.asarray(sample["image"]).dtype == np.uint8
+    assert ds.with_format("torch")[0]["image"].shape == (3, 256, 256)
+    reopened = Scene8(split="train", **kwargs)
+    assert len(reopened) == 2688
+    assert reopened.with_format("raw")[0] == ds.with_format("raw")[0]
+    with pytest.raises(ValueError, match="Split 'test' not found"):
+        Scene8(split="test", **kwargs)
 
 
 def _make_archive(path, names=("forest_a", "coast_b")):
@@ -21,34 +51,22 @@ def _make_archive(path, names=("forest_a", "coast_b")):
     return payloads
 
 
-def test_scene8_cold_warm_cache_and_verbatim_images(tmp_path, monkeypatch):
-    archive = tmp_path / "scene8.zip"
-    payloads = _make_archive(archive)
-    kwargs = {"archive_path": archive, "processed_cache_dir": tmp_path / "processed"}
-    data = Scene8(**kwargs)
-    assert set(data) == {"train"}
-    ds = data["train"]
-    assert ds.features["label"].names == list(Scene8.CLASS_NAMES)
-    assert [row["image_id"] for row in ds] == ["coast_b", "forest_a"]
-    for row in ds.with_format("raw"):
+def test_scene8_parser_preserves_bytes(tmp_path):
+    path = tmp_path / "source.zip"
+    payloads = _make_archive(path)
+    rows = [row for _, row in object.__new__(Scene8)._generate_examples(path, "train")]
+    assert [r["image_id"] for r in rows] == ["coast_b", "forest_a"]
+    assert [r["label"] for r in rows] == [0, 1]
+    for row in rows:
         assert row["image"] == payloads[row["image_id"]]
-    assert [row["label"] for row in ds] == [0, 1]
-    assert ds[0]["image"].size == (8, 5)
-    assert ds.with_format("torch")[0]["image"].shape == (3, 5, 8)
-    archive.unlink()
-    monkeypatch.setattr("stable_datasets.images.scene8.download", lambda *a, **k: pytest.fail("network on cache hit"))
-    reopened = Scene8(split="train", **kwargs)
-    assert [row["image_id"] for row in reopened] == ["coast_b", "forest_a"]
-    assert reopened.with_format("raw")[0]["image"] == payloads["coast_b"]
 
 
 @pytest.mark.parametrize("names, message", [(("unknown_a",), "Unknown Scene8"), ((), "no JPEG")])
 def test_scene8_rejects_invalid_collection(tmp_path, names, message):
     path = tmp_path / "bad.zip"
     _make_archive(path, names)
-    builder = object.__new__(Scene8)
     with pytest.raises(ValueError, match=message):
-        list(builder._generate_examples(path, "train"))
+        list(object.__new__(Scene8)._generate_examples(path, "train"))
 
 
 def test_scene8_rejects_repeated_ids(tmp_path):
@@ -58,20 +76,3 @@ def test_scene8_rejects_repeated_ids(tmp_path):
         archive.writestr("b/coast_a.jpg", b"second")
     with pytest.raises(ValueError, match="Duplicate Scene8 image ID"):
         list(object.__new__(Scene8)._generate_examples(path, "train"))
-
-
-def test_scene8_download_route_and_invalid_split(tmp_path, monkeypatch):
-    path = tmp_path / "source.zip"
-    _make_archive(path)
-    calls = []
-
-    def download(info, **kwargs):
-        calls.append(info)
-        return path
-
-    monkeypatch.setattr("stable_datasets.images.scene8.download", download)
-    ds = Scene8(split="train", processed_cache_dir=tmp_path / "processed")
-    assert len(ds) == 2
-    assert calls == [Scene8.SOURCE.assets["train"]]
-    with pytest.raises(ValueError, match="Split 'test' not found"):
-        Scene8(split="test", processed_cache_dir=tmp_path / "processed")

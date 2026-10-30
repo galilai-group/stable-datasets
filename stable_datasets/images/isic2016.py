@@ -19,7 +19,7 @@ from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 
 
-_BASE_URL = "https://isic-challenge-data.s3.amazonaws.com/2016/"
+_BASE_URL = "https://isic-archive.s3.amazonaws.com/challenges/2016/"
 _ASSET_HASHES = {
     "Training_Data.zip": "d78bd1de08511b514e58784c91fd2d8dab24e407cafd023a7debbceb9155ffb2",
     "Training_GroundTruth.csv": "0ffadd63b7cec650cddfbe5df54d1d3167453fe6004c2bbf05824184b0c4d405",
@@ -29,11 +29,12 @@ _ASSET_HASHES = {
 
 
 class ISIC2016(BaseDatasetBuilder):
-    """Preserve the official 900/379 train/test split of ISIC 2016 Task 3.
+    """ISIC 2016 Task 3 dermoscopic skin lesion classification dataset.
 
-    ``data_dir`` may point to the four original ZIP/CSV assets for offline use.
-    Class 0 is benign and class 1 is malignant. No validation set is fabricated.
-    Three exact pixel duplicates cross the official splits; see the dataset docs.
+    Contains 900 training and 379 test JPEG images with variable dimensions.
+    Labels identify benign lesions (0) and malignant lesions (1). Images and
+    labels were released for the ISBI 2016 skin lesion analysis challenge;
+    the official train/test partitions are retained.
     """
 
     VERSION = Version("1.0.0")
@@ -54,10 +55,6 @@ class ISIC2016(BaseDatasetBuilder):
         license="CC0-1.0",
     )
 
-    def __init__(self, data_dir=None, **kwargs):
-        self.data_dir = Path(data_dir) if data_dir is not None else None
-        super().__init__(**kwargs)
-
     def _info(self):
         return DatasetInfo(
             description="ISIC 2016 Task 3: 900 training and 379 test dermoscopic images for lesion classification.",
@@ -75,14 +72,8 @@ class ISIC2016(BaseDatasetBuilder):
 
     def _split_generators(self):
         assets = self.SOURCE.assets
-        if self.data_dir is not None:
-            paths = {key: self.data_dir / f"ISBI2016_ISIC_Part3_{key}" for key in assets}
-            for path in paths.values():
-                if not path.is_file():
-                    raise FileNotFoundError(f"Missing original ISIC2016 asset: {path}")
-        else:
-            downloaded = bulk_download(assets.values(), dest_folder=self._raw_download_dir)
-            paths = dict(zip(assets, downloaded))
+        downloaded = bulk_download(assets.values(), dest_folder=self._raw_download_dir)
+        paths = dict(zip(assets, downloaded))
         return [
             SplitGenerator(
                 split,
