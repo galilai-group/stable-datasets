@@ -28,10 +28,12 @@ class CIFAR10_1(BaseDatasetBuilder):
             "images": DownloadInfo(
                 url="https://raw.githubusercontent.com/modestyachts/CIFAR-10.1/master/datasets/cifar10.1_v6_data.npy",
                 filename="cifar10.1_v6_data.npy",
+                checksum="sha256:2997188e5816f5bd545dc77771b6227828c28146049fcecf3fa10775474cacc6",
             ),
             "labels": DownloadInfo(
                 url="https://raw.githubusercontent.com/modestyachts/CIFAR-10.1/master/datasets/cifar10.1_v6_labels.npy",
                 filename="cifar10.1_v6_labels.npy",
+                checksum="sha256:ae40beda001693674edc94d925ee8268cfe68905f8f9aff800c8dcdfcd6c9448",
             ),
         },
         citation="""@article{recht2018cifar10,
@@ -40,7 +42,8 @@ class CIFAR10_1(BaseDatasetBuilder):
   journal={arXiv preprint arXiv:1806.00451},
   year={2018}
 }""",
-        license="Tiny Images dataset terms",
+        # The upstream MIT license excludes the image and label data.
+        license="Unknown",
     )
 
     def _info(self):

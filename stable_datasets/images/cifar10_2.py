@@ -26,19 +26,24 @@ class CIFAR10_2(BaseDatasetBuilder):
             "train": DownloadInfo(
                 url="https://raw.githubusercontent.com/modestyachts/cifar-10.2/master/cifar102_train.npz",
                 filename="cifar102_train.npz",
+                checksum="sha256:03804f609934c2fdf3adfb708a820e8372284ee5ccac1e4d8aed9f2c87cab099",
             ),
             "test": DownloadInfo(
                 url="https://raw.githubusercontent.com/modestyachts/cifar-10.2/master/cifar102_test.npz",
                 filename="cifar102_test.npz",
+                checksum="sha256:e4fd6462bd5141ed293acd52ea570952f65d1bfd4ec9b068f87742f75a7a632e",
             ),
         },
-        citation="""@inproceedings{lu2022harder,
-  author={Lu, Shangyun and Nott, Bradley and Olson, Aaron and Todeschini, Alberto and Vahabi, Puya and Carmon, Yair and Schmidt, Ludwig},
+        citation="""@inproceedings{lu2020harder,
+  author={Lu, Shangyun and Nott, Bradley and Olson, Aaron and Todeschini, Alberto and
+          Vahabi, Hossein and Carmon, Yair and Schmidt, Ludwig},
   title={Harder or Different? A Closer Look at Distribution Shift in Dataset Reproduction},
-  booktitle={ICLR},
-  year={2022}
+  booktitle={ICML Workshop on Uncertainty and Robustness in Deep Learning},
+  year={2020},
+  url={https://www.gatsby.ucl.ac.uk/~balaji/udl2020/accepted-papers/UDL2020-paper-101.pdf}
 }""",
-        license="Tiny Images dataset terms",
+        # The upstream repository does not specify a dataset license.
+        license="Unknown",
     )
 
     def _info(self):
