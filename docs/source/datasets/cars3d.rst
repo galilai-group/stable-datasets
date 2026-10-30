@@ -21,7 +21,7 @@ Each image depicts a single car model rendered from a specific **azimuth** and *
 - **Image resolution**: 128×128×3 (RGB)
 
 Latent Factors of Variation
---------------------------
+---------------------------
 
 The dataset is generated from three independent latent factors:
 
@@ -94,7 +94,7 @@ Usage Example
     ds_torch = ds.with_format("torch")
 
 Why No Train/Test Split?
------------------------
+------------------------
 
 Cars3D does not provide an official train/test split.  
 It is designed for **representation learning and disentanglement research**, where evaluation typically focuses on:

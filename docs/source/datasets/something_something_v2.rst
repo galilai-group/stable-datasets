@@ -1,5 +1,5 @@
 Something-Something V2
-=====================
+======================
 
 Something-Something V2 is a video action-recognition dataset of short clips
 showing people performing fine-grained actions with everyday objects.
