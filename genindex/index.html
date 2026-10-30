@@ -149,6 +149,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/imagenet_a/">ImageNet-A</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/imagenet_r/">ImageNet-R</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/e_mnist/">EMNIST</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/eth80/">ETH-80</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/mnist_c/">MNIST-C</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/fgvc_aircraft/">FGVC Aircraft</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/flowers17/">Flowers17</a></li>
@@ -156,6 +157,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/tf_flowers/">TensorFlow Flowers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/imagewoof/">Imagewoof</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/food101/">Food-101</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/freiburg_groceries/">Freiburg Groceries</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/fmd/">FMD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/cub200/">CUB-200</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/stanford_dogs/">Stanford Dogs</a></li>
@@ -334,6 +336,8 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.flowers17.Flowers17.BUILDER_CONFIGS">(Flowers17 attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.freiburg_groceries.FreiburgGroceries.BUILDER_CONFIGS">(FreiburgGroceries attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.BUILDER_CONFIGS">(HASYv2 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_v2.ImageNetV2.BUILDER_CONFIGS">(ImageNetV2 attribute)</a>
@@ -504,6 +508,8 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.flowers17.Flowers17.DEFAULT_CONFIG_NAME">(Flowers17 attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.freiburg_groceries.FreiburgGroceries.DEFAULT_CONFIG_NAME">(FreiburgGroceries attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.DEFAULT_CONFIG_NAME">(HASYv2 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.imagenet_v2.ImageNetV2.DEFAULT_CONFIG_NAME">(ImageNetV2 attribute)</a>
@@ -595,6 +601,8 @@
 </li>
       </ul></li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.epilepsy.Epilepsy">Epilepsy (class in stable_datasets.timeseries.epilepsy)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.eth80.ETH80">ETH80 (class in stable_datasets.images.eth80)</a>
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.eurosat.EuroSAT">EuroSAT (class in stable_datasets.images.eurosat)</a>
 </li>
@@ -693,6 +701,8 @@
 </li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.freefield1010.Freefield1010">Freefield1010 (class in stable_datasets.timeseries.freefield1010)</a>
 </li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.freiburg_groceries.FreiburgGroceries">FreiburgGroceries (class in stable_datasets.images.freiburg_groceries)</a>
+</li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.electricity_hourly.ElectricityHourly.FREQ">FREQ (ElectricityHourly attribute)</a>
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.fruits360.Fruits360">Fruits360 (class in stable_datasets.images.fruits360)</a>
@@ -788,14 +798,16 @@
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.imagewoof.Imagewoof">Imagewoof (class in stable_datasets.images.imagewoof)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets/#stable_datasets.utils.BaseDatasetBuilder.info">info (BaseDatasetBuilder property)</a>
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets/#stable_datasets.dataset.StableDataset.info">(StableDataset property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
+      <li><a href="../stable_datasets.images/#stable_datasets.images.eth80.ETH80.INSTANCE_IDS">INSTANCE_IDS (ETH80 attribute)</a>
+</li>
       <li><a href="../stable_datasets.features/#stable_datasets.features.base.ClassLabel.int2str">int2str() (ClassLabel method)</a>
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.intel_image_classification.IntelImageClassification">IntelImageClassification (class in stable_datasets.images.intel_image_classification)</a>
@@ -855,6 +867,12 @@
   <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li><a href="../stable_datasets.images/#stable_datasets.images.k_mnist49.KMNIST49.LABEL_URLS">LABEL_URLS (KMNIST49 attribute)</a>
 </li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.eth80.ETH80.LABELS">LABELS (ETH80 attribute)</a>
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#stable_datasets.images.freiburg_groceries.FreiburgGroceries.LABELS">(FreiburgGroceries attribute)</a>
+</li>
+      </ul></li>
       <li><a href="../stable_datasets.backends/#stable_datasets.backends.lance_rows.LanceBackend">LanceBackend (class in stable_datasets.backends.lance_rows)</a>
 </li>
       <li><a href="../stable_datasets/#stable_datasets.cache.LanceCacheMeta">LanceCacheMeta (class in stable_datasets.cache)</a>
@@ -1008,6 +1026,8 @@
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.e_mnist">stable_datasets.images.e_mnist</a>
 </li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.eth80">stable_datasets.images.eth80</a>
+</li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.eurosat">stable_datasets.images.eurosat</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.face_pointing">stable_datasets.images.face_pointing</a>
@@ -1023,6 +1043,8 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.fmd">stable_datasets.images.fmd</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.food101">stable_datasets.images.food101</a>
+</li>
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.freiburg_groceries">stable_datasets.images.freiburg_groceries</a>
 </li>
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.fruits360">stable_datasets.images.fruits360</a>
 </li>
@@ -1515,6 +1537,8 @@
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.epilepsy.Epilepsy.SOURCE">(Epilepsy attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.eth80.ETH80.SOURCE">(ETH80 attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.eurosat.EuroSAT.SOURCE">(EuroSAT attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.face_pointing.FacePointing.SOURCE">(FacePointing attribute)</a>
@@ -1532,6 +1556,8 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.food101.Food101.SOURCE">(Food101 attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.freefield1010.Freefield1010.SOURCE">(Freefield1010 attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.freiburg_groceries.FreiburgGroceries.SOURCE">(FreiburgGroceries attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.fruits360.Fruits360.SOURCE">(Fruits360 attribute)</a>
 </li>
@@ -1662,7 +1688,11 @@
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.intel_image_classification.IntelImageClassification.SPLIT_SEED">SPLIT_SEED (IntelImageClassification attribute)</a>
 </li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.eth80.ETH80.SPLIT_SLICES">SPLIT_SLICES (ETH80 attribute)</a>
+</li>
       <li><a href="../stable_datasets/#stable_datasets.splits.SplitGenerator">SplitGenerator (class in stable_datasets.splits)</a>
+</li>
+      <li><a href="../stable_datasets.images/#stable_datasets.images.freiburg_groceries.FreiburgGroceries.SPLITS_REVISION">SPLITS_REVISION (FreiburgGroceries attribute)</a>
 </li>
       <li><a href="../stable_datasets.video/#stable_datasets.video.something_something_v2.SSv2">SSv2 (in module stable_datasets.video.something_something_v2)</a>
 </li>
@@ -1998,6 +2028,13 @@
 </li>
       </ul></li>
       <li>
+    stable_datasets.images.eth80
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.eth80">module</a>
+</li>
+      </ul></li>
+      <li>
     stable_datasets.images.eurosat
 
       <ul style="list-style-type:none">
@@ -2051,6 +2088,13 @@
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.food101">module</a>
+</li>
+      </ul></li>
+      <li>
+    stable_datasets.images.freiburg_groceries
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.images/#module-stable_datasets.images.freiburg_groceries">module</a>
 </li>
       </ul></li>
       <li>
@@ -2817,6 +2861,8 @@
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.epilepsy.Epilepsy.VERSION">(Epilepsy attribute)</a>
 </li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.eth80.ETH80.VERSION">(ETH80 attribute)</a>
+</li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.eurosat.EuroSAT.VERSION">(EuroSAT attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.face_pointing.FacePointing.VERSION">(FacePointing attribute)</a>
@@ -2834,6 +2880,8 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.food101.Food101.VERSION">(Food101 attribute)</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.freefield1010.Freefield1010.VERSION">(Freefield1010 attribute)</a>
+</li>
+        <li><a href="../stable_datasets.images/#stable_datasets.images.freiburg_groceries.FreiburgGroceries.VERSION">(FreiburgGroceries attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.fruits360.Fruits360.VERSION">(Fruits360 attribute)</a>
 </li>
