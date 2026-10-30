@@ -4,8 +4,10 @@ from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
 from .awa2 import AWA2
 from .beans import Beans
+from .belgium_tsc import BelgiumTSC
 from .breakhis import BreakHis
 from .bsds500 import BSDS500
+from .caltech101_silhouettes import Caltech101Silhouettes
 from .caltech256 import Caltech256
 from .cars3d import Cars3D
 from .cars196 import Cars196
@@ -40,6 +42,7 @@ from .flowers102 import Flowers102
 from .fmd import FMD
 from .food101 import Food101
 from .freiburg_groceries import FreiburgGroceries
+from .fruits360 import Fruits360
 from .galaxy10 import Galaxy10Decal
 from .gtsrb import GTSRB
 from .hasy_v2 import HASYv2
@@ -59,6 +62,7 @@ from .kather_colorectal_histology import KatherColorectalHistology
 from .linnaeus5 import Linnaeus5
 from .malaria import Malaria
 from .med_mnist import MedMNIST
+from .mnist_c import MNISTC
 from .not_mnist import NotMNIST
 
 # from .mnist import MNIST
@@ -91,8 +95,10 @@ __all__ = [
     "ArabicDigits",
     "AWA2",
     "Beans",
+    "BelgiumTSC",
     "BreakHis",
     "BSDS500",
+    "Caltech101Silhouettes",
     "Caltech256",
     "Cars196",
     "Cars3D",
@@ -126,6 +132,7 @@ __all__ = [
     "Galaxy10Decal",
     "Food101",
     "FreiburgGroceries",
+    "Fruits360",
     "GTSRB",
     "HASYv2",
     "HorseOrHuman",
@@ -145,6 +152,7 @@ __all__ = [
     "Linnaeus5",
     "Malaria",
     "MedMNIST",
+    "MNISTC",
     "NotMNIST",
     "PlantVillage",
     "OfficeHome",

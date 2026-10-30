@@ -76,6 +76,7 @@ Available Datasets
    imagenet_r
    e_mnist
    eth80
+   mnist_c
    fgvc_aircraft
    flowers17
    flowers102
@@ -94,6 +95,8 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   fruits360
+   belgium_tsc
    plant_village
    intel_image_classification
    horse_or_human
@@ -109,6 +112,7 @@ Available Datasets
    patternnet
    pacs
    office_home
+   caltech101_silhouettes
 
 .. toctree::
    :maxdepth: 1
