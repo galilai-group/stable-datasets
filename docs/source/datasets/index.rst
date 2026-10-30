@@ -141,5 +141,12 @@ Available Datasets
    cars3d
    small_norb
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Financial Time-Series Datasets
+
+   sp500
+   forex
+
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
