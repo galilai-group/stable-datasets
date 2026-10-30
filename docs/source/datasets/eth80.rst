@@ -111,10 +111,3 @@ Citation
       booktitle={IEEE Conference on Computer Vision and Pattern Recognition},
       year={2003}
     }
-
-Validation
-----------
-
-See ``examples/validate_object_datasets.py`` for full source-pixel, split, cache,
-and batch checks. ``examples/object_datasets_lejepa.py`` provides the small SSL
-experiment; its protocol and limitations are in ``docs/object-datasets-validation.md``.

@@ -32,43 +32,44 @@ commit ``8827d2f61c2838756a069562b1c2ff53568ae33b``.
    :header-rows: 1
 
    * - Config
-     - Training rows
-     - Unique training images
+     - Training images
      - Test images
    * - ``split0``
-     - 7,425
      - 3,929
      - 1,018
    * - ``split1``
-     - 7,425
      - 3,989
      - 958
    * - ``split2``
-     - 7,425
      - 3,962
      - 977
    * - ``split3``
-     - 7,425
      - 3,937
      - 995
    * - ``split4``
-     - 7,425
      - 3,943
      - 999
 
-Training lists repeat images; the loader preserves **every row and its original
-order**. Train and test image paths are disjoint within each configuration.
-Configurations 2--4 omit a small number of archive images; the loader follows the
-published lists rather than adding unlisted images. Different configurations are
-alternative experiments and must not be concatenated as disjoint datasets.
+Each published training list has 7,425 rows because the authors oversampled
+smaller classes for their training procedure. The loader returns **each training
+image path once**, in first-occurrence order, preserving the original unbalanced
+class distribution. Author train/test membership and test ordering are unchanged.
+Train and test image paths are disjoint within each configuration.
 
-For an additional validation set, group by ``image_id`` before splitting, so all
-copies of an image remain together. The SSL example first deduplicates the
-``split0`` training list, then creates a stratified 80/20 train/validation split
-using seed 42 (3,143 / 786 unique images). This validation partition is defined by
-the example, not by the authors. The 1,018 official test images remain untouched.
+Configurations 2, 3 and 4 omit 8, 15 and 5 archive images, respectively. The loader
+follows the published membership rather than adding unlisted images. Different
+configurations are alternative experiments and must not be concatenated as
+disjoint datasets. Any additional validation split is user-defined.
+
 The release does not provide physical product instance IDs, so path-disjointness
 does not establish independence of real-world product instances.
+
+Source paths also do not imply unique pixels: the archive contains 14 pairs of
+different paths with identical decoded RGB arrays (4,933 unique RGB arrays among
+4,947 files). Some identical images occur across the published train/test
+boundary. Applications requiring unseen-image evaluation should audit decoded
+pixels and explicitly report any experiment-level exclusions; the loader retains
+the authors' file membership.
 
 Fields and labels
 -----------------
@@ -103,7 +104,9 @@ Usage
     batch = next(iter(DataLoader(data["train"].with_format("torch"), batch_size=8)))
     assert batch["image"].shape == (8, 3, 256, 256)
 
-The shared builder caches each configuration separately. Source archives are
+The shared builder caches each configuration separately. Version 1.0.1 uses a
+new processed cache instead of reopening the oversampled version 1.0.0 cache;
+existing raw downloads are reused. Source archives are
 SHA-256 checked on download. Parsing checks the class vocabulary, path/label
 agreement, train/test overlap, duplicate test entries, and missing or non-regular
 image members. Archive paths are never extracted onto the filesystem.
@@ -135,10 +138,3 @@ Citation
       journal={arXiv preprint arXiv:1611.05799},
       year={2016}
     }
-
-Validation
-----------
-
-Run ``examples/validate_object_datasets.py`` for the real-data checks, or
-``examples/object_datasets_lejepa.py`` for SSL and frozen linear evaluation.
-The complete protocol is in ``docs/object-datasets-validation.md``.

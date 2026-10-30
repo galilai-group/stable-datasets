@@ -24,12 +24,12 @@ from stable_datasets.utils import BaseDatasetBuilder, bulk_download
 class FreiburgGroceries(BaseDatasetBuilder):
     """Load author partitions ``split0`` (default) through ``split4``.
 
-    Training manifests contain repeated images, which are preserved in their
-    original order. Use ``image_id`` to group duplicates before making an
-    additional validation split. There is no official validation split.
+    Each training image is returned once, in order of its first appearance in
+    the author's manifest. Train/test membership and labels follow the author
+    partitions, without class balancing. There is no official validation split.
     """
 
-    VERSION = Version("1.0.0")
+    VERSION = Version("1.0.1")
     BUILDER_CONFIGS = [BuilderConfig(name=f"split{i}") for i in range(5)]
     DEFAULT_CONFIG_NAME = "split0"
     LABELS = (
@@ -86,7 +86,7 @@ class FreiburgGroceries(BaseDatasetBuilder):
         return DatasetInfo(
             description=(
                 "Freiburg Groceries: 4,947 released RGB images in 25 classes. "
-                "Preserves author train/test manifests, including repeated training entries."
+                "Preserves author train/test membership and labels, returning each training image once."
             ),
             features=Features(
                 {"image": ImageFeature(), "label": ClassLabel(names=list(self.LABELS)), "image_id": Value("string")}
@@ -133,6 +133,10 @@ class FreiburgGroceries(BaseDatasetBuilder):
             raise ValueError("Freiburg train/test manifests overlap.")
         if len(test_ids) != len(partitions["test"]):
             raise ValueError("Duplicate image in Freiburg test manifest.")
+        first_labels = {}
+        for path, label in partitions["train"]:
+            first_labels.setdefault(path, label)
+        partitions["train"] = list(first_labels.items())
         return partitions
 
     @classmethod

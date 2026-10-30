@@ -1,12 +1,14 @@
-"""Offline tests for author splits, duplicate handling and cache identity."""
+"""Offline fixtures and released-data checks for Freiburg Groceries."""
 
 import io
 import tarfile
+from collections import Counter
 
 import pytest
 from PIL import Image
 from torch.utils.data import DataLoader
 
+from stable_datasets.cache import cache_fingerprint, write_sharded_arrow_cache
 from stable_datasets.images import FreiburgGroceries
 
 
@@ -36,6 +38,8 @@ def groceries_archives(tmp_path):
                     f"{name}/{name}{index:04d}.png {label}\n" for label, name in enumerate(FreiburgGroceries.LABELS)
                 ]
                 if split == "train":
+                    extra_index = (fold + 2) % 6
+                    rows.append(f"CANDY/CANDY{extra_index:04d}.png 0\n")
                     rows *= 2
                 add_bytes(archive, f"{prefix}/splits/{split}{fold}.txt", "".join(rows).encode())
     return images, annotations
@@ -55,21 +59,22 @@ def test_freiburg_all_configs(groceries_archives, tmp_path, monkeypatch):
     for fold in range(5):
         ds = FreiburgGroceries(config_name=f"split{fold}", **kwargs)
         assert set(ds) == {"train", "test"}
-        assert len(ds["train"]) == 50 and len(ds["test"]) == 25
+        assert len(ds["train"]) == 26 and len(ds["test"]) == 25
         assert ds["train"].features["label"].names == list(FreiburgGroceries.LABELS)
         for split, index in (("train", fold), ("test", fold + 1)):
             for i, row in enumerate(ds[split]):
-                label = i % 25
+                label = i if i < 25 else 0
                 name = FreiburgGroceries.LABELS[label]
+                image_index = index if i < 25 else (fold + 2) % 6
                 assert set(row) == {"image", "label", "image_id"}
                 assert row["label"] == label
-                assert row["image_id"] == f"{name}/{name}{index:04d}.png"
-                assert row["image"].getpixel((0, 0)) == (label, index, 123)
+                assert row["image_id"] == f"{name}/{name}{image_index:04d}.png"
+                assert row["image"].getpixel((0, 0)) == (label, image_index, 123)
                 assert row["image"].mode == "RGB"
         train_ids = [row["image_id"] for row in ds["train"]]
         test_ids = {row["image_id"] for row in ds["test"]}
-        assert len(set(train_ids)) == 25
-        assert train_ids[:25] == train_ids[25:]
+        assert len(set(train_ids)) == 26
+        assert Counter(row["label"] for row in ds["train"]) == Counter({0: 2, **dict.fromkeys(range(1, 25), 1)})
         assert not set(train_ids) & test_ids
         datasets.append(ds)
     assert len(calls) == 5
@@ -102,7 +107,7 @@ def test_freiburg_bad_manifest(text):
         FreiburgGroceries._parse_manifest(text)
 
 
-@pytest.mark.parametrize("problem", ["labels", "overlap", "duplicate"])
+@pytest.mark.parametrize("problem", ["labels", "overlap", "duplicate", "conflicting_label"])
 def test_freiburg_bad_partitions(tmp_path, problem):
     builder = object.__new__(FreiburgGroceries)
     builder.__init__()
@@ -111,13 +116,22 @@ def test_freiburg_bad_partitions(tmp_path, problem):
     with tarfile.open(path, "w") as archive:
         labels = "\n".join(f"{name} {i}" for i, name in enumerate(FreiburgGroceries.LABELS))
         add_bytes(archive, f"{prefix}/classid.txt", ("wrong" if problem == "labels" else labels).encode())
-        add_bytes(archive, f"{prefix}/splits/train0.txt", b"CANDY/CANDY0000.png 0\n")
+        train = b"CANDY/CANDY0000.png 0\n"
+        if problem == "conflicting_label":
+            train += b"CANDY/CANDY0000.png 1\n"
+        add_bytes(archive, f"{prefix}/splits/train0.txt", train)
         test = "CANDY/CANDY0000.png 0\n" if problem == "overlap" else "CANDY/CANDY0001.png 0\n"
         if problem == "duplicate":
             test *= 2
         add_bytes(archive, f"{prefix}/splits/test0.txt", test.encode())
     with pytest.raises(
-        ValueError, match={"labels": "mapping", "overlap": "overlap", "duplicate": "Duplicate"}[problem]
+        ValueError,
+        match={
+            "labels": "mapping",
+            "overlap": "overlap",
+            "duplicate": "Duplicate",
+            "conflicting_label": "path and label disagree",
+        }[problem],
     ):
         builder._read_partitions(path)
 
@@ -126,3 +140,73 @@ def test_freiburg_missing_image(groceries_archives):
     builder = object.__new__(FreiburgGroceries)
     with pytest.raises(ValueError, match="Missing regular"):
         list(builder._generate_examples(groceries_archives[0], [("CANDY/CANDY9999.png", 0)]))
+
+
+def test_freiburg_rebuilds_repeated_row_cache(groceries_archives, tmp_path, monkeypatch):
+    builder = object.__new__(FreiburgGroceries)
+    builder.__init__()
+    processed = tmp_path / "processed"
+    prefix = f"freiburg_groceries_dataset-{FreiburgGroceries.SPLITS_REVISION}"
+    old_metadata = {}
+    with tarfile.open(groceries_archives[1], "r:*") as archive:
+        for split in ("train", "test"):
+            with archive.extractfile(f"{prefix}/splits/{split}0.txt") as source:
+                rows = builder._parse_manifest(source.read().decode())
+            cache_dir = processed / cache_fingerprint("FreiburgGroceries", "1.0.0", "split0", split)
+            write_sharded_arrow_cache(
+                builder._generate_examples(groceries_archives[0], rows),
+                builder.info.features,
+                cache_dir,
+                num_encode_workers=0,
+            )
+            metadata = cache_dir / "_metadata.json"
+            old_metadata[metadata] = metadata.read_bytes()
+
+    calls = []
+
+    def download(specs, dest_folder):
+        calls.append(list(specs))
+        return groceries_archives
+
+    monkeypatch.setattr("stable_datasets.images.freiburg_groceries.bulk_download", download)
+    ds = FreiburgGroceries(processed_cache_dir=processed, download_dir=tmp_path / "downloads")
+    assert len(calls) == 1
+    assert len(ds["train"]) == 26 and len(ds["test"]) == 25
+    assert all(path.read_bytes() == content for path, content in old_metadata.items())
+
+
+def test_freiburg_released_folds(tmp_path):
+    """Load all released folds, including their natural class imbalance."""
+    processed = tmp_path / "processed"
+    expected_counts = ((3929, 1018), (3989, 958), (3962, 977), (3937, 995), (3943, 999))
+    expected_train_ranges = ((76, 288), (76, 281), (76, 297), (83, 297), (77, 297))
+    for fold, (train_count, test_count) in enumerate(expected_counts):
+        kwargs = {"config_name": f"split{fold}", "processed_cache_dir": processed}
+        ds = FreiburgGroceries(**kwargs)
+        assert set(ds) == {"train", "test"}
+        assert len(ds["train"]) == train_count
+        assert len(ds["test"]) == test_count
+        split_ids = {}
+        for split in ("train", "test"):
+            assert ds[split].features["label"].names == list(FreiburgGroceries.LABELS)
+            ids, labels = set(), Counter()
+            for row in ds[split]:
+                assert set(row) == {"image", "label", "image_id"}
+                assert isinstance(row["image"], Image.Image)
+                assert row["image"].mode == "RGB" and row["image"].size == (256, 256)
+                assert isinstance(row["label"], int) and 0 <= row["label"] < 25
+                assert row["image_id"].split("/")[0] == FreiburgGroceries.LABELS[row["label"]]
+                assert row["image_id"] not in ids
+                ids.add(row["image_id"])
+                labels[row["label"]] += 1
+            assert len(ids) == len(ds[split])
+            assert set(labels) == set(range(25))
+            if split == "train":
+                assert (min(labels.values()), max(labels.values())) == expected_train_ranges[fold]
+            split_ids[split] = ids
+            batch = next(iter(DataLoader(ds[split].with_format("torch"), batch_size=8)))
+            assert tuple(batch["image"].shape) == (8, 3, 256, 256)
+        assert split_ids["train"].isdisjoint(split_ids["test"])
+        reopened = FreiburgGroceries(**kwargs)
+        for split in ("train", "test"):
+            assert ds[split].table.equals(reopened[split].table)
