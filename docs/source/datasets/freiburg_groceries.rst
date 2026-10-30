@@ -104,9 +104,7 @@ Usage
     batch = next(iter(DataLoader(data["train"].with_format("torch"), batch_size=8)))
     assert batch["image"].shape == (8, 3, 256, 256)
 
-The shared builder caches each configuration separately. Version 1.0.1 uses a
-new processed cache instead of reopening the oversampled version 1.0.0 cache;
-existing raw downloads are reused. Source archives are
+The shared builder caches each configuration separately. Source archives are
 SHA-256 checked on download. Parsing checks the class vocabulary, path/label
 agreement, train/test overlap, duplicate test entries, and missing or non-regular
 image members. Archive paths are never extracted onto the filesystem.

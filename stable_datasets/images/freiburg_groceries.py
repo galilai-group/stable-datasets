@@ -29,7 +29,7 @@ class FreiburgGroceries(BaseDatasetBuilder):
     partitions, without class balancing. There is no official validation split.
     """
 
-    VERSION = Version("1.0.1")
+    VERSION = Version("1.0.0")
     BUILDER_CONFIGS = [BuilderConfig(name=f"split{i}") for i in range(5)]
     DEFAULT_CONFIG_NAME = "split0"
     LABELS = (

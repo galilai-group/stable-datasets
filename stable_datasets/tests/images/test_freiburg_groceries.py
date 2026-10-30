@@ -8,7 +8,6 @@ import pytest
 from PIL import Image
 from torch.utils.data import DataLoader
 
-from stable_datasets.cache import cache_fingerprint, write_sharded_arrow_cache
 from stable_datasets.images import FreiburgGroceries
 
 
@@ -140,39 +139,6 @@ def test_freiburg_missing_image(groceries_archives):
     builder = object.__new__(FreiburgGroceries)
     with pytest.raises(ValueError, match="Missing regular"):
         list(builder._generate_examples(groceries_archives[0], [("CANDY/CANDY9999.png", 0)]))
-
-
-def test_freiburg_rebuilds_repeated_row_cache(groceries_archives, tmp_path, monkeypatch):
-    builder = object.__new__(FreiburgGroceries)
-    builder.__init__()
-    processed = tmp_path / "processed"
-    prefix = f"freiburg_groceries_dataset-{FreiburgGroceries.SPLITS_REVISION}"
-    old_metadata = {}
-    with tarfile.open(groceries_archives[1], "r:*") as archive:
-        for split in ("train", "test"):
-            with archive.extractfile(f"{prefix}/splits/{split}0.txt") as source:
-                rows = builder._parse_manifest(source.read().decode())
-            cache_dir = processed / cache_fingerprint("FreiburgGroceries", "1.0.0", "split0", split)
-            write_sharded_arrow_cache(
-                builder._generate_examples(groceries_archives[0], rows),
-                builder.info.features,
-                cache_dir,
-                num_encode_workers=0,
-            )
-            metadata = cache_dir / "_metadata.json"
-            old_metadata[metadata] = metadata.read_bytes()
-
-    calls = []
-
-    def download(specs, dest_folder):
-        calls.append(list(specs))
-        return groceries_archives
-
-    monkeypatch.setattr("stable_datasets.images.freiburg_groceries.bulk_download", download)
-    ds = FreiburgGroceries(processed_cache_dir=processed, download_dir=tmp_path / "downloads")
-    assert len(calls) == 1
-    assert len(ds["train"]) == 26 and len(ds["test"]) == 25
-    assert all(path.read_bytes() == content for path, content in old_metadata.items())
 
 
 def test_freiburg_released_folds(tmp_path):
