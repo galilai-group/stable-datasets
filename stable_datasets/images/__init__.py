@@ -59,11 +59,13 @@ from .not_mnist import NotMNIST
 
 # from .mnist import MNIST
 from .office_home import OfficeHome
+from .omniglot import Omniglot
 from .oxford_iiit_pet import OxfordIIITPet
 from .pacs import PACS
 from .patch_camelyon import PatchCamelyon
 from .patternnet import PatternNet
 from .plant_village import PlantVillage
+from .q_mnist import QMNIST
 
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
@@ -138,6 +140,8 @@ __all__ = [
     "Malaria",
     "MedMNIST",
     "NotMNIST",
+    "Omniglot",
+    "QMNIST",
     "PlantVillage",
     "OfficeHome",
     "PACS",

@@ -90,6 +90,8 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   q_mnist
+   omniglot
    plant_village
    intel_image_classification
    horse_or_human
