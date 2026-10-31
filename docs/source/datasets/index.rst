@@ -103,6 +103,8 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   grocery_store
+   plantdoc
    fruits360
    belgium_tsc
    plant_village

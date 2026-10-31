@@ -48,6 +48,7 @@ from .food101 import Food101
 from .freiburg_groceries import FreiburgGroceries
 from .fruits360 import Fruits360
 from .galaxy10 import Galaxy10Decal
+from .grocery_store import GroceryStore
 from .gtsrb import GTSRB
 from .hasy_v2 import HASYv2
 from .horse_or_human import HorseOrHuman
@@ -83,6 +84,7 @@ from .patternnet import PatternNet
 from .plant_village import PlantVillage
 
 # from .places365_small import Places365Small
+from .plantdoc import PlantDoc
 from .rock_paper_scissor import RockPaperScissor
 from .scene8 import Scene8
 from .semeion import Semeion
@@ -145,6 +147,7 @@ __all__ = [
     "FMD",
     "Galaxy10Decal",
     "Food101",
+    "GroceryStore",
     "FreiburgGroceries",
     "Fruits360",
     "GTSRB",
@@ -171,6 +174,7 @@ __all__ = [
     "MedMNIST",
     "MNISTC",
     "NotMNIST",
+    "PlantDoc",
     "OlivettiFaces",
     "Optdigits",
     "PlantVillage",
