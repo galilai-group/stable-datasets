@@ -27,6 +27,7 @@ from .country211 import Country211
 from .cub200 import CUB200
 from .deep_weeds import DeepWeeds
 from .defungi import DeFungi
+from .devanagari import Devanagari
 from .dsprites import DSprites
 from .dsprites_color import DSpritesColor
 from .dsprites_noise import DSpritesNoise
@@ -47,6 +48,7 @@ from .food101 import Food101
 from .freiburg_groceries import FreiburgGroceries
 from .fruits360 import Fruits360
 from .galaxy10 import Galaxy10Decal
+from .grocery_store import GroceryStore
 from .gtsrb import GTSRB
 from .hasy_v2 import HASYv2
 from .horse_or_human import HorseOrHuman
@@ -59,8 +61,10 @@ from .imagenet_sketch import ImageNetSketch
 from .imagenet_v2 import ImageNetV2
 from .imagewoof import Imagewoof
 from .intel_image_classification import IntelImageClassification
+from .isic2016 import ISIC2016
 from .k_mnist import KMNIST
 from .k_mnist49 import KMNIST49
+from .kannada_mnist import KannadaMNIST
 from .kather_colorectal_histology import KatherColorectalHistology
 from .kth_tips import KTHTIPS
 from .linnaeus5 import Linnaeus5
@@ -79,10 +83,12 @@ from .pacs import PACS
 from .patch_camelyon import PatchCamelyon
 from .patternnet import PatternNet
 from .plant_village import PlantVillage
+from .plantdoc import PlantDoc
 
 # from .places365_small import Places365Small
 from .rendered_sst2 import RenderedSST2
 from .rock_paper_scissor import RockPaperScissor
+from .scene8 import Scene8
 from .semeion import Semeion
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
@@ -124,6 +130,7 @@ __all__ = [
     "COIL100",
     "Country211",
     "CUB200",
+    "Devanagari",
     "DeepWeeds",
     "DeFungi",
     "DSprites",
@@ -142,6 +149,7 @@ __all__ = [
     "FMD",
     "Galaxy10Decal",
     "Food101",
+    "GroceryStore",
     "FreiburgGroceries",
     "Fruits360",
     "GTSRB",
@@ -155,9 +163,11 @@ __all__ = [
     "ImageNetR",
     "Imagenette",
     "IntelImageClassification",
+    "ISIC2016",
     "TFFlowers",
     "Imagewoof",
     "KMNIST",
+    "KannadaMNIST",
     "KTHTIPS",
     "KMNIST49",
     "KatherColorectalHistology",
@@ -166,6 +176,7 @@ __all__ = [
     "MedMNIST",
     "MNISTC",
     "NotMNIST",
+    "PlantDoc",
     "OlivettiFaces",
     "Optdigits",
     "PlantVillage",
@@ -177,6 +188,7 @@ __all__ = [
     "OracleMNIST",
     "RenderedSST2",
     "RockPaperScissor",
+    "Scene8",
     "Semeion",
     "Shapes3D",
     "SmallNORB",

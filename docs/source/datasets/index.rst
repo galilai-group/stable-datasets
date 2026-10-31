@@ -64,6 +64,8 @@ Available Datasets
    oracle_mnist
    rendered_sst2
    k_mnist
+   kannada_mnist
+   devanagari
    kth_tips
    k_mnist49
    medmnist
@@ -103,6 +105,8 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   grocery_store
+   plantdoc
    fruits360
    belgium_tsc
    plant_village
@@ -121,6 +125,8 @@ Available Datasets
    pacs
    office_home
    caltech101_silhouettes
+   scene8
+   isic2016
 
 .. toctree::
    :maxdepth: 1
