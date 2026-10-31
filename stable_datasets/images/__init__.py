@@ -46,6 +46,9 @@ from .svhn import SVHN
 from .tiny_imagenet import TinyImagenet
 from .tiny_imagenet_c import TinyImagenetC
 
+from .tu_berlin import TUBerlin
+from .lfw import LFW
+
 
 __all__ = [
     "ArabicCharacters",
@@ -88,4 +91,6 @@ __all__ = [
     "SVHN",
     "TinyImagenet",
     "TinyImagenetC",
+    "TUBerlin",
+    "LFW"
 ]
