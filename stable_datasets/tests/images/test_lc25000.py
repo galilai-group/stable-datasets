@@ -114,7 +114,6 @@ def test_fake_image_bytes_are_unchanged(fake_build):
             assert example["image"] == source_bytes[file_name]
 
 
-@pytest.mark.large
 @pytest.mark.parametrize("split", ["train", "test"])
 def test_lc25000_dataset(split):
     dataset = LC25000(split=split)
@@ -138,7 +137,6 @@ def test_lc25000_dataset(split):
     assert len(set(dataset.table.column("group_id").to_pylist())) == EXPECTED_GROUP_COUNTS[split]
 
 
-@pytest.mark.large
 def test_lc25000_splits_are_disjoint_complete_and_pinned():
     train_groups = LC25000(split="train").table.column("group_id").to_pylist()
     test_groups = LC25000(split="test").table.column("group_id").to_pylist()
@@ -149,7 +147,6 @@ def test_lc25000_splits_are_disjoint_complete_and_pinned():
     assert hashlib.sha256(test_group_ids.encode()).hexdigest() == EXPECTED_TEST_GROUPS_SHA256
 
 
-@pytest.mark.large
 def test_lc25000_metadata():
     dataset = LC25000(split="test")
     label_names = dataset.info.features["label"].names
