@@ -145,7 +145,7 @@ def test_fake_images_are_rgb_including_grayscale_source(fake_build):
     assert grayscale_hash in {h for h, _, _, _ in all_rows}
 
 
-def test_fake_split_matches_seeded_protocol(fake_build):
+def test_fake_split_matches_seeded_split(fake_build):
     expected = Caltech101._split_files(k for k in fake_build["hashes"] if k[0] != BACKGROUND_CLASS)
     for split in ("train", "test"):
         expected_hashes = [fake_build["hashes"][key] for key in expected[split]]
@@ -171,7 +171,7 @@ def test_fake_torch_format(fake_build):
     assert tuple(image.shape) == (3, 12, 16)
 
 
-# Split protocol, without any archive.
+# Split assignment, without any archive.
 
 
 def _keys(sizes):
@@ -219,7 +219,6 @@ EXPECTED_NUM_TRAIN = 3030
 EXPECTED_NUM_TEST = 5647
 
 
-@pytest.mark.large
 def test_caltech101_dataset():
     caltech_train = Caltech101(split="train")
 

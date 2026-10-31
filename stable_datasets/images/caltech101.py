@@ -13,13 +13,12 @@ from stable_datasets.schema import Image as ImageFeature
 from stable_datasets.utils import BaseDatasetBuilder
 
 
-# Caltech-101 has no official split. We follow the transfer-learning protocol of Kornblith et al. (2019), also used
-# by SimCLR and BYOL: 30 random training images per class, all remaining images for testing. The seed fixes the
-# draw so every user gets the same split.
+# Caltech-101 has no official split. This builder defines its own: 30 random training images per class, all remaining
+# images for testing. The seed fixes the draw so every user gets the same split.
 SPLIT_SEED = 0
 TRAIN_IMAGES_PER_CLASS = 30
 
-# Clutter class shipped in the archive; excluded by torchvision and by the standard 101-class benchmark.
+# Clutter class shipped in the archive; excluded here, as in torchvision, to keep only the 101 object classes.
 BACKGROUND_CLASS = "BACKGROUND_Google"
 
 _URL = "https://data.caltech.edu/records/mzrjq-6wc02/files/caltech-101.zip?download=1"
@@ -33,12 +32,11 @@ class Caltech101(BaseDatasetBuilder):
     Caltech-101 contains pictures of objects belonging to 101 categories, collected by Fei-Fei Li, Marco Andreetto,
     and Marc'Aurelio Ranzato in 2003. Most categories have about 40 to 800 images, and most images are roughly
     300x200 pixels. The archive also ships a ``BACKGROUND_Google`` clutter category, which is excluded here, as in
-    torchvision and the standard benchmark, leaving 8677 images in 101 classes.
+    torchvision, leaving 8677 images in 101 classes.
 
-    The dataset has no official train/test split. This builder implements the protocol of Kornblith et al. (2019),
-    used for linear evaluation in SimCLR and BYOL: for every class, file names are sorted, shuffled with a fixed
-    seed (``SPLIT_SEED = 0``), and the first 30 images go to ``train`` while the remainder go to ``test``. This gives
-    3030 training and 5647 test images. Grayscale images are converted to RGB.
+    The dataset has no official train/test split, so this builder defines its own: for every class, file names are
+    sorted, shuffled with a fixed seed (``SPLIT_SEED = 0``), and the first 30 images go to ``train`` while the
+    remainder go to ``test``. This gives 3030 training and 5647 test images. Grayscale images are converted to RGB.
     """
 
     VERSION = Version("1.0.0")
@@ -64,8 +62,8 @@ class Caltech101(BaseDatasetBuilder):
     def _info(self):
         return DatasetInfo(
             description="""Caltech-101 is an object recognition dataset with 8677 images in 101 categories
-                           (excluding the BACKGROUND_Google clutter class). Splits follow the standard transfer
-                           protocol of 30 seeded random training images per class, with the rest for testing.""",
+                           (excluding the BACKGROUND_Google clutter class). The train split has 30 seeded random
+                           images per class, and the test split has the rest.""",
             features=Features(
                 {
                     "image": ImageFeature(),

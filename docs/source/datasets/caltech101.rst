@@ -11,9 +11,9 @@ Caltech-101
 
 Overview
 --------
-Caltech-101 contains pictures of objects belonging to 101 categories, collected by Fei-Fei Li, Marco Andreetto, and Marc'Aurelio Ranzato in 2003. Most categories have about 40 to 800 images, and most images are roughly 300x200 pixels. It is a standard benchmark for transfer learning and linear evaluation of pretrained representations.
+Caltech-101 contains pictures of objects belonging to 101 categories, collected by Fei-Fei Li, Marco Andreetto, and Marc'Aurelio Ranzato in 2003. Most categories have about 40 to 800 images, and most images are roughly 300x200 pixels. It is widely used to evaluate transfer learning and pretrained representations.
 
-The archive also ships a ``BACKGROUND_Google`` clutter category. It is **excluded**, as in torchvision and the standard 101-class benchmark, leaving 8677 images. ``Faces`` and ``Faces_easy`` are kept as two separate classes. Grayscale images are converted to RGB.
+The archive also ships a ``BACKGROUND_Google`` clutter category. It is **excluded**, as in torchvision, leaving 8677 images in the 101 object classes. ``Faces`` and ``Faces_easy`` are kept as two separate classes. Grayscale images are converted to RGB.
 
 - **Train**: 3030 images (30 per class)
 - **Test**: 5647 images
@@ -22,14 +22,16 @@ The archive also ships a ``BACKGROUND_Google`` clutter category. It is **exclude
    :align: center
    :width: 90%
 
-Split Protocol
---------------
+Train/Test Split
+----------------
 
-Caltech-101 has no official train/test split. This builder implements the protocol of Kornblith et al. (2019), which SimCLR and BYOL also use for linear evaluation: **30 random training images per class, with all remaining images used for testing**.
+Caltech-101 has no official train/test split, so this builder defines its own: **30 random training images per class, with all remaining images used for testing**.
 
 The split is deterministic. Classes are visited in sorted order, the file names in each class are sorted and then shuffled with ``random.Random(0)`` (``SPLIT_SEED`` in ``stable_datasets/images/caltech101.py``), and the first 30 go to ``train``. Every class has at least 31 images, so every class appears in the test split.
 
-The test split is imbalanced (for example ``airplanes`` and ``Motorbikes`` have about 770 test images, while ``inline_skate`` has 1). The literature usually reports **mean per-class accuracy** on this split, which can differ from overall top-1 accuracy by a few points. Published numbers also use different random draws of the 30 training images.
+The test split is imbalanced (for example ``airplanes`` and ``Motorbikes`` have about 770 test images, while ``inline_skate`` has 1), so **mean per-class accuracy** can differ from overall top-1 accuracy by a few points.
+
+Papers that report Caltech-101 results often use a different split (for example, 102 classes including ``BACKGROUND_Google``, or a different random draw), so their numbers are not directly comparable with results on this split.
 
 Data Structure
 --------------
@@ -78,7 +80,6 @@ References
 - Official website: https://data.caltech.edu/records/mzrjq-6wc02
 - Download: ``caltech-101.zip`` (MD5 ``3138e1922a9193bfa496528edbbc45d0``)
 - License: CC BY 4.0
-- Split protocol: Kornblith, Shlens, Le. *Do Better ImageNet Models Transfer Better?* CVPR 2019 (arXiv:1805.08974)
 
 Citation
 --------
