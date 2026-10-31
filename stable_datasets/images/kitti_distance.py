@@ -40,6 +40,7 @@ class KITTIDistance(BaseDatasetBuilder):
     understanding on real driving footage, so it is a useful check of whether representations encode geometry.
 
     Content
+
     - Images: the 7,481 labelled frames of KITTI's object ``training`` set (left colour camera, ~1242x375 PNG).
       KITTI's official ``testing`` set has no public labels and is not used.
     - Labels: derived from the 3D object annotations (``label_2``): the minimum camera-frame ``z`` over all Car / Van /
