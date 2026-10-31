@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+from .aiderv2 import AIDERv2
 from .arabic_characters import ArabicCharacters
 from .arabic_digits import ArabicDigits
 from .awa2 import AWA2
 from .beans import Beans
+from .bee_dataset import BeeDataset
 from .belgium_tsc import BelgiumTSC
 from .breakhis import BreakHis
 from .bsds500 import BSDS500
@@ -105,10 +107,12 @@ from .weizmann_seg import WeizmannSegmentation
 
 
 __all__ = [
+    "AIDERv2",
     "ArabicCharacters",
     "ArabicDigits",
     "AWA2",
     "Beans",
+    "BeeDataset",
     "BelgiumTSC",
     "BreakHis",
     "BSDS500",

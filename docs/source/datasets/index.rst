@@ -105,6 +105,8 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   bee_dataset
+   aiderv2
    grocery_store
    plantdoc
    fruits360
