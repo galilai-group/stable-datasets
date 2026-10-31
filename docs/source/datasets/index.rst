@@ -176,3 +176,10 @@ Available Datasets
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Sensor Time Series
+
+   robot_execution_failures
+   daily_and_sports_activities
