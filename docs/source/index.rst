@@ -46,6 +46,13 @@ If you would like to start testing or contribute to ``stable-datasets`` then ple
    introduction/showcase
    introduction/contributing
 
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+   :hidden:
+
+   modules
+
 Citation
 --------
 
