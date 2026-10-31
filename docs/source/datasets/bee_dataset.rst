@@ -6,7 +6,7 @@ BeeDataset
    <p style="display: flex; gap: 10px;">
    <img src="https://img.shields.io/badge/Task-Multi--Label%20Classification-blue" alt="Task: Multi-Label Classification">
    <img src="https://img.shields.io/badge/Labels-4-green" alt="Labels: 4">
-   <img src="https://img.shields.io/badge/Size-Variable-orange" alt="Image Size: 300 X 150">
+   <img src="https://img.shields.io/badge/Size-300x150-orange" alt="Image Size: 300x150">
    </p>
 
 Overview
@@ -79,17 +79,17 @@ References
 - Dataset website: https://github.com/BeeAlarmed/BeeDataset?tab=readme-ov-file
 - Tensorflow information source: https://www.tensorflow.org/datasets/catalog/bee_dataset
 - Original dataset source - deprecated : https://raspbee.de 
-- License:  GLP-3.0 LICENSE
+- License:  GPL-3.0 LICENSE
 
 Citation
 --------
 
 .. code-block:: bibtex
 
-    @misc{BeeAlarmed - A camera based bee-hive monitoring,
-    title =   "Dataset for a camera based bee-hive monitoring",
-    url={https://github.com/BeeAlarmed}, journal={BeeAlarmed},
-    author =  "Fabian Hickert",
-    year   =  "2021",
-    note   = "\url{https://raspbee.de/} and \url{https://github.com/BeeAlarmed/BeeAlarmed}"
-    }
+  @misc{beealarmed2021,
+      title = {Dataset for a camera based bee-hive monitoring},
+      author = {Fabian Hickert},
+      year = {2021},
+      journal = {BeeAlarmed},
+      url = {https://github.com/BeeAlarmed}
+  }
