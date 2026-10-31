@@ -17,6 +17,10 @@ Tiny ImageNet is a downsampled subset of the ImageNet ILSVRC dataset created for
 - **Train**: ~100,000 images total (500 images per class)
 - **Validation**: 10,000 images (50 images per class)
 
+.. image:: teasers/tiny_imagenet_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 
