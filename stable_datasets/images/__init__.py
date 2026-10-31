@@ -60,6 +60,7 @@ from .imagenet_sketch import ImageNetSketch
 from .imagenet_v2 import ImageNetV2
 from .imagewoof import Imagewoof
 from .intel_image_classification import IntelImageClassification
+from .isic2016 import ISIC2016
 from .k_mnist import KMNIST
 from .k_mnist49 import KMNIST49
 from .kannada_mnist import KannadaMNIST
@@ -83,6 +84,7 @@ from .plant_village import PlantVillage
 
 # from .places365_small import Places365Small
 from .rock_paper_scissor import RockPaperScissor
+from .scene8 import Scene8
 from .semeion import Semeion
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
@@ -156,6 +158,7 @@ __all__ = [
     "ImageNetR",
     "Imagenette",
     "IntelImageClassification",
+    "ISIC2016",
     "TFFlowers",
     "Imagewoof",
     "KMNIST",
@@ -177,6 +180,7 @@ __all__ = [
     "PatchCamelyon",
     "OxfordIIITPet",
     "RockPaperScissor",
+    "Scene8",
     "Semeion",
     "Shapes3D",
     "SmallNORB",

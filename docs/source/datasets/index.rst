@@ -121,6 +121,8 @@ Available Datasets
    pacs
    office_home
    caltech101_silhouettes
+   scene8
+   isic2016
 
 .. toctree::
    :maxdepth: 1
