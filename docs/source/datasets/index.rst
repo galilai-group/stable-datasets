@@ -46,38 +46,141 @@ Available Datasets
 
    arabic_characters
    arabic_digits
+   caltech256
    cifar10
+   cifar10_1
+   cifar10_2
    cifar100
    cifar10_c
    cifar100_c
+   cinic10
    cars196
+   coil20
+   cct20
+   coil100
    dtd
+   not_mnist
    fashion_mnist
    fer2013
+   oracle_mnist
+   rendered_sst2
    k_mnist
+   kannada_mnist
+   devanagari
+   kth_tips
+   k_mnist49
    medmnist
+   patch_camelyon
    awa2
    beans
+   deep_weeds
    stl10
    tiny_imagenet
    tiny_imagenet_c
+   imagenet_v2
+   imagenet_sketch
+   imagenet_a
+   imagenet_r
    e_mnist
+   eth80
+   mnist_c
    fgvc_aircraft
+   flowers17
    flowers102
+   tf_flowers
+   imagewoof
    food101
+   freiburg_groceries
+   fmd
    cub200
+   stanford_dogs
    country211
+   cmu_faces
+   defungi
    galaxy10
+   gtsrb
    hasy_v2
    face_pointing
+   olivetti_faces
+   optdigits
    rock_paper_scissor
+   svhn
    linnaeus5
+   bee_dataset
+   aiderv2
+   grocery_store
+   plantdoc
+   fruits360
+   belgium_tsc
+   plant_village
+   intel_image_classification
+   horse_or_human
+   semeion
+   malaria
+   kather_colorectal_histology
+   sun397
+   stanford40
+   usps
+   oxford_iiit_pet
+   eurosat
+   breakhis
+   patternnet
+   pacs
+   office_home
+   caltech101_silhouettes
+   scene8
+   isic2016
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Image Segmentation Datasets
+
+   weizmann_seg
+   bsds500
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Time Series Classification Datasets
+
+   basic_motions
+   epilepsy
+   hand_movement_direction
+   natops
+   racket_sports
+   uwave_gesture_library
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Time Series Forecasting Datasets
+
+   electricity_hourly
+   uber_tlc
 
 .. toctree::
    :maxdepth: 1
    :caption: Video Datasets
 
    something_something_v2
+   clevrer
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Disentanglement Datasets
+
+   dsprites
+   dsprites_color
+   dsprites_noise
+   dsprites_scream
+   shapes3d
+   cars3d
+   small_norb
 
 .. note::
    Documentation is being added progressively, as datasets are ready for usage. Please only use datasets found in the documentation.
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Sensor Time Series
+
+   robot_execution_failures
+   daily_and_sports_activities
