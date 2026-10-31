@@ -77,14 +77,16 @@ from .not_mnist import NotMNIST
 from .office_home import OfficeHome
 from .olivetti_faces import OlivettiFaces
 from .optdigits import Optdigits
+from .oracle_mnist import OracleMNIST
 from .oxford_iiit_pet import OxfordIIITPet
 from .pacs import PACS
 from .patch_camelyon import PatchCamelyon
 from .patternnet import PatternNet
 from .plant_village import PlantVillage
+from .plantdoc import PlantDoc
 
 # from .places365_small import Places365Small
-from .plantdoc import PlantDoc
+from .rendered_sst2 import RenderedSST2
 from .rock_paper_scissor import RockPaperScissor
 from .scene8 import Scene8
 from .semeion import Semeion
@@ -183,6 +185,8 @@ __all__ = [
     "PatternNet",
     "PatchCamelyon",
     "OxfordIIITPet",
+    "OracleMNIST",
+    "RenderedSST2",
     "RockPaperScissor",
     "Scene8",
     "Semeion",

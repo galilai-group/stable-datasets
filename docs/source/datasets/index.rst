@@ -61,6 +61,8 @@ Available Datasets
    dtd
    not_mnist
    fashion_mnist
+   oracle_mnist
+   rendered_sst2
    k_mnist
    kannada_mnist
    devanagari
