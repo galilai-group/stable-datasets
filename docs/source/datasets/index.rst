@@ -62,6 +62,8 @@ Available Datasets
    not_mnist
    fashion_mnist
    k_mnist
+   kannada_mnist
+   devanagari
    kth_tips
    k_mnist49
    medmnist

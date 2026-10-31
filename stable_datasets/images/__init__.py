@@ -27,6 +27,7 @@ from .country211 import Country211
 from .cub200 import CUB200
 from .deep_weeds import DeepWeeds
 from .defungi import DeFungi
+from .devanagari import Devanagari
 from .dsprites import DSprites
 from .dsprites_color import DSpritesColor
 from .dsprites_noise import DSpritesNoise
@@ -61,6 +62,7 @@ from .imagewoof import Imagewoof
 from .intel_image_classification import IntelImageClassification
 from .k_mnist import KMNIST
 from .k_mnist49 import KMNIST49
+from .kannada_mnist import KannadaMNIST
 from .kather_colorectal_histology import KatherColorectalHistology
 from .kth_tips import KTHTIPS
 from .linnaeus5 import Linnaeus5
@@ -122,6 +124,7 @@ __all__ = [
     "COIL100",
     "Country211",
     "CUB200",
+    "Devanagari",
     "DeepWeeds",
     "DeFungi",
     "DSprites",
@@ -156,6 +159,7 @@ __all__ = [
     "TFFlowers",
     "Imagewoof",
     "KMNIST",
+    "KannadaMNIST",
     "KTHTIPS",
     "KMNIST49",
     "KatherColorectalHistology",
