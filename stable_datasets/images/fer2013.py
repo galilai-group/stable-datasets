@@ -41,6 +41,7 @@ class FER2013(BaseDatasetBuilder):
     are imbalanced (disgust has 547 examples, happy 8,989), which makes it a demanding transfer benchmark.
 
     Content
+
     - Images: 35,887 grayscale 48x48 faces, decoded from the space-separated `pixels` column of the competition CSV.
     - Labels: the `emotion` column, 0-6 in the order angry, disgust, fear, happy, sad, surprise, neutral.
     - Splits: the competition's `Usage` column. Training -> train (28,709), PublicTest -> validation (3,589),

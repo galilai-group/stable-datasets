@@ -98,11 +98,13 @@ def test_missing_and_corrupt_files(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Real data (manual Kaggle download), excluded from CI like other large datasets
+# Real data (manual Kaggle download), so it can't run automatically anywhere
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.large
+@pytest.mark.skip(
+    reason="FER2013 needs a Kaggle login and a manual download of fer2013.csv; see the docs page to run this by hand"
+)
 def test_fer2013_dataset():
     ds = FER2013()
     assert {k: len(v) for k, v in ds.items()} == {"train": 28709, "validation": 3589, "test": 3589}
