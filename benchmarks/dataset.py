@@ -8,7 +8,6 @@ the individual model files (``models/*.py``).
 from __future__ import annotations
 
 import logging
-import multiprocessing
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -143,7 +142,6 @@ DATASET_CONFIGS: dict[str, DatasetConfig] = {
     "food101": _rgb("food101", "Food-101", 101),
     "imagenet": _rgb("imagenet", "ImageNet", 1000, builder_name="ImageNet1K", include_in_results=False),
     "imagenette": _rgb("imagenette", "Imagenette", 10),
-    "kitti_distance": _rgb("kitti_distance", "KITTI Distance", 4, builder_name="KITTIDistance"),
     "rockpaperscissor": _rgb("rockpaperscissor", "Rock-Paper-Scissors", 3),
     "stl10": _rgb("stl10", "STL-10", 10, mean=[0.4467, 0.4398, 0.4066], std=[0.2603, 0.2566, 0.2713]),
     "svhn": _rgb("svhn", "SVHN", 10, mean=[0.4377, 0.4438, 0.4728], std=[0.1980, 0.2010, 0.1970]),
@@ -529,8 +527,7 @@ def create_dataset(
     batch_size = training_cfg.batch_size
     num_workers = training_cfg.num_workers
     prefetch_factor = getattr(training_cfg, "prefetch_factor", 2) if num_workers > 0 else None
-    # "fork" is unavailable on Windows; fall back to the platform default there.
-    mp_ctx = "fork" if num_workers > 0 and "fork" in multiprocessing.get_all_start_methods() else None
+    mp_ctx = "fork" if num_workers > 0 else None
 
     if ds_config.modality == "timeseries":
         train_transform = train_transform or _timeseries_transform(ds_config)
