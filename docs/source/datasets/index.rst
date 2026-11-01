@@ -107,6 +107,8 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   caltech101
+   mnist_m
    bee_dataset
    aiderv2
    grocery_store

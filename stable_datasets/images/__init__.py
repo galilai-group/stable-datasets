@@ -9,6 +9,7 @@ from .bee_dataset import BeeDataset
 from .belgium_tsc import BelgiumTSC
 from .breakhis import BreakHis
 from .bsds500 import BSDS500
+from .caltech101 import Caltech101
 from .caltech101_silhouettes import Caltech101Silhouettes
 from .caltech256 import Caltech256
 from .cars3d import Cars3D
@@ -75,6 +76,7 @@ from .linnaeus5 import Linnaeus5
 from .malaria import Malaria
 from .med_mnist import MedMNIST
 from .mnist_c import MNISTC
+from .mnist_m import MNISTM
 from .not_mnist import NotMNIST
 
 # from .mnist import MNIST
@@ -114,6 +116,7 @@ __all__ = [
     "ArabicDigits",
     "AWA2",
     "Beans",
+    "Caltech101",
     "BeeDataset",
     "BelgiumTSC",
     "BreakHis",
@@ -182,6 +185,7 @@ __all__ = [
     "Linnaeus5",
     "Malaria",
     "MedMNIST",
+    "MNISTM",
     "MNISTC",
     "NotMNIST",
     "PlantDoc",
