@@ -3,6 +3,7 @@
 from .audiomnist import AudioMNIST
 from .birdvox_dcase_20k import BirdVoxDCASE20k
 from .CatsDogs import CatsDogs
+from .electricity_hourly import ElectricityHourly
 from .freefield1010 import Freefield1010
 from .fsd_kaggle_2018 import FSDKaggle2018
 from .groove_MIDI import GrooveMIDI
@@ -15,6 +16,7 @@ from .picidae import Picidae
 from .seizures_neonatal import SeizuresNeonatal
 from .sonycust import SONYCUST
 from .speech_commands import SpeechCommands
+from .uber_tlc import UberTLC
 from .uci_har import UCIHAR
 from .UrbanSound import UrbanSound
 from .vocalset import VocalSet
@@ -26,6 +28,7 @@ __all__ = [
     "AudioMNIST",
     "BirdVoxDCASE20k",
     "CatsDogs",
+    "ElectricityHourly",
     "Freefield1010",
     "FSDKaggle2018",
     "GrooveMIDI",
@@ -38,6 +41,7 @@ __all__ = [
     "SeizuresNeonatal",
     "SONYCUST",
     "SpeechCommands",
+    "UberTLC",
     "UCIHAR",
     "UrbanSound",
     "VoiceGenderDetection",

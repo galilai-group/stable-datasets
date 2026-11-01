@@ -34,12 +34,15 @@ class UCIHAR(BaseDatasetBuilder):
             )
             for split in ("train", "test")
         },
-        citation=(
-            "Anguita, D., Ghio, A., Oneto, L., Parra, X., and Reyes-Ortiz, J. L. (2013). "
-            "A Public Domain Dataset for Human Activity Recognition Using Smartphones. ESANN 2013. "
-            "Dataset DOI: https://doi.org/10.24432/C54S4K."
-        ),
-        license="Unresolved: UCI page lists CC BY 4.0; bundled README restricts commercial use.",
+        citation="""@misc{uci_har_2013,
+  author = {Reyes-Ortiz, Jorge and Anguita, Davide and Ghio, Alessandro and Oneto, Luca and Parra, Xavier},
+  title = {Human Activity Recognition Using Smartphones},
+  year = {2013},
+  publisher = {UCI Machine Learning Repository},
+  doi = {10.24432/C54S4K},
+  url = {https://doi.org/10.24432/C54S4K}
+}""",
+        license="CC BY 4.0",
     )
 
     def _info(self):

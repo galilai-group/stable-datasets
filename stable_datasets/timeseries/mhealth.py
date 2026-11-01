@@ -18,7 +18,7 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 
 class MHEALTH(BaseDatasetBuilder):
-    """One (time, 23-channel) recording per subject in the unsplit 'all' collection."""
+    """One (time, 23-channel) recording per subject in a single 'train' split."""
 
     VERSION = Version("1.0.0")
     SAMPLE_RATE = 50
@@ -50,18 +50,20 @@ class MHEALTH(BaseDatasetBuilder):
     SOURCE = DatasetSource(
         homepage="https://archive.ics.uci.edu/dataset/319/mhealth+dataset",
         assets={
-            "all": DownloadInfo(
+            "train": DownloadInfo(
                 url="https://archive.ics.uci.edu/static/public/319/mhealth+dataset.zip",
                 filename="MHEALTH.zip",
                 checksum="sha256:16ad0ce709f3f00df18f348610d15bce0884b79e2143f57f446493673f02b8e0",
             ),
         },
-        citation=(
-            "Banos, O., Garcia, R., Holgado-Terriza, J. A., Damas, M., Pomares, H., Rojas, I., "
-            "Saez, A., and Villalonga, C. (2014). mHealthDroid: A Novel Framework for Agile "
-            "Development of Mobile Health Applications. IWAAL 2014. "
-            "Dataset DOI: https://doi.org/10.24432/C5TW22."
-        ),
+        citation="""@misc{mhealth_2014,
+  author = {Banos, Oresti and Garcia, Rafael and Saez, Alejandro},
+  title = {MHEALTH},
+  year = {2014},
+  publisher = {UCI Machine Learning Repository},
+  doi = {10.24432/C5TW22},
+  url = {https://doi.org/10.24432/C5TW22}
+}""",
         license="CC BY 4.0",
     )
 
