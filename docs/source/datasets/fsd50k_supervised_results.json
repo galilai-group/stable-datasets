@@ -1,0 +1,137 @@
+{
+  "recorded_utc": "2026-10-23T21:15:00Z",
+  "variation": "sample standard deviation over seeds 0, 1, 2 (initialisation and data order); not a confidence interval",
+  "reference": {
+    "paper": "Fonseca et al., FSD50K: An Open Dataset of Human-Labeled Sound Events, IEEE/ACM TASLP 30 (2022) (arXiv:2010.00475), Table VI, VGG-like",
+    "test_mAP": {
+      "mean": 0.434,
+      "std": 0.002
+    },
+    "test_d_prime": {
+      "mean": 2.167,
+      "std": 0.011
+    },
+    "test_lwlrap_class": {
+      "mean": 0.514,
+      "std": 0.003
+    },
+    "code": "none online (the baseline repository linked from the paper has been removed)"
+  },
+  "protocol": {
+    "data": "FSD50K builder, config '22khz'; train 36,796 / validation 4,170 / test (eval) 10,231 clips, 200 classes, smeared labels as released",
+    "front_end": "log10 mel, 96 bands, 30 ms window, hop 220 (10 ms); 1 s patches (101 frames), clips under 1 s replicated, longer clips sliced with 50% overlap; patches inherit the clip labels; standardised with train-split mean/std",
+    "model": "VGG-like: 3x conv32, maxpool 2, 2x conv64, maxpool 2, conv128 (3x3, BN, ReLU); concat global max + average pooling; FC 256 ReLU; FC 200 sigmoid; 265,992 weights; Glorot-uniform init, Keras BN (eps 1e-3, momentum 0.01)",
+    "training": "binary cross-entropy, Adam lr 3e-4 (eps 1e-7), batch 64, shuffled; lr halved after 5 epochs without a better validation mAP, early stop after 10, at most 100 epochs",
+    "selection": "checkpoint with the best validation mAP (the paper used TensorFlow's PR-AUC); test evaluated once with it",
+    "metrics": "clip score = mean of patch sigmoid outputs; mAP and d' = sqrt(2) * Phi^-1(ROC-AUC) per class, averaged over classes; lwlrap_class = per-class label-ranking precision averaged over classes (the paper's reporting, Sec. V-A); lwlrap = DCASE 2019 definition, every (clip, label) pair weighted equally"
+  },
+  "results": {
+    "per_seed": [
+      {
+        "seed": 0,
+        "selected_epoch": 11,
+        "epochs_run": 21,
+        "final_lr": 0.00015,
+        "validation": {
+          "mAP": 0.4430949151224125,
+          "d_prime": 2.490681787307255,
+          "lwlrap": 0.6793868491421646
+        },
+        "test": {
+          "mAP": 0.4222493693465134,
+          "d_prime": 2.244206465703751,
+          "lwlrap_class": 0.511792739260221,
+          "lwlrap": 0.6103639679717492
+        },
+        "minutes_per_epoch": 4.57
+      },
+      {
+        "seed": 1,
+        "selected_epoch": 25,
+        "epochs_run": 35,
+        "final_lr": 3.75e-05,
+        "validation": {
+          "mAP": 0.44417907837614495,
+          "d_prime": 2.4475590910577303,
+          "lwlrap": 0.6860965268452381
+        },
+        "test": {
+          "mAP": 0.4209969764747668,
+          "d_prime": 2.2275525467077615,
+          "lwlrap_class": 0.5219503863249332,
+          "lwlrap": 0.6191749780145422
+        },
+        "minutes_per_epoch": 4.58
+      },
+      {
+        "seed": 2,
+        "selected_epoch": 13,
+        "epochs_run": 23,
+        "final_lr": 7.5e-05,
+        "validation": {
+          "mAP": 0.44065677143618165,
+          "d_prime": 2.457337436674501,
+          "lwlrap": 0.691011410762925
+        },
+        "test": {
+          "mAP": 0.42962696028045855,
+          "d_prime": 2.2566668138821426,
+          "lwlrap_class": 0.5281222419213006,
+          "lwlrap": 0.6230098089771281
+        },
+        "minutes_per_epoch": 4.6
+      }
+    ],
+    "summary": {
+      "test": {
+        "mAP": {
+          "mean": 0.4242911020339129,
+          "std": 0.004663224141805983
+        },
+        "d_prime": {
+          "mean": 2.242808608764552,
+          "std": 0.014607383108967956
+        },
+        "lwlrap_class": {
+          "mean": 0.5206217891688182,
+          "std": 0.008245425525221827
+        },
+        "lwlrap": {
+          "mean": 0.6175162516544731,
+          "std": 0.006484046077606301
+        }
+      },
+      "validation": {
+        "mAP": {
+          "mean": 0.4426435883115796,
+          "std": 0.0018040048399216657
+        },
+        "d_prime": {
+          "mean": 2.4651927716798285,
+          "std": 0.022609101021306366
+        },
+        "lwlrap": {
+          "mean": 0.6854982622501092,
+          "std": 0.005835327635450521
+        }
+      }
+    }
+  },
+  "environment": {
+    "script": "examples/fsd50k_supervised.py",
+    "training_script_sha256": "62ab4c0765a9e14ebafe34cf99c01e54577f5571b34ac958d9925d7a91f471a6",
+    "metrics_script_sha256": "e27367f61b5791e279d6d68b455b9eb190a50dba5ed98ce351dff1cc97a655c3",
+    "metrics_note": "test metrics recomputed from the saved predictions.npz after lwlrap_class was added; mAP, d' and lwlrap match the training-time values exactly",
+    "python": "3.12.3",
+    "platform": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "device": "NVIDIA GeForce RTX 2080 Ti (Brown CS Hydra cluster), fp32",
+    "versions": {
+      "torch": "2.14.1",
+      "torchvision": "0.29.1",
+      "numpy": "2.5.4",
+      "lightning": "2.6.6",
+      "stable-pretraining": "0.1.9.dev10+gab836bf69",
+      "stable-datasets": "0.0.0a1"
+    }
+  }
+}
