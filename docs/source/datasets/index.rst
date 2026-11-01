@@ -61,6 +61,7 @@ Available Datasets
    dtd
    not_mnist
    fashion_mnist
+   fer2013
    kitti_distance
    oracle_mnist
    rendered_sst2

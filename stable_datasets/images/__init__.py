@@ -42,6 +42,7 @@ from .eth80 import ETH80
 from .eurosat import EuroSAT
 from .face_pointing import FacePointing
 from .fashion_mnist import FashionMNIST
+from .fer2013 import FER2013
 from .fgvc_aircraft import FGVCAircraft
 from .flowers17 import Flowers17
 from .flowers102 import Flowers102
@@ -148,6 +149,7 @@ __all__ = [
     "EuroSAT",
     "FacePointing",
     "FashionMNIST",
+    "FER2013",
     "FGVCAircraft",
     "Flowers17",
     "Flowers102",
