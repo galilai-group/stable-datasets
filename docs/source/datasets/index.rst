@@ -54,6 +54,7 @@ Available Datasets
    cifar10_c
    cifar100_c
    cinic10
+   citrus_leaves
    cars196
    coil20
    cct20
@@ -78,6 +79,7 @@ Available Datasets
    stl10
    tiny_imagenet
    tiny_imagenet_c
+   trashnet
    imagenet_v2
    imagenet_sketch
    imagenet_a

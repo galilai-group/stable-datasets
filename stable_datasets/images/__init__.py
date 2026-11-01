@@ -23,6 +23,7 @@ from .cifar10_c import CIFAR10C
 from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
 from .cinic10 import CINIC10
+from .citrus_leaves import CitrusLeaves
 from .clevrer import CLEVRER
 from .cmu_faces import CMUFaces
 from .coil20 import COIL20
@@ -108,6 +109,7 @@ from .svhn import SVHN
 from .tf_flowers import TFFlowers
 from .tiny_imagenet import TinyImagenet
 from .tiny_imagenet_c import TinyImagenetC
+from .trashnet import TrashNet
 from .usps import USPS
 from .weizmann_seg import WeizmannSegmentation
 
@@ -136,6 +138,7 @@ __all__ = [
     "CIFAR100",
     "CIFAR100C",
     "CINIC10",
+    "CitrusLeaves",
     "CLEVRER",
     "CMUFaces",
     "COIL20",
@@ -215,6 +218,7 @@ __all__ = [
     "SVHN",
     "TinyImagenet",
     "TinyImagenetC",
+    "TrashNet",
     "USPS",
     "WeizmannSegmentation",
 ]
