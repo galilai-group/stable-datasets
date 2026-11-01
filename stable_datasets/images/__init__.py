@@ -7,6 +7,7 @@ from .awa2 import AWA2
 from .beans import Beans
 from .bee_dataset import BeeDataset
 from .belgium_tsc import BelgiumTSC
+from .brain_tumor_mri import BrainTumorMRI
 from .breakhis import BreakHis
 from .bsds500 import BSDS500
 from .caltech101 import Caltech101
@@ -72,6 +73,7 @@ from .kannada_mnist import KannadaMNIST
 from .kather_colorectal_histology import KatherColorectalHistology
 from .kitti_distance import KITTIDistance
 from .kth_tips import KTHTIPS
+from .lc25000 import LC25000
 from .linnaeus5 import Linnaeus5
 from .malaria import Malaria
 from .med_mnist import MedMNIST
@@ -119,6 +121,7 @@ __all__ = [
     "Caltech101",
     "BeeDataset",
     "BelgiumTSC",
+    "BrainTumorMRI",
     "BreakHis",
     "BSDS500",
     "Caltech101Silhouettes",
@@ -182,6 +185,7 @@ __all__ = [
     "KTHTIPS",
     "KMNIST49",
     "KatherColorectalHistology",
+    "LC25000",
     "Linnaeus5",
     "Malaria",
     "MedMNIST",

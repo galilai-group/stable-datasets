@@ -133,6 +133,8 @@ Available Datasets
    caltech101_silhouettes
    scene8
    isic2016
+   brain_tumor_mri
+   lc25000
 
 .. toctree::
    :maxdepth: 1
