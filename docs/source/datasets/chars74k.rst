@@ -160,7 +160,6 @@ Run all tests, including real-data integration, with:
 
    pytest stable_datasets/tests/images/test_chars74k.py -v
 
-   pytest stable_datasets/tests/images/test_chars74k.py -v
 
 The real-data tests require access to the official
 Chars74K archives.

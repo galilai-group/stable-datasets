@@ -48,6 +48,7 @@ class SignLanguageMNIST(BaseDatasetBuilder):
             howpublished={Kaggle},
             url={https://www.kaggle.com/datasets/datamunge/sign-language-mnist}
         }""",
+        license="CC0-1.0",
     )
 
     def _info(self):
@@ -67,6 +68,7 @@ class SignLanguageMNIST(BaseDatasetBuilder):
             ),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
+            license=self.SOURCE["license"],
             citation=self.SOURCE["citation"],
         )
 

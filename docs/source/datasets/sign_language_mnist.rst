@@ -142,7 +142,6 @@ Run all tests, including real-data integration, with:
 
    pytest stable_datasets/tests/images/test_sign_language_mnist.py -v
 
-   pytest stable_datasets/tests/images/test_sign_language_mnist.py -v
 
 The real-data test requires network access to Kaggle.
 
