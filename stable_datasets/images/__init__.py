@@ -69,6 +69,7 @@ from .k_mnist import KMNIST
 from .k_mnist49 import KMNIST49
 from .kannada_mnist import KannadaMNIST
 from .kather_colorectal_histology import KatherColorectalHistology
+from .kitti_distance import KITTIDistance
 from .kth_tips import KTHTIPS
 from .linnaeus5 import Linnaeus5
 from .malaria import Malaria
@@ -172,6 +173,7 @@ __all__ = [
     "ISIC2016",
     "TFFlowers",
     "Imagewoof",
+    "KITTIDistance",
     "KMNIST",
     "KannadaMNIST",
     "KTHTIPS",
