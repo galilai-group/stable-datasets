@@ -13,6 +13,7 @@ from .groove_MIDI import GrooveMIDI
 from .gtzan import GTZAN
 from .hand_movement_direction import HandMovementDirection
 from .JapaneseVowels import JapaneseVowels
+from .mhealth import MHEALTH
 from .MosquitoSound import MosquitoSound
 from .natops import NATOPS
 from .Phoneme import Phoneme
@@ -23,6 +24,7 @@ from .seizures_neonatal import SeizuresNeonatal
 from .sonycust import SONYCUST
 from .speech_commands import SpeechCommands
 from .uber_tlc import UberTLC
+from .uci_har import UCIHAR
 from .UrbanSound import UrbanSound
 from .uwave_gesture_library import UWaveGestureLibrary
 from .vocalset import VocalSet
@@ -45,6 +47,7 @@ __all__ = [
     "GTZAN",
     "HandMovementDirection",
     "JapaneseVowels",
+    "MHEALTH",
     "MosquitoSound",
     "NATOPS",
     "Phoneme",
@@ -54,6 +57,7 @@ __all__ = [
     "SONYCUST",
     "SpeechCommands",
     "UberTLC",
+    "UCIHAR",
     "UrbanSound",
     "UWaveGestureLibrary",
     "VoiceGenderDetection",
