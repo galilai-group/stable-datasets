@@ -9,7 +9,7 @@ LFW (Labeled Faces in the Wild)
    <img src="https://img.shields.io/badge/Size-250x250-orange" alt="Image Size: 250x250">
    </p>
 
-  .. image:: teasers/lfw_teaser.png
+.. image:: teasers/lfw_teaser.png
      :align: center
      :width: 90%
 

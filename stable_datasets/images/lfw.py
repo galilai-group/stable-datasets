@@ -22,7 +22,8 @@ class LFW(BaseDatasetBuilder):
     ``pairsDevTrain.txt`` and ``test`` contains the 1,000 pairs in ``pairsDevTest.txt``. Both are balanced between
     matched and mismatched pairs. Images are the original (unaligned) 250x250 RGB JPEGs.
 
-    The files are downloaded from the figshare mirrors that scikit-learn also uses.
+    Files are downloaded from the original UMass site, with the figshare copies that scikit-learn also uses as
+    checksum-verified fallbacks.
     """
 
     VERSION = Version("1.0.0")
@@ -30,9 +31,22 @@ class LFW(BaseDatasetBuilder):
     SOURCE = DatasetSource(
         homepage="http://vis-www.cs.umass.edu/lfw/",
         assets={
-            "images": DownloadInfo(url="https://ndownloader.figshare.com/files/5976018"),  # lfw.tgz
-            "train_pairs": DownloadInfo(url="https://ndownloader.figshare.com/files/5976012"),  # pairsDevTrain.txt
-            "test_pairs": DownloadInfo(url="https://ndownloader.figshare.com/files/5976009"),  # pairsDevTest.txt
+            # Original UMass host first; the figshare copies (also used by scikit-learn) are tried only if it is down.
+            "images": DownloadInfo(
+                url="http://vis-www.cs.umass.edu/lfw/lfw.tgz",
+                fallbacks=["https://ndownloader.figshare.com/files/5976018"],
+                checksum="sha256:055f7d9c632d7370e6fb4afc7468d40f970c34a80d4c6f50ffec63f5a8d536c0",
+            ),
+            "train_pairs": DownloadInfo(
+                url="http://vis-www.cs.umass.edu/lfw/pairsDevTrain.txt",
+                fallbacks=["https://ndownloader.figshare.com/files/5976012"],
+                checksum="sha256:1d454dada7dfeca0e7eab6f65dc4e97a6312d44cf142207be28d688be92aabfa",
+            ),
+            "test_pairs": DownloadInfo(
+                url="http://vis-www.cs.umass.edu/lfw/pairsDevTest.txt",
+                fallbacks=["https://ndownloader.figshare.com/files/5976009"],
+                checksum="sha256:7cb06600ea8b2814ac26e946201cdb304296262aad67d046a16a7ec85d0ff87c",
+            ),
         },
         citation="""@TechReport{LFWTech,
                     author      = {Gary B. Huang and Manu Ramesh and Tamara Berg and Erik Learned-Miller},
@@ -94,7 +108,9 @@ class LFW(BaseDatasetBuilder):
 
         missing = needed - images.keys()
         if missing:
-            raise FileNotFoundError(f"{len(missing)} images listed in the pairs file are missing, e.g. {sorted(missing)[:3]}")
+            raise FileNotFoundError(
+                f"{len(missing)} images listed in the pairs file are missing, e.g. {sorted(missing)[:3]}"
+            )
 
         for idx, (first, second, label) in enumerate(pairs):
             yield (

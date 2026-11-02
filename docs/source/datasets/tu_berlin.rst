@@ -9,7 +9,7 @@ TU-Berlin Sketch
    <img src="https://img.shields.io/badge/Size-~1111x1111-orange" alt="Image Size: ~1111x1111">
    </p>
 
-  .. image:: teasers/tu_berlin_teaser.png
+.. image:: teasers/tu_berlin_teaser.png
      :align: center
      :width: 90%
 
