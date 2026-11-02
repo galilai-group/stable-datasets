@@ -147,9 +147,14 @@ Available Datasets
    :maxdepth: 1
    :caption: Time Series Classification Datasets
 
+   articulary_word_recognition
    basic_motions
+   cricket
    epilepsy
+   ering
    hand_movement_direction
+   handwriting
+   libras
    natops
    racket_sports
    uwave_gesture_library
