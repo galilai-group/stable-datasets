@@ -85,6 +85,7 @@ References
 ----------
 
 - CIFAR-N release: https://github.com/UCSC-REAL/cifar-10-100n
+- License: CC BY-NC 4.0
 - CIFAR-10 dataset: https://www.cs.toronto.edu/~kriz/cifar.html
 - Wei et al., *Learning with Noisy Labels Revisited: A Study Using Real-World Human Annotations*, ICLR 2022: https://openreview.net/forum?id=TBWA6PLJZQm
 

@@ -16,7 +16,7 @@ def test_cifar100n_dataset():
 
     # Test 2: Check the clean, coarse, and human annotation fields
     sample = cifar100n[0]
-    expected_keys = {"image", "label", "coarse_label", "noisy_label"}
+    expected_keys = {"image", "label", "superclass", "noisy_label"}
     assert set(sample.keys()) == expected_keys, f"Expected keys {expected_keys}, got {set(sample.keys())}"
 
     # Test 3: Validate image type and shape
@@ -33,9 +33,9 @@ def test_cifar100n_dataset():
     assert 0 <= label < 100, f"Label should be between 0 and 99, got {label}."
 
     # Test 5: Validate coarse label type and range
-    coarse_label = sample["coarse_label"]
-    assert isinstance(coarse_label, int), f"Coarse label should be an integer, got {type(coarse_label)}."
-    assert 0 <= coarse_label < 20, f"Coarse label should be between 0 and 19, got {coarse_label}."
+    superclass = sample["superclass"]
+    assert isinstance(superclass, int), f"Superclass should be an integer, got {type(superclass)}."
+    assert 0 <= superclass < 20, f"Superclass should be between 0 and 19, got {superclass}."
 
     # Test 6: Validate the human noisy label type and range
     noisy_label = sample["noisy_label"]

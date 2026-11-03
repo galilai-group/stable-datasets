@@ -12,7 +12,7 @@
 Overview
 --------
 
-CIFAR-100N pairs the 50,000 CIFAR-100 training images with their clean fine and coarse labels and the human noisy labels from the CIFAR-N release. It also provides the 10,000 standard CIFAR-100 test images and labels. The test examples have ``None`` for ``noisy_label`` because CIFAR-N annotations cover only training images.
+CIFAR-100N pairs the 50,000 CIFAR-100 training images with their clean fine and superclass labels and the human noisy labels from the CIFAR-N release. It also provides the 10,000 standard CIFAR-100 test images and labels. The test examples have ``None`` for ``noisy_label`` because CIFAR-N annotations cover only training images.
 
 - **Train**: 50,000 images (500 per class)
 - **Test**: 10,000 images (100 per class)
@@ -39,7 +39,7 @@ When accessing an example using ``ds[i]``, you will receive a dictionary with th
    * - ``label``
      - int
      - Clean fine-grained class label (0-99)
-   * - ``coarse_label``
+   * - ``superclass``
      - int
      - Clean superclass label (0-19)
    * - ``noisy_label``
@@ -59,7 +59,7 @@ Usage Example
     test = CIFAR100N(split="test")
     sample = train[0]
 
-    print(sample["label"], sample["coarse_label"], sample["noisy_label"])
+    print(sample["label"], sample["superclass"], sample["noisy_label"])
     print(test[0]["noisy_label"])  # None: no human annotations are provided for test images
 
 Related Datasets
@@ -75,6 +75,7 @@ References
 ----------
 
 - CIFAR-N release: https://github.com/UCSC-REAL/cifar-10-100n
+- License: CC BY-NC 4.0
 - CIFAR-100 dataset: https://www.cs.toronto.edu/~kriz/cifar.html
 - Wei et al., *Learning with Noisy Labels Revisited: A Study Using Real-World Human Annotations*, ICLR 2022: https://openreview.net/forum?id=TBWA6PLJZQm
 

@@ -10,11 +10,12 @@ from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, Downl
 from stable_datasets.splits import Split, SplitGenerator
 from stable_datasets.utils import BaseDatasetBuilder, download
 
+
 _CITATION = """
 @inproceedings{wei2022learning,
-  title={Learning with Noisy Labels Revisited: A Study Using Real-World Human 
+  title={Learning with Noisy Labels Revisited: A Study Using Real-World Human
   Annotations},
-  author={Jiaheng Wei and Zhaowei Zhu and Hao Cheng and Tongliang Liu and Gang 
+  author={Jiaheng Wei and Zhaowei Zhu and Hao Cheng and Tongliang Liu and Gang
   Niu and Yang Liu},
   booktitle={International Conference on Learning Representations},
   year={2022},
@@ -96,6 +97,7 @@ class CIFAR10N(BaseDatasetBuilder):
             ),
         },
         citation=_CITATION,
+        license="CC BY-NC 4.0",
     )
 
     def _info(self):
@@ -115,6 +117,7 @@ class CIFAR10N(BaseDatasetBuilder):
             ),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
+            license=self.SOURCE["license"],
             citation=self.SOURCE["citation"],
         )
 
@@ -123,13 +126,16 @@ class CIFAR10N(BaseDatasetBuilder):
 
     def _split_generators(self):
         assets = self._source()["assets"]
-        download_dir = Path(self._raw_download_dir) / "cifar10n"
+        download_dir = Path(self._raw_download_dir)
         paths = {
-            name: download(
-                self._normalize_download_info(assets[name], asset_name=name),
+            "cifar": download(
+                self._normalize_download_info(assets["cifar"], asset_name="cifar"),
                 dest_folder=download_dir,
-            )
-            for name in ("cifar", "annotations")
+            ),
+            "annotations": download(
+                self._normalize_download_info(assets["annotations"], asset_name="annotations"),
+                dest_folder=download_dir / "cifar10n",
+            ),
         }
         return [
             SplitGenerator(
@@ -146,7 +152,7 @@ class CIFAR10N(BaseDatasetBuilder):
                     "cifar_path": paths["cifar"],
                     "split": Split.TEST,
                 },
-            )
+            ),
         ]
 
     def _generate_examples(self, cifar_path, split, annotations_path=None):

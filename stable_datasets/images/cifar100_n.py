@@ -12,11 +12,12 @@ from stable_datasets.utils import BaseDatasetBuilder, download
 
 from .cifar100 import CIFAR100
 
+
 _CITATION = """
 @inproceedings{wei2022learning,
-  title={Learning with Noisy Labels Revisited: A Study Using Real-World Human 
+  title={Learning with Noisy Labels Revisited: A Study Using Real-World Human
   Annotations},
-  author={Jiaheng Wei and Zhaowei Zhu and Hao Cheng and Tongliang Liu and Gang 
+  author={Jiaheng Wei and Zhaowei Zhu and Hao Cheng and Tongliang Liu and Gang
   Niu and Yang Liu},
   booktitle={International Conference on Learning Representations},
   year={2022},
@@ -26,35 +27,6 @@ _CITATION = """
 
 _CLEAN_LABEL_FIELD = "clean_label"
 _ANNOTATION_FIELDS = ("noisy_label",)
-
-_CIFAR100N_FINE_TO_COARSE = {
-    fine_label: coarse_idx
-    for coarse_idx, fine_labels in enumerate(
-        [
-            ("beaver", "dolphin", "otter", "seal", "whale"),
-            ("aquarium_fish", "flatfish", "ray", "shark", "trout"),
-            ("orchid", "poppy", "rose", "sunflower", "tulip"),
-            ("bottle", "bowl", "can", "cup", "plate"),
-            ("apple", "mushroom", "orange", "pear", "sweet_pepper"),
-            ("clock", "keyboard", "lamp", "telephone", "television"),
-            ("bed", "chair", "couch", "table", "wardrobe"),
-            ("bee", "beetle", "butterfly", "caterpillar", "cockroach"),
-            ("bear", "leopard", "lion", "tiger", "wolf"),
-            ("bridge", "castle", "house", "road", "skyscraper"),
-            ("cloud", "forest", "mountain", "plain", "sea"),
-            ("camel", "cattle", "chimpanzee", "elephant", "kangaroo"),
-            ("fox", "porcupine", "possum", "raccoon", "skunk"),
-            ("crab", "lobster", "snail", "spider", "worm"),
-            ("baby", "boy", "girl", "man", "woman"),
-            ("crocodile", "dinosaur", "lizard", "snake", "turtle"),
-            ("hamster", "mouse", "rabbit", "shrew", "squirrel"),
-            ("maple_tree", "oak_tree", "palm_tree", "pine_tree", "willow_tree"),
-            ("bicycle", "bus", "motorcycle", "pickup_truck", "train"),
-            ("lawn_mower", "rocket", "streetcar", "tank", "tractor"),
-        ]
-    )
-    for fine_label in fine_labels
-}
 
 
 def _load_annotations(path, field_names, expected_count, num_classes):
@@ -108,6 +80,7 @@ class CIFAR100N(BaseDatasetBuilder):
             ),
         },
         citation=_CITATION,
+        license="CC BY-NC 4.0",
     )
 
     def _info(self):
@@ -124,12 +97,13 @@ class CIFAR100N(BaseDatasetBuilder):
                 {
                     "image": Image(),
                     "label": ClassLabel(names=class_names),
-                    "coarse_label": ClassLabel(names=coarse_names),
+                    "superclass": ClassLabel(names=coarse_names),
                     "noisy_label": ClassLabel(names=class_names),
                 }
             ),
             supervised_keys=("image", "label"),
             homepage=self.SOURCE["homepage"],
+            license=self.SOURCE["license"],
             citation=self.SOURCE["citation"],
         )
 
@@ -138,13 +112,16 @@ class CIFAR100N(BaseDatasetBuilder):
 
     def _split_generators(self):
         assets = self._source()["assets"]
-        download_dir = Path(self._raw_download_dir) / "cifar100n"
+        download_dir = Path(self._raw_download_dir)
         paths = {
-            name: download(
-                self._normalize_download_info(assets[name], asset_name=name),
+            "cifar": download(
+                self._normalize_download_info(assets["cifar"], asset_name="cifar"),
                 dest_folder=download_dir,
-            )
-            for name in ("cifar", "annotations")
+            ),
+            "annotations": download(
+                self._normalize_download_info(assets["annotations"], asset_name="annotations"),
+                dest_folder=download_dir / "cifar100n",
+            ),
         }
         return [
             SplitGenerator(
@@ -161,7 +138,7 @@ class CIFAR100N(BaseDatasetBuilder):
                     "cifar_path": paths["cifar"],
                     "split": Split.TEST,
                 },
-            )
+            ),
         ]
 
     def _generate_examples(self, cifar_path, split, annotations_path=None):
@@ -191,11 +168,10 @@ class CIFAR100N(BaseDatasetBuilder):
                     {
                         "image": image,
                         "label": int(label),
-                        "coarse_label": int(coarse_labels[idx]),
+                        "superclass": int(coarse_labels[idx]),
                         **{
                             name: int(annotations[name][idx]) if annotations is not None else None
                             for name in _ANNOTATION_FIELDS
                         },
                     },
                 )
-
