@@ -1,11 +1,7 @@
 import numpy as np
-import pytest
 from PIL import Image
 
 from stable_datasets.images import FGVCAircraft
-
-
-pytestmark = pytest.mark.large
 
 
 def test_fgvc_aircraft_dataset():

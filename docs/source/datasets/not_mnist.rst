@@ -22,6 +22,10 @@ Split sizes:
 - **Train**: 60,000 images
 - **Test**: 10,000 images
 
+.. image:: teasers/not_mnist_teaser.png
+   :align: center
+   :width: 90%
+
 Data Structure
 --------------
 
@@ -86,7 +90,7 @@ Usage Example
 Related Datasets
 ----------------
 
-- :doc:`mnist`: The original handwritten digit dataset
+- **MNIST**: The original handwritten digit dataset
 - **EMNIST**: Extended MNIST including both digits and handwritten letters
 - **Fashion-MNIST**: A replacement for MNIST consisting of clothing items
 

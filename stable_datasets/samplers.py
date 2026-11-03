@@ -11,7 +11,7 @@ the format was designed to exploit.
 This module exposes samplers that yield indices in shard-aware
 orderings, preserving the classical PyTorch API (``DataLoader(ds,
 sampler=...)``) while providing a sampler that matches the
-backend's access-pattern preferences:
+backend's access-pattern preferences::
 
     from stable_datasets.samplers import ShardShuffleSampler
 
@@ -27,11 +27,11 @@ reproduction). Samplers here are strictly opt-in.
 
 See also
 --------
-``torch.utils.data.Sampler`` : base class.
-``lance.sampler.ShardedFragmentSampler`` : Lance's own fragment
-   sampler for its native :class:`lance.torch.data.LanceDataset`
-   integration. ``ShardShuffleSampler`` is the nearest equivalent
-   exposed through the StableDataset backend protocol.
+torch.utils.data.Sampler : base class.
+lance.sampler.ShardedFragmentSampler : Lance's own fragment
+    sampler for its native :class:`lance.torch.data.LanceDataset`
+    integration. ``ShardShuffleSampler`` is the nearest equivalent
+    exposed through the StableDataset backend protocol.
 """
 
 from __future__ import annotations

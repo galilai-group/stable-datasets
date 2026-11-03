@@ -1,5 +1,5 @@
 The Street View House Numbers Dataset (SVHN)
-========
+============================================
 
 .. raw:: html
 

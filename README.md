@@ -251,10 +251,12 @@ To add a new dataset:
 
 The main contract is that `_info()` and `_generate_examples(...)` must agree exactly on field names and types.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for what a dataset pull request should include and what CI checks.
+
 ## Running tests
 
 ```bash
-pytest -q
+pytest -q -m "not large"
 ```
 
-For targeted work, run the relevant subset under `stable_datasets/tests/`.
+`-m "not large"` skips tests that download more than about 10 GB, as CI does. For targeted work, run the relevant subset under `stable_datasets/tests/`.

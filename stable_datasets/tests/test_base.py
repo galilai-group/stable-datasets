@@ -597,6 +597,16 @@ def test_env_cache_dir_with_tilde_expansion(monkeypatch):
     assert utils._default_dest_folder() == expected
 
 
+class _FakeRaw:
+    """Stand-in for ``response.raw``: ``download`` streams the bytes from it undecoded."""
+
+    def __init__(self, chunks):
+        self.chunks = chunks
+
+    def stream(self, amt, decode_content=None):
+        return iter(self.chunks)
+
+
 def test_download_resume_sends_range_header(tmp_path, monkeypatch):
     """When a .tmp file exists, download should send a Range header."""
     from stable_datasets.utils import download
@@ -620,8 +630,7 @@ def test_download_resume_sends_range_header(tmp_path, monkeypatch):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([b"x" * 100])
+        raw = _FakeRaw([b"x" * 100])
 
         def __enter__(self):
             return self
@@ -684,8 +693,7 @@ def test_download_resume_fallback_on_200(tmp_path, monkeypatch):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        raw = _FakeRaw([content])
 
         def __enter__(self):
             return self
@@ -719,6 +727,57 @@ def test_download_resume_fallback_on_200(tmp_path, monkeypatch):
     assert result.read_bytes() == content
 
 
+def test_download_keeps_bytes_of_content_encoded_file(tmp_path):
+    """A .tgz served with ``Content-Encoding: gzip`` is saved as sent, not decompressed."""
+    import gzip
+
+    from stable_datasets.utils import download
+
+    url = "https://example.com/archive.tgz"
+    tar_bytes = b"tar archive contents " * 50
+    sent = gzip.compress(tar_bytes)
+
+    class FakeResponse:
+        status_code = 200
+        headers = {"content-length": str(len(sent)), "content-encoding": "gzip"}
+        raw = _FakeRaw([sent])
+
+        def raise_for_status(self):
+            pass
+
+        def iter_content(self, chunk_size=8192):
+            # What requests yields: the body decompressed per Content-Encoding.
+            return iter([tar_bytes])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    class FakeSession:
+        def __init__(self):
+            self.headers = {}
+
+        def get(self, url, **kwargs):
+            return FakeResponse()
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    session = FakeSession()
+    with patch("stable_datasets.utils.requests.Session", return_value=session):
+        with patch("stable_datasets.utils.FileLock"):
+            result = download(url, dest_folder=tmp_path, progress_bar=False)
+
+    assert result.read_bytes() == sent
+    # Hosts that compress on the fly are asked for the plain file instead.
+    assert session.headers["Accept-Encoding"] == "identity"
+
+
 def test_download_uses_fallback_url(tmp_path):
     from stable_datasets.utils import download
 
@@ -737,8 +796,7 @@ def test_download_uses_fallback_url(tmp_path):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        raw = _FakeRaw([content])
 
         def __enter__(self):
             return self
@@ -798,6 +856,66 @@ def test_download_raises_aggregated_error_when_all_candidates_fail(tmp_path):
                 download(primary, dest_folder=dest_folder, progress_bar=False, fallbacks=[fallback])
 
 
+def _failing_session(errors):
+    """A fake ``requests.Session`` whose ``get`` raises each error in *errors* in turn."""
+    errors = list(errors)
+    seen = []
+
+    class FakeSession:
+        def __init__(self):
+            self.headers = {}
+
+        def get(self, url, **kwargs):
+            seen.append(url)
+            raise errors.pop(0)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            pass
+
+    return FakeSession(), seen
+
+
+def _http_error(status):
+    import requests
+
+    response = MagicMock(status_code=status)
+    return requests.HTTPError(f"{status} error", response=response)
+
+
+def test_download_raises_host_unreachable_when_every_candidate_has_network_errors(tmp_path):
+    import requests
+
+    primary = "https://down.example.com/file.bin"
+    fallback = "https://also-down.example.com/file.bin"
+    session, seen = _failing_session([requests.ConnectionError("no route"), _http_error(503)])
+
+    with patch("stable_datasets.utils.requests.Session", return_value=session):
+        with patch("stable_datasets.utils.FileLock"):
+            with pytest.raises(utils.HostUnreachableError, match="Failed to download from all candidate URLs"):
+                utils.download(primary, dest_folder=tmp_path, progress_bar=False, fallbacks=[fallback])
+
+    assert seen == [primary, fallback]
+
+
+def test_download_404_is_not_host_unreachable(tmp_path):
+    import requests
+
+    primary = "https://down.example.com/file.bin"
+    fallback = "https://moved.example.com/file.bin"
+    session, _ = _failing_session([requests.ConnectionError("no route"), _http_error(404)])
+
+    with patch("stable_datasets.utils.requests.Session", return_value=session):
+        with patch("stable_datasets.utils.FileLock"):
+            with pytest.raises(RuntimeError, match="Failed to download from all candidate URLs") as excinfo:
+                utils.download(primary, dest_folder=tmp_path, progress_bar=False, fallbacks=[fallback])
+
+    # A 404 means a URL is wrong, not that the host is down.
+    assert not isinstance(excinfo.value, utils.HostUnreachableError)
+
+
 def test_download_validates_checksum_on_fallback(tmp_path):
     from stable_datasets.utils import download
 
@@ -816,8 +934,7 @@ def test_download_validates_checksum_on_fallback(tmp_path):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        raw = _FakeRaw([content])
 
         def __enter__(self):
             return self
@@ -872,8 +989,7 @@ def test_checksum_validation_passes(tmp_path):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        raw = _FakeRaw([content])
 
         def __enter__(self):
             return self
@@ -924,8 +1040,7 @@ def test_checksum_mismatch_deletes_and_raises(tmp_path):
         def raise_for_status(self):
             pass
 
-        def iter_content(self, chunk_size=8192):
-            return iter([content])
+        raw = _FakeRaw([content])
 
         def __enter__(self):
             return self

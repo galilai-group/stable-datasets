@@ -48,7 +48,7 @@ def create_transforms(ds_config, model_cfg=None):
 
 
 def forward(self, batch, stage):
-    """NNCLR forward — fork of ``spt.forward.nnclr_forward`` with a fix that
+    """NNCLR forward — fork of ``spt.forward.nnclr`` with a fix that
     moves the lazily-created support-set queue onto the model's device.
 
     The upstream implementation creates the OnlineQueue's underlying buffer
