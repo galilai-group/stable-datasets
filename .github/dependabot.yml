@@ -1,0 +1,10 @@
+version: 2
+updates:
+  # stable-pretraining is pinned in pyproject.toml; open a PR when it has a new release.
+  # The PR changes pyproject.toml, so CI runs the full suite, including the benchmark tests.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-name: "stable-pretraining"

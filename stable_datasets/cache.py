@@ -149,7 +149,10 @@ def write_sharded_arrow_cache(
     num_encode_workers : int
         When > 0, encode examples in parallel using a thread pool.
 
-    Returns a :class:`ShardedCacheMeta` describing the cache.
+    Returns
+    -------
+    ShardedCacheMeta
+        Describes the cache.
     """
     cache_dir = Path(cache_dir)
     cache_dir.parent.mkdir(parents=True, exist_ok=True)

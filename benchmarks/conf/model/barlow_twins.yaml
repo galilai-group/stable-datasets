@@ -1,5 +1,5 @@
 name: barlow_twins
-forward: barlow_twins_forward
+forward: barlow_twins
 
 transforms:
   type: multiview

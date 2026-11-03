@@ -29,7 +29,7 @@ well suited for systematic and controlled disentanglement evaluation.
 - **Image resolution**: 64×64×3 (RGB)
 
 Latent Factors of Variation
---------------------------
+---------------------------
 
 Each image is generated from six independent factors:
 
@@ -122,7 +122,7 @@ Usage Example
     ds_torch = ds.with_format("torch")
 
 Why No Train/Test Split?
------------------------
+------------------------
 
 Shapes3D does not define an official train/test split.
 The dataset is intended for **representation learning**, where the objective is to discover and

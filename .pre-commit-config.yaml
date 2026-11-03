@@ -16,7 +16,8 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-added-large-files
-        args: ["--maxkb=1000"]
+        # --enforce-all: also check files in a pull request, which CI runs with --all-files.
+        args: ["--maxkb=1000", "--enforce-all"]
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: detect-private-key
@@ -54,11 +55,4 @@ repos:
   #       types_or: [markdown, yaml, json]
   #       exclude: ^docs/
 
-  # Check docstrings
-  - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.3.0
-    hooks:
-      - id: pydocstyle
-        additional_dependencies: [tomli]
-        args: [--convention=google]
-        exclude: ".*" # ^(tests/|docs/)
+  # Docstrings are checked by ruff (D101/D102/D103 in pyproject.toml).

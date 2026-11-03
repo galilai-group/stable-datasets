@@ -5,6 +5,8 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 
 class HighGamma(BaseDatasetBuilder):
+    """High-Gamma motor-movement EEG dataset (Schirrmeister et al., 2017). Not implemented yet."""
+
     VERSION = Version("0.0.0")
     SOURCE = DatasetSource(
         homepage="https://github.com/robintibor/high-gamma-dataset",

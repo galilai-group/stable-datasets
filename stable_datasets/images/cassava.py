@@ -27,6 +27,7 @@ class cassava:
 
     @staticmethod
     def download(path):
+        """Download ``cassavaleafdata.zip`` into ``<path>cassava/`` unless it is already there."""
         # Check if directory exists
         if not os.path.isdir(path + "cassava"):
             print("Creating cassava Directory")
@@ -38,6 +39,14 @@ class cassava:
 
     @staticmethod
     def load(path=None):
+        """Download if needed and load all splits as numpy arrays.
+
+        Args:
+            path: Folder holding the ``cassava/`` data. Defaults to ``$DATASET_PATH``.
+
+        Returns:
+            ``(train_images, train_labels, valid_images, valid_labels, test_images, test_labels)``.
+        """
         if path is None:
             path = os.environ["DATASET_PATH"]
 

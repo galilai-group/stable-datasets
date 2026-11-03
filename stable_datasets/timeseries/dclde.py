@@ -5,6 +5,8 @@ from stable_datasets.utils import BaseDatasetBuilder
 
 
 class DCLDE(BaseDatasetBuilder):
+    """DCLDE (Detection, Classification, Localization and Density Estimation) bioacoustics dataset. Not implemented yet."""
+
     VERSION = Version("0.0.0")
     SOURCE = DatasetSource(
         homepage="TBD",

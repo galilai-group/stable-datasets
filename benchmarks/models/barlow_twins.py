@@ -40,7 +40,7 @@ def build(cfg, ds_config) -> tuple[spt.Module, int]:
     module = spt.Module(
         backbone=backbone,
         projector=projector,
-        forward=forward.barlow_twins_forward,
+        forward=forward.barlow_twins,
         barlow_loss=barlow_loss,
         optim=build_optim_config(cfg.model),
     )

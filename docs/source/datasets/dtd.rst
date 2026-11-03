@@ -1,5 +1,5 @@
 Describable Textures Dataset (DTD)
-========
+==================================
 
 .. raw:: html
 

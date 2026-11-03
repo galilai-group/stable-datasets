@@ -292,6 +292,7 @@ class TestSmoke:
             "nnclr",
             "barlow_twins",
             "supervised",
+            "dino",
         ],
     )
     def test_build_module(self, model_name):
@@ -349,6 +350,19 @@ class TestSmoke:
             },
             "supervised": {
                 "name": "supervised",
+                "vit_optimizer": {"type": "AdamW", "lr": 1e-3, "weight_decay": 0.05, "betas": [0.9, 0.999]},
+                "scheduler": {"type": "LinearWarmupCosineAnnealing"},
+            },
+            "dino": {
+                "name": "dino",
+                "projector": {"hidden_dim": 64, "bottleneck_dim": 16, "output_dim": 32},
+                "loss": {
+                    "temperature_student": 0.1,
+                    "temperature_teacher": 0.04,
+                    "warmup_temperature_teacher": 0.04,
+                    "warmup_epochs_temperature_teacher": 1,
+                },
+                "momentum_teacher": 0.996,
                 "vit_optimizer": {"type": "AdamW", "lr": 1e-3, "weight_decay": 0.05, "betas": [0.9, 0.999]},
                 "scheduler": {"type": "LinearWarmupCosineAnnealing"},
             },

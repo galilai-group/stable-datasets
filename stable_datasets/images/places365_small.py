@@ -100,6 +100,7 @@ class Places365Small(BaseDatasetBuilder):
 
     @staticmethod
     def extract_train_class(input_string):
+        """Return the class path of a training image, e.g. ``"/a/airfield"`` for ``"data_256/a/airfield/00000001.jpg"``."""
         first_slash_index = input_string.find("/")
         trimmed_start = input_string[first_slash_index:]
         last_slash_index = trimmed_start.rfind("/")
