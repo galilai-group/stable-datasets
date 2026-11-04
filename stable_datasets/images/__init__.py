@@ -20,8 +20,10 @@ from .cifar10 import CIFAR10
 from .cifar10_1 import CIFAR10_1
 from .cifar10_2 import CIFAR10_2
 from .cifar10_c import CIFAR10C
+from .cifar10_n import CIFAR10N
 from .cifar100 import CIFAR100
 from .cifar100_c import CIFAR100C
+from .cifar100_n import CIFAR100N
 from .cinic10 import CINIC10
 from .clevrer import CLEVRER
 from .cmu_faces import CMUFaces
@@ -133,8 +135,10 @@ __all__ = [
     "CIFAR10_1",
     "CIFAR10_2",
     "CIFAR10C",
+    "CIFAR10N",
     "CIFAR100",
     "CIFAR100C",
+    "CIFAR100N",
     "CINIC10",
     "CLEVRER",
     "CMUFaces",
