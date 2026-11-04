@@ -76,6 +76,7 @@ from .kather_colorectal_histology import KatherColorectalHistology
 from .kitti_distance import KITTIDistance
 from .kth_tips import KTHTIPS
 from .lc25000 import LC25000
+from .lfw import LFW
 from .linnaeus5 import Linnaeus5
 from .malaria import Malaria
 from .med_mnist import MedMNIST
@@ -110,6 +111,7 @@ from .svhn import SVHN
 from .tf_flowers import TFFlowers
 from .tiny_imagenet import TinyImagenet
 from .tiny_imagenet_c import TinyImagenetC
+from .tu_berlin import TUBerlin
 from .usps import USPS
 from .weizmann_seg import WeizmannSegmentation
 
@@ -219,6 +221,8 @@ __all__ = [
     "SVHN",
     "TinyImagenet",
     "TinyImagenetC",
+    "TUBerlin",
+    "LFW",
     "USPS",
     "WeizmannSegmentation",
 ]

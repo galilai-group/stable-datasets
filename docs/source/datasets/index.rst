@@ -109,6 +109,9 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   lfw
+   tu_berlin
+
    caltech101
    mnist_m
    bee_dataset
