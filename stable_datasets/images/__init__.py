@@ -86,6 +86,7 @@ from .not_mnist import NotMNIST
 # from .mnist import MNIST
 from .office_home import OfficeHome
 from .olivetti_faces import OlivettiFaces
+from .omniglot import Omniglot
 from .optdigits import Optdigits
 from .oracle_mnist import OracleMNIST
 from .oxford_iiit_pet import OxfordIIITPet
@@ -94,6 +95,7 @@ from .patch_camelyon import PatchCamelyon
 from .patternnet import PatternNet
 from .plant_village import PlantVillage
 from .plantdoc import PlantDoc
+from .q_mnist import QMNIST
 
 # from .places365_small import Places365Small
 from .rendered_sst2 import RenderedSST2
@@ -196,6 +198,8 @@ __all__ = [
     "MNISTM",
     "MNISTC",
     "NotMNIST",
+    "Omniglot",
+    "QMNIST",
     "PlantDoc",
     "OlivettiFaces",
     "Optdigits",
