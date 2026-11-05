@@ -1,6 +1,6 @@
 """JPEG decoders, and the spec that says which decode resources a loader uses.
 
-Decoder("nvjpeg" | "hw" | "cpu")(frames)   frames (uint8 tensors, numpy arrays or bytes) -> (3, h, w) uint8 tensors
+Decoder("nvjpeg" | "cpu")(frames)          frames (uint8 tensors, numpy arrays or bytes) -> (3, h, w) uint8 tensors
 Decoder("cpu", exact=True)                 libjpeg-turbo with per-MCU chroma upsampling, as nvJPEG and splicing need
 decoders("nvjpeg:2,cpu:4")                 -> {"nvjpeg": 2, "cpu": 4}: a loader's decode resources and their counts
 decode_resized(jpeg, h, w)                 one frame -> (h, w, 3) uint8, CPU decode + antialiased bilinear resize
@@ -8,12 +8,11 @@ decode_resized(jpeg, h, w)                 one frame -> (h, w, 3) uint8, CPU dec
 The loaders decode on the GPU with "nvjpeg" and on the CPU cores with libjpeg-turbo. Where "nvjpeg" runs depends on
 the GPU: torchvision's batched nvJPEG decodes on the NVJPG engines where there are any (H100, measured: engines
 79-100% busy, SMs 20-66%; A100 / B200 / B300 have engines too and should do the same, not yet measured), else on the
-CUDA cores with its Huffman decoding on the calling CPU (A40, L40S, Ada). "hw" (nvImageCodec on the same engines) is
-slower than nvJPEG on them (H100: 2,256 vs 2,929 clips/s per token loader server), so the loaders no longer take it;
-only the converter's verification can still choose it (convert --gpu hw / auto).
+CUDA cores with its Huffman decoding on the calling CPU (A40, L40S, Ada). nvImageCodec on the same engines ("hw",
+removed) was slower than nvJPEG on them (H100: 2,256 vs 2,929 clips/s per token loader server; 1,612 vs 3,964 frame
+pairs/s verifying a conversion).
 """
 
-import os
 from contextlib import nullcontext
 
 import numpy as np
@@ -26,28 +25,13 @@ class Decoder:
     "nvjpeg"  torchvision decode_jpeg on CUDA: nvJPEG's batched decode, on the NVJPG engines where the GPU has them,
               else on the CUDA cores with Huffman decoding on this process's CPU (per-MCU chroma upsampling, which the
               splice needs); alias "tv"
-    "hw"      nvImageCodec on the NVJPG engines (A100 / H100 / B200, not Ada), one CPU thread
-              ($FRAMESTORE_NVIMGCODEC_THREADS); baseline JPEGs only, frames it cannot decode come back as None.
-              Whole frames only: its RGB interpolates chroma across MCU borders (unlike nvJPEG), wrong for spliced
-              JPEGs. Used by the converter's verification only.
-    The decoded images of the last call stay referenced by the decoder (self.keep): the engines' buffers belong to
-    nvImageCodec, and a kernel still reading them must not see them freed.
     """
 
     def __init__(self, kind="nvjpeg", device="cuda", exact=False):
         self.kind = {"tv": "nvjpeg"}.get(kind, kind)
-        self.device, self.exact, self.keep = device, exact, []
-        if self.kind == "hw":
-            from nvidia import nvimgcodec as nv
-
-            self.nv = nv
-            # one CPU thread: nvImageCodec otherwise starts a pool per decoder (~4 busy cores per server measured on an
-            # H100), which starves the loader's CPU workers
-            self.dec = nv.Decoder(
-                backends=[nv.Backend(nv.BackendKind.HW_GPU_ONLY)],
-                max_num_cpu_threads=int(os.environ.get("FRAMESTORE_NVIMGCODEC_THREADS", "1")),
-            )
-            self.params = nv.DecodeParams(color_spec=nv.ColorSpec.SRGB, sample_format=nv.SampleFormat.P_RGB)
+        if self.kind not in ("nvjpeg", "cpu"):
+            raise ValueError(f"unknown decoder {kind!r}: nvjpeg or cpu")
+        self.device, self.exact = device, exact
 
     def __call__(self, frames, stream=None):
         import torch
@@ -61,17 +45,11 @@ class Decoder:
                 ).permute(2, 0, 1)
                 for f in frames
             ]
-        if self.kind == "nvjpeg":  # fastest under load on every GPU measured (L40S, RTX 6000 Ada, H100)
-            from torchvision.io import ImageReadMode, decode_jpeg
+        from torchvision.io import ImageReadMode, decode_jpeg
 
-            frames = [f if isinstance(f, torch.Tensor) else torch.from_numpy(_np(f)) for f in frames]
-            with torch.cuda.stream(stream) if stream is not None else nullcontext():
-                return decode_jpeg(frames, mode=ImageReadMode.RGB, device=self.device)
-        s = stream.cuda_stream if stream is not None else torch.cuda.current_stream().cuda_stream
-        imgs = self.dec.decode([_np(f).tobytes() for f in frames], params=self.params, cuda_stream=s)
-        self.keep = imgs
+        frames = [f if isinstance(f, torch.Tensor) else torch.from_numpy(_np(f)) for f in frames]
         with torch.cuda.stream(stream) if stream is not None else nullcontext():
-            return [None if i is None else torch.as_tensor(i, device=self.device) for i in imgs]
+            return decode_jpeg(frames, mode=ImageReadMode.RGB, device=self.device)
 
 
 def decoders(spec):
@@ -83,9 +61,7 @@ def decoders(spec):
         kind, _, n = part.partition(":")
         kind = {"tv": "nvjpeg"}.get(kind, kind)
         if kind in ("hw", "nvjpg", "engines"):
-            raise ValueError(
-                f"{spec!r}: the hw decoder was removed from the loaders; nvjpeg already decodes on the NVJPG engines"
-            )
+            raise ValueError(f"{spec!r}: the hw decoder was removed; nvjpeg already decodes on the NVJPG engines")
         if kind not in ("nvjpeg", "cpu"):
             raise ValueError(f"unknown decoder {kind!r} in {spec!r}: nvjpeg or cpu")
         out[kind] = None if n in ("", "auto") else int(n)
