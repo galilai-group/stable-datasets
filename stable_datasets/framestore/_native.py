@@ -5,12 +5,14 @@ which releases the GIL for every call, so threads calling them run in parallel.
     lib = _native.load("jpeg_restart.c", libs=["jpeg"])     # linked against libjpeg(-turbo)
 
 NATIVE_CFLAGS replaces -O2, e.g. "-O1 -g -fsanitize=address" for the fuzz tests (a separate build in the cache).
+Where they cannot be built, callers fall back to slower paths and warn once (fallback()).
 """
 
 import ctypes
 import hashlib
 import os
 import subprocess
+import warnings
 
 
 def _flags(libs):
@@ -48,6 +50,20 @@ def load(source, libs=()):
             raise OSError(f"building {name} failed:\n{e.stderr}") from None
         os.replace(tmp, so)  # atomic: concurrent processes may build at once
     return ctypes.CDLL(so)
+
+
+HOW = (
+    "for the fast path install a C compiler and libjpeg-turbo's headers (apt install build-essential "
+    "libjpeg-turbo8-dev; brew install jpeg-turbo; conda install -c conda-forge compilers libjpeg-turbo), then run again"
+)
+_warned = set()
+
+
+def fallback(what, err):
+    """Warn once per process that `what` runs a slower path because a C helper could not be built (err)."""
+    if what not in _warned:
+        _warned.add(what)
+        warnings.warn(f"stable_datasets.framestore: {what} ({err}); {HOW}", RuntimeWarning, stacklevel=3)
 
 
 def usable_cpus():
