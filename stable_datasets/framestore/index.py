@@ -143,8 +143,9 @@ class FrameIndex:
         }
 
     @staticmethod
-    def build(path, root, workers=8):
-        """Scan the store into a new index directory `root` (written to root.tmp, then renamed)."""
+    def build(path, root, workers=None):
+        """Scan the store into a new index directory `root` (written to root.tmp, then renamed); `workers`
+        processes scan fragments in parallel (default: the CPUs the container may use)."""
         import lance
 
         ds = lance.dataset(path)
@@ -167,6 +168,10 @@ class FrameIndex:
             [side_fid] * len(frags),
             [tmp] * len(frags),
         )
+        if workers is None:
+            from ._native import usable_cpus
+
+            workers = usable_cpus()
         if workers <= 1 or multiprocessing.current_process().daemon:  # daemonic processes cannot have children
             parts = list(map(_scan_fragment, *args))
         else:  # spawn, not fork: a fork after lance has started its runtime threads can crash the child
@@ -195,7 +200,7 @@ class FrameIndex:
         os.rename(tmp, root)
 
     @classmethod
-    def shared(cls, path, base=None, workers=8):
+    def shared(cls, path, base=None, workers=None):
         """The node's index of store `path` under `base` (default: index_base()): opened if present, else built by
         the first process to get here while the others wait."""
         import lance

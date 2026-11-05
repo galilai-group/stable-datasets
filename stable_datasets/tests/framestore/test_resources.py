@@ -66,6 +66,14 @@ def test_bad_amounts_refused(v):
         parse_amount(v)
 
 
+@given(st.integers(1, 256), st.one_of(st.floats(0.01, 1.0), st.integers(1, 512)))
+def test_job_cpus_keep_two_free(monkeypatch_session, usable, want):
+    monkeypatch_session.setattr(resources, "usable_cpus", lambda: usable)
+    n = resources.job_cpus(want)
+    assert 1 <= n <= max(1, usable - resources.SPARE_CPUS)
+    assert n <= max(1, int(resolve(want, usable)))
+
+
 # ---- allocate ------------------------------------------------------------------------------------------------
 stages = st.lists(
     st.builds(
