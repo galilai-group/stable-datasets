@@ -217,9 +217,15 @@ class SharedClipLoader:
         store: frame store (blob-encoded, read by `read`; or not, read by lance take).
         batch, frames, stride, size: clips per batch, frames per clip, rows between two frames, (H, W) of each frame.
         cpu_workers: CPU decode processes (cpu_decode: "module:function" or a function of (jpeg, H, W), default
-            decoders.decode_resized); byte_readers: per decode server, feeding its GPU decoder; gpu_servers: decode
-            server processes (MPS clients; nvJPEG's host side is serial per process).
+            decoders.decode_resized); default: the CPUs a job may use (resources.job_cpus: 2 stay free), less one
+            for the trainer and one for each GPU server (nvJPEG decodes Huffman codes on its CPU) and byte reader.
+        byte_readers: per decode server, feeding its GPU decoder; gpu_servers: decode server processes (MPS
+            clients; nvJPEG's host side is serial per process). H100, 23 vCPUs, ViT-S: 2 servers (16 CPU decoders)
+            1,505 clips/s, 3 (14) 1,483, 4 (12) 1,450.
         decoder: GPU JPEG decoder, "nvjpeg" (default: fastest under load on every GPU measured) or "hw" (NVJPG engines).
+        decoders: instead of gpu_servers, decoder and cpu_workers, a decoder spec (decoders.decoders): "nvjpeg:2,hw:1,
+            cpu:16" runs two nvJPEG servers, one on the NVJPG engines and 16 CPU decoders (a kind with no count:
+            nvjpeg 2, hw 1, cpu sized from the node).
         index, read: FrameStore's (a per-node index; the read policy).
     """
 
@@ -230,9 +236,9 @@ class SharedClipLoader:
         frames=16,
         stride=1,
         size=(224, 224),
-        cpu_workers=1,
+        cpu_workers=None,
         byte_readers=1,
-        gpu_servers=3,
+        gpu_servers=2,
         column="frame",
         clip_slots=4,
         host_slots=3,
@@ -240,13 +246,28 @@ class SharedClipLoader:
         nice=0,
         seed=0,
         decoder="nvjpeg",
+        decoders=None,
         cpu_decode="stable_datasets.framestore.decoders:decode_resized",
         index=False,
         read=None,
         bytes_per_frame=96 << 10,
     ):
+        from .resources import job_cpus
+
         self.B = batch
         H, W = size
+        kinds = [decoder] * gpu_servers
+        if decoders is not None:
+            from .decoders import decoders as parse
+
+            d = parse(decoders)
+            kinds = ["nvjpeg"] * (2 if d.get("nvjpeg", 0) is None else d.get("nvjpeg", 0))
+            kinds += ["hw"] * (1 if d.get("hw", 0) is None else d.get("hw", 0))
+            gpu_servers, cpu_workers = len(kinds), d.get("cpu", 0)
+        self.kinds = kinds
+        if cpu_workers is None:
+            cpu_workers = max(0, job_cpus() - 1 - gpu_servers * (1 + byte_readers))
+        self.cpu_workers, self.byte_readers = cpu_workers, byte_readers if gpu_servers else 0
         ctx = mp.get_context("spawn")
         self.clips = torch.empty(clip_slots, batch, frames, H, W, 3, dtype=torch.uint8, device="cuda")
         host = torch.empty(host_slots if cpu_workers else 1, batch, frames, H, W, 3, dtype=torch.uint8).share_memory_()
@@ -269,7 +290,7 @@ class SharedClipLoader:
                 "column": column,
                 "batch": batch,
                 "nice": nice,
-                "decoder": decoder,
+                "decoder": kinds[i] if kinds else decoder,
                 "cpu_decode": cpu_decode,
                 "index": index,
                 "read": read,

@@ -31,6 +31,16 @@ from ._native import usable_cpus
 
 
 GB = 1e9
+SPARE_CPUS = 2  # never handed to a job, whatever it asks: a node whose job keeps every CPU busy can stop responding
+
+
+def job_cpus(want=1.0):
+    """CPUs a job may keep busy: `want` (a fraction or a count) of the CPUs the container may use, leaving
+    SPARE_CPUS of them free (at least one for the job)."""
+    n = usable_cpus()
+    return max(1, min(int(resolve(want, n)), n - SPARE_CPUS))
+
+
 log = logging.getLogger("resources")
 
 
@@ -277,13 +287,16 @@ class ByteGate:
 
 class Budget:
     """Bytes a job may take, by pool: host memory (shared memory is part of it, and is also limited by /dev/shm's
-    own size) and GPU memory (read when first needed)."""
+    own size) and GPU memory (read when first needed); and the CPUs it may keep busy (job_cpus: SPARE_CPUS stay
+    free)."""
 
     def __init__(self, what, resources=None):
         r = resources or Resources()
         lower_priority(r.nice)
         self.what, self.r = what, r
-        self.cpus = max(1, int(resolve(r.cpu, usable_cpus())))
+        self.cpus = job_cpus(r.cpu)
+        if self.cpus < int(resolve(r.cpu, usable_cpus())):
+            log.info(f"BUDGET {what}: {SPARE_CPUS} CPUs stay free for the node: {self.cpus} instead of asked {r.cpu}")
         self.available = memory_available()
         self.memory = resolve(r.memory, self.available)
         self.start = process_bytes() or 0
