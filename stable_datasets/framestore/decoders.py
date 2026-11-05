@@ -6,11 +6,14 @@ Decoder("cpu", exact=True)                 libjpeg-turbo with per-MCU chroma ups
 decoders("nvjpeg:2,hw:1,cpu:4")            -> {"nvjpeg": 2, "hw": 1, "cpu": 4}: decode resources and their counts
 decode_resized(jpeg, h, w)                 one frame -> (h, w, 3) uint8, CPU decode + antialiased bilinear resize
 
-A node has three kinds of JPEG decoders, and a loader can run all of them at once: the CUDA cores (nvJPEG; its Huffman
-decoding takes a CPU core per process), the NVJPG engines (A100 / H100 / B200: separate silicon, no SMs, no CPU) and
-the CPU cores (libjpeg-turbo).
+A node has up to three kinds of JPEG decoder, and a loader can run them all at once: the NVJPG engines (A100 / H100 /
+B200: separate silicon, no SMs), the CUDA cores, and the CPU cores (libjpeg-turbo). Which one "nvjpeg" runs on depends
+on the GPU: torchvision's batched nvJPEG decodes on the engines where there are any (H100, measured: engines 79-100%
+busy, SMs 20-66%), else on the CUDA cores with its Huffman decoding on the calling CPU (A40, L40S, Ada). So on an H100,
+"nvjpeg" and "hw" servers share the same engines: mixing them adds servers, not engines.
 """
 
+import os
 from contextlib import nullcontext
 
 import numpy as np
@@ -20,9 +23,11 @@ class Decoder:
     """frames (uint8 tensors, numpy arrays or bytes) -> list of (3, h, w) uint8 tensors on the decoder's device.
 
     "cpu"     libjpeg-turbo via simplejpeg (fancy upsampling), in the calling thread, GIL released
-    "nvjpeg"  torchvision decode_jpeg on CUDA: nvJPEG on the CUDA cores, Huffman decoding on this process's CPU
-              (per-MCU chroma upsampling, which the splice needs); alias "tv"
-    "hw"      nvImageCodec on the NVJPG engines (A100 / H100 / B200, not Ada): no CPU work; baseline JPEGs only,
+    "nvjpeg"  torchvision decode_jpeg on CUDA: nvJPEG's batched decode, on the NVJPG engines where the GPU has them,
+              else on the CUDA cores with Huffman decoding on this process's CPU (per-MCU chroma upsampling, which the
+              splice needs); alias "tv"
+    "hw"      nvImageCodec on the NVJPG engines (A100 / H100 / B200, not Ada), one CPU thread
+              ($FRAMESTORE_NVIMGCODEC_THREADS); baseline JPEGs only,
               frames it cannot decode come back as None. Their RGB output interpolates chroma across MCU borders
               (unlike nvJPEG), so spliced JPEGs use planes(), whose chroma a kernel upsamples per MCU.
     The decoded images of the last call stay referenced by the decoder (self.keep): the engines' buffers belong to
@@ -36,7 +41,12 @@ class Decoder:
             from nvidia import nvimgcodec as nv
 
             self.nv = nv
-            self.dec = nv.Decoder(backends=[nv.Backend(nv.BackendKind.HW_GPU_ONLY)])
+            # one CPU thread: nvImageCodec otherwise starts a pool per decoder (~4 busy cores per server measured on an
+            # H100), which starves the loader's CPU workers
+            self.dec = nv.Decoder(
+                backends=[nv.Backend(nv.BackendKind.HW_GPU_ONLY)],
+                max_num_cpu_threads=int(os.environ.get("FRAMESTORE_NVIMGCODEC_THREADS", "1")),
+            )
             self.params = nv.DecodeParams(color_spec=nv.ColorSpec.SRGB, sample_format=nv.SampleFormat.P_RGB)
 
     def __call__(self, frames, stream=None):
@@ -96,7 +106,8 @@ class Decoder:
 
 def decoders(spec):
     """A decoder spec -> {kind: count}: "nvjpeg:2,hw:1,cpu:4" (a count of "auto" or none: None, the loader's choice).
-    Kinds: nvjpeg (the CUDA cores), hw (the NVJPG engines), cpu (libjpeg-turbo)."""
+    Kinds: nvjpeg (torchvision's nvJPEG: the NVJPG engines where the GPU has them, else the CUDA cores), hw (the NVJPG
+    engines through nvImageCodec), cpu (libjpeg-turbo)."""
     out = {}
     for part in [p.strip() for p in spec.split(",") if p.strip()]:
         kind, _, n = part.partition(":")
