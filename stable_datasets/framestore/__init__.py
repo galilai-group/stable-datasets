@@ -9,7 +9,7 @@ MCUs can be read and decoded, and read fast from RAM, local disk or network stor
 
 Modules:
     codec        header probes, lossless restart re-coding (C, csrc/jpeg_restart.c), MCU segment lengths
-    decoders     whole-frame decoders: nvJPEG, the NVJPG engines, libjpeg-turbo
+    decoders     whole-frame decoders: nvJPEG, libjpeg-turbo (and the NVJPG engines, for verification)
     convert      the converter (python -m stable_datasets.framestore.convert)
     store        FrameStore: blob descriptors, read policies (mmap, pread, spans, ranges, take), clip windows
     index        FrameIndex: a per-node index of every frame's location and MCU segment lengths

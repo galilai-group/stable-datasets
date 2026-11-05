@@ -199,3 +199,11 @@ def test_crash_and_resume(tmp_path, converted, when):
     assert all_frames(FrameStore(path)) == all_frames(FrameStore(ref))
     assert not [p for p in (path + ".converting", path + ".converting.progress.json") if os.path.exists(p)]
     shutil.rmtree(path)
+
+
+def test_decoder_spec():
+    from stable_datasets.framestore.decoders import decoders
+
+    assert decoders("nvjpeg:2,cpu") == {"nvjpeg": 2, "cpu": None}
+    with pytest.raises(ValueError, match="removed"):  # nvjpeg already decodes on the NVJPG engines
+        decoders("nvjpeg:2,hw:1")
