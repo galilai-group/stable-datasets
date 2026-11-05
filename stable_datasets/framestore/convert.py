@@ -20,7 +20,7 @@ plus ~1.1x its largest fragment. Once all have moved, the sibling replaces the s
 where it stopped (run the same command again); until it finishes, neither directory holds the whole store.
 
 Speed: every stage runs off the GIL in threads -- re-coding in C (libjpeg), header probes and segment scans in
-numba, verification decodes in libjpeg-turbo / nvJPEG / the NVJPG engines -- and verification (both versions of a
+numba, verification decodes in libjpeg-turbo / nvJPEG -- and verification (both versions of a
 frame decoded and compared) goes to the GPU; CPU threads join in only when the GPU is what limits the rate.
 
 Resources (resources.py): a node runs one job at a time, so conversion takes --cpu, --memory and --gpu-memory of it
