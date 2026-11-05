@@ -21,6 +21,7 @@ from hypothesis import HealthCheck, assume, example, given, settings
 from hypothesis import strategies as st
 
 from stable_datasets.framestore import codec
+from stable_datasets.framestore import recode as numba_recode
 
 
 PIL = pytest.importorskip("PIL.Image")
@@ -36,7 +37,21 @@ def recode(blobs, fast):
     return [out[off[i] : off[i + 1]].tobytes() for i in range(len(blobs))], status.tolist()
 
 
+def numba_port(blobs):
+    """The fast path's numba port (recode.py, used where the C cannot be built): status 2 for frames it leaves to
+    libjpeg, as the C fast path."""
+    out, off, status = numba_recode.fast_restart_many(*frames(blobs))
+    return [out[off[i] : off[i + 1]].tobytes() for i in range(len(blobs))], status.tolist()
+
+
+def c_fast_path(blobs):
+    buf, off = frames(blobs)
+    out, out_off, status = codec._many(codec._restart().fast_restart_many, buf, off)
+    return [out[out_off[i] : out_off[i + 1]].tobytes() for i in range(len(blobs))], status.tolist()
+
+
 def assert_same(blobs):
+    assert numba_port(blobs) == c_fast_path(blobs), "the numba port differs from the C fast path"
     fast, fs = recode(blobs, True)
     slow, ss = recode(blobs, False)
     if (fs != ss or fast != slow) and os.environ.get("FUZZ_DUMP"):  # FUZZ_DUMP=dir: keep failing inputs
@@ -226,3 +241,21 @@ def test_jpegtran_fallback_matches(blobs):
         _native._warned.clear()
         got = recode(blobs, fast=True)
     assert got == want
+
+
+def test_numba_port_tables_are_libjpegs():
+    """recode.py's standard Huffman tables are the ones libjpeg writes (Pillow encodes with its defaults)."""
+    b = io.BytesIO()
+    PIL.fromarray(np.zeros((16, 16, 3), np.uint8)).save(b, "JPEG", quality=90)
+    s, i, tables = b.getvalue(), 2, {}
+    while s[i + 1] != 0xDA:
+        L = int.from_bytes(s[i + 2 : i + 4], "big")
+        if s[i + 1] == 0xC4:
+            p = i + 4
+            while p < i + 2 + L:
+                n = sum(s[p + 1 : p + 17])
+                tables[s[p]] = (tuple(s[p + 1 : p + 17]), s[p + 17 : p + 17 + n])
+                p += 17 + n
+        i += 2 + L
+    for t, key in enumerate((0x00, 0x10, 0x01, 0x11)):  # DC/AC luminance, DC/AC chrominance
+        assert tables[key] == (numba_recode._STD_BITS[t], numba_recode._STD_VALS[t])

@@ -20,6 +20,12 @@
 #include <setjmp.h>
 #include <jpeglib.h>
 
+/* The hash of this file a prebuilt copy (a wheel's) was built from: _native.load uses that copy only if it matches */
+#ifndef FRAMESTORE_KEY
+#define FRAMESTORE_KEY ""
+#endif
+const char *framestore_key(void) { return FRAMESTORE_KEY; }
+
 struct err { struct jpeg_error_mgr pub; jmp_buf jb; };
 static void on_error(j_common_ptr c) { longjmp(((struct err *)c->err)->jb, 1); }
 static void on_message(j_common_ptr c) { (void)c; }
@@ -217,8 +223,11 @@ static int same_table(const dht_t *a, const dht_t *b) {
 
 #define BE16(p) (((int)(p)[0] << 8) | (p)[1])
 #define FALLBACK 2
+/* zero bytes after a frame's scan data: a corrupt block may decode up to ~210 bytes past its end (63 coefficients of
+   at most 26 bits) before the check after it, and each refill reads 8 bytes ahead */
+#define MARGIN 1024
 
-/* One frame; clean: scratch of n + 16 bytes; seg: scratch of n / 2 + 2 entries. 0 ok, FALLBACK otherwise. */
+/* One frame; clean: scratch of n + MARGIN bytes; seg: scratch of n / 2 + 2 entries. 0 ok, FALLBACK otherwise. */
 static int fast_one(const uint8_t *s, int64_t n, uint8_t *out, int64_t cap, int64_t *out_n, uint8_t *clean,
                     int64_t *seg) {
     int jfif = 0, jmaj = 1, jmin = 1, junit = 0, jx = 1, jy = 1, h = 0, w = 0, nc = 0, dri = 0, got_sof = 0;
@@ -332,7 +341,7 @@ static int fast_one(const uint8_t *s, int64_t n, uint8_t *out, int64_t cap, int6
         else return FALLBACK;  /* DNL, another scan, ... */
     }
     if (!eoi) return FALLBACK;
-    memset(clean + cn, 0, 16);
+    memset(clean + cn, 0, MARGIN);
     /* MCU geometry */
     int hmax = 1, vmax = 1, nblk[3];
     for (int c = 0; c < nc; c++) {
@@ -462,7 +471,7 @@ int64_t fast_restart_many(const uint8_t *buf, const int64_t *off, int64_t n, uin
                           int64_t *out_off, int32_t *status) {
     int64_t big = 0, o = 0;
     for (int64_t i = 0; i < n; i++) if (off[i + 1] - off[i] > big) big = off[i + 1] - off[i];
-    uint8_t *clean = malloc(big + 32);
+    uint8_t *clean = malloc(big + MARGIN + 16);
     int64_t *seg = malloc(sizeof(int64_t) * (big / 2 + 2));
     out_off[0] = 0;
     for (int64_t i = 0; i < n; i++) {
