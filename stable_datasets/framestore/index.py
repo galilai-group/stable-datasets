@@ -125,22 +125,27 @@ class FrameIndex:
     def __len__(self):
         return self.meta["rows"]
 
-    def lookup(self, rows):
+    def lookup(self, rows, gather=True):
         """Per row: fid (into self.files), pos, size, h, w; seg (the rows' MCU segment lengths, concatenated) and
-        nseg (segments per row)."""
+        nseg (segments per row). gather=False: seg is the index's whole segment-length array instead, without a
+        copy, and seg_start each row's first segment in it."""
         rows = np.asarray(rows)
         a, b = self.seg_off[rows], self.seg_off[rows + 1]
         n = b - a
-        idx = np.repeat(a - np.cumsum(n) + n, n) + np.arange(int(n.sum()))
-        return {
+        out = {
             "fid": self.fid[rows].astype(np.int64),
             "pos": self.pos[rows],
             "size": self.size[rows],
             "h": self.h[rows],
             "w": self.w[rows],
-            "seg": self.seg[idx],
             "nseg": n,
         }
+        if gather:
+            idx = np.repeat(a - np.cumsum(n) + n, n) + np.arange(int(n.sum()))
+            out.update(seg=self.seg[idx], seg_start=np.cumsum(n) - n)
+        else:
+            out.update(seg=np.asarray(self.seg), seg_start=a)
+        return out
 
     @staticmethod
     def build(path, root, workers=None):

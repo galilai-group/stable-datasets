@@ -27,11 +27,34 @@ except ImportError:
     numba = None
 
 if numba is not None:
+    from numba.core import cgutils, types
+    from numba.extending import intrinsic
+
+    @intrinsic
+    def _memcpy(typingctx, dst, dst_at, src, src_at, n):
+        """dst[dst_at : dst_at + n] = src[src_at : src_at + n] for uint8 arrays, as one memcpy (numba's slice
+        assignment copies ~5x slower); no bounds checks: callers check."""
+
+        def codegen(context, builder, sig, args):
+            d = context.make_array(sig.args[0])(context, builder, args[0])
+            s = context.make_array(sig.args[2])(context, builder, args[2])
+            at = [context.cast(builder, args[i], sig.args[i], types.int64) for i in (1, 3, 4)]
+            cgutils.raw_memcpy(builder, builder.gep(d.data, [at[0]]), builder.gep(s.data, [at[1]]), at[2], 1)
+            return context.get_dummy_value()
+
+        return types.void(dst, dst_at, src, src_at, n), codegen
+
+    @numba.njit(cache=True, nogil=True)
+    def copy_bytes(dst, dst_at, src, src_at, n):
+        """dst[dst_at : dst_at + n] = src[src_at : src_at + n] (uint8 arrays), bounds checked, as one memcpy."""
+        if n < 0 or dst_at < 0 or src_at < 0 or dst_at + n > len(dst) or src_at + n > len(src):
+            raise IndexError("copy_bytes: range out of bounds")
+        _memcpy(dst, dst_at, src, src_at, n)
 
     @numba.njit(cache=True, nogil=True)
     def _copy_frames(bufs, fid, pos, size, off, out):
         for f in range(len(pos)):
-            out[off[f] : off[f + 1]] = bufs[fid[f]][pos[f] : pos[f] + size[f]]
+            copy_bytes(out, off[f], bufs[fid[f]], pos[f], size[f])
 
 
 def _readonly(a):
@@ -174,10 +197,18 @@ class FrameStore:
         fid, pos = self._fetch(c["fid"], c["pos"], c["size"])
         return fid, pos, c["seg"], c["nseg"], c["h"], c["w"]
 
-    def take_meta(self, rows):
-        """Descriptors (fid, pos, size, h, w) and seg_len (seg, nseg) of rows, without reading any frame."""
+    def segments(self, rows):
+        """As take, but seg_len may be a larger array (the shared index's, not copied): row i's segment lengths are
+        seg[start[i] : start[i] + nseg[i]]. Returns file id, pos, seg, start, nseg, h, w."""
+        c = self.take_meta(rows, gather=False)
+        fid, pos = self._fetch(c["fid"], c["pos"], c["size"])
+        return fid, pos, c["seg"], c["seg_start"], c["nseg"], c["h"], c["w"]
+
+    def take_meta(self, rows, gather=True):
+        """Descriptors (fid, pos, size, h, w) and seg_len (seg, nseg, seg_start) of rows, without reading any frame.
+        gather=False: seg may be the shared index's whole array (see segments)."""
         if self.index is not None and not isinstance(self.index, dict):
-            return self.index.lookup(rows)
+            return self.index.lookup(rows, gather=gather)
         if self.index is None:
             c = self._columns(self.ds.take(rows, columns=self._cols()), rows)
             seg, nseg = c["seg"], np.diff(c["seg_off"])
@@ -185,7 +216,7 @@ class FrameStore:
             a, b = self.index["seg_off"][rows], self.index["seg_off"][rows + 1]
             c = {k: self.index[k][rows] for k in ("fid", "pos", "size", "h", "w")}
             seg, nseg = _gather_ranges(self.index["seg"], a, b), b - a
-        c.update(seg=seg, nseg=nseg)
+        c.update(seg=seg, nseg=nseg, seg_start=np.cumsum(nseg) - nseg)
         return c
 
     def _reader(self):
