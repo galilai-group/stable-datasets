@@ -51,6 +51,7 @@ import numpy as np
 from . import codec
 from .decoders import Decoder
 from .resources import Budget, ResourceError, Resources, Stage, gb, limit_malloc_arenas
+from .store import format_metadata
 
 
 class ConvertError(Exception):
@@ -718,7 +719,8 @@ def run(a):
         pa.field(f.name, pa.large_binary(), metadata={"lance-encoding:blob": "true"}) if f.name == a.column else f
         for f in ds.schema
     ]
-    out_schema = pa.schema(fields + [pa.field("seg_len", pa.binary())], metadata=ds.schema.metadata)
+    meta = {**(ds.schema.metadata or {}), **format_metadata(a.column)}
+    out_schema = pa.schema(fields + [pa.field("seg_len", pa.binary())], metadata=meta)
     if os.path.exists(tmp) and not committed(tmp):  # interrupted before its first commit: holds nothing
         assert prog["rows"] == 0, f"{tmp} has no committed version but {prog['rows']} rows were converted"
         shutil.rmtree(tmp)
