@@ -107,5 +107,8 @@ References
 Citation
 --------
 
-Refer to the Hugging Face dataset page for the original dataset
-maintainer's attribution and citation information.
+Yllvar. *Forex Historical Data*.
+Hugging Face Datasets.
+https://huggingface.co/datasets/Yllvar/fx-historical-data
+
+Underlying market data source: Dukascopy.

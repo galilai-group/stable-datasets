@@ -119,5 +119,6 @@ References
 Citation
 --------
 
-Dataset published by Cam Nugent on Kaggle. Refer to the source page
-for attribution and applicable usage terms.
+Nugent, Cam. (2018). *S&P 500 Stock Data*.
+Kaggle Dataset.
+https://www.kaggle.com/datasets/camnugent/sandp500

@@ -113,25 +113,36 @@ def test_sp500_chronological_splits(tmp_path):
 
 
 def test_sp500_real_data():
-    """Check that the real SP500 dataset loads correctly."""
-
-    dataset = SP500(split="train")
-
-    assert len(dataset) > 0
-
-    example = dataset[0]
-
-    assert set(example.keys()) == {
-        "date",
-        "ticker",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume",
+    """Check real split sizes, schema, and chronological ordering."""
+    expected_sizes = {
+        "train": 429550,
+        "validation": 94343,
+        "test": 95136,
     }
 
-    assert example["open"] > 0
-    assert example["high"] >= example["low"]
-    assert example["close"] > 0
-    assert example["volume"] >= 0
+    datasets = {split: SP500(split=split) for split in expected_sizes}
+
+    for split, dataset in datasets.items():
+        assert len(dataset) == expected_sizes[split]
+
+        example = dataset[0]
+        assert set(example.keys()) == {
+            "date",
+            "ticker",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+        }
+        assert example["open"] > 0
+        assert example["high"] >= example["low"]
+        assert example["close"] > 0
+        assert example["volume"] >= 0
+
+    train_dates = [row["date"] for row in datasets["train"]]
+    val_dates = [row["date"] for row in datasets["validation"]]
+    test_dates = [row["date"] for row in datasets["test"]]
+
+    assert max(train_dates) < min(val_dates)
+    assert max(val_dates) < min(test_dates)

@@ -100,26 +100,37 @@ def test_forex_chronological_splits(tmp_path):
 
 
 def test_forex_real_data():
-    """Check that the real Forex dataset loads correctly."""
-
-    dataset = Forex(split="train")
-
-    assert len(dataset) > 0
-
-    example = dataset[0]
-
-    assert set(example.keys()) == {
-        "date",
-        "pair",
-        "open",
-        "high",
-        "low",
-        "close",
-        "volume",
+    """Check real split sizes, schema, and chronological ordering."""
+    expected_sizes = {
+        "train": 3512,
+        "validation": 753,
+        "test": 753,
     }
 
-    assert example["pair"] == "EURUSD"
-    assert example["open"] > 0
-    assert example["high"] >= example["low"]
-    assert example["close"] > 0
-    assert example["volume"] >= 0
+    datasets = {split: Forex(split=split) for split in expected_sizes}
+
+    for split, dataset in datasets.items():
+        assert len(dataset) == expected_sizes[split]
+
+        example = dataset[0]
+        assert set(example.keys()) == {
+            "date",
+            "pair",
+            "open",
+            "high",
+            "low",
+            "close",
+            "volume",
+        }
+        assert example["pair"] == "EURUSD"
+        assert example["open"] > 0
+        assert example["high"] >= example["low"]
+        assert example["close"] > 0
+        assert example["volume"] >= 0
+
+    train_dates = [row["date"] for row in datasets["train"]]
+    val_dates = [row["date"] for row in datasets["validation"]]
+    test_dates = [row["date"] for row in datasets["test"]]
+
+    assert max(train_dates) < min(val_dates)
+    assert max(val_dates) < min(test_dates)
