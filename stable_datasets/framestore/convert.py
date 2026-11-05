@@ -337,15 +337,9 @@ class Verifier:
     """Decode both versions of every frame and compare. Chunks queue for the GPU thread; CPU threads take some
     only when the writer stalls on verification, i.e. when the GPU and not re-coding is what limits the rate."""
 
-    TRIAL = 4  # chunks each candidate GPU decoder verifies (after one to warm up) before the faster is kept
-
-    def __init__(self, pool, gpus=(), cpu=True, chunk=512):
+    def __init__(self, pool, gpu=None, cpu=True, chunk=512):
         self.pool, self.cpu, self.chunk = pool, cpu, chunk  # chunk: frame pairs per GPU decode call
-        self.gpus = list(gpus)
-        self.gpu = self.gpus[0] if self.gpus else None
-        # several candidates (--gpu auto): each verifies real chunks during the run, while the CPUs are busy
-        # re-coding (a test on idle CPUs beforehand chose the NVJPG engines on an L40S, which were then slower)
-        self.trial = {d.kind: [0, 0, 0.0] for d in self.gpus} if len(self.gpus) > 1 else None
+        self.gpu = gpu  # the GPU decoder, or None: CPU only
         self.cpu_dec = Decoder("cpu")
         self.q = queue.Queue()
         self.lock, self.helpers = threading.Lock(), 0  # CPU helpers submitted and not yet started
@@ -395,42 +389,14 @@ class Verifier:
         while True:
             job = self.q.get()
             if job.take():
-                dec, t = self._candidate(), time.perf_counter()
                 try:
                     with torch.cuda.stream(stream):
-                        self._run(job, dec, "gpu")
+                        self._run(job, self.gpu, "gpu")
                 except Exception:  # a frame the GPU decoder rejects: this chunk on the CPU decoder instead
                     try:
                         self._run(job, self.cpu_dec, "cpu")
                     except Exception as e:
                         job.fail(e)
-                    if self.trial is not None:  # counts as tried, with no frames to its credit
-                        self.trial[dec.kind][0] += 1
-                    continue
-                if self.trial is not None:  # _run synchronizes once per chunk, so this is the chunk's time
-                    r = self.trial[dec.kind]
-                    if r[0]:  # the first chunk warms up
-                        r[1] += len(job.a)
-                        r[2] += time.perf_counter() - t
-                    r[0] += 1
-
-    def _candidate(self):
-        """The GPU decoder for the next chunk: while trying candidates, the one tried least; then the faster."""
-        if self.trial is None:
-            return self.gpu
-        kind = min(self.trial, key=lambda k: self.trial[k][0])
-        if self.trial[kind][0] <= self.TRIAL:
-            return next(d for d in self.gpus if d.kind == kind)
-        rate = {k: n / max(s, 1e-9) for k, (_, n, s) in self.trial.items()}
-        self.gpu = next(d for d in self.gpus if d.kind == max(rate, key=rate.get))
-        print(
-            "   GPU decoder under load: "
-            + ", ".join(f"{k} {v:,.0f} frame pairs/s" for k, v in rate.items())
-            + f"; using {self.gpu.kind}",
-            flush=True,
-        )
-        self.trial = None
-        return self.gpu
 
     def _run(self, job, dec, by):
         n = len(job.a)
@@ -460,43 +426,31 @@ class Verifier:
 
         n = len(ja)
         imgs = dec(ja + jb)
-        miss = [i for i in range(n) if imgs[i] is None or imgs[n + i] is None]  # hw: frames it cannot decode
-        bad = [i for i in miss if not np.array_equal(*(x.numpy() for x in self.cpu_dec([ja[i], jb[i]])))]
-        same = [i for i in range(n) if i not in set(miss) and imgs[i].shape == imgs[n + i].shape]
-        bad += sorted(set(range(n)) - set(miss) - set(same))
+        same = [i for i in range(n) if imgs[i].shape == imgs[n + i].shape]
+        bad = sorted(set(range(n)) - set(same))
         if same:  # one host sync per chunk
             d = torch.stack([(imgs[i] != imgs[n + i]).any() for i in same]).cpu()
             bad += [i for i, x in zip(same, d.tolist()) if x]
         return sorted(bad)
 
 
-def gpu_decoders(kind, sample, chunk):
-    """The GPU verification decoders to use: [] without a GPU, else [kind], or for "auto" each of nvJPEG and the
-    NVJPG engines (if nvImageCodec has them here) that decodes `sample` (a list of frames); the Verifier keeps
-    whichever is faster during the run. Under conversion load nvJPEG won on an L40S, an RTX 6000 Ada and an H100
-    (7 engines: 3,964 vs 1,612 frame pairs/s)."""
+def gpu_decoder(kind, sample, chunk):
+    """The GPU verification decoder: None with --gpu none or without a GPU (verify on the CPU), else nvJPEG, warmed
+    up on `sample` (a list of frames). nvJPEG decodes on the NVJPG engines where the GPU has them (H100, measured; A100
+    / B200 / B300 should too, not yet measured); nvImageCodec on the same engines was slower under conversion load
+    (H100: 1,612 vs 3,964 frame pairs/s) and is no longer an option."""
     if kind == "none" or not len(sample):
-        return []
+        return None
     import torch
 
     if not torch.cuda.is_available():
-        if kind == "hw":
-            raise ConvertError("--gpu hw: no CUDA device")
-        return []  # the default (nvjpeg) or auto: verify on the CPU
-    out = []
-    for k in ("nvjpeg", "hw") if kind == "auto" else (kind,):
-        try:
-            d = Decoder(k)
-            # a full chunk (both versions of `chunk` frames), so its buffers reach their size before the budget charges
-            # this process's memory
-            assert all(x is not None for x in d((sample * (-(-2 * chunk // len(sample))))[: 2 * chunk]))
-            torch.cuda.synchronize()
-        except Exception:
-            if kind != "auto":
-                raise
-            continue
-        out.append(d)
-    return out
+        return None
+    d = Decoder(kind)
+    # a full chunk (both versions of `chunk` frames), so its buffers reach their size before the budget charges this
+    # process's memory
+    d((sample * (-(-2 * chunk // len(sample))))[: 2 * chunk])
+    torch.cuda.synchronize()
+    return d
 
 
 # ---------------------------------------------------------------------------------------------------------------
@@ -644,10 +598,10 @@ def parser():
     ap.add_argument("--verify", type=float, default=1.0, help="fraction of frames decoded and compared (0: none)")
     ap.add_argument(
         "--gpu",
-        choices=["nvjpeg", "hw", "auto", "none"],
+        choices=["nvjpeg", "none"],
         default="nvjpeg",
-        help="verification decoder on the GPU: nvJPEG (fastest under load on every GPU measured), the NVJPG "
-        "engines, or auto (try both under load, keep the faster); none or no CUDA device: CPU only",
+        help="verification decoder on the GPU: nvJPEG (on the NVJPG engines where the GPU has them); none or no "
+        "CUDA device: CPU only",
     )
     ap.add_argument("--cpu-verify", type=int, default=1, help="CPU threads also verify (0: GPU only)")
     ap.add_argument(
@@ -665,7 +619,7 @@ def parser():
 
 def convert_store(store, **options):
     """Convert `store` (see the module docstring); options are the command line's, by name: out=..., memory="16GB",
-    gpu="hw", census_only=True, ... Raises ConvertError if it stops."""
+    gpu="none", census_only=True, ... Raises ConvertError if it stops."""
     a = parser().parse_args([store])
     for k, v in options.items():
         if not hasattr(a, k):
@@ -723,7 +677,7 @@ def run(a):
     sbuf, soff = sample_frames(left[0], a.column) if left else (np.zeros(0, np.uint8), np.zeros(1, np.int64))
     fb, px = frame_size(sbuf, soff)
     sample = codec.frames_of(sbuf, soff)
-    page, chunk, gpus = page_bytes(ds, a.column), a.batch, []
+    page, chunk, gpu = page_bytes(ds, a.column), a.batch, None
     try:  # fixed needs first; the rest bounds the batches in flight
         # lance's scan of a fragment holds ~3.3 pages (measured: 800 MB for 242 MB pages); fragments are read in turn
         budget.reserve(f"lance scan (pages of up to {page / 1e6:.0f} MB)", 4 * page)
@@ -737,7 +691,7 @@ def run(a):
                     [Stage("GPU verification frame pairs per decode", a.batch, 2 * 3 * px * 1.5, least=8, gpu=True)]
                 )
             with budget.measure("GPU decoder", gpu=True):
-                gpus = gpu_decoders(a.gpu, sample, chunk)
+                gpu = gpu_decoder(a.gpu, sample, chunk)
         budget.charge_process("this process (libraries, CUDA runtime)")  # all it holds by now
         gate = budget.gate("batches in flight", least=2 * CONVERT_COST * a.batch * fb)
     except ResourceError as e:
@@ -796,12 +750,12 @@ def run(a):
     for fid in prog["done"]:
         drop(fid)
     todo = [f for f in frags if f.fragment_id not in prog["done"]]
-    verifier = Verifier(pool, gpus, cpu=bool(a.cpu_verify), chunk=chunk)
+    verifier = Verifier(pool, gpu, cpu=bool(a.cpu_verify), chunk=chunk)
     conv = Converter(a, pool, verifier, out_schema)
     print(
         f"CONVERT {len(todo)} fragments with {threads} threads; verify "
         f"{a.verify:.0%} of frames on "
-        + ("GPU (" + " or ".join(d.kind for d in gpus) + ")" + (" + CPU" if a.cpu_verify else "") if gpus else "CPU"),
+        + ("GPU (nvjpeg)" + (" + CPU" if a.cpu_verify else "") if gpu is not None else "CPU"),
         flush=True,
     )
     t_all, rows_all, peak = time.time(), 0, 0
