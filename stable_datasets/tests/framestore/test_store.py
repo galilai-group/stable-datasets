@@ -7,6 +7,7 @@ resumes to the same result.
 
 # ruff: noqa: E402  (the imports follow the importorskip checks)
 
+import json
 import os
 import shutil
 import subprocess
@@ -23,7 +24,7 @@ pytest.importorskip("simplejpeg")
 from stable_datasets.framestore import codec
 from stable_datasets.framestore.convert import convert_store
 from stable_datasets.framestore.decoders import Decoder
-from stable_datasets.framestore.store import FrameStore
+from stable_datasets.framestore.store import FORMAT, FORMAT_KEY, FrameStore, store_format
 
 from ._stores import make_store
 
@@ -61,6 +62,7 @@ def test_conversion_is_lossless_and_keeps_columns(converted):
     path, blobs = converted
     ds = lance.dataset(path)
     assert ds.count_rows() == len(blobs) and "seg_len" in ds.schema.names
+    assert FrameStore(path).format == FORMAT and json.loads(ds.schema.metadata[FORMAT_KEY])["format"] == FORMAT
     t = ds.to_table(columns=["episode_idx", "h", "w"])
     assert t.column("episode_idx").to_numpy().tolist() == np.repeat(np.arange(6), 40).tolist()
     new = all_frames(FrameStore(path))
@@ -207,3 +209,15 @@ def test_decoder_spec():
     assert decoders("nvjpeg:2,cpu") == {"nvjpeg": 2, "cpu": None}
     with pytest.raises(ValueError, match="removed"):  # nvjpeg already decodes on the NVJPG engines
         decoders("nvjpeg:2,hw:1")
+
+
+def test_store_format():
+    import pyarrow as pa
+
+    cols = [pa.field("frame", pa.large_binary())]
+    assert store_format(pa.schema(cols)) is None  # not converted
+    seg = cols + [pa.field("seg_len", pa.binary())]
+    assert store_format(pa.schema(seg)) == 1  # converted before the format was recorded
+    newer = {FORMAT_KEY: json.dumps({"format": FORMAT + 1}).encode()}
+    with pytest.raises(ValueError, match="newer"):
+        store_format(pa.schema(seg, metadata=newer))

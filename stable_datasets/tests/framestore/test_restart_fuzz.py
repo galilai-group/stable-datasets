@@ -104,6 +104,14 @@ def jpegs(draw):
     return b.getvalue()
 
 
+def scan_start(blob):
+    """Offset of the first SOS marker, found by walking the header's segments (a comment may hold FF DA)."""
+    i = 2
+    while blob[i + 1] != 0xDA:
+        i += 2 + int.from_bytes(blob[i + 2 : i + 4], "big")
+    return i
+
+
 def decode(blob):
     return np.asarray(PIL.open(io.BytesIO(blob)).convert("RGB"))
 
@@ -115,7 +123,7 @@ def test_valid_frames(blobs):
     for src, dst, s in zip(blobs, out, status):
         assert s == 0
         assert decode(dst).tobytes() == decode(src).tobytes(), "re-coding changed the pixels"
-        assert b"\xff\xdd\x00\x04\x00\x01" in dst[: dst.index(b"\xff\xda")], "no DRI 1 before the scan"
+        assert b"\xff\xdd\x00\x04\x00\x01" in dst[: scan_start(dst)], "no DRI 1 before the scan"
 
 
 # ---- corrupt frames ----------------------------------------------------------------------------------------------

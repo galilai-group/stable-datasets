@@ -15,10 +15,39 @@ Read policies (read= or $FRAMESTORE_READ), measured on an H100 node with the tok
     take    a store whose frame column is not blob-encoded: lance take per batch (slow: ~100 us per frame)
 """
 
+import json
 import mmap
 import os
 
 import numpy as np
+
+
+# The store format, in the schema metadata under FORMAT_KEY (JSON; convert.py writes it). Readers refuse a newer
+# format than FORMAT. Rule for changing the layout: bump FORMAT, keep reading every older one (or have the converter
+# upgrade it in place), and describe the change here.
+#   1  frames blob-encoded, re-coded with one MCU per restart interval; seg_len: each frame's per-MCU entropy segment
+#      lengths, uint16 little-endian, markers not counted. Stores converted before the format was recorded have
+#      seg_len and no metadata: format 1.
+FORMAT_KEY, FORMAT = b"stable_datasets.framestore", 1
+
+
+def format_metadata(column):
+    """The schema metadata entry the converter writes."""
+    return {FORMAT_KEY: json.dumps({"format": FORMAT, "column": column, "seg_len": "uint16le"}).encode()}
+
+
+def store_format(schema):
+    """A lance store's format from its (arrow) schema: None if not converted (no seg_len), else its version; raises
+    ValueError on a format newer than this stable_datasets.framestore reads."""
+    if "seg_len" not in schema.names:
+        return None
+    meta = (schema.metadata or {}).get(FORMAT_KEY)
+    v = 1 if meta is None else int(json.loads(meta)["format"])
+    if v > FORMAT:
+        raise ValueError(
+            f"store format {v} is newer than this stable_datasets.framestore reads (up to {FORMAT}): upgrade stable_datasets.framestore"
+        )
+    return v
 
 
 try:
@@ -97,7 +126,8 @@ class FrameStore:
         # a blob column's take returns (kind, position, size, ...) descriptors instead of the bytes
         self.column = column
         self.blob = pa.types.is_struct(self.ds.take([0], columns=[column]).schema.field(column).type)
-        self.has_seg = "seg_len" in self.ds.schema.names
+        self.format = store_format(self.ds.schema)  # None: not converted
+        self.has_seg = self.format is not None
         ep = self.ds.to_table(columns=[episode_column]).column(episode_column).to_numpy()
         cut = np.flatnonzero(np.diff(ep)) + 1
         self.ep_start = np.concatenate(([0], cut))
