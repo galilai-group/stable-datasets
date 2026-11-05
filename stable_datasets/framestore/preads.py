@@ -28,7 +28,10 @@ class PreadMany:
     def __init__(self, threads=16):
         try:
             self.lib = _lib()
-        except (OSError, subprocess.CalledProcessError, FileNotFoundError):
+        except (OSError, subprocess.CalledProcessError) as e:
+            from ._native import fallback
+
+            fallback("preads run in a Python loop, holding the GIL between reads", str(e).splitlines()[0])
             self.lib = None
         self.pool = ThreadPoolExecutor(threads)
         self.threads = threads

@@ -17,6 +17,8 @@ Whole-frame decoders are in decoders.py.
 """
 
 import ctypes
+import shutil
+import subprocess
 import threading
 
 import numpy as np
@@ -158,16 +160,23 @@ def layout(info):
 # lossless re-coding (C, libjpeg)
 # ---------------------------------------------------------------------------------------------------------------
 _restart_lib = None
+_restart_err = None  # why the C re-coder could not be built: re-coding falls back to jpegtran
 _restart_lock = threading.Lock()
 
 
 def _restart():
-    global _restart_lib
+    global _restart_lib, _restart_err
     with _restart_lock:
+        if _restart_err is not None:
+            raise _restart_err
         if _restart_lib is None:
             from . import _native
 
-            lib = _native.load("jpeg_restart.c", libs=["jpeg"])
+            try:
+                lib = _native.load("jpeg_restart.c", libs=["jpeg"])
+            except OSError as e:
+                _restart_err = e
+                raise
             lib.restart_many.restype = ctypes.c_int64
             lib.restart_many.argtypes = [
                 ctypes.c_void_p,
@@ -217,7 +226,18 @@ def to_restart(buf, off, interval=1, fast=True):
     round trip -- only each MCU's first DC differences are re-coded, the rest copied bit for bit -- with the same
     output bytes; every other frame goes through libjpeg."""
     buf, off = np.ascontiguousarray(buf, np.uint8), np.ascontiguousarray(off, np.int64)
-    lib = _restart()
+    try:
+        lib = _restart()
+    except OSError as e:
+        from ._native import HOW, fallback
+
+        err = str(e).splitlines()[0]
+        if not shutil.which("jpegtran"):
+            raise OSError(
+                f"stable_datasets.framestore cannot re-code frames: its C re-coder could not be built ({err}); {HOW}"
+            ) from e
+        fallback("re-coding runs jpegtran, one process per frame (several times slower)", err)
+        return _jpegtran_many(buf, off, interval)
     if not (fast and interval == 1):
         return _many(lib.restart_many, buf, off, interval)
     out, out_off, status = _many(lib.fast_restart_many, buf, off)
@@ -239,6 +259,23 @@ def to_restart(buf, off, interval=1, fast=True):
         else:
             parts.append(out[out_off[i] : out_off[i + 1]])
     return np.concatenate(parts) if parts else out[:0], np.concatenate(([0], np.cumsum(lens))).astype(np.int64), status
+
+
+def _jpegtran_many(buf, off, interval):
+    """to_restart without the C re-coder: jpegtran -restart <interval>B writes the same bytes as restart_many (both
+    keep COM markers only); exit status 2 is libjpeg's warning."""
+    n = len(off) - 1
+    parts, status = [], np.zeros(n, np.int32)
+    for i in range(n):
+        r = subprocess.run(
+            ["jpegtran", "-restart", f"{interval}B"], input=buf[off[i] : off[i + 1]].tobytes(), capture_output=True
+        )
+        ok = r.returncode in (0, 2) and len(r.stdout) > 0
+        parts.append(np.frombuffer(r.stdout, np.uint8) if ok else np.zeros(0, np.uint8))
+        status[i] = (1 if r.returncode == 2 else 0) if ok else -1
+    lens = [len(p) for p in parts]
+    out = np.concatenate(parts) if parts else np.zeros(0, np.uint8)
+    return out, np.concatenate(([0], np.cumsum(lens))).astype(np.int64), status
 
 
 # ---------------------------------------------------------------------------------------------------------------

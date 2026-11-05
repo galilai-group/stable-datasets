@@ -205,3 +205,24 @@ def test_fast_path_handles_standard_frames(a, mode, quality, subsampling, commen
     buf, off = frames([b.getvalue()])
     _, _, status = codec._many(codec._restart().fast_restart_many, buf, off)
     assert status.tolist() == [0]
+
+
+# ---- without the C re-coder ---------------------------------------------------------------------------------------
+@pytest.mark.skipif(not shutil.which("jpegtran"), reason="needs jpegtran (libjpeg-turbo)")
+@given(st.lists(jpegs(), min_size=1, max_size=3))
+@settings(max_examples=30, suppress_health_check=[HealthCheck.too_slow, HealthCheck.data_too_large])
+def test_jpegtran_fallback_matches(blobs):
+    """Where the C re-coder cannot be built, to_restart runs jpegtran: the same bytes and status as libjpeg's path."""
+    from unittest import mock
+
+    want = recode(blobs, fast=False)
+
+    def unbuildable():
+        raise OSError("no C compiler")
+
+    with mock.patch.object(codec, "_restart", unbuildable), pytest.warns(RuntimeWarning, match="jpegtran"):
+        from stable_datasets.framestore import _native
+
+        _native._warned.clear()
+        got = recode(blobs, fast=True)
+    assert got == want
