@@ -222,10 +222,10 @@ class SharedClipLoader:
         byte_readers: per decode server, feeding its GPU decoder; gpu_servers: decode server processes (MPS
             clients; nvJPEG's host side is serial per process). H100, 23 vCPUs, ViT-S: 2 servers (16 CPU decoders)
             1,505 clips/s, 3 (14) 1,483, 4 (12) 1,450.
-        decoder: GPU JPEG decoder, "nvjpeg" (default: fastest under load on every GPU measured) or "hw" (NVJPG engines).
-        decoders: instead of gpu_servers, decoder and cpu_workers, a decoder spec (decoders.decoders): "nvjpeg:2,hw:1,
-            cpu:16" runs two nvJPEG servers, one on the NVJPG engines and 16 CPU decoders (a kind with no count:
-            nvjpeg 2, hw 1, cpu sized from the node).
+        decoder: GPU JPEG decoder, "nvjpeg" (on the NVJPG engines where the GPU has them, else the CUDA cores).
+        decoders: instead of gpu_servers, decoder and cpu_workers, a decoder spec (decoders.decoders): "nvjpeg:2,
+            cpu:16" runs two nvJPEG servers and 16 CPU decoders (a kind with no count: nvjpeg 2, cpu sized from the
+            node).
         index, read: FrameStore's (a per-node index; the read policy).
     """
 
@@ -256,13 +256,14 @@ class SharedClipLoader:
 
         self.B = batch
         H, W = size
+        if decoder != "nvjpeg":
+            raise ValueError(f"decoder {decoder!r}: the decode servers decode with nvjpeg")
         kinds = [decoder] * gpu_servers
         if decoders is not None:
             from .decoders import decoders as parse
 
             d = parse(decoders)
             kinds = ["nvjpeg"] * (2 if d.get("nvjpeg", 0) is None else d.get("nvjpeg", 0))
-            kinds += ["hw"] * (1 if d.get("hw", 0) is None else d.get("hw", 0))
             gpu_servers, cpu_workers = len(kinds), d.get("cpu", 0)
         self.kinds = kinds
         if cpu_workers is None:
