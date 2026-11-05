@@ -11,9 +11,57 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+b[0-9]+" # v0.0.1b0
       - "v[0-9]+.[0-9]+.[0-9]+rc[0-9]+" # v0.0.1rc0
       - "v[0-9]+.[0-9]+.[0-9]+.dev[0-9]+" # v0.0.1.dev0
+  # by hand: build and check the wheels and the sdist without publishing
+  workflow_dispatch:
 jobs:
+  # One wheel per platform: framestore's C helpers, libjpeg-turbo linked in, do not depend on the Python version
+  # (setup.py; [tool.cibuildwheel] in pyproject.toml). Each is installed without its dependencies and checked.
+  wheels:
+    name: Wheel (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-14, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Build
+        uses: pypa/cibuildwheel@v4.3.1
+        with:
+          output-dir: dist
+      - name: Check (installed without dependencies, no compiler needed)
+        run: |
+          python3 -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install --no-deps dist/*.whl
+          /tmp/smoke/bin/pip install numpy pillow
+          cd /tmp && /tmp/smoke/bin/python "$GITHUB_WORKSPACE/.github/scripts/wheel_smoke.py"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}
+          path: dist/*.whl
+
+  # Every other platform installs from the sdist: the helpers are built if they can be, else framestore compiles
+  # them on first use or falls back.
+  sdist:
+    name: Source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+      - name: Build
+        run: uv build --sdist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
   pypi:
     name: Publish to PyPI
+    needs: [wheels, sdist]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     # Environment and permissions trusted publishing.
     environment:
@@ -23,19 +71,11 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
       - name: Install uv
         uses: astral-sh/setup-uv@v6
-      - name: Install Python 3.10
-        run: uv python install 3.10
-      - name: Build
-        run: uv build
-      # Optional smoke tests.
-      # Check that basic features work and we didn't miss to include crucial files
-      # - name: Smoke test (wheel)
-      #   run: uv run --isolated --no-project --with dist/*.whl tests/smoke_test.py
-      # - name: Smoke test (source distribution)
-      #   run: uv run --isolated --no-project --with dist/*.tar.gz tests/smoke_test.py
       - name: Publish
         run: uv publish

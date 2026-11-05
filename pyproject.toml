@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools>=70.1", "setuptools-scm"]  # 70.1: setuptools.command.bdist_wheel (setup.py)
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -202,3 +202,14 @@ line-ending = "auto"
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+# Release wheels (.github/workflows/release.yml): framestore's C helpers with libjpeg-turbo linked in statically. They
+# do not depend on the Python version (py3-none-<platform>, setup.py), so one interpreter builds each platform's wheel.
+[tool.cibuildwheel]
+build = "cp312-*"
+skip = "*-musllinux_*"
+before-all = "bash .github/scripts/build_libjpeg.sh /tmp/libjpeg"
+environment = { FRAMESTORE_LIBJPEG = "/tmp/libjpeg", FRAMESTORE_REQUIRE_HELPERS = "1" }
+
+[tool.cibuildwheel.macos]
+environment = { FRAMESTORE_LIBJPEG = "/tmp/libjpeg", FRAMESTORE_REQUIRE_HELPERS = "1", MACOSX_DEPLOYMENT_TARGET = "11.0" }

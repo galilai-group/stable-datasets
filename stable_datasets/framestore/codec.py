@@ -229,25 +229,42 @@ def to_restart(buf, off, interval=1, fast=True):
     try:
         lib = _restart()
     except OSError as e:
-        from ._native import HOW, fallback
-
-        err = str(e).splitlines()[0]
-        if not shutil.which("jpegtran"):
-            raise OSError(
-                f"stable_datasets.framestore cannot re-code frames: its C re-coder could not be built ({err}); {HOW}"
-            ) from e
-        fallback("re-coding runs jpegtran, one process per frame (several times slower)", err)
-        return _jpegtran_many(buf, off, interval)
+        return _without_c(buf, off, interval, str(e).splitlines()[0])
     if not (fast and interval == 1):
         return _many(lib.restart_many, buf, off, interval)
     out, out_off, status = _many(lib.fast_restart_many, buf, off)
+    return _slow_ones(out, out_off, status, buf, off, lambda b, o: _many(lib.restart_many, b, o, interval))
+
+
+def _without_c(buf, off, interval, err):
+    """to_restart where the C re-coder could not be built: the fast path's numba port (recode.py, the same bytes),
+    and jpegtran (libjpeg, as restart_many) for the frames it does not handle."""
+    from . import recode
+    from ._native import HOW, fallback
+
+    have_jpegtran = shutil.which("jpegtran") is not None
+    if interval == 1:
+        fallback("re-coding runs the fast path in numba, and jpegtran (one process per frame) for the rest", err)
+        out, out_off, status = recode.fast_restart_many(buf, off)
+    else:
+        out, out_off, status = np.zeros(0, np.uint8), np.zeros(len(off), np.int64), np.full(len(off) - 1, 2, np.int32)
+    if (status == 2).any() and not have_jpegtran:
+        raise OSError(
+            f"stable_datasets.framestore cannot re-code {int((status == 2).sum())} frames (progressive, non-standard Huffman tables, "
+            f"...): they need libjpeg, and its C re-coder could not be built ({err}) nor is jpegtran installed; {HOW}"
+        )
+    return _slow_ones(out, out_off, status, buf, off, lambda b, o: _jpegtran_many(b, o, interval))
+
+
+def _slow_ones(out, out_off, status, buf, off, recode_slow):
+    """Re-code the frames the fast path left (status 2) with recode_slow (libjpeg) and merge them in frame order."""
     slow = np.flatnonzero(status == 2)
     if len(slow) == 0:
         return out, out_off, status
     sizes = np.diff(off)[slow]
     soff = np.concatenate(([0], np.cumsum(sizes))).astype(np.int64)
-    sbuf = np.concatenate([buf[off[i] : off[i + 1]] for i in slow]) if len(slow) else np.zeros(0, np.uint8)
-    sout, sout_off, sst = _many(lib.restart_many, sbuf, soff, interval)
+    sbuf = np.concatenate([buf[off[i] : off[i + 1]] for i in slow])
+    sout, sout_off, sst = recode_slow(sbuf, soff)
     status[slow] = sst
     lens = np.diff(out_off)
     lens[slow] = np.diff(sout_off)

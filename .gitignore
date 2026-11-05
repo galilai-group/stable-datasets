@@ -256,3 +256,6 @@ profiling/slurm
 profiling/writeup
 profiling-old/
 intraclass_variation/
+
+# framestore C helpers built in place (pip install -e)
+stable_datasets/framestore/_*.so

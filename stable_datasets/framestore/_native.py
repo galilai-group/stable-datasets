@@ -1,5 +1,7 @@
-"""Small C helpers (csrc/*.c): compiled once into ~/.cache/framestore (needs a C compiler) and loaded with ctypes,
-which releases the GIL for every call, so threads calling them run in parallel.
+"""Small C helpers (csrc/*.c), loaded with ctypes, which releases the GIL for every call, so threads calling them
+run in parallel. A wheel ships them prebuilt (_<name>.so next to this file, libjpeg-turbo linked in); otherwise, or
+if that copy was built from another version of the source, they are compiled once into ~/.cache/framestore (needs a
+C compiler).
 
     lib = _native.load("pread_many.c")                      # cc -O2 -shared; rebuilt when the file changes
     lib = _native.load("jpeg_restart.c", libs=["jpeg"])     # linked against libjpeg(-turbo)
@@ -26,10 +28,34 @@ def _flags(libs):
 CSRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "csrc")
 
 
+def source_key(path):
+    """What a build of the C file at path is known by (setup.py stamps it into the wheel's copy)."""
+    with open(path, "rb") as f:
+        return hashlib.sha1(f.read()).hexdigest()[:12]
+
+
+def prebuilt(name, path):
+    """The wheel's build of csrc/<name>.c, if there is one and it was built from this source; else None."""
+    so = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"_{name}.so")
+    if not os.path.exists(so):
+        return None
+    try:
+        lib = ctypes.CDLL(so)
+        lib.framestore_key.restype = ctypes.c_char_p
+        return lib if lib.framestore_key().decode() == source_key(path) else None
+    except (OSError, AttributeError):
+        return None
+
+
 def load(source, libs=()):
-    """The shared library built from csrc/<source> (or a path), compiled if this version of it was not yet."""
+    """The shared library built from csrc/<source> (or a path): the wheel's prebuilt one, else compiled if this
+    version of it was not yet. NATIVE_CFLAGS always compiles."""
     path = source if os.path.isabs(source) else os.path.join(CSRC, source)
     name = os.path.splitext(os.path.basename(path))[0]
+    if not os.environ.get("NATIVE_CFLAGS"):
+        lib = prebuilt(name, path)
+        if lib is not None:
+            return lib
     with open(path) as f:
         src = f.read()
     d = os.path.expanduser(os.environ.get("FRAMESTORE_CACHE", "~/.cache/framestore"))
