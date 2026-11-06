@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 
+from .articulary_word_recognition import ArticularyWordRecognition
 from .audiomnist import AudioMNIST
 from .basic_motions import BasicMotions
 from .birdvox_dcase_20k import BirdVoxDCASE20k
 from .CatsDogs import CatsDogs
+from .cricket import Cricket
 from .daily_and_sports_activities import DailyAndSportsActivities
 from .electricity_hourly import ElectricityHourly
 from .epilepsy import Epilepsy
+from .ering import ERing
 from .freefield1010 import Freefield1010
 from .fsd_kaggle_2018 import FSDKaggle2018
 from .groove_MIDI import GrooveMIDI
 from .gtzan import GTZAN
 from .hand_movement_direction import HandMovementDirection
+from .handwriting import Handwriting
 from .JapaneseVowels import JapaneseVowels
+from .libras import Libras
 from .mhealth import MHEALTH
 from .MosquitoSound import MosquitoSound
 from .natops import NATOPS
@@ -35,18 +40,23 @@ from .warblr import Warblr
 __all__ = [
     "DailyAndSportsActivities",
     "RobotExecutionFailures",
+    "ArticularyWordRecognition",
     "AudioMNIST",
     "BasicMotions",
     "BirdVoxDCASE20k",
     "CatsDogs",
+    "Cricket",
     "ElectricityHourly",
     "Epilepsy",
+    "ERing",
     "Freefield1010",
     "FSDKaggle2018",
     "GrooveMIDI",
     "GTZAN",
     "HandMovementDirection",
+    "Handwriting",
     "JapaneseVowels",
+    "Libras",
     "MHEALTH",
     "MosquitoSound",
     "NATOPS",
