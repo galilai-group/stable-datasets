@@ -123,15 +123,10 @@ class _UriBuilder(BaseDatasetBuilder):
 
 def test_builder_with_file_uri_cache_dir(tmp_path):
     uri = _file_uri(tmp_path / "processed")
-    first = _UriBuilder(split="train", processed_cache_dir=uri, storage_format="lance", storage_options=OPTIONS)
-    second = _UriBuilder(split="train", processed_cache_dir=uri, storage_format="lance", storage_options=OPTIONS)
+    first = _UriBuilder(split="train", processed_cache_dir=uri, storage_options=OPTIONS)
+    second = _UriBuilder(split="train", processed_cache_dir=uri, storage_options=OPTIONS)
 
     assert [row["x"] for row in second] == [0, 1, 2, 3]
     assert second._backend._uri.startswith(uri)
     assert second._backend._storage_options == OPTIONS
     assert first._stable_datasets_processed_cache_dir == tmp_path / "processed"
-
-
-def test_builder_rejects_remote_arrow_cache():
-    with pytest.raises(ValueError, match="Arrow caches must be local"):
-        _UriBuilder(split="train", processed_cache_dir="s3://bucket/processed", storage_format="arrow")

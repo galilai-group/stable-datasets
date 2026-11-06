@@ -32,10 +32,11 @@ def test_runtime_dependencies(pyproject):
 
 def test_optional_dependencies(pyproject):
     extras = pyproject["project"]["optional-dependencies"]
-    assert "pylance" in _names(extras["lance"])
+    assert "pylance" in _names(pyproject["project"]["dependencies"])  # every cache is Lance
+    assert "lance" not in extras
     assert "torch" in _names(extras["torch"])
     assert {"opencv-python-headless", "torchcodec"} <= _names(extras["video"])
-    assert extras["all"] == ["stable-datasets[lance,torch,video]"]
+    assert extras["all"] == ["stable-datasets[torch,video]"]
     assert "stable-datasets[all]" in extras["dev"]
 
 

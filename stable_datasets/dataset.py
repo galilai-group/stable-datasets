@@ -27,11 +27,9 @@ from pathlib import Path
 
 import numpy as np
 import pyarrow as pa
-import pyarrow.ipc as ipc
 
-from .backends.arrow_shards import ArrowBackend
 from .backends.protocol import StorageBackend
-from .cache import _CACHE_FORMAT_VERSION, _features_fingerprint
+from .backends.table import TableBackend
 from .features.video import decode_frame_blobs
 from .formatting import get_formatter
 from .schema import (
@@ -51,15 +49,15 @@ _ROW_CHUNK_SIZE = 1024
 
 
 class StableDataset:
-    """A single-split dataset backed by Arrow.
+    """A single-split dataset over a storage backend.
 
     Users interact with rows, columns, and transforms — never with files or
-    shards.  All storage details are delegated to ``ArrowBackend``.
+    fragments.  All storage details are delegated to the backend.
 
     Construction:
 
-    1. **File-backed** (typical) — pass ``backend=ArrowBackend(shard_paths=...)``.
-    2. **In-memory** — pass ``backend=ArrowBackend(table=table)``.
+    1. **Cached** (typical) — pass the backend of a Lance cache (``open_cache``).
+    2. **In-memory** — pass ``table=table`` (a :class:`TableBackend`).
     3. **Indexed view** — pass ``_indices=array`` to create a virtual view
        sharing the same backend.  Zero data copying.
     """
@@ -69,10 +67,8 @@ class StableDataset:
         features: Features,
         info: DatasetInfo,
         *,
-        # Storage — pass exactly one of: backend, shard_paths, table
+        # Storage — pass exactly one of: backend, table
         backend: StorageBackend | None = None,
-        shard_paths: list[Path] | None = None,
-        shard_row_counts: list[int] | None = None,
         table: pa.Table | None = None,
         num_rows: int | None = None,
         # Index indirection
@@ -91,16 +87,10 @@ class StableDataset:
         self._backend: StorageBackend
         if backend is not None:
             self._backend = backend
-        elif shard_paths is not None:
-            self._backend = ArrowBackend(
-                shard_paths=shard_paths,
-                shard_row_counts=shard_row_counts,
-                schema=features.to_arrow_schema(),
-            )
         elif table is not None:
-            self._backend = ArrowBackend(table=table, schema=features.to_arrow_schema())
+            self._backend = TableBackend(table, schema=features.to_arrow_schema())
         else:
-            raise ValueError("Must provide one of: backend, shard_paths, table")
+            raise ValueError("Must provide one of: backend, table")
 
         # Index indirection
         self._indices = np.asarray(_indices, dtype=np.int64) if _indices is not None else None
@@ -215,7 +205,7 @@ class StableDataset:
     def __getitems__(self, indices: list[int]) -> list[dict]:
         """Batched sample loading (called by PyTorch DataLoader).
 
-        Policy is backend-sensitive. ArrowBackend's ``slice(i, 1)`` on
+        Policy is backend-sensitive. TableBackend's ``slice(i, 1)`` on
         an mmap'd table is zero-copy and unbeatable per-row, while its
         ``take`` rebuilds chunk offsets -- so for binary columns the
         per-row loop wins. LanceBackend inverts this: every call
@@ -376,7 +366,7 @@ class StableDataset:
         """Apply a function to every row/batch and return a new dataset.
 
         This is a **materializing operation** — output is written
-        incrementally to Arrow IPC files via the sharded cache pipeline,
+        incrementally to a Lance cache,
         so memory usage stays bounded regardless of dataset size.
         Use ``with_transform`` for lazy per-row transforms during iteration.
 
@@ -394,7 +384,7 @@ class StableDataset:
         cache_dir : path, optional
             Where to write the output cache. If None, uses a temp directory.
         """
-        from .cache import write_sharded_arrow_cache
+        from .cache import open_cache, write_lance_cache
 
         remove_set = set(remove_columns) if remove_columns else set()
 
@@ -426,7 +416,7 @@ class StableDataset:
                     else:
                         features[col_name] = _infer_feature(pa.binary())
 
-        # Build output generator that feeds write_sharded_arrow_cache
+        # Build output generator that feeds write_lance_cache
         def _map_gen():
             out_idx = 0
             if not batched:
@@ -464,7 +454,7 @@ class StableDataset:
         else:
             cache_dir = Path(cache_dir)
 
-        meta = write_sharded_arrow_cache(
+        write_lance_cache(
             _map_gen(),
             features,
             cache_dir,
@@ -478,12 +468,12 @@ class StableDataset:
             },
         )
 
+        opened = open_cache(cache_dir, features)
         return StableDataset(
             features=features,
             info=self._info,
-            shard_paths=meta.shard_paths,
-            shard_row_counts=meta.shard_row_counts,
-            num_rows=meta.num_rows,
+            backend=opened.backend,
+            num_rows=opened.num_rows,
             _format_type=self._format_type,
             _decode_images=self._decode_images,
             _video_decode_config=self._video_decode_config,
@@ -652,52 +642,25 @@ class StableDataset:
         )
 
     def flatten_indices(self, cache_dir: Path | None = None) -> StableDataset:
-        """Materialize an indexed view into a new contiguous Arrow file."""
+        """Materialize an indexed view into a new contiguous Lance cache."""
         if self._indices is None:
             return self
+        from .cache import open_cache, write_lance_table
 
         if cache_dir is None:
             cache_dir = Path(tempfile.mkdtemp(prefix=".flatten_"))
-        else:
-            cache_dir = Path(cache_dir)
-            cache_dir.mkdir(parents=True, exist_ok=True)
-
-        materialized = self._backend.take(self._indices)
-
-        out_path = cache_dir / "shard-00000.arrow"
-        schema = self._features.to_arrow_schema()
-        with pa.OSFile(str(out_path), "wb") as sink:
-            writer = ipc.new_file(sink, schema)
-            batch_size = 10_000
-            for start in range(0, materialized.num_rows, batch_size):
-                end = min(start + batch_size, materialized.num_rows)
-                writer.write_table(materialized.slice(start, end - start))
-            writer.close()
-
-        import json
-
-        meta = {
-            "cache_format_version": _CACHE_FORMAT_VERSION,
-            "format": "arrow",
-            "layout": "arrow-shards",
-            "schema_fingerprint": _features_fingerprint(self._features),
-            "num_rows": materialized.num_rows,
-            "num_shards": 1,
-            "shard_filenames": ["shard-00000.arrow"],
-            "shard_row_counts": [materialized.num_rows],
-        }
-        (cache_dir / "_metadata.json").write_text(json.dumps(meta, indent=2))
-
-        backend = ArrowBackend(
-            shard_paths=[out_path],
-            shard_row_counts=[materialized.num_rows],
-            schema=schema,
+        write_lance_table(
+            self._backend.take(self._indices),
+            self._features,
+            cache_dir,
+            lineage={"operation": "flatten_indices", "source_num_rows": len(self)},
         )
+        opened = open_cache(cache_dir, self._features)
         return StableDataset(
             features=self._features,
             info=self._info,
-            backend=backend,
-            num_rows=materialized.num_rows,
+            backend=opened.backend,
+            num_rows=opened.num_rows,
             _format_type=self._format_type,
             _decode_images=self._decode_images,
             _video_decode_config=self._video_decode_config,
@@ -748,7 +711,7 @@ class StableDataset:
         return StableDataset(
             features=features or self._features,
             info=self._info,
-            backend=ArrowBackend(table=table, schema=(features or self._features).to_arrow_schema()),
+            backend=TableBackend(table, schema=(features or self._features).to_arrow_schema()),
             _format_type=self._format_type,
             _decode_images=self._decode_images,
             _video_decode_config=self._video_decode_config,

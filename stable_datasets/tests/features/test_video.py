@@ -2,10 +2,9 @@ from pathlib import Path
 
 import pytest
 
-from stable_datasets.backends.arrow_shards import ArrowBackend
-from stable_datasets.cache import write_lance_cache, write_sharded_arrow_cache
 from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import DatasetInfo, Features, Value, Video, VideoDecodeConfig, VideoRef
+from stable_datasets.tests._caches import cached_dataset
 
 
 def _video_file(tmp_path: Path, name: str = "clip.mp4", data: bytes = b"fake mp4 bytes") -> Path:
@@ -35,20 +34,9 @@ def test_video_path_stages_cache_owned_asset_and_survives_source_deletion(tmp_pa
     def gen():
         yield 0, {"video": source, "label": 1}
 
-    cache_dir = tmp_path / "cache"
-    meta = write_sharded_arrow_cache(gen(), features, cache_dir)
+    ds = cached_dataset(gen(), features, tmp_path / "cache", info=info)
     source.unlink()
 
-    ds = StableDataset(
-        features=features,
-        info=info,
-        backend=ArrowBackend(
-            shard_paths=meta.shard_paths,
-            shard_row_counts=meta.shard_row_counts,
-            schema=features.to_arrow_schema(),
-        ),
-        num_rows=meta.num_rows,
-    )
     row = ds[0]
     assert isinstance(row["video"], VideoRef)
     assert row["video"].path is not None
@@ -90,7 +78,7 @@ def test_video_ref_is_storage_only(tmp_path):
     assert not hasattr(ref, "get_frame_at")
 
 
-def test_video_roundtrip_matches_arrow_and_lance(tmp_path):
+def test_video_roundtrip_through_lance(tmp_path):
     pytest.importorskip("lance")
     source = _video_file(tmp_path, data=b"same content")
     features = Features({"video": Video(storage="path"), "label": Value("int32")})
@@ -99,30 +87,9 @@ def test_video_roundtrip_matches_arrow_and_lance(tmp_path):
     def gen():
         yield 0, {"video": source, "label": 7}
 
-    arrow_meta = write_sharded_arrow_cache(gen(), features, tmp_path / "arrow")
-    lance_meta = write_lance_cache(gen(), features, tmp_path / "lance")
-
-    arrow_ds = StableDataset(
-        features=features,
-        info=info,
-        backend=ArrowBackend(
-            shard_paths=arrow_meta.shard_paths,
-            shard_row_counts=arrow_meta.shard_row_counts,
-            schema=features.to_arrow_schema(),
-        ),
-        num_rows=arrow_meta.num_rows,
-    )
-    from stable_datasets.backends.lance_rows import LanceBackend
-
-    lance_ds = StableDataset(
-        features=features,
-        info=info,
-        backend=LanceBackend(uri=lance_meta.cache_dir),
-        num_rows=lance_meta.num_rows,
-    )
-
-    assert arrow_ds[0]["video"].bytes == lance_ds[0]["video"].bytes == b"same content"
-    assert arrow_ds[0]["label"] == lance_ds[0]["label"] == 7
+    lance_ds = cached_dataset(gen(), features, tmp_path / "lance", info=info)
+    assert lance_ds[0]["video"].bytes == b"same content"
+    assert lance_ds[0]["label"] == 7
 
 
 def _video_dataset(tmp_path: Path, n: int = 3) -> StableDataset:
@@ -134,17 +101,7 @@ def _video_dataset(tmp_path: Path, n: int = 3) -> StableDataset:
             source = _video_file(tmp_path, name=f"clip_{i}.mp4", data=f"video-{i}".encode())
             yield i, {"video": source, "label": i}
 
-    meta = write_sharded_arrow_cache(gen(), features, tmp_path / "decode_cache")
-    return StableDataset(
-        features=features,
-        info=info,
-        backend=ArrowBackend(
-            shard_paths=meta.shard_paths,
-            shard_row_counts=meta.shard_row_counts,
-            schema=features.to_arrow_schema(),
-        ),
-        num_rows=meta.num_rows,
-    )
+    return cached_dataset(gen(), features, tmp_path / "decode_cache", info=info)
 
 
 def test_video_decode_config_validation():

@@ -1,8 +1,7 @@
-"""Tests for the sharded Arrow caching pipeline."""
+"""Tests for the Lance caching pipeline: the writer, cache metadata, schema checks and locking."""
 
 import io
 import json
-import pickle
 
 import numpy as np
 import pytest
@@ -10,10 +9,10 @@ from PIL import Image as PILImage
 
 from stable_datasets.cache import (
     DEFAULT_SHARD_SIZE_BYTES,
-    read_shard,
-    read_sharded_cache_meta,
-    validate_sharded_cache,
-    write_sharded_arrow_cache,
+    open_cache,
+    read_lance_cache_meta,
+    write_lance_cache,
+    write_lance_table,
 )
 from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import (
@@ -25,6 +24,7 @@ from stable_datasets.schema import (
     Version,
 )
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.tests._caches import cached_dataset
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -50,112 +50,59 @@ def _image_gen(n=10):
         yield i, {"image": img, "label": i}
 
 
-def _write_shards(tmp_path, n=100, shard_size_bytes=1024, batch_size=10, features=None, gen=None):
-    """Write a sharded cache and return the metadata."""
-    if features is None:
-        features = _simple_features()
-    if gen is None:
-        gen = _simple_gen(n)
-    cache_dir = tmp_path / "sharded_cache"
-    return write_sharded_arrow_cache(
-        gen,
-        features,
-        cache_dir,
-        shard_size_bytes=shard_size_bytes,
-        batch_size=batch_size,
-    )
+class TestLanceWriter:
+    def test_writes_dataset_and_metadata(self, tmp_path):
+        meta = write_lance_cache(_simple_gen(20), _simple_features(), tmp_path / "c")
+        assert (tmp_path / "c" / "_versions").is_dir()
+        raw = json.loads((tmp_path / "c" / "_metadata.json").read_text())
+        assert raw["format"] == "lance" and raw["layout"] == "lance-rows"
+        assert raw["num_rows"] == meta.num_rows == 20 == sum(raw["shard_row_counts"])
 
+    def test_single_fragment_for_small_data(self, tmp_path):
+        assert len(write_lance_cache(_simple_gen(5), _simple_features(), tmp_path / "c").shard_row_counts) == 1
 
-# Sharded writer tests
-
-
-class TestShardedWriter:
-    def test_creates_directory_with_shards(self, tmp_path):
-        meta = _write_shards(tmp_path, n=100, shard_size_bytes=1024)
-        assert meta.cache_dir.is_dir()
-        assert meta.num_shards >= 2, "Expected multiple shards with small shard_size_bytes"
-        for fname in meta.shard_filenames:
-            assert (meta.cache_dir / fname).exists()
-
-    def test_metadata_file_exists_and_valid(self, tmp_path):
-        meta = _write_shards(tmp_path, n=50)
-        meta_path = meta.cache_dir / "_metadata.json"
-        assert meta_path.exists()
-        raw = json.loads(meta_path.read_text())
-        assert raw["cache_format_version"] == 1
-        assert raw["format"] == "arrow"
-        assert raw["layout"] == "arrow-shards"
-        assert raw["num_rows"] == 50
-        assert raw["num_shards"] == meta.num_shards
-        assert len(raw["shard_filenames"]) == meta.num_shards
-        assert len(raw["shard_row_counts"]) == meta.num_shards
-
-    def test_metadata_consistency(self, tmp_path):
-        meta = _write_shards(tmp_path, n=100)
-        assert meta.num_rows == 100
-        assert sum(meta.shard_row_counts) == 100
-        assert len(meta.shard_filenames) == meta.num_shards
-
-    def test_single_shard_for_small_data(self, tmp_path):
-        meta = _write_shards(tmp_path, n=5, shard_size_bytes=10 * 1024 * 1024)
-        assert meta.num_shards == 1
-
-    def test_empty_dataset(self, tmp_path):
-        features = _simple_features()
-        cache_dir = tmp_path / "empty_cache"
-        meta = write_sharded_arrow_cache(iter([]), features, cache_dir)
-        assert meta.num_rows == 0
-        assert meta.num_shards == 0
+    def test_fragments_follow_max_rows_per_file(self, tmp_path):
+        meta = write_lance_cache(
+            _simple_gen(50), _simple_features(), tmp_path / "c", batch_size=10, max_rows_per_file=10
+        )
+        assert meta.shard_row_counts == [10] * 5
 
     def test_empty_dataset_is_usable(self, tmp_path):
         features = _simple_features()
-        info = DatasetInfo(features=features)
-        cache_dir = tmp_path / "empty_ds"
-        meta = write_sharded_arrow_cache(iter([]), features, cache_dir)
-        ds = StableDataset(
-            features=features,
-            info=info,
-            shard_paths=meta.shard_paths,
-            shard_row_counts=meta.shard_row_counts,
-            num_rows=meta.num_rows,
-        )
+        write_lance_cache(iter([]), features, tmp_path / "empty")
+        opened = open_cache(tmp_path / "empty", features)
+        ds = StableDataset(features=features, info=DatasetInfo(features=features), backend=opened.backend, num_rows=0)
         assert len(ds) == 0
         assert list(ds) == []
         with pytest.raises(IndexError):
             ds[0]
-        assert ds.table.num_rows == 0
 
-    def test_shard_data_readable(self, tmp_path):
-        meta = _write_shards(tmp_path, n=20, shard_size_bytes=1024, batch_size=5)
-        all_x = []
-        for path in meta.shard_paths:
-            tbl = read_shard(path)
-            all_x.extend(tbl.column("x").to_pylist())
-        assert sorted(all_x) == list(range(20))
-
-    def test_atomic_publish_no_temp_dir_on_success(self, tmp_path):
-        _write_shards(tmp_path, n=10)
-        # No temp dirs should remain
-        for child in tmp_path.iterdir():
-            assert not child.name.startswith(".")
-
-    def test_atomic_publish_cleans_up_on_failure(self, tmp_path):
+    def test_rewrite_replaces_rows(self, tmp_path):
         features = _simple_features()
-        cache_dir = tmp_path / "fail_cache"
+        write_lance_cache(_simple_gen(40), features, tmp_path / "c")
+        write_lance_cache(_simple_gen(4), features, tmp_path / "c")
+        assert open_cache(tmp_path / "c", features).num_rows == 4
 
-        def _bad_gen():
-            yield 0, {"x": 0, "label": 0}
-            raise RuntimeError("intentional failure")
+    def test_rewrite_over_corrupt_metadata(self, tmp_path):
+        features = _simple_features()
+        write_lance_cache(_simple_gen(5), features, tmp_path / "c")
+        (tmp_path / "c" / "_metadata.json").write_text("{")
+        write_lance_cache(_simple_gen(3), features, tmp_path / "c")
+        assert open_cache(tmp_path / "c", features).num_rows == 3
 
-        with pytest.raises(RuntimeError, match="intentional failure"):
-            write_sharded_arrow_cache(_bad_gen(), features, cache_dir)
+    def test_parallel_encode_matches_serial(self, tmp_path):
+        features = _image_features()
+        serial = cached_dataset(_image_gen(30), features, tmp_path / "serial", batch_size=10)
+        write_lance_cache(_image_gen(30), features, tmp_path / "parallel", batch_size=10, num_encode_workers=2)
+        parallel = open_cache(tmp_path / "parallel", features).backend
+        assert [serial._backend.get_row(i) for i in range(30)] == [parallel.get_row(i) for i in range(30)]
 
-        # No temp dirs should remain
-        for child in tmp_path.iterdir():
-            assert not child.name.startswith(".")
-
-
-# Image encoding tests
+    def test_write_lance_table_keeps_encoded_rows(self, tmp_path):
+        features = _image_features()
+        ds = cached_dataset(_image_gen(6), features, tmp_path / "src")
+        write_lance_table(ds._backend.take([5, 1]), features, tmp_path / "copy")
+        copy = open_cache(tmp_path / "copy", features).backend
+        assert copy.get_row(0) == ds._backend.get_row(5) and copy.get_row(1) == ds._backend.get_row(1)
 
 
 class TestImageEncoding:
@@ -204,160 +151,17 @@ class TestImageEncoding:
         assert Image().encode(None) is None
 
 
-# Cache validation tests
-
-
-class TestCacheValidation:
+class TestCacheMetadata:
     def test_read_meta_valid(self, tmp_path):
-        meta = _write_shards(tmp_path, n=20)
-        loaded = read_sharded_cache_meta(meta.cache_dir)
-        assert loaded.num_rows == 20
-        assert loaded.num_shards == meta.num_shards
-        assert loaded.shard_filenames == meta.shard_filenames
+        write_lance_cache(_simple_gen(20), _simple_features(), tmp_path / "c")
+        assert read_lance_cache_meta(tmp_path / "c").num_rows == 20
 
     def test_read_meta_missing_dir(self, tmp_path):
         with pytest.raises(FileNotFoundError):
-            read_sharded_cache_meta(tmp_path / "nonexistent")
-
-    def test_validate_schema_mismatch(self, tmp_path):
-        features1 = _simple_features()
-        cache_dir = tmp_path / "cache"
-        write_sharded_arrow_cache(_simple_gen(5), features1, cache_dir)
-
-        features2 = Features({"y": Value("float64")})
-        with pytest.raises(ValueError, match="Schema fingerprint mismatch"):
-            validate_sharded_cache(cache_dir, features2)
-
-    def test_validate_schema_match(self, tmp_path):
-        features = _simple_features()
-        cache_dir = tmp_path / "cache"
-        write_sharded_arrow_cache(_simple_gen(5), features, cache_dir)
-        meta = validate_sharded_cache(cache_dir, features)
-        assert meta.num_rows == 5
-
-    def test_missing_shard_file_detected(self, tmp_path):
-        meta = _write_shards(tmp_path, n=50, shard_size_bytes=512)
-        # Delete one shard
-        (meta.cache_dir / meta.shard_filenames[-1]).unlink()
-        with pytest.raises(ValueError, match="Missing shard file"):
-            read_sharded_cache_meta(meta.cache_dir)
+            read_lance_cache_meta(tmp_path / "nonexistent")
 
 
-# Sharded StableDataset tests
-
-
-def _make_sharded_ds(tmp_path, n=50, shard_size_bytes=512, batch_size=10):
-    """Create a shard-backed StableDataset."""
-    features = _simple_features()
-    info = DatasetInfo(features=features)
-    cache_dir = tmp_path / "ds_cache"
-    meta = write_sharded_arrow_cache(
-        _simple_gen(n),
-        features,
-        cache_dir,
-        shard_size_bytes=shard_size_bytes,
-        batch_size=batch_size,
-    )
-    return StableDataset(
-        features=features,
-        info=info,
-        shard_paths=meta.shard_paths,
-        shard_row_counts=meta.shard_row_counts,
-        num_rows=meta.num_rows,
-    ), meta
-
-
-class TestShardedDataset:
-    def test_len(self, tmp_path):
-        ds, meta = _make_sharded_ds(tmp_path, n=50)
-        assert len(ds) == 50
-
-    def test_getitem_correctness(self, tmp_path):
-        ds, _ = _make_sharded_ds(tmp_path, n=50)
-        for i in range(50):
-            row = ds[i]
-            assert row["x"] == i
-            assert row["label"] == i % 2
-
-    def test_getitem_negative_index(self, tmp_path):
-        ds, _ = _make_sharded_ds(tmp_path, n=20)
-        assert ds[-1]["x"] == 19
-        assert ds[-20]["x"] == 0
-
-    def test_getitem_out_of_range(self, tmp_path):
-        ds, _ = _make_sharded_ds(tmp_path, n=10)
-        with pytest.raises(IndexError):
-            ds[10]
-
-    def test_getitem_does_not_force_full_table(self, tmp_path):
-        ds, meta = _make_sharded_ds(tmp_path, n=200, shard_size_bytes=128, batch_size=5)
-        assert meta.num_shards >= 2
-        # Table not loaded at construction
-        assert ds._backend._table is None
-        # Access first row routes through shard, does NOT force full concat
-        ds[0]
-        assert ds._backend._table is None
-        # Only .table property forces full materialization
-        _ = ds.table
-        assert ds._backend._table is not None
-
-    def test_iter_yields_all(self, tmp_path):
-        ds, _ = _make_sharded_ds(tmp_path, n=30)
-        rows = list(ds)
-        assert len(rows) == 30
-        assert [r["x"] for r in rows] == list(range(30))
-
-    def test_iter_epoch_shuffled(self, tmp_path):
-        ds, meta = _make_sharded_ds(tmp_path, n=200, shard_size_bytes=128, batch_size=5)
-        assert meta.num_shards >= 4
-        sequential = [r["x"] for r in ds]
-        shuffled = [r["x"] for r in ds.iter_epoch(shuffle_shards=True, seed=42)]
-        # Same elements
-        assert sorted(shuffled) == sorted(sequential)
-        # Different order (shard boundaries reordered)
-        assert shuffled != sequential
-
-    def test_slice(self, tmp_path):
-        ds, _ = _make_sharded_ds(tmp_path, n=20)
-        sub = ds[2:5]
-        assert isinstance(sub, StableDataset)
-        assert len(sub) == 3
-        assert sub[0]["x"] == 2
-        assert sub[1]["x"] == 3
-        assert sub[2]["x"] == 4
-
-    def test_pickle_size_is_small(self, tmp_path):
-        ds, _ = _make_sharded_ds(tmp_path, n=50)
-        _ = ds[0]  # trigger shard load
-        data = pickle.dumps(ds)
-        assert len(data) < 4096
-
-    def test_pickle_roundtrip(self, tmp_path):
-        ds, _ = _make_sharded_ds(tmp_path, n=20)
-        ds2 = pickle.loads(pickle.dumps(ds))
-        assert ds2._backend._table is None
-        assert ds2._backend._shard_paths is not None
-        assert len(ds2) == 20
-        for i in range(20):
-            assert ds2[i]["x"] == i
-
-    def test_pickle_preserves_features(self, tmp_path):
-        ds, _ = _make_sharded_ds(tmp_path, n=5)
-        ds2 = pickle.loads(pickle.dumps(ds))
-        assert isinstance(ds2.features["label"], ClassLabel)
-        assert ds2.features["label"].names == ["a", "b"]
-
-    def test_concat_table_covers_all_shards(self, tmp_path):
-        ds, meta = _make_sharded_ds(tmp_path, n=200, shard_size_bytes=128, batch_size=5)
-        assert meta.num_shards > 4
-        # Explicit .table forces full concat of all shards
-        assert ds.table.num_rows == 200
-
-
-# Builder integration tests
-
-
-class _TinyShardedBuilder(BaseDatasetBuilder):
+class _TinyBuilder(BaseDatasetBuilder):
     VERSION = Version("0.0.0")
     SOURCE = {"homepage": "https://example.com", "citation": "TBD", "assets": {}}
 
@@ -372,135 +176,23 @@ class _TinyShardedBuilder(BaseDatasetBuilder):
             yield i, {"x": i}
 
 
-class TestBuilderShardedIntegration:
-    def test_builder_creates_sharded_cache(self, tmp_path):
-        ds = _TinyShardedBuilder(split="train", processed_cache_dir=str(tmp_path))
+class TestBuilderIntegration:
+    def test_builder_creates_lance_cache(self, tmp_path):
+        ds = _TinyBuilder(split="train", processed_cache_dir=str(tmp_path))
         assert isinstance(ds, StableDataset)
         assert ds._backend.is_file_backed
-        assert len(ds) == 20
-        for i in range(20):
-            assert ds[i]["x"] == i
+        assert [ds[i]["x"] for i in range(20)] == list(range(20))
 
     def test_builder_warm_cache_skips_rebuild(self, tmp_path):
-        _TinyShardedBuilder(split="train", processed_cache_dir=str(tmp_path))
-        # Find the shard dir
-        shard_dirs = [d for d in tmp_path.iterdir() if d.is_dir()]
-        assert len(shard_dirs) == 1
-        mtimes = {f: f.stat().st_mtime for f in shard_dirs[0].iterdir()}
-
-        ds2 = _TinyShardedBuilder(split="train", processed_cache_dir=str(tmp_path))
-        for f, mtime in mtimes.items():
-            assert f.stat().st_mtime == mtime
+        _TinyBuilder(split="train", processed_cache_dir=str(tmp_path))
+        (cache_dir,) = [d for d in tmp_path.iterdir() if d.is_dir()]
+        mtimes = {f: f.stat().st_mtime for f in cache_dir.rglob("*") if f.is_file()}
+        ds2 = _TinyBuilder(split="train", processed_cache_dir=str(tmp_path))
+        assert all(f.stat().st_mtime == m for f, m in mtimes.items())
         assert len(ds2) == 20
 
-    def test_builder_writes_finite_shard_target(self, tmp_path):
-        _TinyShardedBuilder(split="train", processed_cache_dir=str(tmp_path))
-        (meta_path,) = tmp_path.glob("*/_metadata.json")
-        meta = json.loads(meta_path.read_text())
-        assert meta["shard_size_target_bytes"] == DEFAULT_SHARD_SIZE_BYTES == 256 * 1024 * 1024
-
-
-class TestCompression:
-    def test_write_with_zstd_compression(self, tmp_path):
-        features = _simple_features()
-        cache_dir = tmp_path / "compressed_cache"
-        meta = write_sharded_arrow_cache(
-            _simple_gen(50),
-            features,
-            cache_dir,
-            batch_size=10,
-            compression="zstd",
-        )
-        assert meta.compression == "zstd"
-        assert meta.num_rows == 50
-
-    def test_compressed_shard_readable_via_mmap(self, tmp_path):
-        features = _simple_features()
-        cache_dir = tmp_path / "comp_read"
-        meta = write_sharded_arrow_cache(
-            _simple_gen(20),
-            features,
-            cache_dir,
-            batch_size=10,
-            compression="zstd",
-        )
-        # Read back through StableDataset (uses mmap)
-        info = DatasetInfo(features=features)
-        ds = StableDataset(
-            features=features,
-            info=info,
-            shard_paths=meta.shard_paths,
-            shard_row_counts=meta.shard_row_counts,
-            num_rows=meta.num_rows,
-        )
-        for i in range(20):
-            assert ds[i]["x"] == i
-
-    def test_uncompressed_cache_reports_no_compression(self, tmp_path):
-        features = _simple_features()
-        cache_dir = tmp_path / "uncompressed"
-        write_sharded_arrow_cache(
-            _simple_gen(10),
-            features,
-            cache_dir,
-            batch_size=10,
-        )
-        loaded = read_sharded_cache_meta(cache_dir)
-        assert loaded.compression is None
-        assert loaded.num_rows == 10
-
-    def test_metadata_includes_compression_key(self, tmp_path):
-        features = _simple_features()
-        cache_dir = tmp_path / "comp_meta"
-        write_sharded_arrow_cache(
-            _simple_gen(10),
-            features,
-            cache_dir,
-            batch_size=10,
-            compression="zstd",
-        )
-        raw = json.loads((cache_dir / "_metadata.json").read_text())
-        assert raw["compression"] == "zstd"
-
-    def test_parallel_encode_matches_serial(self, tmp_path):
-        features = _simple_features()
-        # Serial
-        cache_serial = tmp_path / "serial"
-        meta_s = write_sharded_arrow_cache(
-            _simple_gen(30),
-            features,
-            cache_serial,
-            batch_size=10,
-            num_encode_workers=0,
-        )
-        # Parallel
-        cache_parallel = tmp_path / "parallel"
-        meta_p = write_sharded_arrow_cache(
-            _simple_gen(30),
-            features,
-            cache_parallel,
-            batch_size=10,
-            num_encode_workers=2,
-        )
-        assert meta_s.num_rows == meta_p.num_rows
-        # Verify same data
-        info = DatasetInfo(features=features)
-        ds_s = StableDataset(
-            features=features,
-            info=info,
-            shard_paths=meta_s.shard_paths,
-            shard_row_counts=meta_s.shard_row_counts,
-            num_rows=meta_s.num_rows,
-        )
-        ds_p = StableDataset(
-            features=features,
-            info=info,
-            shard_paths=meta_p.shard_paths,
-            shard_row_counts=meta_p.shard_row_counts,
-            num_rows=meta_p.num_rows,
-        )
-        for i in range(30):
-            assert ds_s[i] == ds_p[i]
+    def test_fragment_target_is_finite(self):
+        assert DEFAULT_SHARD_SIZE_BYTES == 256 * 1024 * 1024
 
 
 class _SchemaBuilder(BaseDatasetBuilder):
@@ -520,11 +212,10 @@ class _SchemaBuilder(BaseDatasetBuilder):
 
 
 class TestSchemaChanges:
-    @pytest.mark.parametrize("storage_format", ["arrow", "lance"])
-    def test_feature_change_rebuilds_cache(self, tmp_path, storage_format, monkeypatch):
-        first = _SchemaBuilder(split="train", processed_cache_dir=tmp_path, storage_format=storage_format)
+    def test_feature_change_rebuilds_cache(self, tmp_path, monkeypatch):
+        first = _SchemaBuilder(split="train", processed_cache_dir=tmp_path)
         monkeypatch.setattr(_SchemaBuilder, "names", [*_SchemaBuilder.names[:-1], "renamed"])
-        second = _SchemaBuilder(split="train", processed_cache_dir=tmp_path, storage_format=storage_format)
+        second = _SchemaBuilder(split="train", processed_cache_dir=tmp_path)
 
         assert first.features["y"].names[-1] == "class_5"
         assert second.features["y"].names[-1] == "renamed"
@@ -569,14 +260,14 @@ class TestSchemaChanges:
     def test_flatten_indices_output_opens_with_open_cache(self, tmp_path):
         from stable_datasets.cache import open_cache
 
-        ds, _ = _make_sharded_ds(tmp_path)
+        ds = cached_dataset(_simple_gen(10), _simple_features(), tmp_path / "cache")
         flat = ds.select([4, 2, 0]).flatten_indices(cache_dir=tmp_path / "flat")
         opened = open_cache(tmp_path / "flat", flat.features)
         assert opened.num_rows == 3
         assert opened.backend.get_row(0)["x"] == ds[4]["x"]
 
 
-class TestLockingAndPublish:
+class TestLocking:
     def test_lock_name_keeps_dotted_config_names(self, tmp_path):
         from stable_datasets.cache import _writer_lock
 
@@ -584,48 +275,6 @@ class TestLockingAndPublish:
         b = _writer_lock(str(tmp_path / "cifar_v1.5_train_abc")).lock_file
         assert a == str(tmp_path / "cifar_v1.0_train_abc.lock")
         assert a != b
-
-    def test_rewrite_keeps_previous_generation_readable(self, tmp_path, monkeypatch):
-        import shutil
-
-        import stable_datasets.cache as cache
-        from stable_datasets.cache import open_cache
-
-        features = _simple_features()
-        cache_dir = tmp_path / "cache"
-        write_sharded_arrow_cache(_simple_gen(40), features, cache_dir, shard_size_bytes=64, batch_size=8)
-        first = open_cache(cache_dir, features).backend
-        assert first.num_shards > 1
-
-        seen = []
-        real_rmtree = shutil.rmtree
-
-        def checking_rmtree(path, *args, **kwargs):
-            real_rmtree(path, *args, **kwargs)
-            seen.append(open_cache(cache_dir, features).num_rows)
-
-        monkeypatch.setattr(cache.shutil, "rmtree", checking_rmtree)
-        write_sharded_arrow_cache(_simple_gen(4), features, cache_dir)
-        second = open_cache(cache_dir, features).backend
-        assert [first.get_row(i)["x"] for i in range(40)] == list(range(40))
-        assert seen == []
-
-        write_sharded_arrow_cache(_simple_gen(2), features, cache_dir)
-        assert seen == [2]
-        assert len(list(cache_dir.glob("data-*"))) == 2
-        assert [second.get_row(i)["x"] for i in range(4)] == list(range(4))
-        assert open_cache(cache_dir, features).num_rows == 2
-
-    def test_rewrite_over_corrupt_metadata(self, tmp_path):
-        from stable_datasets.cache import open_cache
-
-        features = _simple_features()
-        cache_dir = tmp_path / "cache"
-        write_sharded_arrow_cache(_simple_gen(5), features, cache_dir)
-        (cache_dir / "_metadata.json").write_text("{")
-        write_sharded_arrow_cache(_simple_gen(3), features, cache_dir)
-        assert open_cache(cache_dir, features).num_rows == 3
-        assert len(list(cache_dir.glob("data-*"))) == 1
 
 
 def test_download_keeps_lock_file(tmp_path):

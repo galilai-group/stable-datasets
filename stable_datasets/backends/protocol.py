@@ -2,7 +2,7 @@
 
 Defines :class:`StorageBackend`, the interface :class:`StableDataset`
 depends on for row access, iteration, and materialization. Concrete
-backends (e.g. :class:`ArrowBackend`) conform structurally.
+backends (e.g. :class:`LanceBackend`, :class:`TableBackend`) conform structurally.
 
 Arrow types (:class:`pa.Table`, :class:`pa.RecordBatch`,
 :class:`pa.Schema`) are the boundary types. Members not declared on the

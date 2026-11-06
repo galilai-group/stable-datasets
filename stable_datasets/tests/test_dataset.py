@@ -6,40 +6,25 @@ import numpy as np
 import pytest
 from PIL import Image as PILImage
 
-from stable_datasets.cache import write_sharded_arrow_cache
 from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Image, Value, Version
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.tests._caches import cached_dataset
 from stable_datasets.utils import BaseDatasetBuilder
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 
-def _make_sharded_cache(tmp_path, name="cache", n=10):
-    """Write a small sharded Arrow cache and return (meta, features, info)."""
+def _make_ds(tmp_path, name="cache", n=10, rows_per_fragment=5):
+    """A small cached StableDataset (fragments of rows_per_fragment rows)."""
     features = Features({"x": Value("int32"), "label": ClassLabel(names=["a", "b"])})
-    info = DatasetInfo(features=features)
 
     def gen():
         for i in range(n):
             yield i, {"x": i, "label": i % 2}
 
-    cache_dir = tmp_path / name
-    meta = write_sharded_arrow_cache(gen(), features, cache_dir, batch_size=5)
-    return meta, features, info
-
-
-def _make_ds(tmp_path, **kw):
-    """Shorthand: create a sharded cache and return a file-backed StableDataset."""
-    meta, features, info = _make_sharded_cache(tmp_path, **kw)
-    return StableDataset(
-        features=features,
-        info=info,
-        shard_paths=meta.shard_paths,
-        shard_row_counts=meta.shard_row_counts,
-        num_rows=meta.num_rows,
-    )
+    return cached_dataset(gen(), features, tmp_path / name, rows_per_fragment=rows_per_fragment, batch_size=5)
 
 
 class _TinyBuilder(BaseDatasetBuilder):
@@ -63,9 +48,9 @@ class _TinyBuilder(BaseDatasetBuilder):
 class TestLazyMmap:
     def test_init_and_len_do_not_load_table(self, tmp_path):
         ds = _make_ds(tmp_path)
-        assert ds._backend._table is None
+        assert ds._backend.is_file_backed
         assert len(ds) == 10
-        assert ds._backend._table is None
+        assert ds._backend.is_file_backed
 
     def test_getitem_returns_correct_values(self, tmp_path):
         ds = _make_ds(tmp_path, n=5)
@@ -99,9 +84,9 @@ class TestPickle:
     def test_unpickled_dataset_is_lazy_and_reads_correctly(self, tmp_path):
         ds = _make_ds(tmp_path, n=5)
         ds2 = pickle.loads(pickle.dumps(ds))
-        assert ds2._backend._table is None
+        assert ds2._backend.is_file_backed
         assert len(ds2) == 5
-        assert ds2._backend._table is None  # len uses cached num_rows
+        assert ds2._backend.is_file_backed  # len uses cached num_rows
         for i in range(5):
             assert ds2[i]["x"] == i
 
@@ -129,7 +114,7 @@ class TestSliceAndSplit:
         sub = ds[2:5]
         assert isinstance(sub, StableDataset)
         assert sub._indices is not None
-        assert sub._backend._table is None  # no materialization
+        assert sub._backend.is_file_backed  # no materialization
         assert len(sub) == 3
         assert sub[0]["x"] == 2
 
@@ -168,7 +153,7 @@ class TestBuilderIntegration:
         ds = _TinyBuilder(split="train", processed_cache_dir=str(tmp_path))
         assert isinstance(ds, StableDataset)
         assert ds._backend.is_file_backed
-        assert ds._backend._table is None
+        assert ds._backend.is_file_backed
         assert len(ds) == 5
         assert len(pickle.dumps(ds)) < 4096
 
@@ -208,8 +193,8 @@ class TestSelect:
         ds = _make_ds(tmp_path, n=10)
         splits = ds.train_test_split(test_size=0.3, seed=42)
         # Both splits should be indexed views, not materialized tables
-        assert splits["train"]._backend._table is None
-        assert splits["test"]._backend._table is None
+        assert splits["train"]._backend.is_file_backed
+        assert splits["test"]._backend.is_file_backed
         assert splits["train"]._indices is not None
         assert splits["test"]._indices is not None
         assert len(splits["train"]) + len(splits["test"]) == 10
@@ -243,7 +228,7 @@ class TestSelect:
         ds = _make_ds(tmp_path, n=10)
         sub = ds[2:5]
         assert sub._indices is not None
-        assert sub._backend._table is None
+        assert sub._backend.is_file_backed
         assert len(sub) == 3
         assert sub[0]["x"] == 2
 
@@ -268,15 +253,7 @@ def _make_image_cache(tmp_path, name="img_cache", n=5):
             img = PILImage.new("RGB", (4, 4), color=(i * 10, i * 10, i * 10))
             yield i, {"image": img, "label": i}
 
-    cache_dir = tmp_path / name
-    meta = write_sharded_arrow_cache(gen(), features, cache_dir, batch_size=5)
-    return StableDataset(
-        features=features,
-        info=info,
-        shard_paths=meta.shard_paths,
-        shard_row_counts=meta.shard_row_counts,
-        num_rows=meta.num_rows,
-    )
+    return cached_dataset(gen(), features, tmp_path / name, rows_per_fragment=5, batch_size=5, info=info)
 
 
 class TestFormatAndTransform:
@@ -534,12 +511,11 @@ class TestFeatureInference:
 
 class TestSingleFileDefault:
     def test_new_cache_produces_single_shard(self, tmp_path):
-        ds = _make_ds(tmp_path, n=100)
+        ds = _make_ds(tmp_path, n=100, rows_per_fragment=None)
         assert ds._backend.num_shards == 1
 
     def test_single_shard_getitem_does_not_materialize(self, tmp_path):
         ds = _make_ds(tmp_path, n=10)
-        assert ds._backend._table is None
+        assert ds._backend.is_file_backed
         ds[0]
-        # Single shard uses _get_shard_table, not .table
-        assert ds._backend._table is None
+        assert ds._backend.is_file_backed
