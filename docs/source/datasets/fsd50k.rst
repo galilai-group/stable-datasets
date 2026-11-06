@@ -26,6 +26,14 @@ Dev and eval clips come from disjoint Freesound uploaders. Labels are **smeared*
 also carries all ancestors of its labels up to the ontology root (e.g. ``Bark`` implies ``Dog``,
 ``Domestic_animals_and_pets`` and ``Animal``).
 
+.. image:: teasers/fsd50k_teaser.png
+   :align: center
+   :width: 100%
+   :alt: Waveform and log-mel spectrogram of four FSD50K clips
+
+Four CC0 clips from ``test``, resampled to 22.05 kHz: peak-normalised waveform (top) and 96-band log-mel
+spectrogram (bottom) of the first 5 s, titled with their labels in ground-truth order.
+
 Data Structure
 --------------
 

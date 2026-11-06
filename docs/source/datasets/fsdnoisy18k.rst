@@ -23,8 +23,17 @@ FSDnoisy18k is a sound event classification dataset for studying **real-world la
      ``noisy_small=True`` marks 1,003 noisy clips, matching the clean subset in duration
 - **test**: 947 clips, drawn entirely from the clean portion
 
+
 Because the subsets are exposed as boolean columns rather than separate splits, the usual setups are a
 filter away: clean-only training, noisy-only training, or the full train set.
+
+.. image:: teasers/fsdnoisy18k_teaser.png
+   :align: center
+   :width: 100%
+   :alt: Waveform and log-mel spectrogram of four FSDnoisy18k clips
+
+Four CC0 clips from ``test``, resampled to 22.05 kHz: peak-normalised waveform (top) and 96-band log-mel
+spectrogram (bottom) of the first 5 s, titled with their label.
 
 Data Structure
 --------------
