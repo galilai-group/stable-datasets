@@ -17,24 +17,6 @@ def test_video_frames_encode_points_to_specialized_layout(tmp_path):
         Video(storage="frames").encode(path, cache_dir=tmp_path)
 
 
-def test_arrow_storage_rejects_video_frames_layout(tmp_path):
-    class _FramesBuilder(BaseDatasetBuilder):
-        VERSION = Version("0.0.0")
-        SOURCE = DatasetSource(homepage="https://example.com", assets={}, citation="TBD")
-
-        def _info(self):
-            return DatasetInfo(features=Features({"video": Video(storage="frames")}))
-
-        def _split_generators(self):
-            return [SplitGenerator(name=Split.TRAIN, gen_kwargs={})]
-
-        def _iter_examples(self):
-            yield 0, {"video": "unused.mp4"}
-
-    with pytest.raises(ValueError, match="requires storage_format='lance'"):
-        _FramesBuilder(split="train", processed_cache_dir=tmp_path, storage_format="arrow")
-
-
 def _write_tiny_video(path, frames: int = 5, size: int = 12):
     cv2 = pytest.importorskip("cv2")
     writer = cv2.VideoWriter(
@@ -190,7 +172,6 @@ def test_builder_decode_video_with_frames_storage(tmp_path):
     ds = _FramesBuilder(
         split="train",
         processed_cache_dir=tmp_path / "processed",
-        storage_format="lance",
         decode_video={"num_frames": 4, "output": "numpy"},
     )
     assert len(ds) == 3

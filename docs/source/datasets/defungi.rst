@@ -124,7 +124,7 @@ uses a main guard because the shared downloader starts subprocesses:
 
 ``DeFungi(split="train")`` returns a single split. ``download_dir`` and
 ``processed_cache_dir`` control cache locations. The shared ZIP is downloaded
-once and verified on a fresh download; subsequent loads reuse the Arrow cache.
+once and verified on a fresh download; subsequent loads reuse the Lance cache.
 
 Tests
 -----

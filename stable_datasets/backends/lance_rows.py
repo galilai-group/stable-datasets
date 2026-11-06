@@ -4,13 +4,13 @@ Lance is built on Arrow: its Python API returns ``pa.Table``,
 ``pa.RecordBatch``, and ``pa.Schema`` directly, with no adapter layer.
 :class:`LanceBackend` is a thin wrapper over ``lance.LanceDataset`` that
 exposes those Arrow return values through the same protocol as
-:class:`ArrowBackend`, so :class:`StableDataset` consumes either
+:class:`TableBackend`, so :class:`StableDataset` consumes either
 interchangeably.
 
 **Read-only.** Lance is a storage format, not a mutable in-memory
 table. In-memory operations on :class:`StableDataset`
 (``rename_column``, ``add_column``, ``map``, derived subsets) always
-produce a fresh :class:`ArrowBackend` over a ``pa.Table`` regardless of
+produce a fresh :class:`TableBackend` over a ``pa.Table`` regardless of
 the source backend; :class:`LanceBackend` has no ``table=...``
 construction mode.
 

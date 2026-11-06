@@ -31,11 +31,10 @@ from .cache import (
     split_manifest_name,
     write_lance_cache,
     write_lance_video_frames_cache,
-    write_sharded_arrow_cache,
     write_split_manifest,
 )
 from .dataset import StableDataset, StableDatasetDict
-from .schema import BuilderConfig, DatasetSource, DownloadInfo, Image, Version, Video
+from .schema import BuilderConfig, DatasetSource, DownloadInfo, Version, Video
 from .splits import Split, SplitGenerator
 
 
@@ -63,7 +62,7 @@ class BaseDatasetBuilder:
     """
     Base class for stable-datasets builders.
 
-    Handles downloading, Arrow caching, and split generation. Subclasses
+    Handles downloading, Lance caching, and split generation. Subclasses
     implement ``_info``, ``_split_generators``, and ``_iter_examples``.
     """
 
@@ -79,19 +78,6 @@ class BaseDatasetBuilder:
     # Optional: multi-variant datasets define BUILDER_CONFIGS and optionally DEFAULT_CONFIG_NAME.
     BUILDER_CONFIGS: list = []
     DEFAULT_CONFIG_NAME: str | None = None
-
-    # Class-level default storage backend for the processed cache.
-    # "arrow" (library default) writes sharded Arrow IPC files via
-    # write_sharded_arrow_cache and reads through :class:`ArrowBackend`.
-    # "lance" writes a native Lance dataset via write_lance_cache and
-    # reads through :class:`LanceBackend`.
-    #
-    # End users can also override this per-call at load time by
-    # passing ``storage_format="arrow"`` or ``storage_format="lance"``
-    # to the builder constructor, e.g. ``CIFAR10(split="train",
-    # storage_format="lance")``. Arrow and Lance caches coexist at
-    # distinct paths; ``cache_fingerprint`` includes the format.
-    STORAGE_FORMAT: str = "arrow"
 
     @staticmethod
     def _freeze(obj):
@@ -322,7 +308,6 @@ class BaseDatasetBuilder:
         split=None,
         processed_cache_dir=None,
         download_dir=None,
-        storage_format=None,
         backend_kwargs=None,
         storage_options=None,
         decode_video=None,
@@ -336,20 +321,9 @@ class BaseDatasetBuilder:
                 loads all available splits and returns a StableDatasetDict.
             processed_cache_dir: Cache directory for processed datasets. If None,
                 defaults to ~/.stable_datasets/processed/. A URI such as
-                ``s3://bucket/prefix`` is valid with ``storage_format="lance"``.
+                ``s3://bucket/prefix`` is valid. Caches are Lance datasets.
             download_dir: Directory for raw downloads (ZIP/NPZ/etc). If None, defaults to
                 ~/.stable_datasets/downloads/.
-            storage_format: Load-time override for the storage backend, either
-                ``"arrow"`` or ``"lance"``. When None (default), falls back to
-                the builder class's ``STORAGE_FORMAT`` attribute, which itself
-                defaults to ``"arrow"``. Arrow and Lance caches coexist at
-                distinct directories (``cache_fingerprint`` hashes the
-                format), so switching at load time does not invalidate or
-                clobber the other cache; the first load in a new format
-                pays a cache-miss build, subsequent loads hit instantly.
-                Note this is distinct from :meth:`StableDataset.with_format`,
-                which controls the output type (torch / numpy / raw) of
-                decoded rows.
             backend_kwargs: Keyword arguments for the storage backend.
             storage_options: Object store options for Lance caches and for
                 the cache metadata files of a remote ``processed_cache_dir``.
@@ -362,13 +336,11 @@ class BaseDatasetBuilder:
             Union[StableDataset, StableDatasetDict]: The loaded dataset (single split)
                 or a StableDatasetDict (all splits).
         """
-        if storage_format is not None and storage_format not in ("arrow", "lance"):
-            raise ValueError(f"storage_format must be 'arrow' or 'lance', got {storage_format!r}")
+        if "storage_format" in kwargs:
+            raise TypeError("storage_format was removed: every cache is a Lance dataset")
         backend_kwargs = dict(backend_kwargs or {})
 
         instance = object.__new__(cls)
-        effective_format = storage_format if storage_format is not None else cls.STORAGE_FORMAT
-        instance._effective_storage_format = effective_format
 
         # 1) Decide cache locations
         if processed_cache_dir is None:
@@ -388,16 +360,6 @@ class BaseDatasetBuilder:
 
         features = instance._dataset_info.features
         has_frame_video = any(isinstance(f, Video) and f.storage == "frames" for f in features.values())
-        if has_frame_video and effective_format != "lance":
-            raise ValueError(
-                "Video(storage='frames') requires storage_format='lance' because "
-                "it uses the specialized lance-video-frames layout."
-            )
-        if effective_format == "arrow" and _uri.local_path(instance._processed_cache_dir) is None:
-            raise ValueError(
-                f"Arrow caches must be local, got processed_cache_dir={instance._processed_cache_dir!r}. "
-                "Use storage_format='lance' for a remote URI."
-            )
 
         # 4) Read the split manifest. When every wanted split is cached, do not download.
         def _shard_dir(split_name) -> str:
@@ -406,7 +368,6 @@ class BaseDatasetBuilder:
                 str(cls.VERSION),
                 instance.config.name,
                 split_name,
-                storage_format=effective_format,
                 features=features,
             )
             return _uri.join(instance._processed_cache_dir, name)
@@ -430,7 +391,7 @@ class BaseDatasetBuilder:
 
         manifest_path = _uri.join(
             instance._processed_cache_dir,
-            split_manifest_name(cls.__name__, str(cls.VERSION), instance.config.name, effective_format),
+            split_manifest_name(cls.__name__, str(cls.VERSION), instance.config.name),
         )
         split_names = read_split_manifest(manifest_path, storage_options)
         if split is not None and split_names is not None and split not in split_names:
@@ -443,7 +404,6 @@ class BaseDatasetBuilder:
             splits_data = {name: _open_split(name) for name in wanted}
         else:
             # 5) Cache miss: download raw files and build the wanted splits.
-            #    Writer and backend are chosen by effective_format.
             split_generators = instance._split_generators()
             split_names = [sg.name for sg in split_generators]
             write_split_manifest(manifest_path, split_names, storage_options)
@@ -458,7 +418,7 @@ class BaseDatasetBuilder:
 
                 # Per-shard FileLock so concurrent workers (e.g. multiple SLURM
                 # jobs sharing the same scratch cache) don't all race to write
-                # the same lance/arrow shard. The first into the lock builds the
+                # the same cache. The first into the lock builds the
                 # cache; the rest wait and find _metadata.json present. A remote
                 # URI has no lock: each Lance commit replaces the dataset atomically.
                 local_dir = _uri.local_path(shard_dir)
@@ -475,15 +435,9 @@ class BaseDatasetBuilder:
                             write_lance_video_frames_cache(
                                 generator, features, shard_dir, storage_options=storage_options
                             )
-                        elif effective_format == "lance":
+                        else:
                             write_lance_cache(
                                 generator, features, shard_dir, num_encode_workers=4, storage_options=storage_options
-                            )
-                        else:
-                            has_images = any(isinstance(f, Image) for f in features.values())
-                            compression = None if has_images else "zstd"
-                            write_sharded_arrow_cache(
-                                generator, features, local_dir, compression=compression, num_encode_workers=4
                             )
 
                 splits_data[sg.name] = _open_split(sg.name)

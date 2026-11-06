@@ -19,40 +19,24 @@ import pickle
 
 import pytest
 
-from stable_datasets.backends.arrow_shards import ArrowBackend
 from stable_datasets.backends.lance_rows import LanceBackend
-from stable_datasets.cache import write_lance_cache, write_sharded_arrow_cache
+from stable_datasets.cache import write_lance_cache
 from stable_datasets.dataset import StableDataset
 from stable_datasets.samplers import ShardShuffleSampler
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value
+from stable_datasets.tests._caches import cached_dataset
 
 
-def _make_multi_shard_arrow_ds(tmp_path, n: int = 40, batch_size: int = 10):
+def _make_multi_fragment_ds(tmp_path, n: int = 40, batch_size: int = 10):
+    """A cached dataset of several fragments, and its backend (num_shards, shard_row_counts)."""
     features = Features({"x": Value("int32"), "label": ClassLabel(names=["a", "b"])})
-    info = DatasetInfo(features=features)
 
     def gen():
         for i in range(n):
             yield i, {"x": i, "label": i % 2}
 
-    cache_dir = tmp_path / "arrow_cache"
-    # Force multiple shards with a small shard_size_bytes
-    meta = write_sharded_arrow_cache(
-        gen(),
-        features,
-        cache_dir,
-        batch_size=batch_size,
-        shard_size_bytes=200,  # tiny -> forces multi-shard
-    )
-    backend = ArrowBackend(
-        shard_paths=meta.shard_paths,
-        shard_row_counts=meta.shard_row_counts,
-        schema=features.to_arrow_schema(),
-    )
-    return (
-        StableDataset(features=features, info=info, backend=backend, num_rows=meta.num_rows),
-        meta,
-    )
+    ds = cached_dataset(gen(), features, tmp_path / "multi_cache", rows_per_fragment=batch_size, batch_size=batch_size)
+    return ds, ds._backend
 
 
 def _make_lance_ds(tmp_path, n: int = 40, batch_size: int = 10):
@@ -72,9 +56,9 @@ def _make_lance_ds(tmp_path, n: int = 40, batch_size: int = 10):
     )
 
 
-class TestShardShuffleSamplerArrow:
+class TestShardShuffleSamplerFragments:
     def test_covers_every_index_once(self, tmp_path):
-        ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=40)
+        ds, _ = _make_multi_fragment_ds(tmp_path, n=40)
         sampler = ShardShuffleSampler(ds, seed=42, within_shard="random")
         emitted = list(sampler)
         assert len(emitted) == 40
@@ -82,13 +66,13 @@ class TestShardShuffleSamplerArrow:
         assert len(sampler) == 40
 
     def test_reproducible_same_seed_same_epoch(self, tmp_path):
-        ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=40)
+        ds, _ = _make_multi_fragment_ds(tmp_path, n=40)
         s1 = ShardShuffleSampler(ds, seed=7)
         s2 = ShardShuffleSampler(ds, seed=7)
         assert list(s1) == list(s2)
 
     def test_different_seeds_differ(self, tmp_path):
-        ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=40)
+        ds, _ = _make_multi_fragment_ds(tmp_path, n=40)
         s1 = list(ShardShuffleSampler(ds, seed=1))
         s2 = list(ShardShuffleSampler(ds, seed=2))
         # Could match by coincidence but probability is astronomically low
@@ -96,7 +80,7 @@ class TestShardShuffleSamplerArrow:
         assert s1 != s2
 
     def test_set_epoch_changes_order(self, tmp_path):
-        ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=40)
+        ds, _ = _make_multi_fragment_ds(tmp_path, n=40)
         sampler = ShardShuffleSampler(ds, seed=42)
         e0 = list(sampler)
         sampler.set_epoch(1)
@@ -104,7 +88,7 @@ class TestShardShuffleSamplerArrow:
         assert e0 != e1
 
     def test_within_shard_random_permutes_inside_shard(self, tmp_path):
-        ds, meta = _make_multi_shard_arrow_ds(tmp_path, n=40, batch_size=10)
+        ds, meta = _make_multi_fragment_ds(tmp_path, n=40, batch_size=10)
         # With multiple shards, within_shard='random' should produce at
         # least one shard where the within-shard order isn't strictly
         # ascending.
@@ -140,7 +124,7 @@ class TestShardShuffleSamplerArrow:
         assert any_non_sorted, "within_shard='random' should permute at least one shard"
 
     def test_within_shard_sequential_keeps_shard_ordering(self, tmp_path):
-        ds, meta = _make_multi_shard_arrow_ds(tmp_path, n=40, batch_size=10)
+        ds, meta = _make_multi_fragment_ds(tmp_path, n=40, batch_size=10)
         sampler = ShardShuffleSampler(ds, seed=0, within_shard="sequential")
         emitted = list(sampler)
 
@@ -171,7 +155,7 @@ class TestShardShuffleSamplerArrow:
 
     def test_shard_block_structure(self, tmp_path):
         """All indices from any single shard are emitted contiguously."""
-        ds, meta = _make_multi_shard_arrow_ds(tmp_path, n=40, batch_size=10)
+        ds, meta = _make_multi_fragment_ds(tmp_path, n=40, batch_size=10)
         assert meta.num_shards > 1
         sampler = ShardShuffleSampler(ds, seed=3)
         emitted = list(sampler)
@@ -200,7 +184,7 @@ class TestShardShuffleSamplerArrow:
                 current_shard = s
 
     def test_pickle_roundtrip(self, tmp_path):
-        ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=40)
+        ds, _ = _make_multi_fragment_ds(tmp_path, n=40)
         sampler = ShardShuffleSampler(ds, seed=123)
         loaded = pickle.loads(pickle.dumps(sampler))
         # Order must be identical after pickle (sampler holds only
@@ -208,7 +192,7 @@ class TestShardShuffleSamplerArrow:
         assert list(sampler) == list(loaded)
 
     def test_invalid_within_shard_raises(self, tmp_path):
-        ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=10)
+        ds, _ = _make_multi_fragment_ds(tmp_path, n=10)
         with pytest.raises(ValueError, match="within_shard"):
             ShardShuffleSampler(ds, within_shard="neither")
 
@@ -229,13 +213,13 @@ class TestShardShuffleSamplerLance:
 
 class TestFactoryMethod:
     def test_make_sampler_returns_shard_shuffle_sampler(self, tmp_path):
-        ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=20)
+        ds, _ = _make_multi_fragment_ds(tmp_path, n=20)
         s = ds.make_sampler("shard_shuffle", seed=42)
         assert isinstance(s, ShardShuffleSampler)
         assert sorted(s) == list(range(20))
 
     def test_make_sampler_forwards_kwargs(self, tmp_path):
-        ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=20)
+        ds, _ = _make_multi_fragment_ds(tmp_path, n=20)
         s_random = ds.make_sampler("shard_shuffle", seed=0, within_shard="random")
         s_sequential = ds.make_sampler("shard_shuffle", seed=0, within_shard="sequential")
         # Both cover indices but with potentially different orderings.
@@ -243,7 +227,7 @@ class TestFactoryMethod:
         assert sorted(s_sequential) == list(range(20))
 
     def test_make_sampler_unknown_kind_raises(self, tmp_path):
-        ds, _ = _make_multi_shard_arrow_ds(tmp_path, n=10)
+        ds, _ = _make_multi_fragment_ds(tmp_path, n=10)
         with pytest.raises(ValueError, match="Unknown sampler kind"):
             ds.make_sampler("nonexistent")
 

@@ -1,6 +1,6 @@
 """Feature and metadata schema definitions.
 
-Each feature type maps itself to a PyArrow type for Arrow IPC serialization.
+Each feature type maps itself to a PyArrow type, the schema of its column in a Lance cache.
 """
 
 from __future__ import annotations

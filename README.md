@@ -23,7 +23,7 @@ pip install -e .
 pip install -e ".[dev,docs]"
 ```
 
-Optional extras: `torch` (DataLoader integration and torch outputs), `lance` (Lance caches), `video` (video decoding and frame caches), or `all`.
+Processed caches are [Lance](https://lancedb.github.io/lance/) datasets. Optional extras: `torch` (DataLoader integration and torch outputs), `video` (video decoding and frame caches), `framestore` (JPEG frame stores with partial decoding), or `all`.
 
 By default, downloads and processed caches live under `~/.stable_datasets/`. You can override the root with:
 
@@ -33,18 +33,17 @@ export STABLE_DATASETS_CACHE_DIR=/data/stable_datasets
 
 or pass `download_dir=` / `processed_cache_dir=` per dataset.
 
-Lance caches can live on object storage. Pass a URI and the object store options:
+Caches can live on object storage. Pass a URI and the object store options:
 
 ```python
 ds = CIFAR10(
     split="train",
-    storage_format="lance",
     processed_cache_dir="s3://bucket/stable_datasets",
     storage_options={"aws_region": "us-east-1"},
 )
 ```
 
-Arrow caches are memory-mapped, so they must be local. The small JSON metadata files use `pyarrow.fs`: S3 and Azure options map to it, and other stores such as `gs://` use the credentials of the environment.
+The small JSON metadata files use `pyarrow.fs`: S3 and Azure options map to it, and other stores such as `gs://` use the credentials of the environment.
 
 ## Examples
 
@@ -93,7 +92,7 @@ print(np_sample["series"].shape)
 from stable_datasets import VideoDecodeConfig
 from stable_datasets.video import SSv2
 
-ds = SSv2(split="train", storage_format="lance")
+ds = SSv2(split="train")
 sample = ds[0]
 
 video_ref = sample["video"]

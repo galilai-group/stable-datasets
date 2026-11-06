@@ -81,7 +81,7 @@ Usage
     batch = next(iter(DataLoader(data["train"].with_format("torch"), batch_size=8)))
     assert batch["image"].shape == (8, 3, 256, 256)
 
-The standard builder handles download locking, Arrow cache writing and reopening.
+The standard builder handles download locking, Lance cache writing and reopening.
 The archive parser validates all 80 objects and 41 images per object, rejects
 malformed or duplicate image names, and reads members without extracting paths
 onto the filesystem. Access-time preprocessing can use ``with_transform``.

@@ -1,12 +1,12 @@
 """Cross-backend tests for the StorageBackend protocol.
 
 Every test in this file runs twice via a parameterized fixture: once
-with :class:`ArrowBackend` backed by a sharded Arrow IPC cache, once
-with :class:`LanceBackend` backed by a native Lance cache written via
+with :class:`TableBackend` over an in-memory table, once with
+:class:`LanceBackend` backed by a Lance cache written via
 ``write_lance_cache`` from the same generator. Any test that passes
-for Arrow and fails for Lance is evidence of a protocol leak -- some
+for one and fails for the other is evidence of a protocol leak -- some
 place where :class:`StableDataset` or its consumers reach past the
-abstraction and depend on Arrow-specific behavior.
+abstraction and depend on one backend's behavior.
 """
 
 from __future__ import annotations
@@ -18,26 +18,24 @@ import numpy as np
 import pyarrow as pa
 import pytest
 
-from stable_datasets.backends.arrow_shards import ArrowBackend
 from stable_datasets.backends.lance_rows import LanceBackend
-from stable_datasets.cache import write_lance_cache, write_sharded_arrow_cache
+from stable_datasets.cache import write_lance_cache
 from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value
 
 
-BackendKind = str  # "arrow" | "lance"
+BackendKind = str  # "table" | "lance"
 
 
-@pytest.fixture(params=["arrow", "lance"], ids=["arrow", "lance"])
+@pytest.fixture(params=["table", "lance"], ids=["table", "lance"])
 def make_ds(request, tmp_path) -> Callable[..., StableDataset]:
     """Factory fixture: returns a callable that builds a file-backed
     :class:`StableDataset` on the parameterized backend.
 
     Both variants consume the same in-memory generator, so the test
-    content is identical row-for-row between Arrow and Lance runs.
-    The Lance variant writes through :func:`write_lance_cache`
-    directly, matching the path :class:`BaseDatasetBuilder` uses when
-    ``STORAGE_FORMAT="lance"``.
+    content is identical row-for-row between the two runs. The Lance
+    variant writes through :func:`write_lance_cache`, the path
+    :class:`BaseDatasetBuilder` uses.
     """
     kind: BackendKind = request.param
 
@@ -49,15 +47,12 @@ def make_ds(request, tmp_path) -> Callable[..., StableDataset]:
             for i in range(n):
                 yield i, {"x": i, "label": i % 2}
 
-        if kind == "arrow":
-            cache_dir = tmp_path / f"arrow_cache_{n}"
-            meta = write_sharded_arrow_cache(gen(), features, cache_dir, batch_size=batch_size)
-            backend = ArrowBackend(
-                shard_paths=meta.shard_paths,
-                shard_row_counts=meta.shard_row_counts,
-                schema=features.to_arrow_schema(),
-            )
-            num_rows = meta.num_rows
+        if kind == "table":
+            from stable_datasets.cache import encode_example
+
+            rows = [encode_example(ex, features) for _, ex in gen()]
+            table = pa.Table.from_pylist(rows, schema=features.to_arrow_schema())
+            return StableDataset(features=features, info=info, table=table)
         elif kind == "lance":
             lance_dir = tmp_path / f"lance_cache_{n}"
             lance_meta = write_lance_cache(gen(), features, lance_dir, batch_size=batch_size)
@@ -294,8 +289,8 @@ class TestShallowCopyForkSafety:
         assert ds2._backend is ds._backend  # same backend object
 
     def test_set_decode_does_not_open_lance_dataset(self, make_ds):
-        # Only meaningful for Lance -- Arrow's num_rows is free. Skip
-        # gracefully on the arrow parameterization.
+        # Only meaningful for Lance -- a table's num_rows is free. Skip
+        # gracefully on the table parameterization.
         ds = make_ds(n=13)
         backend = ds._backend
         if not hasattr(backend, "_ds"):
@@ -323,12 +318,10 @@ class TestShallowCopyForkSafety:
         assert backend._ds is None
 
 
-# ── BaseDatasetBuilder with STORAGE_FORMAT="lance" ──────────────────────────
+# ── BaseDatasetBuilder writes a Lance cache ─────────────────────────────────
 #
-# Integration test for the direct Lance writer. A tiny builder subclass
-# opts into Lance storage via ``STORAGE_FORMAT = "lance"``; the round
-# trip exercises ``write_lance_cache``, the ``_metadata.json`` format
-# marker, the cache_fingerprint split by storage_format, and the read
+# Integration test for the builder's writer: the round trip exercises
+# ``write_lance_cache``, the ``_metadata.json`` format marker and the read
 # path through ``BaseDatasetBuilder.__new__`` -> ``LanceBackend``.
 
 
@@ -355,7 +348,6 @@ def _make_lance_builder_class():
     class _LanceBuilder(BaseDatasetBuilder):
         VERSION = Version("0.0.0")
         SOURCE = {"homepage": "https://example.com", "citation": "TBD", "assets": {}}
-        STORAGE_FORMAT = "lance"
 
         def _info(self):
             return DatasetInfo(features=Features({"x": Value("int32"), "label": ClassLabel(names=["a", "b", "c"])}))
@@ -370,7 +362,7 @@ def _make_lance_builder_class():
     return _LanceBuilder
 
 
-class TestBuilderStorageFormat:
+class TestBuilderLanceCache:
     def test_lance_builder_writes_lance_cache(self, tmp_path):
         import json
 
@@ -379,7 +371,6 @@ class TestBuilderStorageFormat:
         Builder = _make_lance_builder_class()
         ds = Builder(processed_cache_dir=tmp_path, download_dir=tmp_path / "dl", split="train")
 
-        # Backend is LanceBackend, not ArrowBackend.
         assert isinstance(ds._backend, LanceBackend)
 
         # Cache dir carries the expected format marker in _metadata.json.
@@ -389,8 +380,6 @@ class TestBuilderStorageFormat:
         assert meta["format"] == "lance"
         assert meta["num_rows"] == 15
 
-        # Cache dir does NOT contain Arrow IPC shards.
-        assert not list(cache_dirs[0].glob("shard-*.arrow"))
         # Cache dir DOES contain Lance-style internals (versions / data dir).
         has_lance_marker = (cache_dirs[0] / "_versions").exists() or (cache_dirs[0] / "data").exists()
         assert has_lance_marker, f"no Lance dataset files found in {cache_dirs[0]}"
@@ -422,99 +411,10 @@ class TestBuilderStorageFormat:
         # Sanity: both datasets produce identical contents.
         assert [ds1[i]["x"] for i in range(15)] == [ds2[i]["x"] for i in range(15)]
 
-    def test_runtime_storage_format_override(self, tmp_path):
-        """The ``storage_format=`` kwarg on the builder constructor
-        must override the class-level ``STORAGE_FORMAT`` for a single
-        call, without mutating the class or leaking state into
-        subsequent instantiations."""
-        from stable_datasets.backends.arrow_shards import ArrowBackend
-        from stable_datasets.backends.lance_rows import LanceBackend
-
-        Builder = _make_lance_builder_class()  # class default = "lance"
-
-        # Runtime override to arrow: should return an ArrowBackend
-        # even though the class default is lance.
-        ds_arrow = Builder(
-            processed_cache_dir=tmp_path,
-            download_dir=tmp_path / "dl",
-            split="train",
-            storage_format="arrow",
-        )
-        assert isinstance(ds_arrow._backend, ArrowBackend)
-        assert len(ds_arrow) == 15
-
-        # No override: class default of "lance" applies.
-        ds_lance = Builder(
-            processed_cache_dir=tmp_path,
-            download_dir=tmp_path / "dl",
-            split="train",
-        )
-        assert isinstance(ds_lance._backend, LanceBackend)
-        assert len(ds_lance) == 15
-
-        # Content must be identical row-for-row across formats.
-        for i in range(15):
-            assert ds_arrow[i]["x"] == ds_lance[i]["x"]
-            assert ds_arrow[i]["label"] == ds_lance[i]["label"]
-
-        # Both caches must live on disk at distinct directories.
-        cache_dirs = sorted(p.name for p in tmp_path.iterdir() if p.is_dir() and (p / "_metadata.json").exists())
-        assert len(cache_dirs) == 2, f"expected two cache dirs, got {cache_dirs}"
-
-        # Class default must not have been mutated by the override.
-        assert Builder.STORAGE_FORMAT == "lance"
-
-    def test_invalid_storage_format_raises(self, tmp_path):
+    def test_storage_format_is_refused(self, tmp_path):
         Builder = _make_lance_builder_class()
-        with pytest.raises(ValueError, match="storage_format must be"):
-            Builder(
-                processed_cache_dir=tmp_path,
-                download_dir=tmp_path / "dl",
-                split="train",
-                storage_format="parquet",
-            )
-
-    def test_arrow_and_lance_caches_coexist_at_distinct_paths(self, tmp_path):
-        """The storage_format-aware cache_fingerprint must place Arrow
-        and Lance caches at different directories so both can exist
-        side-by-side without one clobbering the other."""
-        from stable_datasets.schema import (
-            DatasetInfo,
-            Features,
-            Value,
-            Version,
-        )
-        from stable_datasets.splits import Split, SplitGenerator
-        from stable_datasets.utils import BaseDatasetBuilder
-
-        class _ArrowVariant(BaseDatasetBuilder):
-            VERSION = Version("0.0.0")
-            SOURCE = {"homepage": "https://example.com", "citation": "TBD", "assets": {}}
-            STORAGE_FORMAT = "arrow"
-
-            def _info(self):
-                return DatasetInfo(features=Features({"x": Value("int32")}))
-
-            def _split_generators(self):
-                return [SplitGenerator(name=Split.TRAIN, gen_kwargs={"n": 5})]
-
-            def _iter_examples(self, n):
-                for i in range(n):
-                    yield i, {"x": i}
-
-        class _LanceVariant(_ArrowVariant):
-            STORAGE_FORMAT = "lance"
-
-        ds_arrow = _ArrowVariant(processed_cache_dir=tmp_path, download_dir=tmp_path / "dl", split="train")
-        ds_lance = _LanceVariant(processed_cache_dir=tmp_path, download_dir=tmp_path / "dl", split="train")
-
-        # Both datasets should work and return the same content.
-        assert len(ds_arrow) == 5
-        assert len(ds_lance) == 5
-
-        # The two caches live at different directories.
-        cache_dirs = sorted(p.name for p in tmp_path.iterdir() if p.is_dir() and (p / "_metadata.json").exists())
-        assert len(cache_dirs) == 2, f"expected two cache dirs (one per format), got {cache_dirs}"
+        with pytest.raises(TypeError, match="storage_format was removed"):
+            Builder(processed_cache_dir=tmp_path, download_dir=tmp_path / "dl", split="train", storage_format="lance")
 
 
 class TestLanceVersionPinning:
