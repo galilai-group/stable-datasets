@@ -6,9 +6,10 @@ import numpy as np
 import pytest
 
 from stable_datasets.schema import ClassLabel, Sequence
-from stable_datasets.timeseries import FSD50K
+from stable_datasets.timeseries import FSD50K, fsd50k
 from stable_datasets.timeseries._freesound_vocabularies import FSD50K_VOCABULARY
 from stable_datasets.timeseries._zip_utils import SplitZipFile
+from stable_datasets.utils import download
 
 
 MODULE = "stable_datasets.timeseries.fsd50k"
@@ -168,3 +169,69 @@ def test_labels_and_mids_must_align(tmp_path, raw_files, fake_downloads):
     fake_downloads(MODULE, raw_files(mids_override=["/m/only_one"]))
     with pytest.raises(ValueError, match="Malformed FSD50K ground truth"):
         _load(tmp_path, "test")
+
+
+# -- Real data ---------------------------------------------------------------
+# The tests above run on synthetic archives. These read the real Zenodo files: the ground truth and
+# metadata (7 MB) are downloaded, and the split audio archives are opened in place with HTTP range
+# requests, so only their central directories and one clip per split are transferred (~12 MB).
+
+OFFICIAL_SIZES = {"train": 36_796, "val": 4_170, "eval": 10_231}  # paper, Table II
+
+
+@pytest.fixture(scope="module")
+def real_metadata(tmp_path_factory):
+    folder = tmp_path_factory.mktemp("fsd50k")
+    assets = FSD50K.SOURCE["assets"]
+    return {
+        name: download(assets[name], dest_folder=folder, progress_bar=False) for name in ("ground_truth", "metadata")
+    }
+
+
+def test_real_ground_truth_has_the_official_split_sizes(real_metadata):
+    rows = {
+        split: fsd50k._load_ground_truth(real_metadata["ground_truth"], "eval" if split == "eval" else "dev", split)
+        for split in OFFICIAL_SIZES
+    }
+    assert {split: len(split_rows) for split, split_rows in rows.items()} == OFFICIAL_SIZES
+    assert not {row["fname"] for row in rows["train"]} & {row["fname"] for row in rows["val"]}
+    for split_rows in (rows["train"] + rows["val"], rows["eval"]):  # every class occurs in dev and in eval
+        assert {label for row in split_rows for label in row["labels"].split(",")} == set(NAMES)
+
+
+@pytest.mark.parametrize("split", ["train", "val", "eval"])
+def test_real_split_archive_holds_every_listed_clip(split, real_metadata, remote_file):
+    parts = [
+        remote_file(FSD50K.SOURCE["assets"][name].url)
+        for name, _ in (fsd50k._EVAL_AUDIO if split == "eval" else fsd50k._DEV_AUDIO)
+    ]
+    builder = object.__new__(FSD50K)
+    FSD50K.__init__(builder)
+    examples = builder._generate_examples(parts, real_metadata["ground_truth"], real_metadata["metadata"], split)
+    # The generator first checks every ground-truth clip against the split archive's listing.
+    _, example = next(examples)
+    series = np.asarray(example["series"])
+    assert series.ndim == 2 and series.shape[1] == 1 and series.dtype == np.float32
+    assert example["sample_rate"] == 44100 and 0.3 * 44100 * 0.99 <= len(series) <= 30.1 * 44100
+    assert example["labels"] and all(0 <= label < len(NAMES) for label in example["labels"])
+    assert example["mids"] == [MID[NAMES[label]] for label in example["labels"]]
+    assert example["license"].startswith("http://creativecommons.org/") and example["uploader"]
+
+
+@pytest.mark.large
+def test_real_build_has_the_official_split_sizes():
+    """Downloads the full 24.6 GB and builds the 16 kHz cache (~39 GB)."""
+    splits = {split: FSD50K(split=split, config_name="16khz") for split in ("train", "validation", "test")}
+    assert {split: len(ds) for split, ds in splits.items()} == {"train": 36_796, "validation": 4_170, "test": 10_231}
+    sample = splits["test"][0]
+    assert set(sample) == {
+        "series",
+        "sample_rate",
+        "labels",
+        "mids",
+        "filename",
+        "freesound_id",
+        "license",
+        "uploader",
+    }
+    assert sample["sample_rate"] == 16000 and all(0 <= label < len(NAMES) for label in sample["labels"])

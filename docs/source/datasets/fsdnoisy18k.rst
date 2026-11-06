@@ -23,6 +23,8 @@ FSDnoisy18k is a sound event classification dataset for studying **real-world la
      ``noisy_small=True`` marks 1,003 noisy clips, matching the clean subset in duration
 - **test**: 947 clips, drawn entirely from the clean portion
 
+The official lists put three Freesound clips (``393581``, ``414515``, ``417524``, identical audio) in both splits, as unverified
+noisy clips in ``train``; drop them from ``train`` for a strictly disjoint evaluation.
 
 Because the subsets are exposed as boolean columns rather than separate splits, the usual setups are a
 filter away: clean-only training, noisy-only training, or the full train set.

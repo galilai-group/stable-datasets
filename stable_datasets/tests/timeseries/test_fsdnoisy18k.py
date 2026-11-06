@@ -5,8 +5,9 @@ import numpy as np
 import pytest
 
 from stable_datasets.schema import ClassLabel, Sequence, Value
-from stable_datasets.timeseries import FSDnoisy18k
+from stable_datasets.timeseries import FSDnoisy18k, fsdnoisy18k
 from stable_datasets.timeseries._freesound_vocabularies import FSDNOISY18K_VOCABULARY
+from stable_datasets.utils import download
 
 
 MODULE = "stable_datasets.timeseries.fsdnoisy18k"
@@ -163,3 +164,64 @@ def test_unknown_label_is_an_error(tmp_path, raw_files, fake_downloads):
     fake_downloads(MODULE, raw_files(train={"101.wav": ("Not_a_class", "1", "0", 100)}))
     with pytest.raises(ValueError, match="Unknown FSDnoisy18k label"):
         _load(tmp_path, "train")
+
+
+# -- Real data ---------------------------------------------------------------
+# The tests above run on synthetic archives. These read the real Zenodo files: the metadata and license
+# archives (0.2 MB) are downloaded, and the audio archives are opened in place with HTTP range requests,
+# so only their central directories and one clip per split are transferred (~4 MB).
+
+OFFICIAL_SIZES = {"train": 17_585, "test": 947}  # paper, Sec. 2; Zenodo record
+
+
+@pytest.fixture(scope="module")
+def real_metadata(tmp_path_factory):
+    folder = tmp_path_factory.mktemp("fsdnoisy18k")
+    assets = FSDnoisy18k.SOURCE["assets"]
+    return {name: download(assets[name], dest_folder=folder, progress_bar=False) for name in ("meta", "doc")}
+
+
+def test_real_metadata_has_the_official_split_sizes(real_metadata):
+    rows = {split: fsdnoisy18k._load_ground_truth(real_metadata["meta"], split) for split in OFFICIAL_SIZES}
+    assert {split: len(split_rows) for split, split_rows in rows.items()} == OFFICIAL_SIZES
+    assert sum(row["manually_verified"] == "1" for row in rows["train"]) == 1_772  # clean subset
+    assert sum(row["noisy_small"] == "1" for row in rows["train"]) == 1_003
+    # The official release lists three Freesound clips in both splits (as unverified noisy train clips).
+    shared = {row["fname"] for row in rows["train"]} & {row["fname"] for row in rows["test"]}
+    assert shared == {"393581.wav", "414515.wav", "417524.wav"}
+    for split_rows in rows.values():
+        assert {row["label"] for row in split_rows} == set(CLASSES)
+
+
+@pytest.mark.parametrize("split", ["train", "test"])
+def test_real_audio_archive_holds_every_listed_clip(split, real_metadata, remote_file):
+    archive = remote_file(FSDnoisy18k.SOURCE["assets"][f"{split}_audio"].url)
+    builder = object.__new__(FSDnoisy18k)
+    FSDnoisy18k.__init__(builder)
+    examples = builder._generate_examples(archive, real_metadata["meta"], real_metadata["doc"], split)
+    # The generator first checks every metadata clip against the archive's listing.
+    _, example = next(examples)
+    series = np.asarray(example["series"])
+    assert series.ndim == 2 and series.shape[1] == 1 and series.dtype == np.float32
+    assert example["sample_rate"] == 44100 and 0.3 * 44100 * 0.99 <= len(series) <= 30.1 * 44100
+    assert 0 <= example["label"] < len(CLASSES)
+    assert example["license"].startswith("http://creativecommons.org/")
+
+
+@pytest.mark.large
+def test_real_build_has_the_official_split_sizes():
+    """Downloads the full 9.5 GB and builds the 16 kHz cache."""
+    train, test = FSDnoisy18k(split="train", config_name="16khz"), FSDnoisy18k(split="test", config_name="16khz")
+    assert (len(train), len(test)) == (17_585, 947)
+    sample = test[0]
+    assert set(sample) == {
+        "series",
+        "sample_rate",
+        "label",
+        "filename",
+        "freesound_id",
+        "manually_verified",
+        "noisy_small",
+        "license",
+    }
+    assert sample["sample_rate"] == 16000 and 0 <= sample["label"] < len(CLASSES) and sample["manually_verified"]

@@ -2,6 +2,7 @@
 
 import io
 import struct
+import urllib.request
 import zipfile
 import zlib
 
@@ -157,3 +158,51 @@ def fake_downloads(monkeypatch):
         monkeypatch.setattr(f"{module}.bulk_download", _fake_bulk_download)
 
     return install
+
+
+class HTTPRangeFile(io.RawIOBase):
+    """Seekable, read-only view of a remote file over HTTP range requests, with a read-ahead buffer.
+
+    Lets the real-data tests open the multi-GB Zenodo archives in place: reading a ZIP's central
+    directory and a few members transfers megabytes instead of the whole file.
+    """
+
+    def __init__(self, url: str, block: int = 1 << 20):
+        self.url, self.block, self.pos, self.bytes_fetched = url, block, 0, 0
+        with urllib.request.urlopen(urllib.request.Request(url, method="HEAD"), timeout=60) as response:
+            self.size = int(response.headers["Content-Length"])
+        self._buf_start, self._buf = -1, b""
+
+    def seekable(self):
+        return True
+
+    def readable(self):
+        return True
+
+    def seek(self, offset, whence=io.SEEK_SET):
+        self.pos = {io.SEEK_SET: 0, io.SEEK_CUR: self.pos, io.SEEK_END: self.size}[whence] + offset
+        return self.pos
+
+    def tell(self):
+        return self.pos
+
+    def read(self, n=-1):
+        n = self.size - self.pos if n is None or n < 0 else min(n, self.size - self.pos)
+        if n <= 0:
+            return b""
+        if not (self._buf_start <= self.pos and self.pos + n <= self._buf_start + len(self._buf)):
+            end = min(self.size, self.pos + max(n, self.block)) - 1
+            request = urllib.request.Request(self.url, headers={"Range": f"bytes={self.pos}-{end}"})
+            with urllib.request.urlopen(request, timeout=60) as response:
+                self._buf = response.read()
+            self._buf_start = self.pos
+            self.bytes_fetched += len(self._buf)
+        offset = self.pos - self._buf_start
+        self.pos += n
+        return self._buf[offset : offset + n]
+
+
+@pytest.fixture
+def remote_file():
+    """``remote_file(url) -> HTTPRangeFile``: open a remote file for random access without downloading it."""
+    return HTTPRangeFile
