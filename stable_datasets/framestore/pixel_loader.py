@@ -68,9 +68,10 @@ def _function(spec):
 
 
 def _no_cuda(nice=0):
+    from .resources import lower_priority
+
     os.environ["CUDA_VISIBLE_DEVICES"] = ""
-    if nice:
-        os.nice(nice)
+    lower_priority(nice)  # the consumer and the decode servers win any contention for the CPU
 
 
 def cpu_decoder(cfg, frames, jobs, done, seed):
@@ -82,11 +83,14 @@ def cpu_decoder(cfg, frames, jobs, done, seed):
     store, win = _open(cfg, seed)
     out = frames.numpy()
     H, W = cfg["size"]
+    drop = os.environ.get("FRAMESTORE_DROP_PAGES") == "1"  # strictly cold runs: unmap what each clip touched
     while (job := jobs.get()) is not None:
         slot, pos = job
         fid, p, n, _, _ = store.descriptors(win.rows(1)[0])
         for j, (i, a, m) in enumerate(zip(fid, p, n)):
             out[slot, pos, j] = decode(store.frame(i, a, m), H, W)
+        if drop:
+            store.drop_pages()
         done.put(slot)
 
 
@@ -95,11 +99,14 @@ def byte_reader(cfg, data, offsets, jobs, done, seed):
     _no_cuda(cfg["nice"])
     store, win = _open(cfg, seed)
     buf, offs = data.numpy(), offsets.numpy()
+    drop = os.environ.get("FRAMESTORE_DROP_PAGES") == "1"
     while (slot := jobs.get()) is not None:
         try:
             offs[slot] = store.copy_frames(win.rows(cfg["batch"]).reshape(-1), buf[slot])[0]
         except ValueError as e:
             raise RuntimeError(f"byte slot too small for a batch ({e}): raise bytes_per_frame") from None
+        if drop:
+            store.drop_pages()
         done.put(slot)
 
 
@@ -227,6 +234,8 @@ class SharedClipLoader:
             cpu:16" runs two nvJPEG servers and 16 CPU decoders (a kind with no count: nvjpeg 2, cpu sized from the
             node).
         index, read: FrameStore's (a per-node index; the read policy).
+        nice: the CPU processes' priority below the consumer's (and I/O priority, resources.lower_priority); 0 to
+            run level with it.
     """
 
     def __init__(
@@ -243,7 +252,7 @@ class SharedClipLoader:
         clip_slots=4,
         host_slots=3,
         byte_slots=3,
-        nice=0,
+        nice=10,
         seed=0,
         decoder="nvjpeg",
         decoders=None,

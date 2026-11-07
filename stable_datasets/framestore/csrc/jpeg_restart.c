@@ -510,3 +510,57 @@ int64_t restart_many(const uint8_t *buf, const int64_t *off, int64_t n, int32_t 
     }
     return o;
 }
+
+/* RGB frames -> baseline JPEGs with a restart marker every `interval` MCUs, written by libjpeg as it encodes (no
+   re-coding pass): the settings of Pillow's save(quality=q) -- 4:2:0, islow DCT, standard Huffman tables -- so the
+   pixels are Pillow's. n frames of h x w x 3, contiguous; frame i goes to out[out_off[i]:out_off[i + 1]]. Returns
+   the bytes written, -1 on a libjpeg error, -2 if out is too small (call again with more). */
+int64_t encode_restart_many(const uint8_t *rgb, int64_t n, int32_t h, int32_t w, int32_t quality, int32_t interval,
+                            uint8_t *out, int64_t cap, int64_t *out_off) {
+    struct jpeg_compress_struct c;
+    struct err e;
+    unsigned char *volatile mem = NULL;
+    unsigned long msz = 0;
+    c.err = jpeg_std_error(&e.pub);
+    e.pub.error_exit = on_error;
+    e.pub.output_message = on_message;
+    if (setjmp(e.jb)) {
+        jpeg_destroy_compress(&c);
+        free(mem);
+        return -1;
+    }
+    jpeg_create_compress(&c);
+    int64_t at = 0;
+    out_off[0] = 0;
+    for (int64_t i = 0; i < n; i++) {
+        mem = NULL;
+        msz = 0;
+        jpeg_mem_dest(&c, (unsigned char **)&mem, &msz);
+        c.image_width = w;
+        c.image_height = h;
+        c.input_components = 3;
+        c.in_color_space = JCS_RGB;
+        jpeg_set_defaults(&c);
+        jpeg_set_quality(&c, quality, TRUE);
+        c.restart_interval = interval;
+        jpeg_start_compress(&c, TRUE);
+        const uint8_t *img = rgb + i * (int64_t)h * w * 3;
+        while (c.next_scanline < c.image_height) {
+            JSAMPROW r = (JSAMPROW)(img + (int64_t)c.next_scanline * w * 3);
+            jpeg_write_scanlines(&c, &r, 1);
+        }
+        jpeg_finish_compress(&c);
+        if (at + (int64_t)msz > cap) {
+            free(mem);
+            jpeg_destroy_compress(&c);
+            return -2;
+        }
+        memcpy(out + at, mem, msz);
+        at += msz;
+        out_off[i + 1] = at;
+        free(mem);
+        mem = NULL;
+    }
+    jpeg_destroy_compress(&c);
+    return at;
+}

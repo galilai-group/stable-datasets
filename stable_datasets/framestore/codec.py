@@ -10,6 +10,7 @@ column, so batches go between lance, numba and C without copies.
     out, out_off, status = to_restart(buf, off)   lossless re-code: baseline, a restart marker after every MCU,
                                               standard Huffman tables, COM markers kept -- libjpeg in C, the same
                                               bytes as `jpegtran -restart 1B` (no GIL)
+    buf, off = encode(rgb, quality)           RGB frames -> JPEGs with a restart marker after every MCU, as encoded
     seg, seg_off, ok = segment_lengths(buf, off, info)   per-MCU entropy-segment lengths of restart-coded frames
     frames_of(buf, off)                       frame i as a numpy view
 
@@ -198,6 +199,18 @@ def _restart():
                 ctypes.c_void_p,
                 ctypes.c_void_p,
             ]
+            lib.encode_restart_many.restype = ctypes.c_int64
+            lib.encode_restart_many.argtypes = [
+                ctypes.c_void_p,
+                ctypes.c_int64,
+                ctypes.c_int32,
+                ctypes.c_int32,
+                ctypes.c_int32,
+                ctypes.c_int32,
+                ctypes.c_void_p,
+                ctypes.c_int64,
+                ctypes.c_void_p,
+            ]
             lib.fast_init()
             _restart_lib = lib
     return _restart_lib
@@ -234,6 +247,35 @@ def to_restart(buf, off, interval=1, fast=True):
         return _many(lib.restart_many, buf, off, interval)
     out, out_off, status = _many(lib.fast_restart_many, buf, off)
     return _slow_ones(out, out_off, status, buf, off, lambda b, o: _many(lib.restart_many, b, o, interval))
+
+
+def encode(rgb, quality=90):
+    """RGB frames, (n, h, w, 3) uint8 -> (buf, off): baseline JPEGs, 4:2:0, with a restart marker after every MCU
+    written as libjpeg encodes them (Pillow's settings, so Pillow's pixels; no re-coding pass). Runs without the GIL.
+    Without the C helper: simplejpeg encodes, then to_restart re-codes."""
+    rgb = np.ascontiguousarray(rgb, np.uint8)
+    n, h, w, _ = rgb.shape
+    off = np.zeros(n + 1, np.int64)
+    try:
+        lib = _restart()
+    except OSError:
+        import simplejpeg
+
+        parts = [np.frombuffer(simplejpeg.encode_jpeg(f, quality, colorsubsampling="420"), np.uint8) for f in rgb]
+        off[1:] = np.cumsum([len(p) for p in parts])
+        out, out_off, status = to_restart(np.concatenate(parts) if parts else np.zeros(0, np.uint8), off)
+        if (status < 0).any():
+            raise ValueError("re-coding encoded frames failed")
+        return out, out_off
+    cap = n * (h * w // 2 + 4096)
+    while True:
+        out = np.empty(cap, np.uint8)
+        r = lib.encode_restart_many(rgb.ctypes.data, n, h, w, quality, 1, out.ctypes.data, cap, off.ctypes.data)
+        if r >= 0:
+            return out[:r], off
+        if r == -1:
+            raise ValueError(f"libjpeg could not encode {n} frames of {h}x{w}")
+        cap *= 2
 
 
 def _without_c(buf, off, interval, err):
