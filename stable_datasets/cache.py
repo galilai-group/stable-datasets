@@ -455,7 +455,12 @@ def write_lance_video_frames_cache(
         if not tasks:
             raise ValueError("Cannot build a lance-video-frames cache from an empty generator.")
 
-        n_workers = int(workers) if workers else max(1, os.cpu_count() or 1)
+        if workers:
+            n_workers = int(workers)
+        else:  # the CPUs this process may use (os.cpu_count() is the host's, inside a container)
+            from .framestore._native import usable_cpus
+
+            n_workers = usable_cpus()
         video_records: list[dict] = []
 
         def batch_stream(results):

@@ -941,33 +941,24 @@ def _decode_video_torchcodec(
     sample_index: int | None,
 ) -> np.ndarray:
     try:
-        import cv2
         import torch
         from torchcodec.decoders import VideoDecoder
     except ImportError as exc:
-        raise ImportError(
-            "VideoDecodeConfig(decoder='torchcodec') requires torchcodec, torch, and opencv-python."
-        ) from exc
+        raise ImportError("VideoDecodeConfig(decoder='torchcodec') requires torchcodec and torch.") from exc
 
     path = ref.path
     if path is None:
         raise ValueError("torchcodec video decoding requires a filesystem path.")
 
-    cap = cv2.VideoCapture(str(path))
-    try:
-        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-        fps = float(cap.get(cv2.CAP_PROP_FPS) or 0.0)
-    finally:
-        cap.release()
-    if total_frames <= 0 or fps <= 0:
-        raise ValueError(f"Could not determine frame count/fps for {path}")
-
     decoder = VideoDecoder(str(path))
+    total_frames = int(decoder.metadata.num_frames or len(decoder))
+    if total_frames <= 0:
+        raise ValueError(f"Could not determine the frame count of {path}")
     indices = _sample_video_indices(total_frames, config, sample_index=sample_index)
+    # frame indices, not seconds (get_frame_at takes an index); one call decodes the whole clip
+    batch = decoder.get_frames_at(indices=[int(i) for i in indices])
     frames = []
-    for idx in indices:
-        frame = decoder.get_frame_at(float(idx) / fps)
-        data = getattr(frame, "data", frame)
+    for data in batch.data:
         if isinstance(data, torch.Tensor):
             arr = data.detach().cpu().numpy()
         else:
