@@ -1,6 +1,6 @@
 """video_storage=: a builder's video column stored as a framestore store (MP4 or JPEG), its samples clip windows.
 
-    pytest stable_datasets/tests/video/test_video_storage.py      (needs ffmpeg and torchcodec)
+pytest stable_datasets/tests/video/test_video_storage.py      (needs ffmpeg and torchcodec)
 """
 
 import shutil
@@ -72,7 +72,9 @@ def test_mp4_store_windows(tmp_path):
 
 def test_jpeg_store_windows(tmp_path):
     ds = build(tmp_path, {"format": "jpeg", "fps": 7.5, "short_edge": 96})
-    clips = ds.set_video_decode(num_frames=4, frame_stride=2, output="numpy", dtype="uint8", scale="none", layout="THWC")
+    clips = ds.set_video_decode(
+        num_frames=4, frame_stride=2, output="numpy", dtype="uint8", scale="none", layout="THWC"
+    )
     assert len(clips) == (23 - 6) + (30 - 6)  # any start (a window spans 7 frames); stride chosen when loading
     assert clips[0]["video"].shape[0] == 4
 
