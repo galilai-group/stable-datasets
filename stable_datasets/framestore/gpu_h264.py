@@ -30,6 +30,22 @@ try:
 except ImportError:  # the CPU parts (tables, host preparation) still import
     triton = None
 
+MIN_TRITON = (3, 6)  # Triton 3.4 (torch 2.8) crashes while compiling these kernels on H100s
+
+
+def _require_triton():
+    """Raise unless a Triton new enough for these kernels is installed (the GPU stages call this first)."""
+    if triton is None:
+        raise ImportError(
+            "stable_datasets.framestore.gpu_h264 decodes on the GPU with Triton: pip install 'triton>=3.6'"
+        )
+    if tuple(int(p) for p in triton.__version__.split(".")[:2]) < MIN_TRITON:
+        raise RuntimeError(
+            f"stable_datasets.framestore.gpu_h264 needs Triton 3.6 or newer (torch 2.11), found {triton.__version__}: older Tritons "
+            "crash while compiling its kernels; upgrade torch, or decode MP4 stores on the CPU (decoders='cpu')"
+        )
+
+
 N_COEF = 27 * 16  # coefficient levels per macroblock (h264_parse.FrameArrays.coef)
 
 if triton is not None:
@@ -935,6 +951,7 @@ def prepare(clips):
 def decode(batch, device="cuda", stream=None, clear=False):
     """A Batch -> (Y, U, V) uint8 CUDA tensors (frames, coded height, coded width) and the parse arrays. The
     coefficient array holds only what reconstruction reads (the levels of decoded blocks) unless clear."""
+    _require_triton()
     import torch
 
     T = _tables(device)
@@ -1066,6 +1083,7 @@ if triton is not None:
 def prepare_device(raw, table, geom, device="cuda"):
     """gather's output -> a Batch on the device: emulation prevention bytes removed and each slice padded to whole
     32-bit words (bitstream order), by two kernels on the GPU (no host round trip)."""
+    _require_triton()
     import torch
 
     H, W, coff = geom
@@ -1188,6 +1206,7 @@ def to_rgb(Y, U, V, regions, frames, out, K=8):
     c * frames ... (c + 1) * frames - 1 of Y, U, V; regions[c] = (h, w, transposed), its valid region of the coded
     frame (stable_datasets.framestore.mp4's canvas). One kernel: antialiased bilinear resize (torch's weights) of the Y and chroma
     planes and BT.601 limited range conversion, transposed back where the store transposed."""
+    _require_triton()
     import torch
 
     H, W = out.shape[2:4]
