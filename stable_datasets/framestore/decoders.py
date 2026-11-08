@@ -1,6 +1,6 @@
 """JPEG decoders, and the spec that says which decode resources a loader uses.
 
-Decoder("nvjpeg" | "cpu")(frames)          frames (uint8 tensors, numpy arrays or bytes) -> (3, h, w) uint8 tensors
+Decoder("nvjpeg" | "triton" | "cpu")(frames) (uint8 tensors, numpy arrays or bytes) -> (3, h, w) uint8 tensors
 Decoder("cpu", exact=True)                 libjpeg-turbo with per-MCU chroma upsampling, as nvJPEG and splicing need
 decoders("nvjpeg:2,cpu:4")                 -> {"nvjpeg": 2, "cpu": 4}: a loader's decode resources and their counts
 decode_resized(jpeg, h, w)                 one frame -> (h, w, 3) uint8, CPU decode + antialiased bilinear resize
@@ -25,12 +25,14 @@ class Decoder:
     "nvjpeg"  torchvision decode_jpeg on CUDA: nvJPEG's batched decode, on the NVJPG engines where the GPU has them,
               else on the CUDA cores with Huffman decoding on this process's CPU (per-MCU chroma upsampling, which the
               splice needs); alias "tv"
+    "triton"  stable_datasets.framestore.gpu_jpeg: the whole decode in Triton kernels on the CUDA cores, entropy decoding included (one lane per MCU),
+              for restart-coded frames (converted stores); libjpeg-turbo's pixels with plain upsampling, as nvJPEG
     """
 
     def __init__(self, kind="nvjpeg", device="cuda", exact=False):
         self.kind = {"tv": "nvjpeg"}.get(kind, kind)
-        if self.kind not in ("nvjpeg", "cpu"):
-            raise ValueError(f"unknown decoder {kind!r}: nvjpeg or cpu")
+        if self.kind not in ("nvjpeg", "triton", "cpu"):
+            raise ValueError(f"unknown decoder {kind!r}: nvjpeg, triton or cpu")
         self.device, self.exact = device, exact
 
     def __call__(self, frames, stream=None):
@@ -45,6 +47,12 @@ class Decoder:
                 ).permute(2, 0, 1)
                 for f in frames
             ]
+        if self.kind == "triton":
+            from .gpu_jpeg import decode_buffer
+
+            frames = [_np(f) for f in frames]
+            off = np.concatenate(([0], np.cumsum([len(f) for f in frames])))
+            return decode_buffer(torch.from_numpy(np.concatenate(frames)), off, self.device, stream)
         from torchvision.io import ImageReadMode, decode_jpeg
 
         frames = [f if isinstance(f, torch.Tensor) else torch.from_numpy(_np(f)) for f in frames]
@@ -54,16 +62,17 @@ class Decoder:
 
 def decoders(spec):
     """A loader's decoder spec -> {kind: count}: "nvjpeg:2,cpu:4" (a count of "auto" or none: None, the loader's
-    choice). Kinds: nvjpeg (torchvision's nvJPEG: the NVJPG engines where the GPU has them, else the CUDA cores), cpu
-    (libjpeg-turbo)."""
+    choice). Kinds: nvjpeg (torchvision's nvJPEG: the NVJPG engines where the GPU has them, else the CUDA cores), triton
+    (stable_datasets.framestore.gpu_jpeg: all of it on the CUDA cores; restart-coded frames), cpu (libjpeg-turbo; MP4 stores: ffmpeg),
+    nvdec (MP4 stores: torchcodec on the GPU's video decoders)."""
     out = {}
     for part in [p.strip() for p in spec.split(",") if p.strip()]:
         kind, _, n = part.partition(":")
         kind = {"tv": "nvjpeg"}.get(kind, kind)
         if kind in ("hw", "nvjpg", "engines"):
             raise ValueError(f"{spec!r}: the hw decoder was removed; nvjpeg already decodes on the NVJPG engines")
-        if kind not in ("nvjpeg", "cpu"):
-            raise ValueError(f"unknown decoder {kind!r} in {spec!r}: nvjpeg or cpu")
+        if kind not in ("nvjpeg", "triton", "cpu", "nvdec"):
+            raise ValueError(f"unknown decoder {kind!r} in {spec!r}: nvjpeg, triton, cpu or nvdec")
         out[kind] = None if n in ("", "auto") else int(n)
     return out
 
