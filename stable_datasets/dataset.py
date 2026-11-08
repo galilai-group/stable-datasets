@@ -30,7 +30,7 @@ import pyarrow as pa
 
 from .backends.protocol import StorageBackend
 from .backends.table import TableBackend
-from .features.video import decode_frame_blobs
+from .features.video import decode_frame_blobs, decode_store_window
 from .formatting import get_formatter
 from .schema import (
     Array3D,
@@ -580,15 +580,47 @@ class StableDataset:
                 f"or keyword arguments, got {type(config).__name__}."
             )
         self._validate_video_decode_config(next_config)
-        if self._features[next_config.column].storage != "frames":
+        if self._features[next_config.column].storage not in ("frames", *Video.STORES):
             return self._shallow_copy(_video_decode_config=next_config)
         if self._indices is not None:
-            raise ValueError("Set the video decode of a Video(storage='frames') dataset before you select rows.")
+            raise ValueError("Set the video decode of a windowed video dataset before you select rows.")
         backend = self._backend.with_window(
             window_length=next_config.num_frames,
             frame_skip=next_config.frame_stride - 1,
         )
         return self._shallow_copy(_video_decode_config=next_config, backend=backend, num_rows=backend.num_rows)
+
+    def loader(self, batch_size: int, *, size=(224, 224), decoders: str | None = None, seed: int = 0, **kwargs):
+        """The fast path for a dataset whose video column is a framestore store (``Video(storage="mp4" |
+        "jpeg")``): a stable_datasets.framestore.SharedClipLoader over it, yielding (batch_size, T, H, W, 3) uint8
+        clips on the GPU, drawn iid (a video uniformly, then a window start in it), T and the frame stride from this
+        view's video decode (set_video_decode(num_frames=..., frame_stride=...)).
+
+        decoders: framestore's decoder spec ("triton:2,cpu": two GPU decode servers plus the CPU; MP4 stores also
+        take "nvdec"); None: the GPU and the CPU (triton:2,cpu) where there is a GPU decoder for the store. kwargs go
+        to SharedClipLoader. The loader decodes whole frames and resizes them to size; the other fields of the
+        rows (labels) are not part of its batches: use the dataset itself for those."""
+        from .framestore import SharedClipLoader
+
+        config = self._video_decode_config
+        col = (
+            config.column
+            if config is not None
+            else next(
+                (n for n, f in self._features.items() if isinstance(f, Video) and f.storage in Video.STORES), None
+            )
+        )
+        feat = self._features.get(col)
+        if not isinstance(feat, Video) or feat.storage not in Video.STORES:
+            raise ValueError(
+                "loader() needs a video column stored as a framestore store (video_storage='mp4' or 'jpeg')"
+            )
+        frames = config.num_frames if config is not None else 16
+        stride = config.frame_stride if config is not None else 1
+        return SharedClipLoader(
+            self._backend.store_path, batch_size, frames=frames, stride=stride, size=tuple(size),
+            decoders=decoders or "triton:2,cpu", seed=seed, **kwargs,
+        )  # fmt: skip
 
     def make_sampler(self, kind: str = "shard_shuffle", **kwargs):
         """Return a backend-aware ``torch.utils.data.Sampler`` for this dataset.
@@ -731,12 +763,13 @@ class StableDataset:
         feat = self._features.get(config.column)
         if not isinstance(feat, Video):
             raise ValueError(f"Video decode column {config.column!r} must exist and be a Video feature.")
-        if feat.storage == "frames":
+        if feat.storage in ("frames", *Video.STORES):
             if config.decode_fn is not None or config.decode_fn_batched is not None:
-                raise ValueError("Video(storage='frames') decodes its own frames. Do not set decode_fn.")
+                raise ValueError(f"Video(storage={feat.storage!r}) decodes its own frames. Do not set decode_fn.")
             if config.sampling != "uniform" or config.pad != "error":
                 raise ValueError(
-                    "Video(storage='frames') yields each frame window as a sample. Use the default sampling and pad."
+                    f"Video(storage={feat.storage!r}) yields each frame window as a sample. Use the default sampling "
+                    "and pad."
                 )
 
     def _apply_video_decode_row(self, row: dict, *, sample_index: int | None) -> dict:
@@ -786,9 +819,14 @@ class StableDataset:
         *,
         sample_index: int | None,
     ):
-        if self._features[config.column].storage == "frames":
+        storage = self._features[config.column].storage
+        if storage == "frames":
             value = row[config.column]
             frames = decode_frame_blobs(value) if isinstance(value, list) else np.asarray(value)
+            return _format_decoded_video_frames(frames, config, sample_index=sample_index)
+        if storage in Video.STORES:
+            value = row[config.column]
+            frames = decode_store_window(value) if isinstance(value, Mapping) else np.asarray(value)
             return _format_decoded_video_frames(frames, config, sample_index=sample_index)
         ref = self._coerce_video_ref(row[config.column], config)
         if config.decode_fn is not None:
