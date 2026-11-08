@@ -96,3 +96,24 @@ def test_store_window_matches_the_store(tmp_path):
     row = ds[2]
     store = Mp4Store(ds._backend.store_path)
     np.testing.assert_array_equal(row["video"], store.decode(row["video_idx"], row["start_frame"], 8))
+
+
+def test_torchcodec_decodes_the_sampled_frames(tmp_path):
+    """decoder="torchcodec" returns the frames at the sampled indices (it once passed seconds to get_frame_at, which
+    takes an index)."""
+    ds = build(tmp_path, None)
+    clips = ds.set_video_decode(
+        num_frames=4, frame_stride=3, sampling="start", decoder="torchcodec", output="numpy", dtype="uint8",
+        scale="none", layout="THWC",
+    )  # fmt: skip
+    got = clips[0]["video"]
+    raw = subprocess.run(
+        ["ffmpeg", "-loglevel", "error", "-i", str(VIDEOS[0]), "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+        check=True, capture_output=True,
+    ).stdout  # fmt: skip
+    every = np.frombuffer(raw, np.uint8).reshape(-1, 240, 320, 3)
+    assert got.shape == (4, 240, 320, 3)
+    for k, idx in enumerate([0, 3, 6, 9]):
+        err = np.abs(got[k].astype(int) - every[idx]).mean()
+        assert err < 2, (k, idx, err)
+        assert err < np.abs(got[k].astype(int) - every[idx + 1]).mean()  # and not a neighbouring frame
