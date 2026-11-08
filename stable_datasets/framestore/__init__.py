@@ -12,13 +12,23 @@ Modules:
     decoders     whole-frame decoders: nvJPEG, libjpeg-turbo (and the NVJPG engines, for verification)
     convert      the converter (python -m stable_datasets.framestore.convert)
     store        FrameStore: blob descriptors, read policies (mmap, pread, spans, ranges, take), clip windows
+    mp4          Mp4Store: one H.264 MP4 per video, every clip from a keyframe, decoded straight to pixels
     index        FrameIndex: a per-node index of every frame's location and MCU segment lengths
     preads       many preads per call from C threads
     resources    the share of a node a job may use, and holding it to that
     pixel_loader SharedClipLoader: whole-frame decode into a GPU ring served by MPS processes
 """
 
-__all__ = ["ConvertError", "Decoder", "FrameIndex", "FrameStore", "Resources", "SharedClipLoader", "convert_store"]
+__all__ = [
+    "ConvertError",
+    "Decoder",
+    "FrameIndex",
+    "FrameStore",
+    "Mp4Store",
+    "Resources",
+    "SharedClipLoader",
+    "convert_store",
+]
 
 _WHERE = {
     "convert_store": "convert",
@@ -26,6 +36,7 @@ _WHERE = {
     "Decoder": "decoders",
     "FrameIndex": "index",
     "FrameStore": "store",
+    "Mp4Store": "mp4",
     "Resources": "resources",
     "SharedClipLoader": "pixel_loader",
 }

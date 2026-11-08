@@ -97,7 +97,7 @@ def _scan_fragment(path, i, data_fid, side_fid, out_dir):
             d = b.column("frame")
             assert hasattr(d, "field"), "the scan returned frame bytes, not blob descriptors"
             kind = d.field("kind").to_numpy(zero_copy_only=False)
-            assert kind.max(initial=0) <= 1, "unexpected blob descriptor"
+            assert kind.max(initial=0) <= 2, "unexpected blob descriptor"  # 1, 2: a side file
             fid = np.where(kind == 0, data_fid[i], side_fid[i, d.field("blob_id").to_numpy(zero_copy_only=False)])
             assert fid.min(initial=0) >= 0, "blob in a side file the store does not have"
             cols["fid"].append(fid.astype(np.int32))

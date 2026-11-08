@@ -6,9 +6,14 @@ layout partial decoding reads without a conversion pass. One episode per video.
     python -m stable_datasets.framestore.build videos.txt --out /data/v.lance --label-from-parent     # one path per line
     stable_datasets.framestore.build_store(paths, "/data/k400.lance", short_edge=384, fps=15, columns={"label": labels})
 
+--format mp4 instead writes one H.264 MP4 per video, re-encoded so every clip starts on a keyframe (stable_datasets.framestore.mp4:
+--crf 18 and --keyint 4 by default; needs ffmpeg with libx264):
+
+    python -m stable_datasets.framestore.build /data/k400/train --out /data/k400_mp4.lance --short-edge 384 --fps 7.5 --format mp4
+
 Rows: episode_idx (the video's position in the input), step_idx, frame (a blob column), h, w, seg_len, and any
-per-video `columns`. Episodes are written whole, in the order they finish (each one's rows contiguous, which is
-all FrameStore needs).
+per-video `columns` (MP4 stores: one row per video, see stable_datasets.framestore.mp4). Episodes are written whole, in the order
+they finish (each one's rows contiguous, which is all FrameStore needs).
 
 Memory and resuming: workers send finished videos to this process, which appends them to the store in commits of
 whole videos (--commit-gb); at most a few videos per worker are in flight, so memory does not grow with the
@@ -38,7 +43,7 @@ import numpy as np
 
 from . import codec
 from .resources import job_cpus, limit_malloc_arenas, lower_priority
-from .store import format_metadata
+from .store import MAX_ROWS_PER_FILE, format_metadata
 
 
 VIDEO_EXTENSIONS = (".mp4", ".avi", ".mkv", ".mov", ".webm")
@@ -118,14 +123,34 @@ def video_decoder(name="auto"):
 
 
 def encode_video(task):
-    """(i, path, short_edge, fps, quality, decoder, min_frames) -> (i, frames or None, error or None); frames:
-    buf, off, seg (uint16 per MCU, all frames), seg_off, h, w."""
-    i, path, short_edge, fps, quality, decoder, min_frames = task
+    """(i, path, short_edge, fps, quality, decoder, min_frames, mp4) -> (i, frames or None, error or None); frames:
+    buf, off, seg (uint16 per MCU, all frames), seg_off, h, w; with mp4 = {"crf", "keyint"}: ("mp4", bytes, frames,
+    kept fps, h, w, transposed): h, w the valid region of mp4["canvas"] (stable_datasets.framestore.mp4.fit), if one."""
+    i, path, short_edge, fps, quality, decoder, min_frames, mp4 = task
     try:
         v = video_decoder(decoder)(path, short_edge)
         idx = steps(v.n, v.fps, fps)
         if len(idx) < min_frames:
             return i, None, f"{len(idx)} frames, fewer than {min_frames}"
+        if mp4 is not None:
+            from .mp4 import encode, fit
+
+            h, w = v.size[0] // 2 * 2, v.size[1] // 2 * 2  # 4:2:0: even sizes (a row or column cropped)
+            kept = v.fps / max(1, round(v.fps / fps)) if fps and v.fps else (v.fps or fps or 30.0)
+            chunks = (v.frames(idx[c : c + CHUNK])[:, :h, :w] for c in range(0, len(idx), CHUNK))
+            canvas, region = mp4["canvas"], [h, w, False]
+            if canvas:
+
+                def fitted(chunks):
+                    for c in chunks:
+                        x, *r = fit(c, canvas)
+                        region[:] = r
+                        yield x
+
+                chunks = fitted(chunks)
+            H, W = canvas or (h, w)
+            data = encode(chunks, H, W, kept, mp4["crf"], mp4["keyint"])
+            return i, ("mp4", data, len(idx), kept, *region), None
         bufs, offs = [], [np.zeros(1, np.int64)]
         at = 0
         for c in range(0, len(idx), CHUNK):
@@ -160,7 +185,24 @@ def schema_for(settings, columns):
     import pyarrow as pa
 
     extra = [pa.field(k, pa.array(v[:1]).type) for k, v in columns.items()]
-    meta = {**format_metadata("frame"), BUILD_KEY: json.dumps(settings, sort_keys=True).encode()}
+    build = {BUILD_KEY: json.dumps(settings, sort_keys=True).encode()}
+    if settings.get("format") == "mp4":
+        from .mp4 import video_metadata
+
+        return pa.schema(
+            [
+                pa.field("episode_idx", pa.int32()),
+                pa.field("video", pa.large_binary(), metadata={"lance-encoding:blob": "true"}),
+                pa.field("frames", pa.int32()),
+                pa.field("fps", pa.float32()),
+                pa.field("h", pa.int16()),
+                pa.field("w", pa.int16()),
+                pa.field("transposed", pa.bool_()),
+                *extra,
+            ],
+            metadata={**video_metadata(settings["keyint"], settings["crf"], settings["canvas"]), **build},
+        )
+    meta = {**format_metadata("frame"), **build}
     return pa.schema(
         [
             pa.field("episode_idx", pa.int32()),
@@ -178,6 +220,19 @@ def schema_for(settings, columns):
 def record_batch(schema, i, frames, columns):
     import pyarrow as pa
 
+    if isinstance(frames[0], str):  # ("mp4", ...)
+        _, data, n, fps, h, w, transposed = frames
+        arrays = [
+            pa.array([i], pa.int32()),
+            pa.array([data], pa.large_binary()),
+            pa.array([n], pa.int32()),
+            pa.array([fps], pa.float32()),
+            pa.array([h], pa.int16()),
+            pa.array([w], pa.int16()),
+            pa.array([transposed], pa.bool_()),
+        ]
+        arrays += [pa.array([columns[k][i]], schema.field(k).type) for k in columns]
+        return pa.record_batch(arrays, schema=schema)
     buf, off, seg, seg_off, h, w = frames
     n = len(off) - 1
     seg = seg.astype("<u2")
@@ -202,6 +257,10 @@ def build_store(
     short_edge=None,
     fps=None,
     quality=90,
+    format="jpeg",
+    crf=18,
+    keyint=4,
+    canvas="auto",
     columns=None,
     cpu=0.8,
     decoder="auto",
@@ -210,9 +269,11 @@ def build_store(
     nice=10,
     log=print,
 ):
-    """Build the store at `out` from `videos` (paths); see the module docstring. columns: per-video values
-    ({name: list as long as videos}) stored on each of the video's rows. Resumes an interrupted build. Returns
-    {"videos", "frames", "bytes", "failed": [(path, why)], "seconds"}."""
+    """Build the store at `out` from `videos` (paths); see the module docstring. format: "jpeg" (a frame store) or
+    "mp4" (stable_datasets.framestore.mp4: one H.264 MP4 per video at `crf`, a keyframe every `keyint` frames, every video fitted
+    into one coded size `canvas`: (H, W), "auto" for 16:9 at short_edge, or None to keep each video's size).
+    columns: per-video values ({name: list as long as videos}) stored on each of the video's rows. Resumes an
+    interrupted build. Returns {"videos", "frames", "bytes", "failed": [(path, why)], "seconds"}."""
     import lance
     import pyarrow as pa
 
@@ -224,6 +285,21 @@ def build_store(
     video_decoder(decoder)  # fail now, not in every worker
     paths = hashlib.sha1("\n".join(videos).encode()).hexdigest()[:16]  # episode_idx is a position in this list
     settings = {"short_edge": short_edge, "fps": fps, "quality": quality, "videos": len(videos), "paths": paths}
+    mp4 = None
+    if format == "mp4":
+        import shutil
+
+        if shutil.which("ffmpeg") is None:
+            raise RuntimeError("an MP4 store is encoded by ffmpeg (with libx264): install it")
+        from .mp4 import default_canvas
+
+        if canvas == "auto":
+            canvas = default_canvas(short_edge)
+        mp4 = {"crf": crf, "keyint": keyint, "canvas": list(canvas) if canvas else None}
+        settings = {**settings, "format": "mp4", **mp4}
+        del settings["quality"]
+    elif format != "jpeg":
+        raise ValueError(f"format {format!r}: jpeg or mp4")
     schema = schema_for(settings, columns)
 
     done = set()
@@ -249,7 +325,7 @@ def build_store(
         def submit():
             for i in todo:
                 slots.acquire()
-                task = (i, videos[i], short_edge, fps, quality, decoder, min_frames)
+                task = (i, videos[i], short_edge, fps, quality, decoder, min_frames, mp4)
                 pool.apply_async(encode_video, (task,), callback=results.put, error_callback=results.put)
 
         threading.Thread(target=submit, daemon=True).start()
@@ -269,8 +345,12 @@ def build_store(
                     log(f"skipping {videos[i]}: {err}")
                     continue
                 stats["videos"] += 1
-                stats["frames"] += len(frames[1]) - 1
-                stats["bytes"] += int(frames[1][-1])
+                if isinstance(frames[0], str):  # ("mp4", ...)
+                    stats["frames"] += frames[2]
+                    stats["bytes"] += len(frames[1])
+                else:
+                    stats["frames"] += len(frames[1]) - 1
+                    stats["bytes"] += int(frames[1][-1])
                 return record_batch(schema, i, frames, columns)
             return None
 
@@ -294,7 +374,7 @@ def build_store(
                 out,
                 schema=schema,
                 mode="append" if committed(out) else "create",
-                max_rows_per_file=1 << 40,
+                max_rows_per_file=MAX_ROWS_PER_FILE,
             )
             el = time.time() - t0
             log(
@@ -328,6 +408,11 @@ def parser():
     p.add_argument("--short-edge", type=int, help="resize so the short edge is this many pixels (default: unchanged)")
     p.add_argument("--fps", type=float, help="keep about this many frames per second (default: every frame)")
     p.add_argument("--quality", type=int, default=90, help="JPEG quality (default 90)")
+    p.add_argument("--format", default="jpeg", choices=["jpeg", "mp4"], help="JPEG frames, or one MP4 per video")
+    p.add_argument("--crf", type=int, default=18, help="mp4: libx264 quality (default 18)")
+    p.add_argument("--keyint", type=int, default=4, help="mp4: frames between keyframes, the clip-start grid")
+    p.add_argument("--canvas", default="auto", help='mp4: one coded size HxW for every video ("auto": 16:9 at the '
+                   'short edge; "none": each its own)')  # fmt: skip
     p.add_argument("--label-from-parent", action="store_true", help="a label column: the parent directory's index")
     p.add_argument("--min-frames", type=int, default=1, help="skip videos with fewer kept frames")
     p.add_argument("--decoder", default="auto", choices=["auto", *DECODERS])
@@ -351,6 +436,14 @@ def main(argv=None):
         short_edge=a.short_edge,
         fps=a.fps,
         quality=a.quality,
+        format=a.format,
+        crf=a.crf,
+        keyint=a.keyint,
+        canvas=None
+        if a.canvas == "none"
+        else a.canvas
+        if a.canvas == "auto"
+        else tuple(map(int, a.canvas.split("x"))),
         columns=columns,
         cpu=cpu,
         decoder=a.decoder,

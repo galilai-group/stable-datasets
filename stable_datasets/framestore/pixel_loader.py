@@ -25,31 +25,26 @@ import torch.multiprocessing as mp
 
 
 class Windows:
-    """Random windows of `frames` rows, every `stride`-th, uniform over all window starts of the episodes (starts,
-    lengths) long enough to hold one."""
+    """Random windows of `frames` rows, every `stride`-th, drawn iid by FrameStore.windows (an episode uniformly among
+    those long enough, then the window's start uniformly in it): the token loader's draw."""
 
-    def __init__(self, starts, lengths, frames, stride, seed):
-        span = (frames - 1) * stride + 1
-        ok = lengths >= span
-        self.starts, self.n = starts[ok], lengths[ok] - span + 1
-        if not len(self.n):
-            raise ValueError(f"no episode holds {frames} frames {stride} rows apart")
-        self.cum = np.cumsum(self.n)
-        self.frames, self.stride = frames, stride
+    def __init__(self, store, frames, stride, seed):
+        self.store, self.frames, self.stride = store, frames, stride
         self.rng = np.random.default_rng(seed)
 
     def rows(self, count):
-        draw = self.rng.integers(self.cum[-1], size=count)
-        k = np.searchsorted(self.cum, draw, side="right")
-        first = self.starts[k] + draw - np.concatenate(([0], self.cum))[k]
-        return first[:, None] + np.arange(self.frames) * self.stride  # (count, frames)
+        return self.store.windows(self.rng, count, self.frames, self.stride).reshape(count, self.frames)
 
 
 def _open(cfg, seed):
+    if cfg["mp4"]:  # clips drawn by Mp4Store.clips, in the worker
+        from .mp4 import Mp4Store
+
+        return Mp4Store(cfg["store"], read=cfg["read"]), np.random.default_rng(seed)
     from .store import FrameStore
 
     store = FrameStore(cfg["store"], index=cfg["index"], read=cfg["read"], column=cfg["column"])
-    return store, Windows(store.ep_start, store.ep_len, cfg["frames"], cfg["stride"], seed)
+    return store, Windows(store, cfg["frames"], cfg["stride"], seed)
 
 
 def _function(spec):
@@ -83,6 +78,12 @@ def cpu_decoder(cfg, frames, jobs, done, seed):
     store, win = _open(cfg, seed)
     out = frames.numpy()
     H, W = cfg["size"]
+    if cfg["mp4"]:  # a clip from its keyframe: decoded and resized by the decoder
+        while (job := jobs.get()) is not None:
+            v, start = store.clips(win, 1, cfg["frames"])
+            out[job] = store.decode(v[0], start[0], cfg["frames"], (H, W))
+            done.put(job[0])
+        return
     drop = os.environ.get("FRAMESTORE_DROP_PAGES") == "1"  # strictly cold runs: unmap what each clip touched
     while (job := jobs.get()) is not None:
         slot, pos = job
@@ -116,7 +117,12 @@ def _gpu_decode_into(dec, data, offs, out, B, T, stream):
 
     H, W = out.shape[2:4]
     o = offs.tolist()
-    imgs = dec([data[o[k] : o[k + 1]] for k in range(B * T)], stream)
+    if dec.kind == "triton":  # one buffer, no per-frame copies
+        from .gpu_jpeg import decode_buffer
+
+        imgs = decode_buffer(data[: o[B * T]], offs[: B * T + 1].numpy(), dec.device, stream)
+    else:
+        imgs = dec([data[o[k] : o[k + 1]] for k in range(B * T)], stream)
     with torch.cuda.stream(stream):
         for b in range(B):  # the frames of a clip share one size
             clip = torch.stack(imgs[b * T : (b + 1) * T])
@@ -189,6 +195,9 @@ def decode_server(cfg, clips, frames, data, offsets, free, ready, stats, stop):
         from .decoders import Decoder
 
         stream, dec = torch.cuda.Stream(), Decoder(cfg["decoder"])
+        if dec.kind == "triton":  # the byte slots, page-locked: copied to the GPU whole, asynchronously
+            err = torch.cuda.cudart().cudaHostRegister(data.data_ptr(), data.numel(), 0)
+            assert int(err) == 0, err
         for s in range(data.shape[0]):
             bjobs.put(s)
         while not stop.is_set():
@@ -204,9 +213,30 @@ def decode_server(cfg, clips, frames, data, offsets, free, ready, stats, stop):
             stats[1] += B
             bjobs.put(slot)
 
+    def nvdec_path(k):  # MP4 store: a batch of clips decoded by NVDEC and resized on the GPU, into a clip slot
+        from .mp4 import Mp4Store
+
+        store, rng = Mp4Store(cfg["store"], read=cfg["read"]), np.random.default_rng(cfg["seed"] + 7919 * (k + 1))
+        T, (H, W), stream = cfg["frames"], cfg["size"], torch.cuda.Stream()
+        own = torch.empty(clips.shape[1:], dtype=torch.uint8, device="cuda")  # a slot is taken only to copy into
+        while not stop.is_set():
+            vid, start = store.clips(rng, B, T)
+            with torch.cuda.stream(stream):
+                for b in range(B):
+                    own[b] = store.frames(vid[b], start[b], T, (H, W), device="cuda").permute(0, 2, 3, 1)
+            if (v := take()) is None:
+                break
+            with torch.cuda.stream(stream):
+                clips[v].copy_(own)
+            stream.synchronize()
+            ready.put(v)
+            stats[1] += B
+
     threads = ([threading.Thread(target=cpu_path, daemon=True)] if cfg["cpu_workers"] else []) + (
         [threading.Thread(target=gpu_path, daemon=True)] if cfg["byte_readers"] else []
     )
+    if cfg["decoder"] == "nvdec":
+        threads += [threading.Thread(target=nvdec_path, args=(k,), daemon=True) for k in range(cfg["nvdec_threads"])]
     for t in threads:
         t.start()
     stop.wait()
@@ -221,19 +251,22 @@ class SharedClipLoader:
     """``next(loader)`` -> clip (B, T, H, W, 3) uint8 on the GPU, valid until the next call.
 
     Args:
-        store: frame store (blob-encoded, read by `read`; or not, read by lance take).
+        store: frame store (blob-encoded, read by `read`; or not, read by lance take), or an MP4 store
+            (stable_datasets.framestore.mp4: clips decoded from their keyframe on the CPU, by torchcodec; stride 1).
         batch, frames, stride, size: clips per batch, frames per clip, rows between two frames, (H, W) of each frame.
         cpu_workers: CPU decode processes (cpu_decode: "module:function" or a function of (jpeg, H, W), default
-            decoders.decode_resized); default: the CPUs a job may use (resources.job_cpus: 2 stay free), less one
-            for the trainer and one for each GPU server (nvJPEG decodes Huffman codes on its CPU) and byte reader.
+            decoders.decode_resized); default: the CPUs a job may use (resources.job_cpus: 2 stay free). They run
+            below the trainer and the decode servers in priority (nice), so no core is held back for those.
         byte_readers: per decode server, feeding its GPU decoder; gpu_servers: decode server processes (MPS
-            clients; nvJPEG's host side is serial per process). H100, 23 vCPUs, ViT-S: 2 servers (16 CPU decoders)
-            1,505 clips/s, 3 (14) 1,483, 4 (12) 1,450.
-        decoder: GPU JPEG decoder, "nvjpeg" (on the NVJPG engines where the GPU has them, else the CUDA cores).
+            clients; nvJPEG's host side is serial per process). Loader alone, H100, 23 vCPUs, store in memory:
+            "nvjpeg:2" 1,126 clips/s, "nvjpeg:2,cpu" 1,720 (benchmarks/run_matrix.sh).
+        decoder: GPU JPEG decoder, "nvjpeg" (on the NVJPG engines where the GPU has them, else the CUDA cores) or
+            "triton" (stable_datasets.framestore.gpu_jpeg: all of it in Triton kernels on the CUDA cores; converted stores).
         decoders: instead of gpu_servers, decoder and cpu_workers, a decoder spec (decoders.decoders): "nvjpeg:2,
-            cpu:16" runs two nvJPEG servers and 16 CPU decoders (a kind with no count: nvjpeg 2, cpu sized from the
-            node).
+            cpu:16" runs two nvJPEG servers and 16 CPU decoders (a kind with no count: nvjpeg 2, triton 1, cpu sized
+            from the node).
         index, read: FrameStore's (a per-node index; the read policy).
+        nvdec_threads: per nvdec server, threads each decoding a batch of MP4 clips on the GPU's video decoders.
         nice: the CPU processes' priority below the consumer's (and I/O priority, resources.lower_priority); 0 to
             run level with it.
     """
@@ -260,23 +293,40 @@ class SharedClipLoader:
         index=False,
         read=None,
         bytes_per_frame=96 << 10,
+        nvdec_threads=4,
     ):
+        import lance
+
+        from .mp4 import video_format
         from .resources import job_cpus
 
         self.B = batch
         H, W = size
-        if decoder != "nvjpeg":
-            raise ValueError(f"decoder {decoder!r}: the decode servers decode with nvjpeg")
+        mp4 = video_format(lance.dataset(store).schema) is not None
+        if decoder not in ("nvjpeg", "triton"):
+            raise ValueError(f"decoder {decoder!r}: the decode servers decode with nvjpeg or triton")
         kinds = [decoder] * gpu_servers
         if decoders is not None:
             from .decoders import decoders as parse
 
             d = parse(decoders)
             kinds = ["nvjpeg"] * (2 if d.get("nvjpeg", 0) is None else d.get("nvjpeg", 0))
+            kinds += ["triton"] * (1 if d.get("triton", 0) is None else d.get("triton", 0))
+            kinds += ["nvdec"] * (1 if d.get("nvdec", 0) is None else d.get("nvdec", 0))
             gpu_servers, cpu_workers = len(kinds), d.get("cpu", 0)
+        if mp4:  # decoded by torchcodec, on the CPU or NVDEC; its stride was fixed when it was built
+            if stride != 1:
+                raise ValueError("an MP4 store keeps frames at its build's fps: stride must be 1")
+            if decoders is None:
+                kinds = []
+            elif set(kinds) - {"nvdec"}:
+                raise ValueError(f"decoders {decoders!r}: an MP4 store decodes with nvdec and cpu")
+            gpu_servers, byte_readers = len(kinds), 0
+        elif "nvdec" in kinds:
+            raise ValueError(f"decoders {decoders!r}: nvdec decodes MP4 stores, this is a frame store")
         self.kinds = kinds
         if cpu_workers is None:
-            cpu_workers = max(0, job_cpus() - 1 - gpu_servers * (1 + byte_readers))
+            cpu_workers = job_cpus()  # niced: the servers and the trainer win any contention
         self.cpu_workers, self.byte_readers = cpu_workers, byte_readers if gpu_servers else 0
         ctx = mp.get_context("spawn")
         self.clips = torch.empty(clip_slots, batch, frames, H, W, 3, dtype=torch.uint8, device="cuda")
@@ -294,6 +344,7 @@ class SharedClipLoader:
         for i in range(n):
             cfg = {
                 "store": store,
+                "mp4": mp4,
                 "frames": frames,
                 "stride": stride,
                 "size": (H, W),
@@ -305,6 +356,7 @@ class SharedClipLoader:
                 "index": index,
                 "read": read,
                 "cpu_workers": cpu_workers if i == 0 else 0,
+                "nvdec_threads": nvdec_threads,
                 "byte_readers": byte_readers if gpu_servers else 0,
                 "seed": seed + 1000 * i,
             }

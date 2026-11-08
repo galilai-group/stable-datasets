@@ -67,13 +67,12 @@ def test_build_reads_back(videos, tmp_path):
     labels = [0, 0, 1, 1]
     s = build_store(videos, out, short_edge=96, fps=15, columns={"label": labels}, cpu=2, nice=0, commit_gb=1e-5)
     assert s["videos"] == 3 and len(s["failed"]) == 1
-    t = lance.dataset(out).to_table(columns=["episode_idx", "step_idx", "h", "w", "label"]).to_pandas()
-    per = t.groupby("episode_idx").agg(
-        n=("step_idx", "size"), h=("h", "first"), w=("w", "first"), label=("label", "first")
-    )
-    assert per.loc[0, "n"] == 30 and per.loc[1, "n"] == 45 and per.loc[2, "n"] == 30
-    assert tuple(per.loc[0, ["h", "w"]]) == (96, 128) and tuple(per.loc[2, ["h", "w"]]) == (128, 96)
-    assert list(per["label"]) == [0, 0, 1]
+    t = lance.dataset(out).to_table(columns=["episode_idx", "h", "w", "label"])
+    ep, h, w, label = (t.column(k).to_numpy() for k in ("episode_idx", "h", "w", "label"))
+    first = np.unique(ep, return_index=True)[1]  # each episode's first row (videos commit as they finish)
+    assert np.bincount(ep).tolist() == [30, 45, 30]
+    assert (h[first[0]], w[first[0]]) == (96, 128) and (h[first[2]], w[first[2]]) == (128, 96)
+    assert label[first].tolist() == [0, 0, 1]
     store = FrameStore(out, index=True)
     assert store.format is not None and sorted(store.ep_len) == [30, 30, 45]
 
@@ -81,6 +80,7 @@ def test_build_reads_back(videos, tmp_path):
 def test_build_resumes_and_refuses_other_settings(videos, tmp_path):
     out = str(tmp_path / "v.lance")
     build_store(videos[:2], out, short_edge=96, fps=15, cpu=2, nice=0)
+    assert len(lance.dataset(out).get_fragments()) == 1  # one commit, one file (not one per video)
     rows = lance.dataset(out).count_rows()
     s = build_store(videos[:2], out, short_edge=96, fps=15, cpu=2, nice=0)
     assert s["videos"] == 0 and lance.dataset(out).count_rows() == rows
