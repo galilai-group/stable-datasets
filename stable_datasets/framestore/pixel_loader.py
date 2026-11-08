@@ -18,6 +18,7 @@ VariableLengthBatchSampler draws them.
 import os
 import queue
 import threading
+import time
 
 import numpy as np
 import torch
@@ -153,7 +154,14 @@ def _gpu_decode_into(dec, data, offs, out, B, T, stream):
             out[b] = clip.permute(0, 2, 3, 1)
 
 
-def decode_server(cfg, clips, frames, data, offsets, tables, free, ready, stats, stop):
+# a decoder's cost to a GPU-bound consumer, cheapest first: CPU decoding takes no GPU time; NVDEC and nvJPEG run on
+# the GPU's fixed-function decoders where it has them (nvJPEG's Huffman decoding on a CPU core where it has none);
+# triton decodes on the SMs the consumer computes on
+COST = {"cpu": 0, "nvdec": 1, "nvjpeg": 1, "triton": 2}
+LANES = 2 + 16  # per server: the CPU path, the byte path, nvdec threads
+
+
+def decode_server(cfg, clips, frames, data, offsets, tables, free, ready, stats, stop, waiting):
     import warnings
 
     warnings.filterwarnings("ignore")
@@ -185,6 +193,32 @@ def decode_server(cfg, clips, frames, data, offsets, tables, free, ready, stats,
                 pass
         return None
 
+    def take_ranked(lane, rank):
+        """A clip slot for a batch that `lane` (this server's row of `waiting`) holds or is ready to decode, `rank`
+        its decoder's cost to the consumer (COST). cheapest_first: the slot goes to the lane only while no lane of a
+        cheaper decoder (any server) waits for one, so a consumer slower than the loader is fed by the cheapest
+        decoders and the costlier ones decode only the shortfall."""
+        if not cfg["cheapest_first"]:
+            return take()
+        row = waiting[cfg["server"]]
+        row[lane, 1] = rank
+        row[lane, 0] = 1  # only this thread writes its lane
+        try:
+            while not stop.is_set():
+                if bool((waiting[..., 0] * (waiting[..., 1] < rank)).any()):
+                    time.sleep(0.001)
+                    continue
+                try:
+                    v = free.get(timeout=0.5)
+                except queue.Empty:
+                    continue
+                if not bool((waiting[..., 0] * (waiting[..., 1] < rank)).any()):
+                    return v
+                free.put(v)
+            return None
+        finally:
+            row[lane, 0] = 0
+
     def cpu_path():
         stream, pending = torch.cuda.Stream(), {}
         for s in range(frames.shape[0]):
@@ -199,7 +233,7 @@ def decode_server(cfg, clips, frames, data, offsets, tables, free, ready, stats,
             pending[slot] -= 1
             if pending[slot]:
                 continue
-            if (v := take()) is None:
+            if (v := take_ranked(0, COST["cpu"])) is None:
                 break
             with torch.cuda.stream(stream):
                 clips[v].copy_(frames[slot], non_blocking=True)
@@ -223,7 +257,7 @@ def decode_server(cfg, clips, frames, data, offsets, tables, free, ready, stats,
                 slot = bdone.get(timeout=0.5)
             except queue.Empty:
                 continue
-            if (v := take()) is None:
+            if (v := take_ranked(1, COST["triton"])) is None:
                 break
             o = offsets[slot].numpy()
             n, S = int(o[0]), int(o[1])
@@ -250,7 +284,7 @@ def decode_server(cfg, clips, frames, data, offsets, tables, free, ready, stats,
                 slot = bdone.get(timeout=0.5)
             except queue.Empty:
                 continue
-            if (v := take()) is None:
+            if (v := take_ranked(1, COST[cfg["decoder"]])) is None:
                 break
             _gpu_decode_into(dec, data[slot], offsets[slot], clips[v], B, cfg["frames"], stream)
             stream.synchronize()
@@ -269,7 +303,7 @@ def decode_server(cfg, clips, frames, data, offsets, tables, free, ready, stats,
             with torch.cuda.stream(stream):
                 for b in range(B):
                     own[b] = store.frames(vid[b], start[b], T, (H, W), device="cuda").permute(0, 2, 3, 1)
-            if (v := take()) is None:
+            if (v := take_ranked(2 + k, COST["nvdec"])) is None:
                 break
             with torch.cuda.stream(stream):
                 clips[v].copy_(own)
@@ -284,12 +318,54 @@ def decode_server(cfg, clips, frames, data, offsets, tables, free, ready, stats,
         threads += [threading.Thread(target=nvdec_path, args=(k,), daemon=True) for k in range(cfg["nvdec_threads"])]
     for t in threads:
         t.start()
-    stop.wait()
+    # a decoder process or thread that dies (spawn failed, a decode raised) would leave the consumer waiting forever:
+    # exit instead, which next() reports
+    while not stop.wait(1.0):
+        if any(not p.is_alive() for p in procs) or any(not t.is_alive() for t in threads):
+            for p in procs:
+                p.kill()
+            os._exit(1)
     for p in procs:
         p.kill()
     for p in procs:
         p.join(timeout=5)
     os._exit(0)
+
+
+def auto_decoders(store, mp4):
+    """The decoder spec "auto" resolves to: every decoder this node can run on this store. CPU always; an MP4 store:
+    nvdec if torchcodec decodes on this GPU, triton if the store has a slice index and Triton is new enough
+    (gpu_h264); a JPEG store: nvjpeg, and triton if the store is converted (restart-coded)."""
+    import importlib.util
+
+    parts = ["cpu"]
+    has_triton = importlib.util.find_spec("triton") is not None
+    if mp4:
+        from .mp4 import Mp4Store
+
+        st = Mp4Store(store)
+        try:
+            st.frames(0, 0, 1, (64, 64), device="cuda")
+            parts.append("nvdec:1")
+        except Exception:  # no NVDEC here, or torchcodec without CUDA
+            pass
+        if has_triton and st.sloc is not None:
+            from . import gpu_h264
+
+            try:
+                gpu_h264._require_triton()
+                parts.append("triton:2")
+            except (ImportError, RuntimeError):
+                pass
+    else:
+        import lance
+
+        from .store import store_format
+
+        parts.append("nvjpeg:2")
+        if has_triton and store_format(lance.dataset(store).schema) is not None:
+            parts.append("triton:2")
+    return ",".join(parts)
 
 
 class SharedClipLoader:
@@ -309,11 +385,17 @@ class SharedClipLoader:
             "triton" (stable_datasets.framestore.gpu_jpeg: all of it in Triton kernels on the CUDA cores; converted stores).
         decoders: instead of gpu_servers, decoder and cpu_workers, a decoder spec (decoders.decoders): "nvjpeg:2,
             cpu:16" runs two nvJPEG servers and 16 CPU decoders (a kind with no count: nvjpeg 2, triton 1, cpu sized
-            from the node).
+            from the node). "auto": every decoder this node and store can use (auto_decoders), cheapest first.
         index, read: FrameStore's (a per-node index; the read policy).
         nvdec_threads: per nvdec server, threads each decoding a batch of MP4 clips on the GPU's video decoders.
         nice: the CPU processes' priority below the consumer's (and I/O priority, resources.lower_priority); 0 to
             run level with it.
+        cheapest_first: a decoder takes a clip slot only while no cheaper decoder (COST: cpu, then nvdec and nvjpeg,
+            then triton) has a batch waiting for one. All decoders run; a consumer slower than the loader is fed by
+            the cheapest, and the costlier decode only the shortfall (a GPU-bound consumer loses SM time to triton,
+            none to CPU decoding). False: first come, first served. stats() says whether the consumer still waits.
+        gpu_share: under MPS, the share of the GPU's SMs each decode server may use (CUDA_MPS_ACTIVE_THREAD_PERCENTAGE,
+            e.g. 0.2); None: no limit.
     """
 
     def __init__(
@@ -339,6 +421,8 @@ class SharedClipLoader:
         read=None,
         bytes_per_frame=96 << 10,
         nvdec_threads=4,
+        cheapest_first=True,
+        gpu_share=None,
     ):
         import lance
 
@@ -351,6 +435,9 @@ class SharedClipLoader:
         if decoder not in ("nvjpeg", "triton"):
             raise ValueError(f"decoder {decoder!r}: the decode servers decode with nvjpeg or triton")
         kinds = [decoder] * gpu_servers
+        if decoders == "auto":
+            decoders = auto_decoders(store, mp4)
+        self.spec = decoders
         if decoders is not None:
             from .decoders import decoders as parse
 
@@ -366,8 +453,6 @@ class SharedClipLoader:
                 kinds = []
             elif set(kinds) - {"nvdec", "triton"}:
                 raise ValueError(f"decoders {decoders!r}: an MP4 store decodes with triton, nvdec and cpu")
-            elif "triton" in kinds and "nvdec" in kinds:
-                raise ValueError(f"decoders {decoders!r}: an MP4 store decodes with triton or nvdec, not both")
             gpu_servers = len(kinds)
             byte_readers = (byte_readers or 2) if "triton" in kinds else 0
             geom, max_slices = (0, 0, 0), 1
@@ -399,6 +484,10 @@ class SharedClipLoader:
         tables = torch.zeros(n, data.shape[1] if mp4 else 1, max_slices if mp4 else 1, 4, dtype=torch.int32)
         tables = tables.share_memory_()
         self._stats = torch.zeros(n, 2, dtype=torch.int64).share_memory_()
+        if nvdec_threads > LANES - 2:
+            raise ValueError(f"nvdec_threads: at most {LANES - 2}")
+        # per server and lane (a thread that takes clip slots): (waits for a slot, its decoder's COST)
+        waiting = torch.zeros(n, LANES, 2, dtype=torch.int64).share_memory_()
         self.free, self.ready, self.stop = ctx.Queue(), ctx.Queue(), ctx.Event()
         for v in range(clip_slots):
             self.free.put(v)
@@ -420,8 +509,10 @@ class SharedClipLoader:
                 "read": read,
                 "cpu_workers": cpu_workers if i == 0 else 0,
                 "nvdec_threads": nvdec_threads,
-                "byte_readers": byte_readers if gpu_servers else 0,
+                "byte_readers": byte_readers if gpu_servers and (not kinds or kinds[i] != "nvdec") else 0,
                 "seed": seed + 1000 * i,
+                "server": i,
+                "cheapest_first": cheapest_first,
             }
             p = ctx.Process(
                 target=decode_server,
@@ -436,31 +527,72 @@ class SharedClipLoader:
                     self.ready,
                     self._stats[i],
                     self.stop,
+                    waiting,
                 ),
             )
-            p.start()
+            share = os.environ.get("CUDA_MPS_ACTIVE_THREAD_PERCENTAGE")
+            if gpu_share is not None:  # read by the server's CUDA context: set while spawning it, not in this process
+                os.environ["CUDA_MPS_ACTIVE_THREAD_PERCENTAGE"] = str(max(1, round(100 * gpu_share)))
+            try:
+                p.start()
+            finally:
+                if gpu_share is not None:
+                    if share is None:
+                        os.environ.pop("CUDA_MPS_ACTIVE_THREAD_PERCENTAGE")
+                    else:
+                        os.environ["CUDA_MPS_ACTIVE_THREAD_PERCENTAGE"] = share
             self.servers.append(p)
         self.prev = None
+        self._starved, self._since, self._n, self._done = 0.0, None, 0, (-1, 0.0)
         self._release = queue.Queue()
         threading.Thread(target=self._releaser, daemon=True).start()
 
     def _releaser(self):
+        """Frees the previous batch's slot once the consumer's GPU work queued before next() is done, and notes when
+        that was (stats: GPU starvation)."""
         while True:
-            ev, v = self._release.get()
+            ev, v, n = self._release.get()
             ev.synchronize()
-            self.free.put(v)
+            self._done = (n, time.perf_counter())
+            if v is not None:
+                self.free.put(v)
 
     def __iter__(self):
         return self
 
+    def stats(self):
+        """Since the first batch: gpu_starved, the share of the time the consumer's GPU sat idle waiting for a batch
+        (from the end of the work it queued before next() to the batch's arrival). Above a few percent the consumer
+        is data-bound, and more decoders, CPUs or a cheaper store would speed it up; near zero the loader keeps up,
+        and with cheapest_first the costlier decoders idle. Time in next() alone would not tell: a consumer that
+        queues its GPU work asynchronously (a CUDA graph) waits in next() for slots its own GPU work still holds.
+        decoded_by: the share of batches each decoder kind decoded."""
+        elapsed = time.perf_counter() - self._since if self._since else 0.0
+        by = {}
+        for i, (c, g) in enumerate(self._stats.tolist()):
+            by["cpu"] = by.get("cpu", 0) + c
+            if self.kinds and i < len(self.kinds):
+                by[self.kinds[i]] = by.get(self.kinds[i], 0) + g
+        total = sum(by.values()) or 1
+        return {
+            "gpu_starved": round(self._starved / elapsed, 3) if elapsed else None,
+            "decoded_by": {k: round(v / total, 3) for k, v in by.items() if v},
+        }
+
     def __next__(self):
-        if self.prev is not None:
-            ev = torch.cuda.Event()
-            ev.record()
-            self._release.put((ev, self.prev))
+        ev, n = torch.cuda.Event(), self._n
+        ev.record()
+        self._release.put((ev, self.prev, n))
+        self._n += 1
         while True:
             try:
                 v = self.ready.get(timeout=5)
+                t = time.perf_counter()
+                if self._since is None:
+                    self._since = t  # from the first batch: start-up is not starvation
+                elif ev.query():  # the GPU went idle before this batch came
+                    done_n, done_t = self._done
+                    self._starved += max(0.0, t - done_t) if done_n == n else 0.0
                 break
             except queue.Empty:
                 dead = [p.exitcode for p in self.servers if not p.is_alive()]
@@ -468,10 +600,6 @@ class SharedClipLoader:
                     raise RuntimeError(f"decode server exited ({dead})")
         self.prev = v
         return self.clips[v]
-
-    @property
-    def stats(self):
-        return self._stats.sum(0)
 
     def close(self):
         self.stop.set()
