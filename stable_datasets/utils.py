@@ -10,7 +10,6 @@ from types import MappingProxyType
 from urllib.parse import urlparse
 
 import numpy as np
-import pandas as pd
 import requests
 import rich.progress
 from filelock import FileLock
@@ -890,6 +889,8 @@ def load_from_tsfile_to_dataframe(
         Otherwise a single DataFrame of all time series, with a "class_vals"
         column holding the class values if the file has them.
     """
+    import pandas as pd
+
     # Initialize flags and variables used when parsing the file
     metadata_started = False
     data_started = False
