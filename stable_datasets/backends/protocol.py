@@ -31,6 +31,9 @@ class StorageBackend(Protocol):
     def num_shards(self) -> int: ...
 
     @property
+    def shard_row_counts(self) -> list[int]: ...
+
+    @property
     def is_file_backed(self) -> bool: ...
 
     @property
