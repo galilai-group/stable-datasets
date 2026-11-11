@@ -31,6 +31,19 @@ export STABLE_DATASETS_CACHE_DIR=/data/stable_datasets
 
 or pass `download_dir=` / `processed_cache_dir=` per dataset.
 
+Lance caches can live on object storage. Pass a URI and the object store options:
+
+```python
+ds = CIFAR10(
+    split="train",
+    storage_format="lance",
+    processed_cache_dir="s3://bucket/stable_datasets",
+    storage_options={"aws_region": "us-east-1"},
+)
+```
+
+Arrow caches are memory-mapped, so they must be local. The small JSON metadata files use `pyarrow.fs`: S3 and Azure options map to it, and other stores such as `gs://` use the credentials of the environment.
+
 ## Examples
 
 The `examples/` directory contains small, runnable examples:
