@@ -93,9 +93,6 @@ class FSDKaggle2018(BaseDatasetBuilder):
             ),
         ]
 
-    def _candidate_splits(self) -> list:
-        return [Split.TRAIN, Split.TEST]
-
     def _generate_examples(self, audio_path, meta_path, split):
         metadata = _load_metadata(meta_path)
         label_to_id = {

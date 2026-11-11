@@ -63,9 +63,6 @@ class SeizuresNeonatal(BaseDatasetBuilder):
             )
         ]
 
-    def _candidate_splits(self) -> list:
-        return [Split.TRAIN]
-
     def _generate_examples(self, annotations_path, eeg_paths, split):
         del split
         import mne

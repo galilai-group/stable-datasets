@@ -73,9 +73,6 @@ class BirdVoxDCASE20k(BaseDatasetBuilder):
             )
         ]
 
-    def _candidate_splits(self) -> list:
-        return [Split.TRAIN]
-
     def _generate_examples(self, audio_path, metadata_path, split):
         del split
         with open(metadata_path, newline="", encoding="utf-8") as fh:
