@@ -678,6 +678,7 @@ class StableDataset:
 
         meta = {
             "cache_format_version": _CACHE_FORMAT_VERSION,
+            "format": "arrow",
             "layout": "arrow-shards",
             "schema_fingerprint": _features_fingerprint(self._features),
             "num_rows": materialized.num_rows,
