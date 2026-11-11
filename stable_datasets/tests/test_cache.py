@@ -643,6 +643,11 @@ def test_download_keeps_lock_file(tmp_path):
         def iter_content(self, chunk_size=8192):
             return iter([b"data"])
 
+        class raw:  # download() streams the undecoded bytes
+            @staticmethod
+            def stream(chunk_size=8192, decode_content=True):
+                return iter([b"data"])
+
         def __enter__(self):
             return self
 
