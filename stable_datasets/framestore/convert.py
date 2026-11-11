@@ -51,7 +51,7 @@ import numpy as np
 from . import codec
 from .decoders import Decoder
 from .resources import Budget, ResourceError, Resources, Stage, gb, limit_malloc_arenas
-from .store import format_metadata
+from .store import MAX_ROWS_PER_FILE, format_metadata
 
 
 class ConvertError(Exception):
@@ -794,7 +794,7 @@ def run(a):
                     tmp,
                     schema=out_schema,
                     mode="append" if committed(tmp) else "create",
-                    max_rows_per_file=1 << 40,
+                    max_rows_per_file=MAX_ROWS_PER_FILE,
                 )
             except Exception:
                 if failed:

@@ -29,6 +29,9 @@ import numpy as np
 #      lengths, uint16 little-endian, markers not counted. Stores converted before the format was recorded have
 #      seg_len and no metadata: format 1.
 FORMAT_KEY, FORMAT = b"stable_datasets.framestore", 1
+# lance's rows-per-file limit for writers that want one file per write: 32 bits (1 << 40 wraps, and every batch became
+# a file of its own: a fragment per video in a built store)
+MAX_ROWS_PER_FILE = (1 << 31) - 1
 
 
 def format_metadata(column):
@@ -86,6 +89,21 @@ if numba is not None:
             copy_bytes(out, off[f], bufs[fid[f]], pos[f], size[f])
 
 
+def _allow_open_files(n):
+    """Raise this process's open-file limit so n more files can be opened (up to the hard limit): a store keeps a
+    descriptor per data file, and lance writes a side file per frame over 64 KB, so a store can hold thousands -- past
+    the usual soft limit of 1,024 (and a process may open several stores)."""
+    try:
+        import resource
+
+        soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+        n += len(os.listdir("/dev/fd"))  # the ones already open
+        if soft != resource.RLIM_INFINITY and soft < n:
+            resource.setrlimit(resource.RLIMIT_NOFILE, (n if hard == resource.RLIM_INFINITY else min(n, hard), hard))
+    except (ImportError, ValueError, OSError):  # not POSIX, or not allowed: opening the files says so
+        pass
+
+
 def _readonly(a):
     a = a.view(np.ndarray)  # plain read-only ndarrays, so numba sees one array type for every buffer
     a.setflags(write=False)
@@ -96,7 +114,8 @@ class FrameStore:
     """A blob-encoded frame store (convert.py) opened for zero-copy reads: frame bytes come from np.memmap of the
     lance files, located by the blob descriptors (kind, position, size, blob_id). Every fragment has one data file
     holding its frames under 64 KB (kind 0); larger frames live in its side files data/<data file>/<blob_id>.blob
-    (kind 1). Each file is memory-mapped once; a frame is addressed as (file id, position).
+    (kind 1: packed; kind 2: one blob per file, over ~4 MB, e.g. an MP4 store's videos). Each file is memory-mapped
+    once; a frame is addressed as (file id, position).
 
     index=True reads every row's descriptor (and seg_len) once into numpy, so a batch touches lance not at all (for
     stores whose index fits in every worker's memory); index="shared" memory-maps the node's one copy of the same
@@ -145,6 +164,7 @@ class FrameStore:
         frags = self.ds.get_fragments()
         self.frag_start = np.cumsum([0] + [f.count_rows() for f in frags])
         files, self.data_fid, self.side_fid = store_files(path, frags)
+        _allow_open_files(len(files) + 256)  # one descriptor per file (maps hold one too)
         self.bufs = List([self._map(f) for f in files])
         if index == "shared":  # one per node, memory-mapped by every worker (index.py)
             self.index = FrameIndex.shared(path)
@@ -177,7 +197,7 @@ class FrameStore:
             kind = d.field("kind").to_numpy()
             frag = np.searchsorted(self.frag_start, rows, side="right") - 1
             fid = np.where(kind == 0, self.data_fid[frag], self.side_fid[frag, d.field("blob_id").to_numpy()])
-            assert kind.max() <= 1 and fid.min() >= 0, "unexpected blob descriptor"
+            assert kind.max() <= 2 and fid.min() >= 0, "unexpected blob descriptor"
             out = {
                 "fid": fid,
                 "pos": d.field("position").to_numpy().astype(np.int64),
