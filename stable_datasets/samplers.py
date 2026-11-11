@@ -15,7 +15,7 @@ backend's access-pattern preferences::
 
     from stable_datasets.samplers import ShardShuffleSampler
 
-    ds = CIFAR10(split="train", storage_format="lance")
+    ds = CIFAR10(split="train")
     sampler = ShardShuffleSampler(ds, seed=42)
     loader = DataLoader(ds, batch_size=128, sampler=sampler,
                         num_workers=8, persistent_workers=True,

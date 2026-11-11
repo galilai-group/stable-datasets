@@ -6,36 +6,24 @@ import pyarrow as pa
 import pytest
 from torch.utils.data import DataLoader
 
-from stable_datasets.cache import write_sharded_arrow_cache
 from stable_datasets.dataset import StableDataset
 from stable_datasets.iterable import StableIterableDataset
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value, Video
+from stable_datasets.tests._caches import cached_dataset
 
 
-def _make_ds(tmp_path, n=20, shard_size_bytes=512, batch_size=5):
-    """Create a shard-backed StableDataset with multiple shards."""
+def _make_ds(tmp_path, n=20, rows_per_fragment=5, batch_size=5):
+    """A cached StableDataset of several fragments, and its backend."""
     features = Features({"x": Value("int32"), "label": ClassLabel(names=["a", "b"])})
-    info = DatasetInfo(features=features)
-    cache_dir = tmp_path / "iter_cache"
 
     def gen():
         for i in range(n):
             yield i, {"x": i, "label": i % 2}
 
-    meta = write_sharded_arrow_cache(
-        gen(),
-        features,
-        cache_dir,
-        shard_size_bytes=shard_size_bytes,
-        batch_size=batch_size,
+    ds = cached_dataset(
+        gen(), features, tmp_path / "iter_cache", rows_per_fragment=rows_per_fragment, batch_size=batch_size
     )
-    return StableDataset(
-        features=features,
-        info=info,
-        shard_paths=meta.shard_paths,
-        shard_row_counts=meta.shard_row_counts,
-        num_rows=meta.num_rows,
-    ), meta
+    return ds, ds._backend
 
 
 class TestIterableDataset:
@@ -47,7 +35,7 @@ class TestIterableDataset:
         assert sorted(r["x"] for r in rows) == list(range(20))
 
     def test_worker_sharding_covers_all_rows(self, tmp_path):
-        ds, meta = _make_ds(tmp_path, n=20, shard_size_bytes=128, batch_size=5)
+        ds, meta = _make_ds(tmp_path, n=20, rows_per_fragment=5, batch_size=5)
         assert meta.num_shards >= 2
 
         all_rows = []
@@ -125,20 +113,14 @@ class TestIterableRespectsView:
 
     def test_video_decode_applies_with_map_style_sample_index(self, tmp_path):
         features = Features({"video": Video(storage="bytes"), "x": Value("int32")})
-        meta = write_sharded_arrow_cache(
+        ds = cached_dataset(
             ((i, {"video": b"clip", "x": i}) for i in range(12)),
             features,
             tmp_path / "video_cache",
-            shard_size_bytes=64,
+            rows_per_fragment=4,
             batch_size=4,
         )
-        assert meta.num_shards > 1
-        ds = StableDataset(
-            features=features,
-            info=DatasetInfo(features=features),
-            shard_paths=meta.shard_paths,
-            shard_row_counts=meta.shard_row_counts,
-        )
+        assert ds._backend.num_shards > 1
 
         def decode_fn(ref, config, *, row=None, sample_index=None):
             return (row["x"], sample_index)
@@ -158,13 +140,13 @@ def _loader_xs(iterable, *, num_workers=2, **kwargs):
 
 class TestPartitioning:
     def test_fewer_shards_than_workers_yields_each_row_once(self, tmp_path):
-        ds, meta = _make_ds(tmp_path, n=42, shard_size_bytes=100, batch_size=14)
+        ds, meta = _make_ds(tmp_path, n=42, rows_per_fragment=14, batch_size=14)
         assert meta.num_shards == 3
         xs = _loader_xs(ds.as_iterable(shuffle=True, seed=2, buffer_size=4), num_workers=4)
         assert sorted(xs) == list(range(42))
 
     def test_more_shards_than_workers_yields_each_row_once(self, tmp_path):
-        ds, meta = _make_ds(tmp_path, n=60, shard_size_bytes=30, batch_size=3)
+        ds, meta = _make_ds(tmp_path, n=60, rows_per_fragment=3, batch_size=3)
         assert meta.num_shards > 4
         xs = _loader_xs(ds.as_iterable(shuffle=True, seed=5, buffer_size=4), num_workers=3)
         assert sorted(xs) == list(range(60))
@@ -178,9 +160,9 @@ class TestPartitioning:
         )
         assert sorted(_loader_xs(ds.as_iterable(), num_workers=2)) == list(range(20))
 
-    @pytest.mark.parametrize("shard_size_bytes", [100, 30])
-    def test_ranks_and_workers_yield_each_row_once(self, tmp_path, shard_size_bytes):
-        ds, _ = _make_ds(tmp_path, n=42, shard_size_bytes=shard_size_bytes, batch_size=3)
+    @pytest.mark.parametrize("rows_per_fragment", [14, 3])
+    def test_ranks_and_workers_yield_each_row_once(self, tmp_path, rows_per_fragment):
+        ds, _ = _make_ds(tmp_path, n=42, rows_per_fragment=rows_per_fragment, batch_size=3)
         xs = []
         for rank in range(2):
             iterable = ds.as_iterable(shuffle=True, seed=1, buffer_size=4, rank=rank, world_size=2)
@@ -199,7 +181,7 @@ class TestPartitioning:
 
         import torch.distributed as dist
 
-        ds, _ = _make_ds(tmp_path, n=42, shard_size_bytes=30, batch_size=3)
+        ds, _ = _make_ds(tmp_path, n=42, rows_per_fragment=3, batch_size=3)
         xs = []
         for rank in range(2):
             iterable = ds.as_iterable(shuffle=True, seed=1, buffer_size=4)
@@ -215,7 +197,7 @@ class TestPartitioning:
 
 class TestEpochs:
     def test_epoch_advances_on_each_pass(self, tmp_path):
-        ds, _ = _make_ds(tmp_path, n=40, shard_size_bytes=30, batch_size=3)
+        ds, _ = _make_ds(tmp_path, n=40, rows_per_fragment=3, batch_size=3)
         iterable = ds.as_iterable(shuffle=True, seed=0, buffer_size=8)
         first, second = [r["x"] for r in iterable], [r["x"] for r in iterable]
         assert sorted(first) == sorted(second) == list(range(40))
@@ -226,14 +208,14 @@ class TestEpochs:
         assert [r["x"] for r in replay] == second
 
     def test_seed_and_epoch_do_not_collide(self, tmp_path):
-        ds, _ = _make_ds(tmp_path, n=40, shard_size_bytes=30, batch_size=3)
+        ds, _ = _make_ds(tmp_path, n=40, rows_per_fragment=3, batch_size=3)
         shifted_epoch = ds.as_iterable(shuffle=True, seed=0, buffer_size=8)
         shifted_epoch.set_epoch(1)
         shifted_seed = ds.as_iterable(shuffle=True, seed=1000, buffer_size=8)
         assert [r["x"] for r in shifted_epoch] != [r["x"] for r in shifted_seed]
 
     def test_persistent_workers_advance_epoch(self, tmp_path):
-        ds, _ = _make_ds(tmp_path, n=40, shard_size_bytes=30, batch_size=3)
+        ds, _ = _make_ds(tmp_path, n=40, rows_per_fragment=3, batch_size=3)
         loader = DataLoader(
             ds.as_iterable(shuffle=True, seed=0, buffer_size=8),
             batch_size=None,
@@ -246,7 +228,7 @@ class TestEpochs:
         assert first != second
 
     def test_set_epoch_reaches_persistent_workers(self, tmp_path):
-        ds, _ = _make_ds(tmp_path, n=40, shard_size_bytes=30, batch_size=3)
+        ds, _ = _make_ds(tmp_path, n=40, rows_per_fragment=3, batch_size=3)
         iterable = ds.as_iterable(shuffle=True, seed=0, buffer_size=8)
         loader = DataLoader(iterable, batch_size=None, num_workers=2, persistent_workers=True)
         list(loader)
@@ -260,7 +242,7 @@ class TestEpochs:
 
 class TestShuffleSeedNone:
     def test_arrow_shuffles_shards_without_seed(self, tmp_path):
-        ds, meta = _make_ds(tmp_path, n=60, shard_size_bytes=30, batch_size=3)
+        ds, meta = _make_ds(tmp_path, n=60, rows_per_fragment=3, batch_size=3)
         assert meta.num_shards >= 10
         natural = [r["x"] for r in ds.iter_epoch(shuffle_shards=False)]
         shuffled = [r["x"] for r in ds.iter_epoch(shuffle_shards=True, seed=None)]
@@ -287,7 +269,7 @@ class TestShardDefaults:
         assert meta.shard_row_counts == fragment_counts
 
     def test_fewer_shards_than_workers_reads_contiguous_ranges(self, tmp_path):
-        ds, meta = _make_ds(tmp_path, n=40, shard_size_bytes=100, batch_size=20)
+        ds, meta = _make_ds(tmp_path, n=40, rows_per_fragment=20, batch_size=20)
         assert meta.num_shards == 2
         blocks = []
         for worker_id in range(4):
@@ -295,7 +277,6 @@ class TestShardDefaults:
             with patch("torch.utils.data.get_worker_info", return_value=worker_info):
                 blocks.append([r["x"] for r in ds.as_iterable()])
         assert blocks == [list(range(i, i + 10)) for i in range(0, 40, 10)]
-        assert ds._backend._table is None
 
     def test_lance_fragments_with_workers_yield_each_row_once(self, tmp_path):
         from stable_datasets.cache import open_cache, write_lance_cache

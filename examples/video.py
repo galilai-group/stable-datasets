@@ -7,7 +7,6 @@ from stable_datasets.video import SSv2
 def main() -> None:
     ds = SSv2(
         split="train",
-        storage_format="lance",
     )
 
     sample = ds[0]

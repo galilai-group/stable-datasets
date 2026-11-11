@@ -1,8 +1,9 @@
-"""Generator-to-Arrow sharded caching pipeline.
+"""Generator-to-Lance caching pipeline.
 
-Writes dataset examples to a directory of PyArrow IPC (Feather v2) shard
-files.  Peak memory during writes is bounded to ~1 batch, and the sharded
-layout supports efficient sequential reads for training workloads.
+Writes dataset examples to a Lance dataset (``lance-rows``), or videos to
+the frame layout (``lance-video-frames``), and opens a cache by the layout
+its ``_metadata.json`` records. Peak memory during writes is bounded to
+about one batch.
 """
 
 from __future__ import annotations
@@ -19,7 +20,6 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pyarrow as pa
-import pyarrow.ipc as ipc
 from filelock import FileLock
 from loguru import logger as logging
 
@@ -52,28 +52,27 @@ def cache_fingerprint(
     version: str,
     config_name: str,
     split: str,
-    storage_format: str = "arrow",
     *,
     features: Features,
 ) -> str:
     """Deterministic cache directory name for a dataset variant + split.
 
-    ``storage_format`` is always included in the hash so Arrow and Lance
-    caches for the same dataset coexist at different paths. The features
-    fingerprint is in the hash too, so a schema change gives a new cache.
+    The features fingerprint is in the hash, so a schema change (including a
+    column's storage, such as how a video is stored) gives a new cache.
     """
-    key = f"{cls_name}:{version}:{config_name}:{split}:{storage_format}:{_features_fingerprint(features)}"
+    # "lance" stays in the key: caches built when Arrow was the alternative keep their names.
+    key = f"{cls_name}:{version}:{config_name}:{split}:lance:{_features_fingerprint(features)}"
     digest = hashlib.sha256(key.encode()).hexdigest()[:16]
     return f"{cls_name.lower()}_{config_name}_{split}_{digest}"
 
 
-def split_manifest_name(cls_name: str, version: str, config_name: str, storage_format: str) -> str:
+def split_manifest_name(cls_name: str, version: str, config_name: str) -> str:
     """File name of the split manifest of a dataset variant.
 
     The manifest lists the split names of the variant. A builder reads it
     before any download to find the cached splits.
     """
-    key = f"{cls_name}:{version}:{config_name}:{storage_format}"
+    key = f"{cls_name}:{version}:{config_name}:lance"
     digest = hashlib.sha256(key.encode()).hexdigest()[:16]
     return f"{cls_name.lower()}_{config_name}_{digest}.splits.json"
 
@@ -91,14 +90,13 @@ def write_split_manifest(uri: str | Path, split_names: list[str], storage_option
     _uri.write_text(os.fspath(uri), json.dumps({"splits": list(split_names)}, indent=2), storage_options)
 
 
-# Sharded readers/writers
+# Writers
 
 _CACHE_FORMAT_VERSION = 1
 
-_SHARD_NAME_FMT = "shard-{:05d}.arrow"
 _METADATA_FILE = "_metadata.json"
 
-# Target size of one Arrow shard or one Lance fragment. More shards let
+# Target size of one Lance fragment. More fragments let
 # DataLoader workers read disjoint files.
 DEFAULT_SHARD_SIZE_BYTES = 256 * 1024 * 1024
 DEFAULT_MAX_ROWS_PER_FILE = 1024 * 1024
@@ -144,207 +142,6 @@ def _writer_lock(cache_dir: str | os.PathLike):
     return FileLock(str(path.parent / f"{path.name}.lock"))
 
 
-def write_sharded_arrow_cache(
-    generator,
-    features: Features,
-    cache_dir: Path,
-    *,
-    shard_size_bytes: int = DEFAULT_SHARD_SIZE_BYTES,
-    batch_size: int = 1000,
-    compression: str | None = None,
-    num_encode_workers: int = 0,
-    single_file: bool = False,
-    lineage: dict | None = None,
-) -> ShardedCacheMeta:
-    """Consume a generator and write to a directory of Arrow IPC shards.
-
-    Batches are flushed every *batch_size* rows.  After each flush the
-    cumulative ``RecordBatch.nbytes`` for the current shard is checked;
-    when it exceeds *shard_size_bytes* the shard is closed.  The next
-    shard is opened lazily when the next batch is ready, so there are
-    never trailing empty shards.
-
-    .. note::
-
-       *shard_size_bytes* is an **approximate target** based on Arrow
-       in-memory batch sizes, not exact on-disk file sizes.  Actual shard
-       files may be somewhat larger or smaller due to IPC framing, batch
-       granularity, and compression differences.
-
-    An empty generator produces zero shards (``num_shards == 0``).
-
-    The completed cache directory contains:
-
-    * ``data-XXXXXXXX/shard-NNNNN.arrow`` — zero or more IPC files
-    * ``_metadata.json`` — row counts, shard list, format version,
-      schema fingerprint
-
-    Publishing is atomic for readers. The writer puts the shards in a new
-    ``data-*`` directory, then replaces ``_metadata.json``, which lists
-    them. The cache directory always exists, and a reader sees the old or
-    the new shard list. The writer keeps the previous ``data-*``
-    directory, so a reader that opened the previous cache can still read
-    its shards. It removes older ``data-*`` directories.
-
-    Parameters
-    ----------
-    compression : str or None
-        IPC buffer compression codec (e.g. ``"zstd"``, ``"lz4"``).
-        Decompression on read is automatic.
-    num_encode_workers : int
-        When > 0, encode examples in parallel using a thread pool.
-
-    Returns
-    -------
-    ShardedCacheMeta
-        Describes the cache.
-    """
-    cache_dir = Path(cache_dir)
-    created_cache_dir = not cache_dir.exists()
-    schema = features.to_arrow_schema()
-
-    if single_file:
-        shard_size_bytes = float("inf")
-
-    ipc_options = ipc.IpcWriteOptions(compression=compression) if compression else None
-
-    data_dir: Path | None = None
-    batch_rows: dict[str, list] = {name: [] for name in features}
-
-    # Per-shard bookkeeping
-    shard_filenames: list[str] = []
-    shard_row_counts: list[int] = []
-    shard_idx = 0
-    shard_bytes = 0  # cumulative RecordBatch.nbytes for current shard
-    shard_rows = 0
-    writer: ipc.RecordBatchFileWriter | None = None
-    sink: pa.OSFile | None = None
-
-    def _ensure_shard_open():
-        """Open a new shard if one is not already open."""
-        nonlocal writer, sink, shard_bytes, shard_rows
-        if writer is not None:
-            return
-        fname = _SHARD_NAME_FMT.format(shard_idx)
-        shard_filenames.append(f"{data_dir.name}/{fname}")
-        sink = pa.OSFile(str(data_dir / fname), "wb")
-        if ipc_options:
-            writer = ipc.new_file(sink, schema, options=ipc_options)
-        else:
-            writer = ipc.new_file(sink, schema)
-        shard_bytes = 0
-        shard_rows = 0
-
-    def _close_shard():
-        nonlocal writer, sink, shard_idx
-        if writer is None:
-            return
-        writer.close()
-        writer = None
-        sink.close()
-        sink = None
-        shard_row_counts.append(shard_rows)
-        shard_idx += 1
-
-    def _flush_batch() -> pa.RecordBatch | None:
-        if not batch_rows[next(iter(batch_rows))]:
-            return None
-        arrays = []
-        for col_name in features:
-            feat = features[col_name]
-            col_data = batch_rows[col_name]
-            arr = pa.array(col_data, type=feat.to_arrow_type())
-            arrays.append(arr)
-        batch = pa.record_batch(arrays, schema=schema)
-        for col_name in batch_rows:
-            batch_rows[col_name] = []
-        return batch
-
-    def _write_batch(batch: pa.RecordBatch):
-        nonlocal shard_bytes, shard_rows
-        _ensure_shard_open()
-        writer.write_batch(batch)
-        shard_bytes += batch.nbytes
-        shard_rows += batch.num_rows
-
-    total_count = 0
-
-    try:
-        with _writer_lock(cache_dir):
-            # Make the data directory under the lock, so another writer cannot remove it.
-            cache_dir.mkdir(parents=True, exist_ok=True)
-            data_dir = Path(tempfile.mkdtemp(dir=cache_dir, prefix="data-"))
-            # Wrap generator with optional parallel encoding
-            encoded_gen = _encode_gen(generator, features, batch_size, num_encode_workers, cache_dir=data_dir)
-            for _key, encoded in encoded_gen:
-                for col_name in features:
-                    batch_rows[col_name].append(encoded.get(col_name))
-                total_count += 1
-
-                if total_count % batch_size == 0:
-                    batch = _flush_batch()
-                    if batch is not None:
-                        _write_batch(batch)
-                        # Rotate shard if over budget
-                        if shard_bytes >= shard_size_bytes:
-                            _close_shard()
-
-            # Flush remaining rows
-            batch = _flush_batch()
-            if batch is not None:
-                _write_batch(batch)
-
-            _close_shard()
-
-            # Write metadata
-            meta = {
-                "cache_format_version": _CACHE_FORMAT_VERSION,
-                "format": "arrow",
-                "layout": "arrow-shards",
-                "schema_fingerprint": _features_fingerprint(features),
-                "num_rows": total_count,
-                "num_shards": len(shard_filenames),
-                "shard_row_counts": shard_row_counts,
-                "shard_filenames": shard_filenames,
-                "shard_size_target_bytes": None if shard_size_bytes == float("inf") else shard_size_bytes,
-            }
-            if compression:
-                meta["compression"] = compression
-            if lineage:
-                meta["lineage"] = lineage
-            # Atomic publish: replace the metadata, then remove the data directories
-            # that neither the new nor the previous metadata lists.
-            meta_path = cache_dir / _METADATA_FILE
-            keep = {data_dir.name}
-            try:
-                keep.update(name.split("/")[0] for name in json.loads(meta_path.read_text())["shard_filenames"])
-            except (OSError, ValueError, KeyError):
-                pass  # No readable previous cache: keep only the new data directory.
-            _uri.write_text(str(meta_path), json.dumps(meta, indent=2))
-            for old_dir in cache_dir.glob("data-*"):
-                if old_dir.name not in keep:
-                    shutil.rmtree(old_dir, ignore_errors=True)
-
-    except BaseException:
-        if data_dir is not None:
-            shutil.rmtree(data_dir, ignore_errors=True)
-        if created_cache_dir and cache_dir.is_dir() and not any(cache_dir.iterdir()):
-            cache_dir.rmdir()
-        raise
-
-    logging.info(f"Cached {total_count} examples in {len(shard_filenames)} shard(s) to {cache_dir}")
-
-    return ShardedCacheMeta(
-        cache_dir=cache_dir,
-        num_rows=total_count,
-        num_shards=len(shard_filenames),
-        shard_filenames=shard_filenames,
-        shard_row_counts=shard_row_counts,
-        schema_fingerprint=meta["schema_fingerprint"],
-        compression=compression,
-    )
-
-
 def write_lance_cache(
     generator,
     features: Features,
@@ -359,12 +156,9 @@ def write_lance_cache(
 ) -> LanceCacheMeta:
     """Consume a generator and write directly to a Lance dataset.
 
-    Mirrors :func:`write_sharded_arrow_cache` in shape (same generator
-    contract, same features, same encode pipeline) but writes a Lance
-    dataset via ``lance.write_dataset`` instead of Arrow IPC shards. No
-    intermediate Arrow IPC file is produced -- the encoded rows stream
-    into Lance via a :class:`pa.RecordBatchReader`, so the native Lance
-    write path is used end-to-end.
+    The generator yields ``(key, example)`` pairs; examples are encoded by
+    the features and stream into ``lance.write_dataset`` through a
+    :class:`pa.RecordBatchReader`.
 
     ``cache_dir`` is a local path or a URI such as ``s3://bucket/prefix``.
     A Lance commit publishes the dataset atomically, and the writer then
@@ -383,7 +177,7 @@ def write_lance_cache(
         memory during writing.
     num_encode_workers : int
         When > 0, encode examples in parallel using a thread pool
-        (same contract as the Arrow writer).
+        .
     max_rows_per_file : int
         Maximum number of rows in one Lance fragment.
     max_bytes_per_file : int
@@ -394,12 +188,8 @@ def write_lance_cache(
     storage_options : dict, optional
         Object store options for Lance and for the metadata file.
     """
-    import lance
-
     cache_dir = os.fspath(cache_dir)
     schema = features.to_arrow_schema()
-
-    # Counter state is read after Lance consumes the batch stream.
     counter = {"rows": 0}
 
     # Video(storage="path") stages assets in a local cache directory only.
@@ -422,8 +212,51 @@ def write_lance_cache(
             arrays = [pa.array(batch_rows[name], type=features[name].to_arrow_type()) for name in features]
             yield pa.record_batch(arrays, schema=schema)
 
+    return _write_lance_batches(
+        batch_stream(),
+        features,
+        cache_dir,
+        max_rows_per_file=max_rows_per_file,
+        max_bytes_per_file=max_bytes_per_file,
+        lineage=lineage,
+        storage_options=storage_options,
+    )
+
+
+def write_lance_table(
+    table: pa.Table,
+    features: Features,
+    cache_dir: str | Path,
+    *,
+    lineage: dict | None = None,
+    storage_options: dict | None = None,
+) -> LanceCacheMeta:
+    """Write rows that are already encoded (a table read from another cache) as a Lance cache."""
+    table = table.cast(features.to_arrow_schema())
+    return _write_lance_batches(
+        iter(table.to_batches(max_chunksize=1000)),
+        features,
+        os.fspath(cache_dir),
+        lineage=lineage,
+        storage_options=storage_options,
+    )
+
+
+def _write_lance_batches(
+    batches,
+    features: Features,
+    cache_dir: str,
+    *,
+    max_rows_per_file: int = DEFAULT_MAX_ROWS_PER_FILE,
+    max_bytes_per_file: int = DEFAULT_SHARD_SIZE_BYTES,
+    lineage: dict | None = None,
+    storage_options: dict | None = None,
+) -> LanceCacheMeta:
+    """Write record batches as the Lance dataset at ``cache_dir``, then its ``_metadata.json``."""
+    import lance
+
+    schema = features.to_arrow_schema()
     with _writer_lock(cache_dir):
-        batches = batch_stream()
         first = next(batches, None)
         rows_per_file = max_rows_per_file
         if first is not None:
@@ -440,13 +273,13 @@ def write_lance_cache(
             max_bytes_per_file=max_bytes_per_file,
             storage_options=storage_options,
         )
-
+        rows = dataset.count_rows()
         meta = {
             "cache_format_version": _CACHE_FORMAT_VERSION,
             "format": "lance",
             "layout": "lance-rows",
             "schema_fingerprint": _features_fingerprint(features),
-            "num_rows": counter["rows"],
+            "num_rows": rows,
             "shard_row_counts": [fragment.count_rows() for fragment in dataset.get_fragments()],
             "version": dataset.version,
         }
@@ -454,11 +287,11 @@ def write_lance_cache(
             meta["lineage"] = lineage
         _uri.write_text(_uri.join(cache_dir, _METADATA_FILE), json.dumps(meta, indent=2), storage_options)
 
-    logging.info(f"Cached {counter['rows']} examples in Lance format to {cache_dir}")
+    logging.info(f"Cached {rows} examples in Lance format to {cache_dir}")
 
     return LanceCacheMeta(
         cache_dir=cache_dir,
-        num_rows=counter["rows"],
+        num_rows=rows,
         schema_fingerprint=meta["schema_fingerprint"],
         shard_row_counts=meta["shard_row_counts"],
         version=meta["version"],
@@ -740,11 +573,6 @@ def _metadata_field(raw: dict, field: str, cache_dir: str | Path):
     return raw[field]
 
 
-def detect_cache_format(cache_dir: str | Path, storage_options: dict | None = None) -> str:
-    """Return ``"arrow"`` or ``"lance"`` based on the cache's metadata."""
-    return _metadata_field(_read_metadata(cache_dir, storage_options), "format", cache_dir)
-
-
 def detect_cache_layout(cache_dir: str | Path, storage_options: dict | None = None) -> str:
     """Return the physical cache layout recorded in cache metadata."""
     return _metadata_field(_read_metadata(cache_dir, storage_options), "layout", cache_dir)
@@ -771,25 +599,13 @@ def open_cache(
 ) -> CacheOpenResult:
     """Open a cache directory and return the backend selected by its layout.
 
-    ``cache_dir`` is a local path or a URI. Lance caches can be remote.
-    Arrow caches must be local. ``backend_kwargs`` go to the backend and
+    ``cache_dir`` is a local path or a URI. ``backend_kwargs`` go to the backend and
     replace the values from the metadata. ``storage_options`` go to Lance
     and to the metadata reads.
     """
     backend_kwargs = backend_kwargs or {}
     cache_dir = os.fspath(cache_dir)
     layout = detect_cache_layout(cache_dir, storage_options)
-
-    if layout == "arrow-shards":
-        from .backends.arrow_shards import ArrowBackend
-
-        meta = validate_sharded_cache(cache_dir, features)
-        backend = ArrowBackend(
-            shard_paths=meta.shard_paths,
-            shard_row_counts=meta.shard_row_counts,
-            schema=features.to_arrow_schema(),
-        )
-        return CacheOpenResult(backend=backend, num_rows=meta.num_rows, layout=layout, metadata=meta)
 
     if layout == "lance-rows":
         from .backends.lance_rows import LanceBackend
@@ -843,101 +659,6 @@ def read_lance_cache_meta(cache_dir: str | Path, storage_options: dict | None = 
     )
 
 
-class ShardedCacheMeta:
-    """Lightweight descriptor for a sharded Arrow cache on disk."""
-
-    __slots__ = (
-        "cache_dir",
-        "num_rows",
-        "num_shards",
-        "shard_filenames",
-        "shard_row_counts",
-        "schema_fingerprint",
-        "compression",
-    )
-
-    def __init__(
-        self,
-        cache_dir: Path,
-        num_rows: int,
-        num_shards: int,
-        shard_filenames: list[str],
-        shard_row_counts: list[int],
-        schema_fingerprint: str,
-        compression: str | None = None,
-    ):
-        self.cache_dir = Path(cache_dir)
-        self.num_rows = num_rows
-        self.num_shards = num_shards
-        self.shard_filenames = shard_filenames
-        self.shard_row_counts = shard_row_counts
-        self.schema_fingerprint = schema_fingerprint
-        self.compression = compression
-
-    @property
-    def shard_paths(self) -> list[Path]:
-        return [self.cache_dir / f for f in self.shard_filenames]
-
-
-def read_sharded_cache_meta(cache_dir: Path) -> ShardedCacheMeta:
-    """Read metadata from a sharded cache directory.
-
-    Validates that all shard files and metadata exist and are internally
-    consistent.  Raises ``ValueError`` on corruption. Arrow caches are
-    memory-mapped, so ``cache_dir`` must be local.
-    """
-    local_dir = _uri.local_path(cache_dir)
-    if local_dir is None:
-        raise ValueError(f"Arrow caches must be local, got {cache_dir!r}. Use a Lance cache for a remote URI.")
-    cache_dir = local_dir
-    raw = _read_metadata(cache_dir)
-
-    if raw.get("format") != "arrow":
-        raise ValueError(f"Not an Arrow sharded cache: {cache_dir} (format={raw.get('format')!r})")
-    if raw.get("layout") != "arrow-shards":
-        raise ValueError(f"Not an Arrow sharded cache: {cache_dir} (layout={raw.get('layout')!r})")
-
-    _check_format_version(raw)
-
-    shard_filenames = raw["shard_filenames"]
-    shard_row_counts = raw["shard_row_counts"]
-    num_rows = raw["num_rows"]
-    num_shards = raw["num_shards"]
-
-    # Consistency checks
-    if len(shard_filenames) != num_shards:
-        raise ValueError(f"Metadata claims {num_shards} shards but lists {len(shard_filenames)} filenames")
-    if len(shard_row_counts) != num_shards:
-        raise ValueError(f"Metadata claims {num_shards} shards but has {len(shard_row_counts)} row counts")
-    if sum(shard_row_counts) != num_rows:
-        raise ValueError(f"Sum of shard_row_counts ({sum(shard_row_counts)}) != num_rows ({num_rows})")
-
-    # Check shard files exist
-    for fname in shard_filenames:
-        if not (cache_dir / fname).exists():
-            raise ValueError(f"Missing shard file: {cache_dir / fname}")
-
-    return ShardedCacheMeta(
-        cache_dir=cache_dir,
-        num_rows=num_rows,
-        num_shards=num_shards,
-        shard_filenames=shard_filenames,
-        shard_row_counts=shard_row_counts,
-        schema_fingerprint=raw.get("schema_fingerprint", ""),
-        compression=raw.get("compression"),
-    )
-
-
-def validate_sharded_cache(cache_dir: Path, features: Features) -> ShardedCacheMeta:
-    """Read and validate a sharded cache, checking the schema fingerprint.
-
-    Raises ``ValueError`` if the cache is inconsistent or the schema has changed.
-    """
-    meta = read_sharded_cache_meta(cache_dir)
-    _check_schema_fingerprint(meta.schema_fingerprint, features, cache_dir)
-    return meta
-
-
 def _check_format_version(raw: dict) -> None:
     """Raise ``ValueError`` if cache metadata has a different format version."""
     fmt_version = raw.get("cache_format_version")
@@ -953,10 +674,3 @@ def _check_schema_fingerprint(found: str, features: Features, cache_dir: Path) -
             f"Schema fingerprint mismatch in {cache_dir}: cache has {found!r}, "
             f"expected {expected_fp!r}.  Delete the cache and rebuild."
         )
-
-
-def read_shard(shard_path: Path) -> pa.Table:
-    """Memory-map a single shard file and return its table."""
-    mmap = pa.memory_map(str(shard_path), "r")
-    reader = ipc.open_file(mmap)
-    return reader.read_all()
