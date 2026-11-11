@@ -49,7 +49,7 @@ torch = ["torch"]
 video = ["opencv-python-headless", "torch", "torchcodec"]
 
 # JPEG frame stores with partial decoding (stable_datasets.framestore); the GPU loaders need torchvision with CUDA
-framestore = ["pylance", "numba", "simplejpeg", "torchvision"]
+framestore = ["numba", "simplejpeg", "torchvision"]
 
 # Benchmark dependencies (profiling + SSL evaluation suite)
 benchmarks = [
