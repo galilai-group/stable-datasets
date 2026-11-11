@@ -3,7 +3,7 @@
 from .array import Array3D, Array4D
 from .base import ClassLabel, FeatureType, Sequence, Value
 from .image import Image
-from .video import Video, VideoRef
+from .video import Video, VideoRef, VideoStorage
 
 
 __all__ = [
@@ -16,4 +16,5 @@ __all__ = [
     "Value",
     "Video",
     "VideoRef",
+    "VideoStorage",
 ]

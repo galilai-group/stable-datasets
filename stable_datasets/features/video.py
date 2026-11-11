@@ -79,18 +79,83 @@ class VideoRef:
         return path.read_bytes()
 
 
+@dataclass(frozen=True)
+class VideoStorage:
+    """How a dataset stores its videos when it is built (stable_datasets.framestore), for fast clip reads.
+
+    ``format="mp4"`` (the default) keeps one H.264 MP4 per video, re-encoded so that every ``keyint``-th frame is a
+    keyframe a clip can start on with no earlier frame decoded, every video coded at one size (``canvas``; portrait
+    videos transposed, readers return each video as it was) and decodable on the GPU (framestore.gpu_h264) as well as
+    by ffmpeg or NVDEC. ``format="jpeg"`` keeps every frame as a JPEG with a restart marker after each MCU, so any
+    part of a frame decodes alone (partial decoding: the token loader).
+
+    Which to choose, measured on an H100 with Kinetics-400 at 7.5 fps, 384 px short edge (the whole-frame loader
+    alone, 224 x 224 clips of 16 frames; framestore's benchmarks): MP4 stores are ~half the size of JPEG ones at
+    the same frame rate (about the size of the source MP4s) and load 4,131 clips/s (GPU and CPU decoding) against
+    3,369 for JPEG; JPEG stores allow partial decoding, any frame stride when loading, and decode faster on the CPU
+    alone. A size check never switches the format: it is what is asked for.
+
+    fps, short_edge: frames kept per second (the clip stride is fixed then, for MP4) and the short edge in pixels
+    (None: the source's). crf, keyint, canvas: MP4's libx264 quality, frames between keyframes, coded size ("auto":
+    16:9 at the short edge; (H, W); None: each video's own). quality: JPEG's.
+    """
+
+    format: str = "mp4"
+    fps: float | None = None
+    short_edge: int | None = None
+    crf: int = 18
+    keyint: int = 4
+    canvas: str | tuple[int, int] | None = "auto"
+    quality: int = 90
+
+    def __post_init__(self):
+        if self.format not in ("mp4", "jpeg"):
+            raise ValueError(f"VideoStorage.format must be 'mp4' or 'jpeg', got {self.format!r}.")
+        if self.keyint < 1 or self.crf < 0:
+            raise ValueError("VideoStorage needs keyint >= 1 and crf >= 0.")
+        if isinstance(self.canvas, list):
+            object.__setattr__(self, "canvas", tuple(self.canvas))
+
+    @classmethod
+    def coerce(cls, value) -> VideoStorage:
+        """A VideoStorage from itself, a format name ("mp4", "jpeg") or a mapping of its fields."""
+        if isinstance(value, VideoStorage):
+            return value
+        if isinstance(value, str):
+            return cls(format=value)
+        if isinstance(value, Mapping):
+            return cls(**value)
+        raise TypeError(
+            f"video storage must be a VideoStorage, 'mp4', 'jpeg' or a mapping, got {type(value).__name__}"
+        )
+
+
 class Video(FeatureType):
-    """Video feature with validated path, bytes, or specialized frame storage."""
+    """Video feature with validated path, bytes, or specialized frame storage.
+
+    storage: "path" or "bytes" (the source files), "frames" (WebP frames in Lance), or a framestore store: "mp4" or
+    "jpeg" (settings: a VideoStorage; see it for which to choose). A builder's ``video_storage=`` argument turns its
+    video column into a store.
+    """
 
     _DEFAULT_EXTENSIONS = (".mp4", ".avi", ".mov", ".webm", ".mkv")
+    STORES = ("mp4", "jpeg")
 
     def __init__(
         self,
         storage: str = "path",
         allowed_extensions: tuple[str, ...] = _DEFAULT_EXTENSIONS,
+        settings: VideoStorage | None = None,
     ):
-        if storage not in ("path", "bytes", "frames"):
-            raise ValueError("Video.storage must be one of 'path', 'bytes', or 'frames'.")
+        if storage not in ("path", "bytes", "frames", *self.STORES):
+            raise ValueError("Video.storage must be one of 'path', 'bytes', 'frames', 'mp4' or 'jpeg'.")
+        if storage in self.STORES:
+            settings = settings or VideoStorage(format=storage)
+            if settings.format != storage:
+                raise ValueError(f"Video(storage={storage!r}) with settings for {settings.format!r}")
+        elif settings is not None:
+            raise ValueError("Video(settings=...) is for storage 'mp4' or 'jpeg'.")
+        self.settings = settings
         self.storage = storage
         self.allowed_extensions = tuple(
             ext.lower() if ext.startswith(".") else f".{ext.lower()}" for ext in allowed_extensions
@@ -120,6 +185,8 @@ class Video(FeatureType):
             return None
         if self.storage == "frames":
             raise NotImplementedError("Video(storage='frames') uses the specialized Lance video-frames layout.")
+        if self.storage in self.STORES:
+            raise NotImplementedError(f"Video(storage={self.storage!r}) is written by framestore.build_store.")
         if self.storage == "path":
             path, checksum = self._coerce_path_value(value)
             return self._encode_path(path, checksum=checksum, cache_dir=cache_dir)
@@ -135,6 +202,15 @@ class Video(FeatureType):
     ):
         if value is None:
             return None
+        if self.storage in self.STORES:  # a clip window of a store: decoded whole at the stored size
+            if format_type == "raw":
+                return value
+            frames = decode_store_window(value)
+            if format_type == "torch":
+                import torch
+
+                return torch.from_numpy(frames)
+            return frames
         if self.storage == "frames":
             if format_type == "raw":
                 return value
@@ -238,9 +314,45 @@ class Video(FeatureType):
         return repr(self)
 
     def __repr__(self) -> str:
+        if self.storage in self.STORES:
+            return f"Video(storage={self.storage!r}, settings={self.settings!r})"
         if self.storage == "path" and self.allowed_extensions == self._DEFAULT_EXTENSIONS:
             return "Video(storage='path')"
         return f"Video(storage={self.storage!r}, allowed_extensions={self.allowed_extensions!r})"
+
+
+_STORES: dict = {}
+
+
+def _open_store(uri: str, fmt: str):
+    """The process's open store at uri (opened once per process; a forked DataLoader worker opens its own)."""
+    key = (os.getpid(), uri)
+    if key not in _STORES:
+        if fmt == "mp4":
+            from ..framestore.mp4 import Mp4Store
+
+            _STORES[key] = Mp4Store(uri)
+        else:
+            from ..framestore.store import FrameStore
+
+            _STORES[key] = FrameStore(uri, index=True)
+    return _STORES[key]
+
+
+def decode_store_window(ref) -> np.ndarray:
+    """A store window ({"store", "format", "video", "start", "frames", "stride"}) -> (T, H, W, 3) RGB uint8 at the
+    stored size, decoded on the CPU (MP4: torchcodec from the window's keyframe; JPEG: libjpeg-turbo)."""
+    store = _open_store(ref["store"], ref["format"])
+    video, start, n, stride = (int(ref[k]) for k in ("video", "start", "frames", "stride"))
+    if ref["format"] == "mp4":
+        return store.decode(video, start, n)
+    from ..framestore.decoders import decode_resized
+
+    rows = int(store.ep_start[video]) + start + stride * np.arange(n)
+    fid, pos, size, h, w = store.descriptors(rows)
+    return np.stack(
+        [decode_resized(store.frame(f, p, s), int(hh), int(ww)) for f, p, s, hh, ww in zip(fid, pos, size, h, w)]
+    )
 
 
 def decode_frame_blobs(blobs) -> np.ndarray:
