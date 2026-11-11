@@ -156,13 +156,16 @@ class LanceBackend:
         :class:`StableIterableDataset` works the same way as for the
         Arrow backend: each worker receives a disjoint set of fragment
         indices and iterates only those.
+
+        With ``shuffle=True``, shuffle the fragment order. A ``seed`` of
+        ``None`` gives a different order on each call.
         """
         fragments = self._dataset.get_fragments()
 
         if shard_indices is not None:
             fragments = [fragments[i] for i in shard_indices]
 
-        if shuffle and seed is not None:
+        if shuffle:
             rng = np.random.default_rng(seed)
             order = np.arange(len(fragments))
             rng.shuffle(order)

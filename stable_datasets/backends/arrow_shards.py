@@ -202,6 +202,9 @@ class ArrowBackend:
 
         Only one shard is mmap'd at a time, which can reduce peak
         Python-managed memory for multi-shard datasets.
+
+        With ``shuffle=True``, shuffle the shard order. A ``seed`` of
+        ``None`` gives a different order on each call.
         """
         if self._shard_paths is None:
             yield from self.table.to_batches()
@@ -210,7 +213,7 @@ class ArrowBackend:
         if shard_indices is None:
             shard_indices = list(range(len(self._shard_paths)))
 
-        if shuffle and seed is not None:
+        if shuffle:
             rng = np.random.default_rng(seed)
             shard_indices = list(shard_indices)
             rng.shuffle(shard_indices)
