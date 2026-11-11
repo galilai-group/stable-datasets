@@ -125,7 +125,7 @@ def video_decoder(name="auto"):
 def encode_video(task):
     """(i, path, short_edge, fps, quality, decoder, min_frames, mp4) -> (i, frames or None, error or None); frames:
     buf, off, seg (uint16 per MCU, all frames), seg_off, h, w; with mp4 = {"crf", "keyint"}: ("mp4", bytes, frames,
-    kept fps, h, w, transposed): h, w the valid region of mp4["canvas"] (stable_datasets.framestore.mp4.fit), if one."""
+    kept fps, h, w, transposed, slice index): h, w the valid region of mp4["canvas"] (stable_datasets.framestore.mp4.fit), if one."""
     i, path, short_edge, fps, quality, decoder, min_frames, mp4 = task
     try:
         v = video_decoder(decoder)(path, short_edge)
@@ -133,7 +133,7 @@ def encode_video(task):
         if len(idx) < min_frames:
             return i, None, f"{len(idx)} frames, fewer than {min_frames}"
         if mp4 is not None:
-            from .mp4 import encode, fit
+            from .mp4 import encode, fit, slice_index
 
             h, w = v.size[0] // 2 * 2, v.size[1] // 2 * 2  # 4:2:0: even sizes (a row or column cropped)
             kept = v.fps / max(1, round(v.fps / fps)) if fps and v.fps else (v.fps or fps or 30.0)
@@ -150,7 +150,7 @@ def encode_video(task):
                 chunks = fitted(chunks)
             H, W = canvas or (h, w)
             data = encode(chunks, H, W, kept, mp4["crf"], mp4["keyint"])
-            return i, ("mp4", data, len(idx), kept, *region), None
+            return i, ("mp4", data, len(idx), kept, *region, slice_index(data)), None
         bufs, offs = [], [np.zeros(1, np.int64)]
         at = 0
         for c in range(0, len(idx), CHUNK):
@@ -198,6 +198,7 @@ def schema_for(settings, columns):
                 pa.field("h", pa.int16()),
                 pa.field("w", pa.int16()),
                 pa.field("transposed", pa.bool_()),
+                pa.field("slices", pa.large_binary(), metadata={"lance-encoding:blob": "true"}),
                 *extra,
             ],
             metadata={**video_metadata(settings["keyint"], settings["crf"], settings["canvas"]), **build},
@@ -221,7 +222,7 @@ def record_batch(schema, i, frames, columns):
     import pyarrow as pa
 
     if isinstance(frames[0], str):  # ("mp4", ...)
-        _, data, n, fps, h, w, transposed = frames
+        _, data, n, fps, h, w, transposed, slices = frames
         arrays = [
             pa.array([i], pa.int32()),
             pa.array([data], pa.large_binary()),
@@ -230,6 +231,7 @@ def record_batch(schema, i, frames, columns):
             pa.array([h], pa.int16()),
             pa.array([w], pa.int16()),
             pa.array([transposed], pa.bool_()),
+            pa.array([slices], pa.large_binary()),
         ]
         arrays += [pa.array([columns[k][i]], schema.field(k).type) for k in columns]
         return pa.record_batch(arrays, schema=schema)

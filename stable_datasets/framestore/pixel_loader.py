@@ -95,11 +95,28 @@ def cpu_decoder(cfg, frames, jobs, done, seed):
         done.put(slot)
 
 
-def byte_reader(cfg, data, offsets, jobs, done, seed):
-    """jobs: slot; packs one batch of random windows' JPEGs into data[slot], offsets[slot] (B*T + 1)."""
+def byte_reader(cfg, data, offsets, tables, jobs, done, seed):
+    """jobs: slot; packs one batch of random windows' JPEGs into data[slot], offsets[slot] (B*T + 1). MP4 store: the
+    clips' stretches of their MP4s into data[slot], their slice table into tables[slot], and offsets[slot] = bytes,
+    slices, then per clip h, w, transposed (gpu_h264.gather)."""
     _no_cuda(cfg["nice"])
     store, win = _open(cfg, seed)
     buf, offs = data.numpy(), offsets.numpy()
+    if cfg["mp4"]:
+        from .gpu_h264 import gather
+
+        B, T, tab = cfg["batch"], cfg["frames"], tables.numpy()
+        while (slot := jobs.get()) is not None:
+            v, start = store.clips(win, B, T)
+            try:
+                raw, table, _ = gather(store, [(v[i], start[i], T) for i in range(B)], out=buf[slot])
+            except ValueError as e:
+                raise RuntimeError(f"byte slot too small for a batch ({e}): raise bytes_per_frame") from None
+            tab[slot, : len(table)] = table
+            offs[slot, :2] = len(raw), len(table)
+            offs[slot, 2 : 2 + 3 * B] = np.concatenate([store.loc["h"][v], store.loc["w"][v], store.transposed[v]])
+            done.put(slot)
+        return
     drop = os.environ.get("FRAMESTORE_DROP_PAGES") == "1"
     while (slot := jobs.get()) is not None:
         try:
@@ -136,7 +153,7 @@ def _gpu_decode_into(dec, data, offs, out, B, T, stream):
             out[b] = clip.permute(0, 2, 3, 1)
 
 
-def decode_server(cfg, clips, frames, data, offsets, free, ready, stats, stop):
+def decode_server(cfg, clips, frames, data, offsets, tables, free, ready, stats, stop):
     import warnings
 
     warnings.filterwarnings("ignore")
@@ -149,7 +166,9 @@ def decode_server(cfg, clips, frames, data, offsets, free, ready, stats, stop):
         for i in range(cfg["cpu_workers"])
     ]
     procs += [
-        ctx.Process(target=byte_reader, args=(cfg, data, offsets, bjobs, bdone, cfg["seed"] + 500 + i), daemon=True)
+        ctx.Process(
+            target=byte_reader, args=(cfg, data, offsets, tables, bjobs, bdone, cfg["seed"] + 500 + i), daemon=True
+        )
         for i in range(cfg["byte_readers"])
     ]
     for p in procs:
@@ -190,6 +209,32 @@ def decode_server(cfg, clips, frames, data, offsets, free, ready, stats, stop):
             pending[slot] = B
             for pos in range(B):
                 cjobs.put((slot, pos))
+
+    def mp4_path():  # MP4 store, decoded by gpu_h264: a batch's bytes and slice table -> RGB clips in a clip slot
+        from .gpu_h264 import decode, prepare_device, to_rgb
+
+        stream, T = torch.cuda.Stream(), cfg["frames"]
+        err = torch.cuda.cudart().cudaHostRegister(data.data_ptr(), data.numel(), 0)
+        assert int(err) == 0, err
+        for s in range(data.shape[0]):
+            bjobs.put(s)
+        while not stop.is_set():
+            try:
+                slot = bdone.get(timeout=0.5)
+            except queue.Empty:
+                continue
+            if (v := take()) is None:
+                break
+            o = offsets[slot].numpy()
+            n, S = int(o[0]), int(o[1])
+            with torch.cuda.stream(stream):
+                batch = prepare_device(data[slot, :n], tables[slot, :S].numpy(), cfg["geom"])
+                (Y, U, V), _ = decode(batch)
+                to_rgb(Y, U, V, o[2 : 2 + 3 * B].reshape(3, B).T, T, clips[v])
+            stream.synchronize()
+            ready.put(v)
+            stats[1] += B
+            bjobs.put(slot)
 
     def gpu_path():
         from .decoders import Decoder
@@ -233,7 +278,7 @@ def decode_server(cfg, clips, frames, data, offsets, free, ready, stats, stop):
             stats[1] += B
 
     threads = ([threading.Thread(target=cpu_path, daemon=True)] if cfg["cpu_workers"] else []) + (
-        [threading.Thread(target=gpu_path, daemon=True)] if cfg["byte_readers"] else []
+        [threading.Thread(target=mp4_path if cfg["mp4"] else gpu_path, daemon=True)] if cfg["byte_readers"] else []
     )
     if cfg["decoder"] == "nvdec":
         threads += [threading.Thread(target=nvdec_path, args=(k,), daemon=True) for k in range(cfg["nvdec_threads"])]
@@ -279,7 +324,7 @@ class SharedClipLoader:
         stride=1,
         size=(224, 224),
         cpu_workers=None,
-        byte_readers=1,
+        byte_readers=None,
         gpu_servers=2,
         column="frame",
         clip_slots=4,
@@ -319,14 +364,27 @@ class SharedClipLoader:
                 raise ValueError("an MP4 store keeps frames at its build's fps: stride must be 1")
             if decoders is None:
                 kinds = []
-            elif set(kinds) - {"nvdec"}:
-                raise ValueError(f"decoders {decoders!r}: an MP4 store decodes with nvdec and cpu")
-            gpu_servers, byte_readers = len(kinds), 0
+            elif set(kinds) - {"nvdec", "triton"}:
+                raise ValueError(f"decoders {decoders!r}: an MP4 store decodes with triton, nvdec and cpu")
+            elif "triton" in kinds and "nvdec" in kinds:
+                raise ValueError(f"decoders {decoders!r}: an MP4 store decodes with triton or nvdec, not both")
+            gpu_servers = len(kinds)
+            byte_readers = (byte_readers or 2) if "triton" in kinds else 0
+            geom, max_slices = (0, 0, 0), 1
+            if "triton" in kinds:
+                from .mp4 import Mp4Store
+
+                st = Mp4Store(store)
+                if st.sloc is None:
+                    raise ValueError(f"{store} has no slice index: rebuild it to decode on the GPU (decoders triton)")
+                _, mh, mw, coff, _, _ = st.slices(0)
+                geom, max_slices = (mh, mw, coff), batch * frames * mh
         elif "nvdec" in kinds:
             raise ValueError(f"decoders {decoders!r}: nvdec decodes MP4 stores, this is a frame store")
         self.kinds = kinds
         if cpu_workers is None:
             cpu_workers = job_cpus()  # niced: the servers and the trainer win any contention
+        byte_readers = 1 if byte_readers is None else byte_readers  # (MP4 stores, GPU decode: 2, set above)
         self.cpu_workers, self.byte_readers = cpu_workers, byte_readers if gpu_servers else 0
         ctx = mp.get_context("spawn")
         self.clips = torch.empty(clip_slots, batch, frames, H, W, 3, dtype=torch.uint8, device="cuda")
@@ -335,7 +393,11 @@ class SharedClipLoader:
         data = torch.empty(
             n, byte_slots if byte_readers else 1, batch * frames * bytes_per_frame, dtype=torch.uint8
         ).share_memory_()
-        offsets = torch.zeros(n, data.shape[1], batch * frames + 1, dtype=torch.int64).share_memory_()
+        offsets = torch.zeros(
+            n, data.shape[1], max(batch * frames + 1, 3 * batch + 2), dtype=torch.int64
+        ).share_memory_()
+        tables = torch.zeros(n, data.shape[1] if mp4 else 1, max_slices if mp4 else 1, 4, dtype=torch.int32)
+        tables = tables.share_memory_()
         self._stats = torch.zeros(n, 2, dtype=torch.int64).share_memory_()
         self.free, self.ready, self.stop = ctx.Queue(), ctx.Queue(), ctx.Event()
         for v in range(clip_slots):
@@ -345,6 +407,7 @@ class SharedClipLoader:
             cfg = {
                 "store": store,
                 "mp4": mp4,
+                "geom": geom if mp4 else None,
                 "frames": frames,
                 "stride": stride,
                 "size": (H, W),
@@ -362,7 +425,18 @@ class SharedClipLoader:
             }
             p = ctx.Process(
                 target=decode_server,
-                args=(cfg, self.clips, host, data[i], offsets[i], self.free, self.ready, self._stats[i], self.stop),
+                args=(
+                    cfg,
+                    self.clips,
+                    host,
+                    data[i],
+                    offsets[i],
+                    tables[i],
+                    self.free,
+                    self.ready,
+                    self._stats[i],
+                    self.stop,
+                ),
             )
             p.start()
             self.servers.append(p)
