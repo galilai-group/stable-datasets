@@ -85,10 +85,12 @@ def video_format(schema):
     return m
 
 
-def encode(chunks, h, w, fps, crf=18, keyint=4, preset="medium"):
+def encode(chunks, h, w, fps, crf=18, keyint=4, preset="medium", gpu=True):
     """MP4 bytes of the frames in `chunks` (an iterable of (n, h, w, 3) uint8 arrays; h and w even), at `fps`: libx264,
     a closed keyframe every `keyint` frames, no B-frames, -tune fastdecode, BT.601 4:2:0, moov first. One thread (the
-    builder runs one encoder per CPU)."""
+    builder runs one encoder per CPU). gpu: the subset stable_datasets.framestore.gpu_h264 decodes (baseline profile, one reference
+    frame, one slice per macroblock row); every decoder reads it, at 0-11% more bytes."""
+    extra = ["-profile:v", "baseline", "-x264-params", f"ref=1:slices={(h + 15) // 16}"] if gpu else []
     with tempfile.TemporaryDirectory() as d:
         out = os.path.join(d, "v.mp4")  # +faststart rewrites the file, so not a pipe
         cmd = ["ffmpeg", "-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{w}x{h}",
@@ -96,7 +98,7 @@ def encode(chunks, h, w, fps, crf=18, keyint=4, preset="medium"):
                "-g", str(keyint), "-keyint_min", str(keyint), "-sc_threshold", "0", "-bf", "0", "-flags", "+cgop",
                "-tune", "fastdecode", "-threads", "1", "-pix_fmt", "yuv420p", "-colorspace", "smpte170m",
                "-color_primaries", "smpte170m", "-color_trc", "smpte170m", "-color_range", "tv",
-               "-movflags", "+faststart", out]  # fmt: skip
+               *extra, "-movflags", "+faststart", out]  # fmt: skip
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
             for c in chunks:
@@ -109,6 +111,49 @@ def encode(chunks, h, w, fps, crf=18, keyint=4, preset="medium"):
             raise RuntimeError(f"ffmpeg failed: {err}")
         with open(out, "rb") as f:
             return f.read()
+
+
+# slice index (stable_datasets.framestore.gpu_h264's input, built with the store): a header (frames, mb_h, mb_w, chroma qp offset), each
+# frame's sample offset in the MP4, then per frame and slice (macroblock row order) a record: payload offset in the
+# sample, payload size (escaped), the bit where the slice data starts (after the header, in the unescaped payload),
+# qp | intra << 7
+SLICE_REC = np.dtype([("off", "<u4"), ("size", "<u2"), ("data_bit", "u1"), ("qp_i", "u1")])
+
+
+def slice_index(data):
+    """The slice index (bytes) of an MP4 written with gpu=True; raises h264.UnsupportedStream if its slices are not
+    macroblock rows."""
+    from . import h264
+
+    sps_nal, pps_nal, nal_len, samples = h264.mp4_samples(data)
+    sps, pps = h264.parse_sps(h264.unescape(sps_nal)), h264.parse_pps(h264.unescape(pps_nal))
+    H, W = sps["mb_h"], sps["mb_w"]
+    rec = np.zeros((len(samples), H), SLICE_REC)
+    for k, (off, size) in enumerate(samples):
+        p, rows = off, []
+        while p < off + size:
+            n = int.from_bytes(data[p : p + nal_len], "big")
+            a = p + nal_len
+            if data[a] & 31 in (1, 5):
+                h = h264.parse_slice_header(h264.unescape(data[a : a + min(n, 96)]), sps, pps)
+                rows.append((h["first_mb"], a - off, n, h["data_bit"], h["qp"] | (128 if h["type"] == 2 else 0)))
+            p = a + n
+        rows.sort()
+        if len(rows) != H or any(r[0] != i * W for i, r in enumerate(rows)):
+            raise h264.UnsupportedStream("slices are not macroblock rows")
+        rec[k] = [r[1:] for r in rows]
+    head = np.array([len(samples), H, W, pps["chroma_qp_offset"]], "<i4")
+    offs = np.array([o for o, _ in samples], "<u4")
+    return head.tobytes() + offs.tobytes() + rec.tobytes()
+
+
+def read_slice_index(buf):
+    """(frames, mb_h, mb_w, chroma qp offset, sample offsets (frames,), records (frames, mb_h)) of a slice index."""
+    b = np.frombuffer(buf, np.uint8)
+    n, H, W, coff = (int(x) for x in b[:16].view("<i4"))
+    offs = b[16 : 16 + 4 * n].view("<u4")
+    rec = b[16 + 4 * n : 16 + 4 * n + n * H * SLICE_REC.itemsize].view(SLICE_REC).reshape(n, H)
+    return n, H, W, coff, offs, rec
 
 
 class _Blob(io.RawIOBase):
@@ -160,6 +205,10 @@ class Mp4Store:
             raise ValueError(f"read={self.read!r}: an MP4 store reads with mmap or pread")
         fs = FrameStore(path, index=True, column="video")  # blob descriptors of every video, the files mapped
         self.bufs, self.loc = fs.bufs, fs.index
+        self.sloc = None  # the slice index's descriptors (stores built for the GPU decoder)
+        if "slices" in ds.schema.names:
+            si = FrameStore(path, index=True, column="slices")
+            self.sbufs, self.sloc = si.bufs, si.index
         cols = ["frames", "fps"] + (["transposed"] if "transposed" in ds.schema.names else [])
         t = ds.to_table(columns=cols)
         self.n = t.column("frames").to_numpy().astype(np.int64)
@@ -184,6 +233,27 @@ class Mp4Store:
         v = ok[rng.integers(0, len(ok), count)]
         starts = (self.n[v] - frames) // self.keyint + 1
         return v, (rng.random(count) * starts).astype(np.int64) * self.keyint
+
+    def slices(self, video):
+        """Video `video`'s slice index (read_slice_index's tuple)."""
+        f, pos, size = (int(self.sloc[k][video]) for k in ("fid", "pos", "size"))
+        return read_slice_index(self.sbufs[f][pos : pos + size])
+
+    def clip_bytes(self, video, start, frames):
+        """(the bytes of frames [start, start + frames) of video `video`: one stretch of its MP4, slice table
+        (frames * mb_h, 4) int32: payload offset in that stretch, payload size, data bit, qp | intra << 7)."""
+        _, H, _, _, offs, rec = self.slices(video)
+        r = rec[start : start + frames]
+        begin = int(offs[start] + r[0, 0]["off"])
+        last = r[-1, -1]
+        end = int(offs[start + frames - 1] + last["off"] + last["size"])
+        f, pos, _ = (int(self.loc[k][video]) for k in ("fid", "pos", "size"))
+        table = np.empty((frames * H, 4), np.int32)
+        table[:, 0] = (offs[start : start + frames, None].astype(np.int64) + r["off"] - begin).reshape(-1)
+        table[:, 1] = r["size"].reshape(-1)
+        table[:, 2] = r["data_bit"].reshape(-1)
+        table[:, 3] = r["qp_i"].reshape(-1)
+        return self.bufs[f][pos + begin : pos + end], table
 
     def file(self, video):
         """Video `video`'s MP4 as a file object (reads go to the map or the file, nothing copied up front)."""
