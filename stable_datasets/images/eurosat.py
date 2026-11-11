@@ -59,7 +59,7 @@ class EuroSAT(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         class_names = self.info.features["label"].names
         label_mapping = {name: idx for idx, name in enumerate(class_names)}
 

@@ -83,7 +83,7 @@ class Flowers17(BaseDatasetBuilder):
             SplitGenerator(name=Split.TEST, gen_kwargs={"path_map": path_map, "split": "test"}),
         ]
 
-    def _generate_examples(self, path_map, split):
+    def _iter_examples(self, path_map, split):
         partition = self.config.name[-1]
         split_key = {"train": "trn", "validation": "val", "test": "tst"}[split] + partition
         split_data = scipy.io.loadmat(path_map["splits"])

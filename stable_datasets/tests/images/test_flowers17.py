@@ -11,7 +11,7 @@ def test_flowers17_dataset(partition, tmp_path, monkeypatch):
     split_specs = {"train": ("trn", 680), "validation": ("val", 340), "test": ("tst", 340)}
     generated_ids = {}
     expected_ids = {}
-    generate_examples = Flowers17._generate_examples
+    generate_examples = Flowers17._iter_examples
 
     # Observe real generated IDs without changing the examples sent to the cache.
     def record_examples(builder, path_map, split):
@@ -22,7 +22,7 @@ def test_flowers17_dataset(partition, tmp_path, monkeypatch):
             generated_ids[split].add(image_id)
             yield image_id, example
 
-    monkeypatch.setattr(Flowers17, "_generate_examples", record_examples)
+    monkeypatch.setattr(Flowers17, "_iter_examples", record_examples)
     # Fresh processed caches ensure the generator runs; raw downloads can be reused.
     flowers = Flowers17(config_name=f"partition{partition}", processed_cache_dir=tmp_path / "processed")
     assert set(flowers) == set(split_specs)

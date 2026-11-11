@@ -23,7 +23,7 @@ def _idx_pair(tmp_path, images=None, labels=None):
 def test_idx_pixels_and_labels(tmp_path):
     images, labels = _idx_pair(tmp_path)
     builder = object.__new__(KannadaMNIST)
-    rows = list(builder._generate_examples(images, labels, "train"))
+    rows = list(builder._iter_examples(images, labels, "train"))
     assert [key for key, _ in rows] == [0, 1]
     assert [row["label"] for _, row in rows] == [3, 9]
     assert np.all(rows[0][1]["image"] == 17)
@@ -50,7 +50,7 @@ def test_idx_pixels_and_labels(tmp_path):
 def test_invalid_idx(tmp_path, images, labels, message):
     paths = _idx_pair(tmp_path, images, labels)
     with pytest.raises(ValueError, match=message):
-        list(object.__new__(KannadaMNIST)._generate_examples(*paths, "train"))
+        list(object.__new__(KannadaMNIST)._iter_examples(*paths, "train"))
 
 
 def test_cache_roundtrip(tmp_path, monkeypatch):
@@ -102,4 +102,4 @@ def test_official_splits():
 def test_unknown_split_is_rejected(tmp_path):
     paths = _idx_pair(tmp_path)
     with pytest.raises(ValueError, match="Unknown Kannada-MNIST split"):
-        list(object.__new__(KannadaMNIST)._generate_examples(*paths, "validation"))
+        list(object.__new__(KannadaMNIST)._iter_examples(*paths, "validation"))

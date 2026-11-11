@@ -190,7 +190,7 @@ class GroceryStore(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         list_name = "val" if split == "validation" else split
         with zipfile.ZipFile(data_path, "r") as archive:
             # GitHub archives wrap everything in a "<repo>-<commit>/" folder.

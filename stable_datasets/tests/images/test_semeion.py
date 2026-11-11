@@ -39,7 +39,7 @@ def _builder():
 
 
 def _load_rows(path, split):
-    return list(_builder()._generate_examples(path, split=split))
+    return list(_builder()._iter_examples(path, split=split))
 
 
 def test_local_split_counts(data_file):

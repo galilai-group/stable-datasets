@@ -81,7 +81,7 @@ class KatherColorectalHistology(BaseDatasetBuilder):
             license=source.license,
         )
 
-    def _generate_examples(self, data_path=None, **_kwargs):
+    def _iter_examples(self, data_path=None, **_kwargs):
         """Yield sorted tile paths, losslessly encoded images, and source groups."""
         if data_path is None:
             raise TypeError("data_path is required")

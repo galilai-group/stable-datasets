@@ -110,13 +110,13 @@ def test_archive_prefix_does_not_change_membership(plant_village_archive, split_
 
 
 @pytest.mark.parametrize(("split", "expected_count"), [(Split.TRAIN, 32), (Split.TEST, 8)])
-def test_generate_examples(plant_village_archive, split_manifests, tmp_path, monkeypatch, split, expected_count):
+def test_iter_examples(plant_village_archive, split_manifests, tmp_path, monkeypatch, split, expected_count):
     builder = make_builder()
     builder._raw_download_dir = tmp_path
     monkeypatch.setattr(
         "stable_datasets.images.plant_village.bulk_download", lambda *args, **kwargs: [plant_village_archive]
     )
-    examples = list(builder._generate_examples(data_path=split_manifests[split], split=split))
+    examples = list(builder._iter_examples(data_path=split_manifests[split], split=split))
     assert len(examples) == expected_count
     for key, example in examples:
         assert key.endswith(".jpg")
@@ -130,7 +130,7 @@ def test_generate_examples(plant_village_archive, split_manifests, tmp_path, mon
 @pytest.mark.parametrize("split", ["invalid", Split.VALIDATION])
 def test_unknown_split_raises(plant_village_archive, split):
     with pytest.raises(ValueError, match="Unknown PlantVillage split"):
-        list(make_builder()._generate_examples(data_path=plant_village_archive, split=split))
+        list(make_builder()._iter_examples(data_path=plant_village_archive, split=split))
 
 
 def test_missing_image_raises(plant_village_archive, tmp_path):
@@ -156,7 +156,7 @@ def test_empty_manifest_raises(plant_village_archive, tmp_path, monkeypatch):
         "stable_datasets.images.plant_village.bulk_download", lambda *args, **kwargs: [plant_village_archive]
     )
     with pytest.raises(ValueError, match="No PlantVillage color images"):
-        list(builder._generate_examples(data_path=manifest, split=Split.TRAIN))
+        list(builder._iter_examples(data_path=manifest, split=Split.TRAIN))
 
 
 @pytest.fixture(scope="module")

@@ -64,7 +64,7 @@ class Semeion(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate images and labels from the Semeion text file."""
 
         data = np.loadtxt(data_path, dtype=np.float32)

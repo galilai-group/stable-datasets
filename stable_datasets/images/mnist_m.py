@@ -71,7 +71,7 @@ class MNISTM(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         labels, images = self._read_split(data_path, split)
 
         for idx, (file_name, label) in enumerate(tqdm(labels, desc=f"Processing {split} split")):

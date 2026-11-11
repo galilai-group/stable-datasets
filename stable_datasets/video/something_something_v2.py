@@ -147,7 +147,7 @@ class SomethingSomethingV2(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(
+    def _iter_examples(
         self,
         annotation_file: Path,
         videos_dir: Path,

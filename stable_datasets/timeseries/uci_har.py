@@ -67,7 +67,7 @@ class UCIHAR(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # The UCI download wraps the original dataset ZIP in another ZIP.
         with zipfile.ZipFile(data_path) as outer:
             with zipfile.ZipFile(io.BytesIO(outer.read("UCI HAR Dataset.zip"))) as archive:

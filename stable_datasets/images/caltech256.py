@@ -55,7 +55,7 @@ class Caltech256(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the .tar archive."""
         with tarfile.open(data_path, "r") as tar:
             for member in tar:

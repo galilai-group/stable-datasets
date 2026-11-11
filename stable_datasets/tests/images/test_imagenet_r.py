@@ -78,7 +78,7 @@ def test_builder_metadata():
     assert assets["test"].checksum.startswith("sha256:")
 
 
-def test_generate_examples_on_fake_archive(tmp_path, monkeypatch):
+def test_iter_examples_on_fake_archive(tmp_path, monkeypatch):
     tar_path = tmp_path / "imagenet-r.tar"
     _create_fake_imagenet_r_tar(
         tar_path,
@@ -129,7 +129,7 @@ def test_unknown_class_folder_fails_loudly(tmp_path):
 
     builder = _metadata_only_builder()
     with pytest.raises(KeyError):
-        list(builder._generate_examples(data_path=tar_path, split="test"))
+        list(builder._iter_examples(data_path=tar_path, split="test"))
 
 
 def test_imagenet_r_real_dataset():

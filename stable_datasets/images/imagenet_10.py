@@ -60,7 +60,7 @@ class Imagenette(BaseDatasetBuilder):
             SplitGenerator(name=Split.VALIDATION, gen_kwargs={"data_path": archive_path, "split": "val"}),
         ]
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         mode = "r|*" if self.streaming else "r:*"
         with tarfile.open(Path(data_path), mode) as archive:
             for member in archive:

@@ -91,7 +91,7 @@ class AIDERv2(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # Each split is a separate zip, so no split folder needs to be matched. The label comes only
         # from the class folder that directly contains the image, whatever the folders above it
         # are called (e.g. Train/Flood/img (1).jpg or data/Dataset_Images/Train/Flood/img (1).jpg).

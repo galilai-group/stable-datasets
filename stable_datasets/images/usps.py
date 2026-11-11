@@ -45,7 +45,7 @@ class USPS(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         with bz2.open(data_path, "rt", encoding="ascii") as stream:
             for index, line in enumerate(stream):
                 fields = line.split()

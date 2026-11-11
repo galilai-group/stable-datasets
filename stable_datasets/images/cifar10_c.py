@@ -59,7 +59,7 @@ class CIFAR10C(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split, corruptions=None):
+    def _iter_examples(self, data_path, split, corruptions=None):
         """Generates corrupted CIFAR-10-C examples.
 
         Note: split parameter is unused as CIFAR-10-C only contains a test split.

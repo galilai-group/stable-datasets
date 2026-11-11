@@ -102,4 +102,4 @@ def test_cifar10_1_rejects_invalid_arrays(tmp_path: Path, images: np.ndarray, la
 
     instance = object.__new__(CIFAR10_1)
     with pytest.raises(ValueError, match=message):
-        list(instance._generate_examples(images_path, labels_path))
+        list(instance._iter_examples(images_path, labels_path))

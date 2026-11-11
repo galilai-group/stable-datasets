@@ -66,7 +66,7 @@ class Places365Small(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, archive_path, split, devkit_path=None):
+    def _iter_examples(self, archive_path, split, devkit_path=None):
         with tarfile.open(archive_path, "r") as tar:
             if split == "train":
                 for member in tar.getmembers():

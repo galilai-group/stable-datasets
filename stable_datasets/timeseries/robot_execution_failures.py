@@ -79,7 +79,7 @@ class RobotExecutionFailures(BaseDatasetBuilder):
             license=self.SOURCE.license,
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         if split != "train":
             raise ValueError("Robot Execution Failures exposes only the unsplit 'train' collection")
         filename = f"{self.config.name}.data"

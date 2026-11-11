@@ -28,7 +28,7 @@ def test_arrow_storage_rejects_video_frames_layout(tmp_path):
         def _split_generators(self):
             return [SplitGenerator(name=Split.TRAIN, gen_kwargs={})]
 
-        def _generate_examples(self):
+        def _iter_examples(self):
             yield 0, {"video": "unused.mp4"}
 
     with pytest.raises(ValueError, match="requires storage_format='lance'"):
@@ -184,7 +184,7 @@ def test_builder_decode_video_with_frames_storage(tmp_path):
         def _split_generators(self):
             return [SplitGenerator(name=Split.TRAIN, gen_kwargs={})]
 
-        def _generate_examples(self):
+        def _iter_examples(self):
             yield 0, {"video": video_path}
 
     ds = _FramesBuilder(

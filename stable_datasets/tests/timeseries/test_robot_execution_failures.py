@@ -35,7 +35,7 @@ def test_every_configuration_preserves_axes_and_labels(tmp_path, config):
     obj = builder(config)
     names = RobotExecutionFailures.CLASS_NAMES[config]
     path = archive(tmp_path, {f"nested/{config}.data": record(names[0]) + record(names[-1]), "a.out": "unused"})
-    rows = list(obj._generate_examples(path, "train"))
+    rows = list(obj._iter_examples(path, "train"))
     assert obj.info.features["label"].names == list(names)
     assert [key for key, row in rows] == [0, 1]
     assert [row["label"] for key, row in rows] == [0, len(names) - 1]
@@ -64,16 +64,16 @@ def test_every_configuration_preserves_axes_and_labels(tmp_path, config):
 def test_rejects_malformed_records(tmp_path, content):
     path = archive(tmp_path, {"lp1.data": content})
     with pytest.raises(ValueError):
-        list(builder()._generate_examples(path, "train"))
+        list(builder()._iter_examples(path, "train"))
 
 
 def test_rejects_missing_duplicate_members_and_invalid_split(tmp_path):
     obj = builder()
     for members in [{"other.data": record()}, {"a/lp1.data": record(), "b/lp1.data": record()}]:
         with pytest.raises(ValueError, match="exactly one"):
-            list(obj._generate_examples(archive(tmp_path, members), "train"))
+            list(obj._iter_examples(archive(tmp_path, members), "train"))
     with pytest.raises(ValueError, match="unsplit"):
-        list(obj._generate_examples(None, "all"))
+        list(obj._iter_examples(None, "all"))
     with pytest.raises(ValueError):
         builder("not-a-task")
 

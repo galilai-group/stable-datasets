@@ -55,7 +55,7 @@ class DTD(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         with tarfile.open(data_path, "r:gz") as tar:
             split_file = f"dtd/labels/{split}1.txt"
             file_names = self._read_split_file(tar, split_file)

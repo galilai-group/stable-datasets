@@ -60,7 +60,7 @@ class BelgiumTSC(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Yield the PPMs under ``<Training|Testing>/<class id>/`` in the zip archive, re-encoded as PNG.
 
         The label is the class folder. The per-class ``GT-*.csv`` files list a few images that are not in
