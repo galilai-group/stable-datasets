@@ -4,7 +4,6 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import numpy as np
-import torch
 
 from stable_datasets.schema import ClassLabel, DatasetInfo, DatasetSource, DownloadInfo, Features, Image, Version
 from stable_datasets.splits import Split, SplitGenerator
@@ -30,6 +29,8 @@ _ANNOTATION_FIELDS = ("noisy_label",)
 
 
 def _load_annotations(path, field_names, expected_count, num_classes):
+    import torch  # the annotations are a torch pickle; torch is optional for the rest of the library
+
     try:
         annotations = torch.load(path, map_location="cpu", weights_only=False)
     except TypeError:  # Compatibility with PyTorch versions before weights_only was added.
