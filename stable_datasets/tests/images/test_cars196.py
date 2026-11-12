@@ -1,11 +1,7 @@
 import numpy as np
-import pytest
 from PIL import Image
 
 from stable_datasets.images import Cars196
-
-
-pytestmark = pytest.mark.large
 
 
 def test_cars196_dataset():

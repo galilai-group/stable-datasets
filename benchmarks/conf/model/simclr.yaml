@@ -1,5 +1,5 @@
 name: simclr
-forward: simclr_forward
+forward: simclr
 
 transforms:
   type: multiview

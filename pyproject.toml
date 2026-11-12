@@ -46,7 +46,8 @@ benchmarks = [
     "psutil",
     "datasets",
     "torchvision",
-    "stable-pretraining @ git+https://github.com/galilai-group/stable-pretraining",
+    # Pinned because upstream renames APIs between patch releases; Dependabot opens a PR for each new release.
+    "stable-pretraining==0.1.8",
     "hydra-core>=1.3",
     "hydra-submitit-launcher>=1.2",
     "hydra-joblib-launcher>=1.2",
@@ -101,9 +102,12 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 
+# Fail on unknown markers, so a typo like `@pytest.mark.larg` can't silently run a huge download in CI.
+addopts = "--strict-markers"
+
 # Custom markers
 markers = [
-    "large: Tests for datasets too large to run in CI",
+    "large: downloads more than ~10 GB, so it never runs in CI; run it by hand before merging",
 ]
 
 #####################
@@ -153,8 +157,16 @@ fix = true
 ignore = ["C901", "E501", "E741", "F402", "F823", "SIM1", "SIM300", "SIM212", "SIM905", "UP009", "UP015", "UP031", "UP028", "UP004", "UP045", "UP007", "UP035"]
 # RUF013: Checks for the use of implicit Optional
 #  in type annotations when the default parameter value is None.
-select = ["C", "E", "F", "I", "W", "RUF013", "PERF102", "PLC1802", "PLC0208", "SIM", "UP"]
+# D101/D102/D103: public classes, methods and functions need a docstring (dataset builders only, see below).
+select = ["C", "E", "F", "I", "W", "RUF013", "PERF102", "PLC1802", "PLC0208", "SIM", "UP", "D101", "D102", "D103"]
 extend-safe-fixes = ["UP006"]
+
+[tool.ruff.lint.per-file-ignores]
+# Only dataset builders are required to have docstrings for now.
+"!stable_datasets/{images,timeseries,video,tabular}/*.py" = ["D101", "D102", "D103"]
+# Stubs that open PRs replace with documented builders (#88, #40); drop these once they merge.
+"stable_datasets/images/patch_camelyon.py" = ["D101"]
+"stable_datasets/timeseries/brain_mnist.py" = ["D101"]
 
 # old: config
 # select = ["E4", "E7", "E9", "F", "D"]

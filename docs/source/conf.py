@@ -47,6 +47,9 @@ autodoc_default_options = {
     "members": True,
     "undoc-members": False,
     "show-inheritance": True,
+    # Document each class once, in the module that defines it, not again under every
+    # package that re-exports it through __all__ (duplicates make cross-references ambiguous).
+    "ignore-module-all": True,
 }
 
 napoleon_google_docstring = True
@@ -77,9 +80,7 @@ numfig_secnum_depth = 3
 pygments_style = "tango"
 pygments_style_dark = "github-dark"
 html_permalinks_icon = Icons.permalinks_icon
-html_static_path = ["_static"]
 html_css_files = [
-    "css/custom.css",
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css",
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css",
     "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css",
@@ -89,7 +90,6 @@ html_show_sourcelink = False
 html_copy_source = False
 html_title = "stable-datasets"
 html_theme = "sphinxawesome_theme"
-html_favicon = "_static/img/favicon.ico"
 
 html_theme_options = {
     # "logo_light": "_static/img/logo-light.svg",
