@@ -86,6 +86,26 @@ def pytest_terminal_summary(terminalreporter):
             f.write("\n".join(lines) + "\n")
 
 
+@pytest.fixture(scope="module")
+def shared_download_dir(tmp_path_factory, request):
+    """A raw-download directory shared by every test in one module.
+
+    The autouse cleanup below wipes the *default* download directory after each
+    test, so a test file with several functions would otherwise re-fetch the same
+    archive once per test -- MVTec-AD's smallest category archive is ~109 MB and
+    MedIAnomaly's smallest subset ~42 MB, so that adds up quickly in CI.
+
+    Anchoring downloads here keeps one copy per module. It sits outside the
+    default cache directory so the cleanup does not touch it, and pytest reclaims
+    it with the rest of the session's temporary directories.
+
+    Pass it as ``download_dir=`` alongside a per-test ``processed_cache_dir=``,
+    so each test still builds its cache from scratch while reusing the download.
+    """
+    module_name = request.module.__name__.rsplit(".", 1)[-1]
+    return str(tmp_path_factory.mktemp(f"dl_{module_name}_"))
+
+
 @pytest.fixture(autouse=True, scope="function")
 def cleanup_stable_datasets_cache_after_test():
     """Remove stable_datasets cache dirs after each test when running in CI.

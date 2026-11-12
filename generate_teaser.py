@@ -23,6 +23,7 @@ def generate_teaser(
     output_path: str | None = None,
     figsize_per_sample: float = 1.5,
     variant: str | None = None,
+    split: str = "train",
 ):
     """
     Generate a teaser figure for a dataset.
@@ -35,6 +36,8 @@ def generate_teaser(
         output_path: Path to save the figure (if None, display instead)
         figsize_per_sample: Width per sample in inches
         variant: Optional dataset variant/config name (e.g. MedMNIST variants)
+        split: Split to sample from. Anomaly-detection datasets have a single-class
+            (all-normal) train split, so they need ``split="test"`` to show both classes.
     """
     # Try to import the dataset
     try:
@@ -54,9 +57,9 @@ def generate_teaser(
     # Load the dataset
     print(f"Loading {dataset_name} dataset...")
     if variant is None:
-        dataset = dataset_class(split="train")
+        dataset = dataset_class(split=split)
     else:
-        dataset = dataset_class(split="train", config_name=variant)
+        dataset = dataset_class(split=split, config_name=variant)
 
     # Get samples from different classes
     samples = []
@@ -74,13 +77,27 @@ def generate_teaser(
 
         idx += 1
 
-    # If we couldn't get enough unique classes, fill with remaining samples
+    # If there are fewer classes than requested samples, top up by cycling through
+    # the classes rather than restarting at index 0 -- otherwise a dataset whose
+    # rows are grouped by class (any anomaly-detection set) yields a strip that is
+    # almost entirely one class.
     if len(samples) < num_samples:
-        print(f"Warning: Only found {len(samples)} unique classes, but {num_samples} samples requested.")
-        idx = 0
-        while len(samples) < num_samples and idx < len(dataset):
-            samples.append(dataset[idx])
-            idx += 1
+        print(f"Only found {len(samples)} unique classes for {num_samples} samples; balancing across them.")
+
+        # Index labels without decoding images ("raw" skips the image codec), since
+        # rows grouped by class mean the classes we need can sit anywhere in the split.
+        label_view = dataset.with_format("raw") if hasattr(dataset, "with_format") else dataset
+        indices_by_class: dict = {}
+        for idx in range(len(dataset)):
+            indices_by_class.setdefault(label_view[idx].get(label_key), []).append(idx)
+
+        chosen: list[int] = []
+        while len(chosen) < num_samples and any(indices_by_class.values()):
+            for label in sorted(indices_by_class, key=lambda value: (value is None, value)):
+                if indices_by_class[label] and len(chosen) < num_samples:
+                    chosen.append(indices_by_class[label].pop(0))
+
+        samples = [dataset[idx] for idx in sorted(chosen)]
 
     # Create figure
     fig = plt.figure(figsize=(figsize_per_sample * num_samples, figsize_per_sample * 1.1))
@@ -205,6 +222,12 @@ Examples:
         help='Optional dataset variant/config name (e.g., "dermamnist" for MedMNIST).',
     )
     parser.add_argument(
+        "--split",
+        type=str,
+        default="train",
+        help="Split to sample from (default: 'train'; anomaly datasets need 'test')",
+    )
+    parser.add_argument(
         "--image-key",
         type=str,
         default="image",
@@ -237,6 +260,7 @@ Examples:
         num_samples=args.num_samples,
         image_key=args.image_key,
         label_key=args.label_key,
+        split=args.split,
         output_path=args.output,
         figsize_per_sample=args.figsize,
         variant=args.variant,

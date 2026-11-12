@@ -79,8 +79,10 @@ from .lc25000 import LC25000
 from .linnaeus5 import Linnaeus5
 from .malaria import Malaria
 from .med_mnist import MedMNIST
+from .medianomaly import MedIAnomaly
 from .mnist_c import MNISTC
 from .mnist_m import MNISTM
+from .mvtec_ad import MVTecAD
 from .not_mnist import NotMNIST
 
 # from .mnist import MNIST
@@ -100,6 +102,7 @@ from .rendered_sst2 import RenderedSST2
 from .rock_paper_scissor import RockPaperScissor
 from .scene8 import Scene8
 from .semeion import Semeion
+from .sewer_ml import SewerML
 from .shapes3d import Shapes3D
 from .small_norb import SmallNORB
 from .stanford40 import Stanford40
@@ -111,6 +114,7 @@ from .tf_flowers import TFFlowers
 from .tiny_imagenet import TinyImagenet
 from .tiny_imagenet_c import TinyImagenetC
 from .usps import USPS
+from .visa import VisA
 from .weizmann_seg import WeizmannSegmentation
 
 
@@ -191,6 +195,9 @@ __all__ = [
     "KatherColorectalHistology",
     "LC25000",
     "Linnaeus5",
+    "MVTecAD",
+    "VisA",
+    "MedIAnomaly",
     "Malaria",
     "MedMNIST",
     "MNISTM",
@@ -208,6 +215,7 @@ __all__ = [
     "OracleMNIST",
     "RenderedSST2",
     "RockPaperScissor",
+    "SewerML",
     "Scene8",
     "Semeion",
     "Shapes3D",
