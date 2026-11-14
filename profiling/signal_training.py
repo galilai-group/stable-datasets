@@ -21,8 +21,8 @@ import numpy as np
 import torch
 from torch import nn
 
-from profiling.signal_cache import SignalCache, checksum
-from profiling.signal_loading import calibrate
+from profiling.signal_cache import SignalCache
+from profiling.signal_utils import calibrate, checksum
 
 
 @dataclass(frozen=True)
@@ -292,6 +292,7 @@ def build_training_report(
             "signal_training.py": checksum(Path(__file__)),
             "signal_cache.py": checksum(Path(__file__).with_name("signal_cache.py")),
             "signal_loading.py": checksum(Path(__file__).with_name("signal_loading.py")),
+            "signal_utils.py": checksum(Path(__file__).with_name("signal_utils.py")),
         },
         "model": {
             "name": "SignalRegressor",

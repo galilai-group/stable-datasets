@@ -1,0 +1,502 @@
+[
+  {
+    "original": "signal-loading-cuda-neu.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-loading-cuda-neu.json",
+    "sha256": "8220040b2df83b80518b9ab211ff9ca46ba3091e2fe2b6f6818082b651d083cf"
+  },
+  {
+    "original": "signal-loading-cuda.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-loading-cuda.json",
+    "sha256": "0bf46832efd49d04f88bbce2b0fddfe84d46f06ee244037cc0d818cddea6c992"
+  },
+  {
+    "original": "signal-loading-edf-cuda-refactored.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-loading-edf-cuda-refactored.json",
+    "sha256": "09faaacd5557a29e042c5599507bcf40b493b277e0ea0b2634a45723bb7d39b1"
+  },
+  {
+    "original": "signal-loading-edf-cuda.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-loading-edf-cuda.json",
+    "sha256": "41882c6a2c87d5d4b0d53143239873a4d46f5b547ff115384daf3c85a4ef1c48"
+  },
+  {
+    "original": "signal-loading-neonatal-validation.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-loading-neonatal-validation.json",
+    "sha256": "492ad98b1dad0709f6a0f40e2a7fb47f472ec87eb75ac706c048460b3b1b2840"
+  },
+  {
+    "original": "signal-training-neonatal-contiguous.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-training-neonatal-contiguous.json",
+    "sha256": "595c67808a6268fffbcf86c17938fa8ff328ce80e9bab9a91ed712ddf7f8b962"
+  },
+  {
+    "original": "signal-training-neonatal-final-t1.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-training-neonatal-final-t1.json",
+    "sha256": "d731a9f136d75115c050fcff34ef4e2c944d485d5353ede9a37e7a3246f6c6cb"
+  },
+  {
+    "original": "signal-training-neonatal-final-t4.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-training-neonatal-final-t4.json",
+    "sha256": "cdbbd81c95f5d0b95d6a68615cced1fcdb9c2e0fbcb37055eabd3626f228d80a"
+  },
+  {
+    "original": "signal-training-neonatal-t1.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-training-neonatal-t1.json",
+    "sha256": "767b6bd6e29b680c3312fcde006daa125860ac0e822b59405ea7ca47efbaf16a"
+  },
+  {
+    "original": "signal-training-neonatal.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-training-neonatal.json",
+    "sha256": "0491966863c34ff5b19dc00bfdd56c84701110fca9780c1307a55bb64e48b7b4"
+  },
+  {
+    "original": "signal-reproducibility-20-a/gpu-telemetry.csv",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/gpu-telemetry.csv",
+    "sha256": "4b078b098e7ac6e653941d1a384e2ea281584fd9818d7a13dbf2d35b43a7e6c3"
+  },
+  {
+    "original": "signal-reproducibility-20-a/gpu-telemetry.stderr",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/gpu-telemetry.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "original": "signal-reproducibility-20-a/protocol.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/protocol.json",
+    "sha256": "9807bd3cf42ba2066961350cdb471f1dd3df6b03921047365e14910b36a961be"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-1.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-1.json",
+    "sha256": "2d415d102ad841cc6e0e0be3b6ded61051d978b3b3521013d3e1e93e8fc5402f"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-10.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-10.json",
+    "sha256": "c6c66f152eaeb216ac5bf969cc9dc5faf133e260fd8097a5a38d1780db708c7a"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-2.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-2.json",
+    "sha256": "0165035b10c5056d75ea84f1a95f82ec734e3e6b9e00fb279a89a1f08d025219"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-3.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-3.json",
+    "sha256": "44f98381ab67d4966d37cc01a9f1178ba8e11d0287a2f9bf16a9ef82aae80313"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-4.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-4.json",
+    "sha256": "52360266815b9c320640f9d13a82cf6ecd0645e27f7e324f2a5ef6c7e8f08b6f"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-5.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-5.json",
+    "sha256": "6b1fd2fb4cda2b81a1b8ab6ed4bbdbe9d438ca72a68a04334f429d1148779c20"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-6.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-6.json",
+    "sha256": "2cdf3949e517cd8213922d3c9cf51487304296a300a2440b04d9fc97b078a93d"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-7.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-7.json",
+    "sha256": "f6b1cff31a4b412d1819470e7513503afe23cf3325241b3a62e2919d03fe7801"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-8.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-8.json",
+    "sha256": "dc340d58e5f6a2122b04c8ccdabef1d08cc1456d07464be0c909a29c23ba297d"
+  },
+  {
+    "original": "signal-reproducibility-20-a/round-9.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/round-9.json",
+    "sha256": "abbc3dbcec15d97cd29a6c4ee65a500d2f6e13b05192c2d22af6008df3478ec7"
+  },
+  {
+    "original": "signal-reproducibility-20-a/summary.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/summary.json",
+    "sha256": "51d827f3976600e9f28ba4211a9fc077d331add434e83709d4bc2998b97f7773"
+  },
+  {
+    "original": "signal-reproducibility-20-a/trace-float32_overlap.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/trace-float32_overlap.json",
+    "sha256": "4ee11466be82b45f562f84dd704fa0fa1458417eda0d22e56e57e4450575a410"
+  },
+  {
+    "original": "signal-reproducibility-20-a/trace-float32_serial.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/trace-float32_serial.json",
+    "sha256": "0be304847d93b6983f7d8214a2457526f7fea00ac1de355458493fee83b34995"
+  },
+  {
+    "original": "signal-reproducibility-20-a/trace-int16_overlap.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/trace-int16_overlap.json",
+    "sha256": "79a3bb27f3c4637a7f1e23c90a0547340fb2d54bbb40ba59b38918027f38b682"
+  },
+  {
+    "original": "signal-reproducibility-20-a/trace-int16_serial.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-a/trace-int16_serial.json",
+    "sha256": "12a9bac3eeedb54ccd58c6789acd3cda6c487a687b1f6a915bb675953671ec02"
+  },
+  {
+    "original": "signal-reproducibility-20-b/gpu-telemetry.csv",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/gpu-telemetry.csv",
+    "sha256": "e4de30cafc7defa0ab88b28d59845f0e2e8eba2328515f22c443a3756bbf73c7"
+  },
+  {
+    "original": "signal-reproducibility-20-b/gpu-telemetry.stderr",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/gpu-telemetry.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "original": "signal-reproducibility-20-b/protocol.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/protocol.json",
+    "sha256": "1be5e54d4ef8844c2fbad845ccea3dd2c5a855832107e18075a548cd0a4d010e"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-1.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-1.json",
+    "sha256": "e87350f9fa5229783c0ea3ef2ad74f34eb7abe757f196ca4577acc2a32fca8e9"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-10.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-10.json",
+    "sha256": "90390aa536666f2df648481e3e62e516ca109bde499dec47f2160f8567737bce"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-2.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-2.json",
+    "sha256": "0aa518f59c0dd6d2501150e89fb8d72a8ef83077ecfd4444eabdc15d894b80fd"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-3.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-3.json",
+    "sha256": "e0f05a03563dfdd4d0a51de32f9f1c2624471d5b1b7d34ab3448ed9019c88fc8"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-4.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-4.json",
+    "sha256": "08c8c1c39115a9053bdc0424d762e5638b75b1b6b9b36288f0fe80bf07d41a40"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-5.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-5.json",
+    "sha256": "1302fcf0c6374ca4fc175061600155a378bbbd685bc636c94e069e010dd31fad"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-6.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-6.json",
+    "sha256": "0988f8d8a8cd83ada807e6197d43a9ee256861d9edece376edb9a979aa079f65"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-7.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-7.json",
+    "sha256": "587a2a4f36f021dceab26cf512877bbd33add8aed256b1c820ecaf12cee068ea"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-8.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-8.json",
+    "sha256": "755a1ede6edf445e5d42e02793f1641649f2c141bc4b03285e5d8ab5503f454d"
+  },
+  {
+    "original": "signal-reproducibility-20-b/round-9.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/round-9.json",
+    "sha256": "20cf73966429b71275183cef20ac67d870538e886a3543ea09840fde3ac476cc"
+  },
+  {
+    "original": "signal-reproducibility-20-b/summary.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/summary.json",
+    "sha256": "7f3feb2471b5cca01af26e56e60063744a00f3b0e3b6ab97f670fdfc55efa497"
+  },
+  {
+    "original": "signal-reproducibility-20-b/trace-float32_overlap.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/trace-float32_overlap.json",
+    "sha256": "2b4af41874046d51cc1e0359404069107dfcb60e7919eb5dbc728a9a7b52d362"
+  },
+  {
+    "original": "signal-reproducibility-20-b/trace-float32_serial.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/trace-float32_serial.json",
+    "sha256": "1bada189726a22fa9019c54bb681ad77b765975ce8d8c7169858188c9f1d7f0d"
+  },
+  {
+    "original": "signal-reproducibility-20-b/trace-int16_overlap.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/trace-int16_overlap.json",
+    "sha256": "6634cf4713557e715a8f801630c4a9f77d446513821487ddecc8562b35294e92"
+  },
+  {
+    "original": "signal-reproducibility-20-b/trace-int16_serial.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-b/trace-int16_serial.json",
+    "sha256": "c8c8bd182c149acb98a4c84716b3d8461898a5c91a21a24c3a4a5ed3c6514857"
+  },
+  {
+    "original": "signal-reproducibility-20-summary.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-20-summary.json",
+    "sha256": "e3fef72df80c4badf36de21d18db41df8e2c66779e3be779c2c01a1ff1fe1c92"
+  },
+  {
+    "original": "signal-reproducibility-v1/gpu-telemetry.csv",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/gpu-telemetry.csv",
+    "sha256": "450f8d789a318bb4e32bad03d2d4dea05998356965016dc8b99e9c530409871d"
+  },
+  {
+    "original": "signal-reproducibility-v1/gpu-telemetry.stderr",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/gpu-telemetry.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "original": "signal-reproducibility-v1/protocol.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/protocol.json",
+    "sha256": "06d5b6925c512b12d51cba7dc77ca1b1253dc32b4d88f2382c77fad49f345ca9"
+  },
+  {
+    "original": "signal-reproducibility-v1/round-1.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/round-1.json",
+    "sha256": "ad81160fb6496419eda9f8c7472b33f3dd134928cf0b7c49d27557d8918a08bd"
+  },
+  {
+    "original": "signal-reproducibility-v1/round-2.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/round-2.json",
+    "sha256": "678825e9f7e47329c666de7c1ddd4e32e116d453e1f69ab22573876ba78a8414"
+  },
+  {
+    "original": "signal-reproducibility-v1/summary.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/summary.json",
+    "sha256": "c68464955f832dc191d38b287c7d1e94d2e00f4c80f9e8939dbefd96cc8f21d8"
+  },
+  {
+    "original": "signal-reproducibility-v1/trace-float32_overlap.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/trace-float32_overlap.json",
+    "sha256": "8cdd7275e65729c110c3a316d6ff68491bf960128b2781fc88cd3e6c4843827f"
+  },
+  {
+    "original": "signal-reproducibility-v1/trace-float32_serial.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/trace-float32_serial.json",
+    "sha256": "6eeffe99b4cfed9f4a7f953f1741046c23a90acb267e45a21262c13b3db5e9f1"
+  },
+  {
+    "original": "signal-reproducibility-v1/trace-int16_overlap.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/trace-int16_overlap.json",
+    "sha256": "b62a1039c63d5cc42776f69d79bf4425109a029ee63636d7420a0a38bbf20b1c"
+  },
+  {
+    "original": "signal-reproducibility-v1/trace-int16_serial.json",
+    "current": "profiling/medical_signal_research/archive/results/signal-reproducibility-v1/trace-int16_serial.json",
+    "sha256": "c83eb3cbf94637ec0311c0ab796702707b94761bffdbf0e883fba4520dfa741c"
+  },
+  {
+    "original": "native-edf-neonatal.json",
+    "current": "profiling/medical_signal_research/archive/results/native-edf-neonatal.json",
+    "sha256": "cb64b3f8609404cdc7df5e3d8469632c4f750e22161cfe4711bee31c790604aa"
+  },
+  {
+    "original": "native-edf-physionet.json",
+    "current": "profiling/medical_signal_research/archive/results/native-edf-physionet.json",
+    "sha256": "8381658babb37c173360ae10a21d61fcd9101fabb5e0d7fbf72f22d5717e78d2"
+  },
+  {
+    "original": "edf-records-neonatal-final.json",
+    "current": "profiling/medical_signal_research/archive/results/edf-records-neonatal-final.json",
+    "sha256": "e813c998e283c4af049f2b542cfe968e36265c59439e3ac93957644d8c79ceaa"
+  },
+  {
+    "original": "edf-records-neonatal-small.json",
+    "current": "profiling/medical_signal_research/archive/results/edf-records-neonatal-small.json",
+    "sha256": "a29e6a5203d58725914056656c6dc68d19d01e9f8eebc0be0c6f04287f8f9b51"
+  },
+  {
+    "original": "edf-records-neonatal.json",
+    "current": "profiling/medical_signal_research/archive/results/edf-records-neonatal.json",
+    "sha256": "b0936d22ec37efcd69debbd0753007f0484f6a6c34f93ac1dc13c8cfd12e4d90"
+  },
+  {
+    "original": "edf-records-physionet-final.json",
+    "current": "profiling/medical_signal_research/archive/results/edf-records-physionet-final.json",
+    "sha256": "19cd52280ead9478fdfaf8348bf273c105f49825d25508b7976f8cb15ee65890"
+  },
+  {
+    "original": "edf-records-physionet-small.json",
+    "current": "profiling/medical_signal_research/archive/results/edf-records-physionet-small.json",
+    "sha256": "a43d3f5a8bb2cf5e8dad7cf8aa23236d3b7e2362912b90c83d355b1e1470e7bf"
+  },
+  {
+    "original": "edf-records-physionet.json",
+    "current": "profiling/medical_signal_research/archive/results/edf-records-physionet.json",
+    "sha256": "2d94222f80b21e5c9782c5b5e70570678895d711eaac1549401b4b5c5fae2ff1"
+  },
+  {
+    "original": "wfdb212-results-v1/b32-l1024.json",
+    "current": "profiling/medical_signal_research/archive/results/wfdb212-results-v1/b32-l1024.json",
+    "sha256": "6ba640a4f789ad7783b86236103e05fffdb46798f576ab3b73895cfc2c9c05e8"
+  },
+  {
+    "original": "wfdb212-results-v1/b32-l8192.json",
+    "current": "profiling/medical_signal_research/archive/results/wfdb212-results-v1/b32-l8192.json",
+    "sha256": "b63dff5c9fd636e6dfa1ecca01e9254933a3f7d854b49aa3ae2fdba087f002b0"
+  },
+  {
+    "original": "wfdb212-results-v1/b4-l128.json",
+    "current": "profiling/medical_signal_research/archive/results/wfdb212-results-v1/b4-l128.json",
+    "sha256": "2de7f3da203fcb28a3531510b1f824a6655b617d67bddfd9782e191578469225"
+  },
+  {
+    "original": "wfdb212-results-v2/b32-l1024.json",
+    "current": "profiling/medical_signal_research/archive/results/wfdb212-results-v2/b32-l1024.json",
+    "sha256": "9e81959862b0c0ad4cbca42ba2858060b01d64b3721b4bef7141e0c3ab695c5e"
+  },
+  {
+    "original": "wfdb212-results-v2/b32-l8192.json",
+    "current": "profiling/medical_signal_research/archive/results/wfdb212-results-v2/b32-l8192.json",
+    "sha256": "012058c9e3e13c0f059c1fa5eccbb320b48021826527c0b92f9ffd20b033a15a"
+  },
+  {
+    "original": "wfdb212-results-v2/b4-l128.json",
+    "current": "profiling/medical_signal_research/archive/results/wfdb212-results-v2/b4-l128.json",
+    "sha256": "644a4de78e25a47660e34a956fc682ed511793f54f5d56fe8d029ccde44d078e"
+  },
+  {
+    "original": "wfdb212-summary.json",
+    "current": "profiling/medical_signal_research/archive/results/wfdb212-summary.json",
+    "sha256": "646c0f2ed9fea466e39c88c7105bc6d6b2a424682e0ffae9907cc1ed5e8db606"
+  },
+  {
+    "original": "edf-workload-grid-v1/neonatal-b32-l1024.json",
+    "current": "profiling/medical_signal_research/results/edf-workload-grid-v1/neonatal-b32-l1024.json",
+    "sha256": "4e57f2de8f0878f0115bc5e42fecb38772b76f942fc4f518cdd1f4e39384c0b6"
+  },
+  {
+    "original": "edf-workload-grid-v1/neonatal-b32-l128.json",
+    "current": "profiling/medical_signal_research/results/edf-workload-grid-v1/neonatal-b32-l128.json",
+    "sha256": "a04be831f0dceb7a03b51239e1a3f3b3c2a39f2d71591a746ef876e0b364e04e"
+  },
+  {
+    "original": "edf-workload-grid-v1/neonatal-b4-l1024.json",
+    "current": "profiling/medical_signal_research/results/edf-workload-grid-v1/neonatal-b4-l1024.json",
+    "sha256": "f69984b1ef7af27f19dfd23d8c5423e4a00987f73bf628c8e720ba69bc4150dc"
+  },
+  {
+    "original": "edf-workload-grid-v1/neonatal-b4-l128.json",
+    "current": "profiling/medical_signal_research/results/edf-workload-grid-v1/neonatal-b4-l128.json",
+    "sha256": "f94464036001dff1414452cfc0b86697f1fd8645e4011247c1e71b3ea0e720d7"
+  },
+  {
+    "original": "edf-workload-grid-v1/physionet-b32-l1024.json",
+    "current": "profiling/medical_signal_research/results/edf-workload-grid-v1/physionet-b32-l1024.json",
+    "sha256": "cdcde5ca8af440614d682ee7ff384bf5cb8026140ce22095db655631f947b124"
+  },
+  {
+    "original": "edf-workload-grid-v1/physionet-b32-l128.json",
+    "current": "profiling/medical_signal_research/results/edf-workload-grid-v1/physionet-b32-l128.json",
+    "sha256": "ab6637f800db9718a470c7d63232c512680cd7cca59bf9f119516c78046a0a1a"
+  },
+  {
+    "original": "edf-workload-grid-v1/physionet-b4-l1024.json",
+    "current": "profiling/medical_signal_research/results/edf-workload-grid-v1/physionet-b4-l1024.json",
+    "sha256": "f720ae0eaeaae74569bdd66d14221fe231213a8acbcbe96fcc7095e03c15441b"
+  },
+  {
+    "original": "edf-workload-grid-v1/physionet-b4-l128.json",
+    "current": "profiling/medical_signal_research/results/edf-workload-grid-v1/physionet-b4-l128.json",
+    "sha256": "bd0e8534c5103965ad0a502967358b0d07f1fc2adbf83cc84919c1cb251f2705"
+  },
+  {
+    "original": "edf-workload-grid-v1/summary.json",
+    "current": "profiling/medical_signal_research/results/edf-workload-grid-v1/summary.json",
+    "sha256": "9d2f26c8cef71f920ca5fd49da910477f1817531d1334ca32e5f5b50e7a71c8f"
+  },
+  {
+    "original": "wfdb212-final-a/b32-l1024.json",
+    "current": "profiling/medical_signal_research/results/wfdb212-final-a/b32-l1024.json",
+    "sha256": "b800e1f5faadbd7bc0d794ce1787c3abc05fcddfa752aa318d02fd7f2401cd5c"
+  },
+  {
+    "original": "wfdb212-final-a/b32-l8192.json",
+    "current": "profiling/medical_signal_research/results/wfdb212-final-a/b32-l8192.json",
+    "sha256": "da04ac0ce5168eb20c1e878c52662c95ad4b5b31868f4ee9753fdcbc15633ebf"
+  },
+  {
+    "original": "wfdb212-final-a/b4-l128.json",
+    "current": "profiling/medical_signal_research/results/wfdb212-final-a/b4-l128.json",
+    "sha256": "84fd02aa8b8fcd54a42e1bc042481942cfbf4443ba50c850c02a7073ad639f4d"
+  },
+  {
+    "original": "wfdb212-final-b/b32-l1024.json",
+    "current": "profiling/medical_signal_research/results/wfdb212-final-b/b32-l1024.json",
+    "sha256": "0bc4e480593280dfaa6ddaa2623cb7dbf053c378008e2ffcc5470500a68ecc8e"
+  },
+  {
+    "original": "wfdb212-final-b/b32-l8192.json",
+    "current": "profiling/medical_signal_research/results/wfdb212-final-b/b32-l8192.json",
+    "sha256": "1eb00d4865783fe69254f125cc617b0640c07396b203e0c950c04acefc3c3912"
+  },
+  {
+    "original": "wfdb212-final-b/b4-l128.json",
+    "current": "profiling/medical_signal_research/results/wfdb212-final-b/b4-l128.json",
+    "sha256": "9a27a9677bda9751f248b3e3b0d07bab7b7113b1f58852239b335a4852811267"
+  },
+  {
+    "original": "wfdb212-final-summary.json",
+    "current": "profiling/medical_signal_research/results/wfdb212-final-summary.json",
+    "sha256": "3184f9f25cdaaca41dae4a4072cc0cae9a97ce27f5fe5ba44fc69529d5a943cc"
+  },
+  {
+    "original": "wfdb212-full-record-check.json",
+    "current": "profiling/medical_signal_research/results/wfdb212-full-record-check.json",
+    "sha256": "1c31703e234a24387cad2457fe68327d69f16b0dad4fa5a376e2d48cef76e1a0"
+  },
+  {
+    "original": "wfdb212-full-record-validation.json",
+    "current": "profiling/medical_signal_research/results/wfdb212-full-record-validation.json",
+    "sha256": "ea3df7fded968322018e98cf127b9ceb430eb8d65f31f6743f18fae508adcbd3"
+  },
+  {
+    "original": "profiling/SIGNAL_LOADING.md",
+    "current": "profiling/medical_signal_research/archive/docs/SIGNAL_LOADING.md",
+    "sha256": "5b07b68ebbbc29a20b158aa008b30b887b4ea71a62340322ced4dd0cadcfe15d"
+  },
+  {
+    "original": "profiling/EDF_SIGNAL_LOADING.md",
+    "current": "profiling/medical_signal_research/archive/docs/EDF_SIGNAL_LOADING.md",
+    "sha256": "785bcd0c24c603f0a2efd2831ce1b62189e08a01bda6291845e7c6a628d60253"
+  },
+  {
+    "original": "profiling/NEONATAL_EDF_VALIDATION.md",
+    "current": "profiling/medical_signal_research/archive/docs/NEONATAL_EDF_VALIDATION.md",
+    "sha256": "e065d298bcb683bb18e1b3d638780b3a43e98dcf898cc7c3f0abe39888a2b0ff"
+  },
+  {
+    "original": "profiling/SIGNAL_CACHE_TRAINING.md",
+    "current": "profiling/medical_signal_research/archive/docs/SIGNAL_CACHE_TRAINING.md",
+    "sha256": "19f5da792576646c15a061f50bd929c60be86fb861329c9b32620197edf01169"
+  },
+  {
+    "original": "profiling/SIGNAL_REPRODUCIBILITY.md",
+    "current": "profiling/medical_signal_research/archive/docs/SIGNAL_REPRODUCIBILITY.md",
+    "sha256": "7aed738a002a5fe89444195664e1a922fe7064c141aeb7628504023cae5ba73a"
+  },
+  {
+    "original": "profiling/RESEARCH_CONCLUSION.md",
+    "current": "profiling/medical_signal_research/docs/RESEARCH_CONCLUSION.md",
+    "sha256": "2a0d7e06f2df5d7ce598e4ed9e551b9c27d11a648589bdff8b2b8c2f9872d18c"
+  },
+  {
+    "original": "profiling/NATIVE_MEDICAL_FORMATS.md",
+    "current": "profiling/medical_signal_research/docs/NATIVE_MEDICAL_FORMATS.md",
+    "sha256": "0879274483e8c54db6bd0075960340da1813f7c99d382d4dded71c8dfced31c1"
+  },
+  {
+    "original": "profiling/EDF_RECORD_LOADING.md",
+    "current": "profiling/medical_signal_research/docs/EDF_RECORD_LOADING.md",
+    "sha256": "b393f9137df138c8ae3d406abb170698ece330f1a71021f901b0cbebe1a61439"
+  },
+  {
+    "original": "profiling/EDF_WORKLOAD_LIMITS.md",
+    "current": "profiling/medical_signal_research/docs/EDF_WORKLOAD_LIMITS.md",
+    "sha256": "80d8a8b6a6a68faa74571ae7037b15e9c3415b48f9df6a7f837a691edc7fc463"
+  },
+  {
+    "original": "profiling/WFDB212_RESULTS.md",
+    "current": "profiling/medical_signal_research/docs/WFDB212_RESULTS.md",
+    "sha256": "b968f938fd5e83754250a3c3fbb9de4a5128bdb987ab9948664fbda52464731b"
+  }
+]

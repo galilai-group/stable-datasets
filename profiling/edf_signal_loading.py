@@ -25,14 +25,19 @@ import pyedflib
 import torch
 from numpy.typing import NDArray
 
-from profiling.signal_loading import calibrate, calibration_parameters, extract_windows, measure_stage
+from profiling.signal_loading import extract_windows
+from profiling.signal_utils import (
+    SIGNAL_ABSOLUTE_TOLERANCE_VOLTS,
+    SIGNAL_RELATIVE_TOLERANCE,
+    VOLTAGE_UNIT_SCALES,
+    calibrate,
+    calibration_parameters,
+    measure_stage,
+    require_matching_signals,
+)
 
 
-# The absolute tolerance is 0.1 nV, below the reference recording's 1 uV step.
-SIGNAL_RELATIVE_TOLERANCE = 2e-6
-SIGNAL_ABSOLUTE_TOLERANCE_VOLTS = 1e-10
 ANNOTATION_TOLERANCE_SECONDS = 1e-7
-VOLTAGE_UNIT_SCALES = {"V": 1.0, "mV": 1e-3, "uV": 1e-6, "µV": 1e-6}
 EDF_VERSION_SLICE = slice(0, 8)
 EDF_RESERVED_SLICE = slice(192, 236)
 
@@ -299,11 +304,6 @@ def extract_arrow_windows(prepared: PreparedExperiment) -> torch.Tensor:
     return torch.from_numpy(
         extract_windows(prepared.arrow_column, prepared.arrow_requests, window_length, channel_count)
     )
-
-
-def require_matching_signals(actual: NDArray, expected: NDArray) -> None:
-    """Abort on sample/shape differences beyond the experiment's volt tolerance."""
-    np.testing.assert_allclose(actual, expected, rtol=SIGNAL_RELATIVE_TOLERANCE, atol=SIGNAL_ABSOLUTE_TOLERANCE_VOLTS)
 
 
 def validate_cpu_paths(prepared: PreparedExperiment) -> dict[str, float]:

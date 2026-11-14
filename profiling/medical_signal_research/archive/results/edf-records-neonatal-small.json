@@ -1,0 +1,442 @@
+{
+  "scope": "Unchanged native EDF, warm OS cache, completed-batch GPU latency; no training/GDS/cold disk claim",
+  "source": {
+    "name": "eeg4.edf",
+    "sha256": "6444722cf46e101381754354888194dc1402ad445cd3da3df1df212e6365c81e"
+  },
+  "source_unchanged": true,
+  "shape": [
+    4,
+    128,
+    21
+  ],
+  "window_starts": [
+    0,
+    876672,
+    255,
+    236514
+  ],
+  "channel_names": [
+    "EEG Fp1-Ref",
+    "EEG Fp2-Ref",
+    "EEG F3-Ref",
+    "EEG F4-Ref",
+    "EEG F7-Ref",
+    "EEG F8-Ref",
+    "EEG Fz-Ref",
+    "EEG C3-Ref",
+    "EEG C4-Ref",
+    "EEG Cz-Ref",
+    "EEG T3-Ref",
+    "EEG T5-Ref",
+    "EEG T4-Ref",
+    "EEG T6-Ref",
+    "EEG P3-Ref",
+    "EEG P4-Ref",
+    "EEG Pz-Ref",
+    "EEG O1-Ref",
+    "EEG O2-Ref",
+    "ECG EKG",
+    "Resp Effort"
+  ],
+  "record_layout": {
+    "record_count": 3425,
+    "words_per_record": 5376,
+    "samples_per_channel_record": 256,
+    "channel_offsets": [
+      0,
+      256,
+      512,
+      768,
+      1024,
+      1280,
+      1536,
+      1792,
+      2048,
+      2304,
+      2560,
+      2816,
+      3072,
+      3328,
+      3584,
+      3840,
+      4096,
+      4352,
+      4608,
+      4864,
+      5120
+    ]
+  },
+  "payload": {
+    "unique_records": 5,
+    "logical_window_bytes": 21504,
+    "unique_requested_signal_bytes": 21504,
+    "record_payload_bytes": 53760,
+    "record_bytes_divided_by_logical_bytes": 2.5,
+    "record_overread_vs_unique_signal_bytes": 2.5
+  },
+  "checks": {
+    "selected_cpu_max_abs_error_volts": 5.97084471275211e-10,
+    "selected_samples_outside_declared_bounds": 0,
+    "channel_order_clock_start_annotations": "passed",
+    "raw_samples_match_library": true,
+    "cpu_max_abs_error_volts": 5.97084471275211e-10
+  },
+  "gpu_max_abs_errors_volts": {
+    "library_cpu_calibration": 5.97084471275211e-10,
+    "library_gpu_calibration": 5.97084471275211e-10,
+    "cpu_gather_cpu_calibration": 5.97084471275211e-10,
+    "cpu_gather_gpu_calibration": 5.97084471275211e-10,
+    "cpu_records_cpu_calibration": 5.97084471275211e-10,
+    "cpu_records_gpu_calibration": 5.97084471275211e-10,
+    "gpu_records_gpu_assembly": 5.97084471275211e-10
+  },
+  "rounds": 7,
+  "repeats": 30,
+  "warmup": 3,
+  "torch_cpu_threads": 1,
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "versions": {
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "torch": "2.15.0+cu132",
+    "mne": "1.13.2",
+    "edfio": "0.4.18"
+  },
+  "code_sha256": {
+    "benchmark_edf_records.py": "858e0ca404ac5debc421dd0a192169be74e724e82992d2e68731f19834e79ad2",
+    "edf_record_loading.py": "514775f0a5585cb4a5c6e63385423d0cfdac2e908bd8cf088d91ce6893a25a18",
+    "native_edf_loading.py": "da34d814ccaf81ae6af2f910e17572fb82beed4c66e6b6cf44abd5ff41e37d5c"
+  },
+  "results": {
+    "library_cpu_calibration": {
+      "median_of_round_medians_ms": 0.4980869980499847,
+      "trials": [
+        {
+          "median_ms": 0.5132469977979781,
+          "p95_ms": 0.6099779506257618,
+          "round": 0,
+          "position": 5
+        },
+        {
+          "median_ms": 0.49776949890656397,
+          "p95_ms": 0.5794277987661189,
+          "round": 1,
+          "position": 4
+        },
+        {
+          "median_ms": 0.4985760006093187,
+          "p95_ms": 0.5970161482764524,
+          "round": 2,
+          "position": 3
+        },
+        {
+          "median_ms": 0.48854899978323374,
+          "p95_ms": 0.5565953990299021,
+          "round": 3,
+          "position": 2
+        },
+        {
+          "median_ms": 0.4980869980499847,
+          "p95_ms": 0.597039100648544,
+          "round": 4,
+          "position": 1
+        },
+        {
+          "median_ms": 0.48147250163310673,
+          "p95_ms": 0.605602101313707,
+          "round": 5,
+          "position": 0
+        },
+        {
+          "median_ms": 0.5146935000084341,
+          "p95_ms": 0.5977583485218929,
+          "round": 6,
+          "position": 6
+        }
+      ]
+    },
+    "library_gpu_calibration": {
+      "median_of_round_medians_ms": 0.505296500705299,
+      "trials": [
+        {
+          "median_ms": 0.50800000099116,
+          "p95_ms": 0.653122850053478,
+          "round": 0,
+          "position": 6
+        },
+        {
+          "median_ms": 0.4986580006516306,
+          "p95_ms": 0.5058274506154703,
+          "round": 1,
+          "position": 5
+        },
+        {
+          "median_ms": 0.5015660026401747,
+          "p95_ms": 0.5295785491398419,
+          "round": 2,
+          "position": 4
+        },
+        {
+          "median_ms": 0.5116194988659117,
+          "p95_ms": 0.6286196479777573,
+          "round": 3,
+          "position": 3
+        },
+        {
+          "median_ms": 0.5061695010226686,
+          "p95_ms": 0.6061344516638201,
+          "round": 4,
+          "position": 2
+        },
+        {
+          "median_ms": 0.505296500705299,
+          "p95_ms": 0.5585451504884986,
+          "round": 5,
+          "position": 1
+        },
+        {
+          "median_ms": 0.49955100075749215,
+          "p95_ms": 0.6050742493243888,
+          "round": 6,
+          "position": 0
+        }
+      ]
+    },
+    "cpu_gather_cpu_calibration": {
+      "median_of_round_medians_ms": 0.11079100113420282,
+      "trials": [
+        {
+          "median_ms": 0.11386900041543413,
+          "p95_ms": 0.18832950045180039,
+          "round": 0,
+          "position": 0
+        },
+        {
+          "median_ms": 0.11358600204403047,
+          "p95_ms": 0.1357521521640592,
+          "round": 1,
+          "position": 6
+        },
+        {
+          "median_ms": 0.1078020013665082,
+          "p95_ms": 0.14517670169880148,
+          "round": 2,
+          "position": 5
+        },
+        {
+          "median_ms": 0.10129699876415543,
+          "p95_ms": 0.10907804953603771,
+          "round": 3,
+          "position": 4
+        },
+        {
+          "median_ms": 0.11079100113420282,
+          "p95_ms": 0.13318654910108305,
+          "round": 4,
+          "position": 3
+        },
+        {
+          "median_ms": 0.10110850053024478,
+          "p95_ms": 0.1075984997441992,
+          "round": 5,
+          "position": 2
+        },
+        {
+          "median_ms": 0.1128624990087701,
+          "p95_ms": 0.16173119784070877,
+          "round": 6,
+          "position": 1
+        }
+      ]
+    },
+    "cpu_gather_gpu_calibration": {
+      "median_of_round_medians_ms": 0.12024850002489984,
+      "trials": [
+        {
+          "median_ms": 0.12032550148433074,
+          "p95_ms": 0.12855704881076235,
+          "round": 0,
+          "position": 2
+        },
+        {
+          "median_ms": 0.12024850002489984,
+          "p95_ms": 0.13298104895511642,
+          "round": 1,
+          "position": 1
+        },
+        {
+          "median_ms": 0.12729950140055735,
+          "p95_ms": 0.18967474916280475,
+          "round": 2,
+          "position": 0
+        },
+        {
+          "median_ms": 0.11762400026782416,
+          "p95_ms": 0.1288940504309721,
+          "round": 3,
+          "position": 6
+        },
+        {
+          "median_ms": 0.11907500083907507,
+          "p95_ms": 0.12415670007612789,
+          "round": 4,
+          "position": 5
+        },
+        {
+          "median_ms": 0.12057249841745943,
+          "p95_ms": 0.18041239745798518,
+          "round": 5,
+          "position": 4
+        },
+        {
+          "median_ms": 0.11932099914702121,
+          "p95_ms": 0.14242779907362996,
+          "round": 6,
+          "position": 3
+        }
+      ]
+    },
+    "cpu_records_cpu_calibration": {
+      "median_of_round_medians_ms": 0.13480250163411256,
+      "trials": [
+        {
+          "median_ms": 0.13480250163411256,
+          "p95_ms": 0.1635365988477133,
+          "round": 0,
+          "position": 1
+        },
+        {
+          "median_ms": 0.13806900096824393,
+          "p95_ms": 0.18112820253008977,
+          "round": 1,
+          "position": 0
+        },
+        {
+          "median_ms": 0.14633849968959112,
+          "p95_ms": 0.19597549999161856,
+          "round": 2,
+          "position": 6
+        },
+        {
+          "median_ms": 0.1331215007667197,
+          "p95_ms": 0.15462384981219654,
+          "round": 3,
+          "position": 5
+        },
+        {
+          "median_ms": 0.1325409994024085,
+          "p95_ms": 0.1453742501325905,
+          "round": 4,
+          "position": 4
+        },
+        {
+          "median_ms": 0.14510200162476394,
+          "p95_ms": 0.1636466497075162,
+          "round": 5,
+          "position": 3
+        },
+        {
+          "median_ms": 0.13356850104173645,
+          "p95_ms": 0.15989724925020704,
+          "round": 6,
+          "position": 2
+        }
+      ]
+    },
+    "cpu_records_gpu_calibration": {
+      "median_of_round_medians_ms": 0.15752550098113716,
+      "trials": [
+        {
+          "median_ms": 0.16077800137281884,
+          "p95_ms": 0.2815885012751096,
+          "round": 0,
+          "position": 4
+        },
+        {
+          "median_ms": 0.16439299906778615,
+          "p95_ms": 0.23576015100843503,
+          "round": 1,
+          "position": 3
+        },
+        {
+          "median_ms": 0.15752550098113716,
+          "p95_ms": 0.2001508992179879,
+          "round": 2,
+          "position": 2
+        },
+        {
+          "median_ms": 0.1644000003580004,
+          "p95_ms": 0.267402252939064,
+          "round": 3,
+          "position": 1
+        },
+        {
+          "median_ms": 0.15295500088541303,
+          "p95_ms": 0.19125330127280904,
+          "round": 4,
+          "position": 0
+        },
+        {
+          "median_ms": 0.14867050049360842,
+          "p95_ms": 0.15631360038241837,
+          "round": 5,
+          "position": 6
+        },
+        {
+          "median_ms": 0.15048649947857484,
+          "p95_ms": 0.15694229914515745,
+          "round": 6,
+          "position": 5
+        }
+      ]
+    },
+    "gpu_records_gpu_assembly": {
+      "median_of_round_medians_ms": 0.20901500283798669,
+      "trials": [
+        {
+          "median_ms": 0.20901500283798669,
+          "p95_ms": 0.25793080130824814,
+          "round": 0,
+          "position": 3
+        },
+        {
+          "median_ms": 0.205485997867072,
+          "p95_ms": 0.2533596003559069,
+          "round": 1,
+          "position": 2
+        },
+        {
+          "median_ms": 0.221799500650377,
+          "p95_ms": 0.39557534946652595,
+          "round": 2,
+          "position": 1
+        },
+        {
+          "median_ms": 0.21376699987740722,
+          "p95_ms": 0.2632615018228534,
+          "round": 3,
+          "position": 0
+        },
+        {
+          "median_ms": 0.20055599998158868,
+          "p95_ms": 0.21056475106888684,
+          "round": 4,
+          "position": 6
+        },
+        {
+          "median_ms": 0.20974050130462274,
+          "p95_ms": 0.2968474507724748,
+          "round": 5,
+          "position": 5
+        },
+        {
+          "median_ms": 0.2002889996219892,
+          "p95_ms": 0.20889404950139576,
+          "round": 6,
+          "position": 4
+        }
+      ]
+    }
+  }
+}

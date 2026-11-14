@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from profiling.signal_cache import SignalCache, checksum
+from profiling.signal_cache import SignalCache
 from profiling.signal_training import (
     SignalRegressor,
     TrainingConfig,
@@ -30,6 +30,7 @@ from profiling.signal_training import (
     run_trial,
     training_step,
 )
+from profiling.signal_utils import checksum
 
 
 TELEMETRY_FIELDS = (

@@ -31,7 +31,7 @@ from profiling.edf_signal_loading import (
     validate_reference_metadata,
     write_report,
 )
-from profiling.signal_loading import calibrate
+from profiling.signal_utils import calibrate
 
 
 def file_digest(path: Path, algorithm: str = "sha256") -> str:

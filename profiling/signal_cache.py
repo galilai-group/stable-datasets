@@ -7,7 +7,6 @@ via per-channel affine calibration. No resampling or channel inference occurs.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -15,6 +14,8 @@ from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
+
+from profiling.signal_utils import checksum
 
 
 @dataclass(frozen=True)
@@ -33,15 +34,6 @@ class SignalMetadata:
             raise ValueError("Every channel requires a name")
         if not np.isfinite(self.sample_rate_hz) or self.sample_rate_hz <= 0:
             raise ValueError("Sample rate must be finite and positive")
-
-
-def checksum(path: Path) -> str:
-    """Return a streaming SHA256 digest without loading a cache into RAM."""
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        while block := stream.read(1024 * 1024):
-            digest.update(block)
-    return digest.hexdigest()
 
 
 def validate_representations(

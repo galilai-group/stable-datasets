@@ -12,7 +12,8 @@ import mne
 import numpy as np
 
 from profiling.edf_signal_loading import read_digital, validate_reference_metadata
-from profiling.signal_cache import SignalMetadata, checksum, write_signal_cache
+from profiling.signal_cache import SignalMetadata, write_signal_cache
+from profiling.signal_utils import checksum
 
 
 def prepare_cache(

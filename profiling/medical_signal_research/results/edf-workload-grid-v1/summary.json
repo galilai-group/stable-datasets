@@ -1,0 +1,351 @@
+{
+  "scope": "2x2 batch/window grid on the same two original EDF files; warm OS cache; no training or generic threshold claim",
+  "batch_sizes": [
+    4,
+    32
+  ],
+  "window_lengths": [
+    128,
+    1024
+  ],
+  "rounds_per_configuration": 7,
+  "repeats_per_path_per_round": 30,
+  "configurations": 8,
+  "code_sha256": {
+    "benchmark_edf_records.py": "858e0ca404ac5debc421dd0a192169be74e724e82992d2e68731f19834e79ad2",
+    "edf_record_loading.py": "514775f0a5585cb4a5c6e63385423d0cfdac2e908bd8cf088d91ce6893a25a18",
+    "native_edf_loading.py": "da34d814ccaf81ae6af2f910e17572fb82beed4c66e6b6cf44abd5ff41e37d5c"
+  },
+  "all_original_sources_unchanged": true,
+  "all_paths_checked_against_mne": true,
+  "results": [
+    {
+      "source": "neonatal",
+      "report": "edf-workload-grid-v1/neonatal-b4-l128.json",
+      "shape": [
+        4,
+        128,
+        21
+      ],
+      "baseline_path": "cpu_gather_cpu_calibration",
+      "baseline_median_ms": 0.10436299999128096,
+      "gpu_record_assembly_median_ms": 0.20341000163170975,
+      "gpu_latency_reduction_percent": -94.90624229727365,
+      "baseline_divided_by_gpu_latency": 0.5130672000103447,
+      "gpu_faster_rounds_vs_selected_baseline": 0,
+      "baseline_round_medians_ms": [
+        0.10217800081591122,
+        0.11368950072210282,
+        0.10160400051972829,
+        0.10436299999128096,
+        0.10647949966369197,
+        0.09945400051947217,
+        0.11057749907195102
+      ],
+      "gpu_round_medians_ms": [
+        0.20696150022558868,
+        0.20305249927332625,
+        0.2010295011132257,
+        0.21585700051218737,
+        0.20341000163170975,
+        0.21072749950690195,
+        0.1970985013031168
+      ],
+      "payload": {
+        "unique_records": 5,
+        "logical_window_bytes": 21504,
+        "unique_requested_signal_bytes": 21504,
+        "record_payload_bytes": 53760,
+        "record_bytes_divided_by_logical_bytes": 2.5,
+        "record_overread_vs_unique_signal_bytes": 2.5
+      }
+    },
+    {
+      "source": "neonatal",
+      "report": "edf-workload-grid-v1/neonatal-b4-l1024.json",
+      "shape": [
+        4,
+        1024,
+        21
+      ],
+      "baseline_path": "cpu_records_gpu_calibration",
+      "baseline_median_ms": 0.22782150153943803,
+      "gpu_record_assembly_median_ms": 0.23877400053606834,
+      "gpu_latency_reduction_percent": -4.80749135732228,
+      "baseline_divided_by_gpu_latency": 0.9541302697444404,
+      "gpu_faster_rounds_vs_selected_baseline": 0,
+      "baseline_round_medians_ms": [
+        0.21383400053309742,
+        0.23102200066205114,
+        0.22363350035448093,
+        0.2123379999829922,
+        0.22782150153943803,
+        0.2337890000490006,
+        0.2285940008732723
+      ],
+      "gpu_round_medians_ms": [
+        0.23705350031377748,
+        0.23523950039816555,
+        0.23255999803950544,
+        0.23877400053606834,
+        0.2456344991514925,
+        0.2575604994490277,
+        0.25633749828557484
+      ],
+      "payload": {
+        "unique_records": 14,
+        "logical_window_bytes": 172032,
+        "unique_requested_signal_bytes": 139734,
+        "record_payload_bytes": 150528,
+        "record_bytes_divided_by_logical_bytes": 0.875,
+        "record_overread_vs_unique_signal_bytes": 1.0772467688608356
+      }
+    },
+    {
+      "source": "neonatal",
+      "report": "edf-workload-grid-v1/neonatal-b32-l128.json",
+      "shape": [
+        32,
+        128,
+        21
+      ],
+      "baseline_path": "cpu_records_gpu_calibration",
+      "baseline_median_ms": 0.4202865020488389,
+      "gpu_record_assembly_median_ms": 0.3197884998371592,
+      "gpu_latency_reduction_percent": 23.9117843951128,
+      "baseline_divided_by_gpu_latency": 1.3142639659113906,
+      "gpu_faster_rounds_vs_selected_baseline": 7,
+      "baseline_round_medians_ms": [
+        0.41804600004979875,
+        0.4202865020488389,
+        0.4142360012338031,
+        0.4328320010245079,
+        0.42533399937383365,
+        0.41865600178425666,
+        0.4394504994706949
+      ],
+      "gpu_round_medians_ms": [
+        0.32939949960564263,
+        0.3156635011691833,
+        0.3422110003157286,
+        0.3197884998371592,
+        0.31051699806994293,
+        0.30805049937043805,
+        0.34625199987203814
+      ],
+      "payload": {
+        "unique_records": 43,
+        "logical_window_bytes": 172032,
+        "unique_requested_signal_bytes": 172032,
+        "record_payload_bytes": 462336,
+        "record_bytes_divided_by_logical_bytes": 2.6875,
+        "record_overread_vs_unique_signal_bytes": 2.6875
+      }
+    },
+    {
+      "source": "neonatal",
+      "report": "edf-workload-grid-v1/neonatal-b32-l1024.json",
+      "shape": [
+        32,
+        1024,
+        21
+      ],
+      "baseline_path": "cpu_records_gpu_calibration",
+      "baseline_median_ms": 1.7178830021293834,
+      "gpu_record_assembly_median_ms": 0.6625419991905801,
+      "gpu_latency_reduction_percent": 61.432647137824105,
+      "baseline_divided_by_gpu_latency": 2.5928665718220145,
+      "gpu_faster_rounds_vs_selected_baseline": 7,
+      "baseline_round_medians_ms": [
+        1.7178830021293834,
+        1.5415519974339986,
+        1.689889500994468,
+        1.735191000989289,
+        1.7404489990440197,
+        1.7908629997691605,
+        1.5149519986152882
+      ],
+      "gpu_round_medians_ms": [
+        0.7556275013484992,
+        0.6379909991665045,
+        0.5678904999513179,
+        0.6625419991905801,
+        0.5742180001107045,
+        0.7674990010855254,
+        0.6654549997620052
+      ],
+      "payload": {
+        "unique_records": 145,
+        "logical_window_bytes": 1376256,
+        "unique_requested_signal_bytes": 1278060,
+        "record_payload_bytes": 1559040,
+        "record_bytes_divided_by_logical_bytes": 1.1328125,
+        "record_overread_vs_unique_signal_bytes": 1.219848833388104
+      }
+    },
+    {
+      "source": "physionet",
+      "report": "edf-workload-grid-v1/physionet-b4-l128.json",
+      "shape": [
+        4,
+        128,
+        64
+      ],
+      "baseline_path": "cpu_gather_cpu_calibration",
+      "baseline_median_ms": 0.19757500194828026,
+      "gpu_record_assembly_median_ms": 0.21262949849187862,
+      "gpu_latency_reduction_percent": -7.6196362875599055,
+      "baseline_divided_by_gpu_latency": 0.9291984571737427,
+      "gpu_faster_rounds_vs_selected_baseline": 1,
+      "baseline_round_medians_ms": [
+        0.21497199850273319,
+        0.19428900122875348,
+        0.19207600053050555,
+        0.19844550115521997,
+        0.20749750001414213,
+        0.19757500194828026,
+        0.19602349857450463
+      ],
+      "gpu_round_medians_ms": [
+        0.2101994978147559,
+        0.21331749849196058,
+        0.21262949849187862,
+        0.23175699971034192,
+        0.21138849842827767,
+        0.2080409994960064,
+        0.22258099852479063
+      ],
+      "payload": {
+        "unique_records": 5,
+        "logical_window_bytes": 65536,
+        "unique_requested_signal_bytes": 65536,
+        "record_payload_bytes": 103200,
+        "record_bytes_divided_by_logical_bytes": 1.57470703125,
+        "record_overread_vs_unique_signal_bytes": 1.57470703125
+      }
+    },
+    {
+      "source": "physionet",
+      "report": "edf-workload-grid-v1/physionet-b4-l1024.json",
+      "shape": [
+        4,
+        1024,
+        64
+      ],
+      "baseline_path": "cpu_records_gpu_calibration",
+      "baseline_median_ms": 0.4500875002122484,
+      "gpu_record_assembly_median_ms": 0.2930194987129653,
+      "gpu_latency_reduction_percent": 34.89721474718013,
+      "baseline_divided_by_gpu_latency": 1.5360325923331917,
+      "gpu_faster_rounds_vs_selected_baseline": 7,
+      "baseline_round_medians_ms": [
+        0.4446120001375675,
+        0.44842249917564914,
+        0.4756720009027049,
+        0.4500875002122484,
+        0.4641625000658678,
+        0.44678750055027194,
+        0.4704180009866832
+      ],
+      "gpu_round_medians_ms": [
+        0.3036339985555969,
+        0.29221650038380176,
+        0.29161800011934247,
+        0.2930194987129653,
+        0.29114649805705994,
+        0.32198499866353814,
+        0.2935680004156893
+      ],
+      "payload": {
+        "unique_records": 23,
+        "logical_window_bytes": 524288,
+        "unique_requested_signal_bytes": 413568,
+        "record_payload_bytes": 474720,
+        "record_bytes_divided_by_logical_bytes": 0.90545654296875,
+        "record_overread_vs_unique_signal_bytes": 1.1478644382544103
+      }
+    },
+    {
+      "source": "physionet",
+      "report": "edf-workload-grid-v1/physionet-b32-l128.json",
+      "shape": [
+        32,
+        128,
+        64
+      ],
+      "baseline_path": "cpu_records_gpu_calibration",
+      "baseline_median_ms": 0.6750770007784013,
+      "gpu_record_assembly_median_ms": 0.3977470005338546,
+      "gpu_latency_reduction_percent": 41.081239610410336,
+      "baseline_divided_by_gpu_latency": 1.6972522731090753,
+      "gpu_faster_rounds_vs_selected_baseline": 7,
+      "baseline_round_medians_ms": [
+        0.661703501464217,
+        0.6886694991408149,
+        0.7019584991212469,
+        0.6750770007784013,
+        0.6746000017301412,
+        0.6629969993809937,
+        0.7012574988038978
+      ],
+      "gpu_round_medians_ms": [
+        0.4299374995753169,
+        0.42946299981849734,
+        0.38654250238323584,
+        0.3739144995051902,
+        0.4775770012201974,
+        0.3977470005338546,
+        0.3964454990637023
+      ],
+      "payload": {
+        "unique_records": 40,
+        "logical_window_bytes": 524288,
+        "unique_requested_signal_bytes": 419456,
+        "record_payload_bytes": 825600,
+        "record_bytes_divided_by_logical_bytes": 1.57470703125,
+        "record_overread_vs_unique_signal_bytes": 1.968263655782728
+      }
+    },
+    {
+      "source": "physionet",
+      "report": "edf-workload-grid-v1/physionet-b32-l1024.json",
+      "shape": [
+        32,
+        1024,
+        64
+      ],
+      "baseline_path": "cpu_records_gpu_calibration",
+      "baseline_median_ms": 1.749705999827711,
+      "gpu_record_assembly_median_ms": 0.7088929996825755,
+      "gpu_latency_reduction_percent": 59.48502206928602,
+      "baseline_divided_by_gpu_latency": 2.4682229907915376,
+      "gpu_faster_rounds_vs_selected_baseline": 7,
+      "baseline_round_medians_ms": [
+        2.4476749986206414,
+        1.7429350009479094,
+        1.749705999827711,
+        1.6510204986843746,
+        1.7559589996380964,
+        2.0431569992069853,
+        1.6813629990792833
+      ],
+      "gpu_round_medians_ms": [
+        0.7899749998614425,
+        0.663989001623122,
+        0.6705609994241968,
+        0.6934529992577154,
+        0.7088929996825755,
+        0.7543204992543906,
+        0.7728859982307767
+      ],
+      "payload": {
+        "unique_records": 61,
+        "logical_window_bytes": 4194304,
+        "unique_requested_signal_bytes": 1249280,
+        "record_payload_bytes": 1259040,
+        "record_bytes_divided_by_logical_bytes": 0.30017852783203125,
+        "record_overread_vs_unique_signal_bytes": 1.0078125
+      }
+    }
+  ]
+}

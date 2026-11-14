@@ -1,0 +1,17 @@
+{
+  "record": "100",
+  "frames": 650000,
+  "channels": [
+    "MLII",
+    "V5"
+  ],
+  "digital_cpu_and_cuda_bit_exact": true,
+  "physical_and_nan_masks_match_reference": true,
+  "max_abs_errors_volts": {
+    "numpy": 1.6860663906714812e-10,
+    "compiled_serial": 1.6860663906714812e-10,
+    "compiled_parallel": 1.6860663906714812e-10,
+    "cuda": 1.6860663906714812e-10
+  },
+  "missing_samples": 0
+}
