@@ -1,0 +1,59 @@
+{
+  "scope": "synthetic in-memory stages; no EDF parsing, disk I/O, resampling or training",
+  "shape": [
+    32,
+    1024,
+    19
+  ],
+  "device": "cuda",
+  "platform": "Linux-6.8.0-38-generic-x86_64-with-glibc2.39",
+  "versions": {
+    "numpy": "2.3.5",
+    "pyarrow": "26.0.1",
+    "torch": "2.15.0+cu132"
+  },
+  "torch_cpu_threads": 1,
+  "warmup": 3,
+  "repeats": 50,
+  "float32_batch_bytes": 2490368,
+  "int16_batch_bytes": 1245184,
+  "correctness": "CPU paths match; CUDA path checked when requested",
+  "setup": {
+    "prepare_both_pinned_inputs_ms": 80.67694300007133
+  },
+  "stages": {
+    "cached_python_lists_to_cpu_tensor": {
+      "median_ms": 28.627737000078923,
+      "p95_ms": 35.06424550000702
+    },
+    "cached_numeric_windows_to_cpu_tensor": {
+      "median_ms": 0.5101690001083625,
+      "p95_ms": 0.5330866500116827
+    },
+    "int16_cpu_calibration": {
+      "median_ms": 0.5493319999914092,
+      "p95_ms": 0.5512362499530354
+    },
+    "prepared_float32_transfer": {
+      "median_ms": 0.22407949995795207,
+      "p95_ms": 0.23054085017975012
+    },
+    "prepared_int16_transfer_and_gpu_calibration": {
+      "median_ms": 0.14537150013893552,
+      "p95_ms": 0.1471686497097835
+    },
+    "cpu_calibrate_pin_transfer": {
+      "median_ms": 0.7758560002457671,
+      "p95_ms": 0.7841765501325426
+    },
+    "int16_pin_transfer_gpu_calibrate": {
+      "median_ms": 0.23336950016528135,
+      "p95_ms": 0.23698635011442093
+    }
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "total_memory_bytes": 8186822656
+  },
+  "peak_allocated_gpu_bytes": 6226944
+}

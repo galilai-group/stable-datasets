@@ -1,0 +1,835 @@
+{
+  "scope": "One continuous equal-rate EEG recording; warm OS-cache preparation and in-memory batches. No cold disk, native window reader, resampling, training, or overlap benchmark.",
+  "source": {
+    "filename": "S001R01.edf",
+    "sha256": "4743b736131a7e147c150e8b37711029b6cda5e356c4b3e8261a03cdcaaf8b0c",
+    "bytes": 1275936
+  },
+  "revision": "65bf7dcb5cbf214d347c78dee3639bf3e2fb8047",
+  "platform": "Linux-6.8.0-38-generic-x86_64-with-glibc2.39",
+  "versions": {
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "pyarrow": "26.0.1",
+    "torch": "2.15.0+cu132",
+    "mne": "1.13.2",
+    "pyedflib": "0.1.42"
+  },
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "torch_cpu_threads": 1,
+  "shape": [
+    32,
+    1024,
+    64
+  ],
+  "window_starts": [
+    0,
+    8736,
+    159,
+    2357,
+    2689,
+    357,
+    657,
+    144,
+    1531,
+    7105,
+    5673,
+    7974,
+    4400,
+    5300,
+    8481,
+    6373,
+    5524,
+    4749,
+    4891,
+    8169,
+    2423,
+    7128,
+    5861,
+    23,
+    3443,
+    7491,
+    4843,
+    293,
+    6682,
+    6374,
+    7396,
+    1534
+  ],
+  "repeats": 50,
+  "warmup": 3,
+  "metadata": {
+    "headers": [
+      {
+        "label": "Fc5.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fc3.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fc1.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fcz.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fc2.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fc4.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fc6.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "C5..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "C3..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "C1..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Cz..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "C2..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "C4..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "C6..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Cp5.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Cp3.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Cp1.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Cpz.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Cp2.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Cp4.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Cp6.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fp1.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fpz.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fp2.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Af7.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Af3.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Afz.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Af4.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Af8.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "F7..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "F5..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "F3..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "F1..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Fz..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "F2..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "F4..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "F6..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "F8..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Ft7.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Ft8.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "T7..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "T8..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "T9..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "T10.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Tp7.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Tp8.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "P7..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "P5..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "P3..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "P1..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Pz..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "P2..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "P4..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "P6..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "P8..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Po7.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Po3.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Poz.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Po4.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Po8.",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "O1..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Oz..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "O2..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      },
+      {
+        "label": "Iz..",
+        "dimension": "uV",
+        "sample_frequency": 160.0,
+        "physical_max": 8092.0,
+        "physical_min": -8092.0,
+        "digital_max": 8092,
+        "digital_min": -8092,
+        "prefilter": "HP:0Hz LP:0Hz N:0Hz",
+        "transducer": "BCI2000"
+      }
+    ],
+    "sample_rate_hz": 160.0,
+    "sample_count": 9760,
+    "start_datetime": "2009-08-12T16:15:00",
+    "annotation_onset_s": [
+      0.0
+    ],
+    "annotation_duration_s": [
+      60.2
+    ],
+    "annotation_description": [
+      "T0"
+    ]
+  },
+  "checks": {
+    "cpu_full_record_max_abs_error_volts": 2.9552727886378305e-11,
+    "cuda_full_record_max_abs_error_volts": 2.9552727886378305e-11,
+    "channel_order_rates_units_annotations": "passed",
+    "rtol": 2e-06,
+    "atol_volts": 1e-10
+  },
+  "stages": {
+    "preparation_mne_full_record_float32": {
+      "median_ms": 5.105980999815074,
+      "p95_ms": 6.732789750003576
+    },
+    "preparation_pyedflib_full_record_int16": {
+      "median_ms": 24.640024500058644,
+      "p95_ms": 25.299765950057918
+    },
+    "cached_numpy_float32_windows": {
+      "median_ms": 0.5106789999445027,
+      "p95_ms": 0.725434150035653
+    },
+    "cached_arrow_float32_windows": {
+      "median_ms": 0.8821265000733547,
+      "p95_ms": 1.1425758000314088
+    },
+    "batch_numpy_cpu_calibration": {
+      "median_ms": 1.8138400000680122,
+      "p95_ms": 2.569252800185495
+    },
+    "batch_torch_cpu_calibration": {
+      "median_ms": 7.682099500016193,
+      "p95_ms": 8.184830850177605
+    },
+    "batch_numpy_calibrate_pin_transfer": {
+      "median_ms": 2.7758040005210205,
+      "p95_ms": 4.29707180051082
+    },
+    "batch_torch_calibrate_pin_transfer": {
+      "median_ms": 4.161528000167891,
+      "p95_ms": 5.715970450182795
+    },
+    "batch_int16_pin_transfer_gpu_calibrate": {
+      "median_ms": 0.7494670003325155,
+      "p95_ms": 1.1891745998127587
+    },
+    "cached_numpy_float32_gather_pin_transfer": {
+      "median_ms": 1.8269719998897926,
+      "p95_ms": 3.4333560005052277
+    },
+    "cached_int16_gather_pin_transfer_gpu_calibrate": {
+      "median_ms": 1.074799500656809,
+      "p95_ms": 1.6429248501935942
+    }
+  }
+}

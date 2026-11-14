@@ -1,0 +1,216 @@
+{
+  "scope": "One warm memory-mapped recording and a small mean-regression model; no clinical accuracy claim",
+  "config": {
+    "cache_directory": "/tmp/stable-datasets-neonatal/paired-cache-v2",
+    "output": "signal-training-neonatal-final-t4.json",
+    "batch_size": 32,
+    "length": 1024,
+    "steps": 300,
+    "repeats": 5,
+    "warmup": 5,
+    "cpu_threads": 4,
+    "seed": 0
+  },
+  "manifest_sha256": "20b1bde042208c0869bc4b97d3c13cca053d2255f6147004bd45e1d0dfc3c06b",
+  "code_sha256": {
+    "signal_training.py": "26cfba2e26ed6f1879b8ba653735b6eec73575cbed106c7eb6f222a331114f5f",
+    "signal_cache.py": "06c2a64ad4f062ab14af95b7b65f5c6994ee390b610dcfe9e8a0094579166b3d"
+  },
+  "model": {
+    "name": "SignalRegressor",
+    "hidden_channels": 64,
+    "optimizer": "SGD",
+    "learning_rate": 0.001,
+    "target": "per-channel window means in mV"
+  },
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "versions": {
+    "python": "3.13.9",
+    "numpy": "2.3.5",
+    "torch": "2.15.0+cu132"
+  },
+  "shape": [
+    32,
+    1024,
+    21
+  ],
+  "schedule_sha256": "a6c051ab3ddabc7cda7a2da1f47f010870f421ff75392000cb43e75c386e9dd2",
+  "correctness": "Full cache CPU calibration, first-batch CUDA input/loss/updated parameters passed",
+  "results": {
+    "resident": {
+      "median_steps_per_second": 1010.9919493096927,
+      "trials": [
+        {
+          "steps_per_second": 500.92706488364354,
+          "elapsed_seconds": 0.5988895810005488,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 847938560
+        },
+        {
+          "steps_per_second": 1009.7307584947317,
+          "elapsed_seconds": 0.29710890499882225,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 847938560
+        },
+        {
+          "steps_per_second": 1020.8281785057707,
+          "elapsed_seconds": 0.2938790349999181,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 847938560
+        },
+        {
+          "steps_per_second": 1010.9919493096927,
+          "elapsed_seconds": 0.2967382679998991,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 847938560
+        },
+        {
+          "steps_per_second": 1015.7700673099092,
+          "elapsed_seconds": 0.2953424299994367,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 847938560
+        }
+      ]
+    },
+    "float32_serial": {
+      "median_steps_per_second": 527.8991665290865,
+      "trials": [
+        {
+          "steps_per_second": 479.24648496863875,
+          "elapsed_seconds": 0.6259826820005401,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        },
+        {
+          "steps_per_second": 543.6366639875095,
+          "elapsed_seconds": 0.5518391599998722,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        },
+        {
+          "steps_per_second": 527.8991665290865,
+          "elapsed_seconds": 0.5682903460001398,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        },
+        {
+          "steps_per_second": 536.403719668279,
+          "elapsed_seconds": 0.5592802379997011,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        },
+        {
+          "steps_per_second": 525.602955679971,
+          "elapsed_seconds": 0.5707730459998857,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        }
+      ]
+    },
+    "int16_serial": {
+      "median_steps_per_second": 584.1967591035152,
+      "trials": [
+        {
+          "steps_per_second": 556.7619421778477,
+          "elapsed_seconds": 0.5388299329988513,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        },
+        {
+          "steps_per_second": 592.6626713682915,
+          "elapsed_seconds": 0.5061901389999548,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        },
+        {
+          "steps_per_second": 584.1967591035152,
+          "elapsed_seconds": 0.5135256150006171,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        },
+        {
+          "steps_per_second": 530.143165497678,
+          "elapsed_seconds": 0.5658848769999167,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        },
+        {
+          "steps_per_second": 597.9939682368381,
+          "elapsed_seconds": 0.5016773010011093,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        }
+      ]
+    },
+    "float32_overlap": {
+      "median_steps_per_second": 705.7895457677898,
+      "trials": [
+        {
+          "steps_per_second": 620.8235261310094,
+          "elapsed_seconds": 0.48322911000104796,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        },
+        {
+          "steps_per_second": 733.451687009078,
+          "elapsed_seconds": 0.40902489600011904,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        },
+        {
+          "steps_per_second": 701.7523603212277,
+          "elapsed_seconds": 0.4275012340003741,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        },
+        {
+          "steps_per_second": 710.058085922825,
+          "elapsed_seconds": 0.42250064600011683,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        },
+        {
+          "steps_per_second": 705.7895457677898,
+          "elapsed_seconds": 0.42505588499989244,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 853837824
+        }
+      ]
+    },
+    "int16_overlap": {
+      "median_steps_per_second": 818.6037168610502,
+      "trials": [
+        {
+          "steps_per_second": 822.6419472446181,
+          "elapsed_seconds": 0.3646787050001876,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        },
+        {
+          "steps_per_second": 818.6037168610502,
+          "elapsed_seconds": 0.36647769100090954,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        },
+        {
+          "steps_per_second": 734.1103179774925,
+          "elapsed_seconds": 0.40865792600015993,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        },
+        {
+          "steps_per_second": 874.8566241207911,
+          "elapsed_seconds": 0.34291333200053487,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        },
+        {
+          "steps_per_second": 636.1749416699311,
+          "elapsed_seconds": 0.4715684010006953,
+          "final_loss": 0.005431880708783865,
+          "peak_allocated_gpu_bytes": 854099968
+        }
+      ]
+    }
+  }
+}

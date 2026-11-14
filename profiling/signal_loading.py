@@ -11,6 +11,7 @@ import json
 import operator
 import platform
 import time
+from collections.abc import Callable
 
 import numpy as np
 import pyarrow as pa
@@ -105,9 +106,17 @@ def calibrate(samples: torch.Tensor, gain: torch.Tensor, offset: torch.Tensor) -
     return samples.to(torch.float32) * gain + offset
 
 
-def _timing(fn, device, warmup, repeats):
+def measure_stage(
+    operation: Callable[[], object], device: torch.device, warmup: int, repeats: int
+) -> dict[str, float]:
+    """Measure completed-call median/p95 latency in milliseconds.
+
+    Warmups are excluded. CUDA synchronization brackets each timed call;
+    allocations inside the operation are included, but result disposal is not.
+    This measures batch latency rather than overlapping pipeline throughput.
+    """
     for _ in range(warmup):
-        fn()
+        operation()
     if device.type == "cuda":
         torch.cuda.synchronize(device)
     durations = []
@@ -115,7 +124,7 @@ def _timing(fn, device, warmup, repeats):
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         start = time.perf_counter()
-        result = fn()
+        result = operation()
         if device.type == "cuda":
             torch.cuda.synchronize(device)
         durations.append((time.perf_counter() - start) * 1000)
@@ -202,7 +211,7 @@ def main():
         )
         torch.cuda.synchronize(device)
         torch.cuda.reset_peak_memory_stats(device)
-    results = {name: _timing(fn, device, args.warmup, args.repeats) for name, fn in stages.items()}
+    results = {name: measure_stage(fn, device, args.warmup, args.repeats) for name, fn in stages.items()}
     report = {
         "scope": "synthetic in-memory stages; no EDF parsing, disk I/O, resampling or training",
         "shape": shape,
