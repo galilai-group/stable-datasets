@@ -16,15 +16,11 @@ import torch
 import triton
 import wfdb
 
-from profiling.signal_utils import checksum, measure_stage
+from profiling.benchmark_support import checksum, measure_stage, transfer_to_cuda
+from profiling.research_environment import collect_environment
 from profiling.wfdb212 import Wfdb212Source, unpack_cpu
 from profiling.wfdb212_cpu import decode_cpu_parallel, decode_cpu_serial
 from profiling.wfdb212_cuda import calibrate_cuda, decode_cuda
-
-
-def transfer(array: np.ndarray) -> torch.Tensor:
-    """Include per-batch pinning and nonblocking H2D transfer; caller synchronizes."""
-    return torch.from_numpy(array).pin_memory().cuda(non_blocking=True)
 
 
 def require_equal(actual: np.ndarray, reference: np.ndarray) -> None:
@@ -41,22 +37,22 @@ def build_operations(source: Wfdb212Source, starts: np.ndarray, length: int) -> 
     baseline = torch.from_numpy(source.baseline).cuda()
 
     def library():
-        return transfer(source.reference(starts, length, physical=True).astype(np.float32))
+        return transfer_to_cuda(source.reference(starts, length, physical=True).astype(np.float32))
 
     def numpy_cpu():
-        return transfer(source.physical(unpack_cpu(source.gather(starts, length))))
+        return transfer_to_cuda(source.physical(unpack_cpu(source.gather(starts, length))))
 
     def serial_cpu():
-        return transfer(decode_cpu_serial(source.gather(starts, length), source.scale, source.baseline))
+        return transfer_to_cuda(decode_cpu_serial(source.gather(starts, length), source.scale, source.baseline))
 
     def parallel_cpu():
-        return transfer(decode_cpu_parallel(source.gather(starts, length), source.scale, source.baseline))
+        return transfer_to_cuda(decode_cpu_parallel(source.gather(starts, length), source.scale, source.baseline))
 
     def hybrid():
-        return calibrate_cuda(transfer(unpack_cpu(source.gather(starts, length))), scale, baseline)
+        return calibrate_cuda(transfer_to_cuda(unpack_cpu(source.gather(starts, length))), scale, baseline)
 
     def gpu():
-        return decode_cuda(transfer(source.gather(starts, length)), scale, baseline)
+        return decode_cuda(transfer_to_cuda(source.gather(starts, length)), scale, baseline)
 
     return {
         "wfdb_library": library,
@@ -112,7 +108,7 @@ def run_benchmark(record: Path, batch_size: int, length: int, *, rounds: int = 6
         errors[name] = float(np.nanmax(np.abs(actual - expected))) if np.isfinite(expected).any() else None
     scale = torch.from_numpy(source.scale).cuda()
     baseline = torch.from_numpy(source.baseline).cuda()
-    resident = transfer(packed)
+    resident = transfer_to_cuda(packed)
     np.testing.assert_array_equal(decode_cuda(resident, scale, baseline, physical=False).cpu().numpy(), digital)
     results = measure_operations(operations, rounds, repeats)
     diagnostics = {
@@ -149,6 +145,7 @@ def run_benchmark(record: Path, batch_size: int, length: int, *, rounds: int = 6
         "torch_threads": 1,
         "compiled_cpu_parallel_threads": numba.get_num_threads(),
         "gpu": torch.cuda.get_device_name(0),
+        "environment": collect_environment(),
         "versions": {
             "python": platform.python_version(),
             "numpy": np.__version__,
@@ -159,7 +156,14 @@ def run_benchmark(record: Path, batch_size: int, length: int, *, rounds: int = 6
         },
         "code_sha256": {
             name: checksum(Path(__file__).with_name(name))
-            for name in ("wfdb212.py", "wfdb212_cpu.py", "wfdb212_cuda.py", "benchmark_wfdb212.py", "signal_utils.py")
+            for name in (
+                "wfdb212.py",
+                "wfdb212_cpu.py",
+                "wfdb212_cuda.py",
+                "benchmark_wfdb212.py",
+                "benchmark_support.py",
+                "research_environment.py",
+            )
         },
         "results": results,
         "separate_prepared_input_diagnostics": diagnostics,

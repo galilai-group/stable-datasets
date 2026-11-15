@@ -19,16 +19,26 @@ import mne
 import numpy as np
 import torch
 
+from profiling.benchmark_support import checksum, measure_stage, transfer_to_cuda
 from profiling.edf_record_loading import BatchedEdfRecords, GpuRecordAssembler
-from profiling.native_edf_loading import (
-    NativeEdfReader,
-    calibrate_cpu,
-    choose_windows,
-    read_mne_windows,
-    transfer,
-    validate_source,
-)
-from profiling.signal_utils import calibrate, checksum, measure_stage, require_matching_signals
+from profiling.edf_reference import read_mne_windows, require_matching_signals, validate_source
+from profiling.edf_source import NativeEdfMetadata, NativeEdfReader
+from profiling.research_environment import collect_environment
+from profiling.signal_calibration import calibrate, calibrate_cpu
+
+
+def choose_windows(metadata: NativeEdfMetadata, batch_size: int, length: int) -> np.ndarray:
+    """Include first/last windows and an EDF-record boundary among seeded requests."""
+    last_start = metadata.sample_count - length
+    if batch_size < 3 or last_start < 0:
+        raise ValueError("Require at least three windows fitting the recording")
+    starts = np.random.default_rng(0).integers(0, last_start + 1, size=batch_size)
+    starts[:3] = [
+        0,
+        last_start,
+        min(last_start, max(0, round(metadata.record_duration_s * metadata.sample_rate_hz) - 1)),
+    ]
+    return starts
 
 
 @dataclass(frozen=True)
@@ -53,26 +63,26 @@ def build_gpu_operations(
     assembler = GpuRecordAssembler(records, torch.device("cuda"))
 
     def library_cpu_calibration():
-        return transfer(calibrate_cpu(source.read_windows(starts, length), metadata))
+        return transfer_to_cuda(calibrate_cpu(source.read_windows(starts, length), metadata.gain, metadata.offset))
 
     def library_gpu_calibration():
-        return calibrate(transfer(source.read_windows(starts, length)), gain, offset)
+        return calibrate(transfer_to_cuda(source.read_windows(starts, length)), gain, offset)
 
     def cpu_gather_cpu_calibration():
         digital = records.read_cpu(records.plan(starts, length))
-        return transfer(calibrate_cpu(digital, metadata))
+        return transfer_to_cuda(calibrate_cpu(digital, metadata.gain, metadata.offset))
 
     def cpu_gather_gpu_calibration():
         digital = records.read_cpu(records.plan(starts, length))
-        return calibrate(transfer(digital), gain, offset)
+        return calibrate(transfer_to_cuda(digital), gain, offset)
 
     def cpu_records_cpu_calibration():
         digital = records.read_cpu_from_records(records.plan(starts, length))
-        return transfer(calibrate_cpu(digital, metadata))
+        return transfer_to_cuda(calibrate_cpu(digital, metadata.gain, metadata.offset))
 
     def cpu_records_gpu_calibration():
         digital = records.read_cpu_from_records(records.plan(starts, length))
-        return calibrate(transfer(digital), gain, offset)
+        return calibrate(transfer_to_cuda(digital), gain, offset)
 
     def gpu_records_gpu_assembly():
         return assembler.assemble(records.plan(starts, length))
@@ -121,7 +131,7 @@ def validate_raw_paths(
     selected = records.read_cpu_from_records(plan)
     np.testing.assert_array_equal(direct, library)
     np.testing.assert_array_equal(selected, library)
-    physical = calibrate_cpu(direct, source.metadata)
+    physical = calibrate_cpu(direct, source.metadata.gain, source.metadata.offset)
     require_matching_signals(physical, expected)
     return {"raw_samples_match_library": True, "cpu_max_abs_error_volts": float(np.max(np.abs(physical - expected)))}
 
@@ -183,6 +193,7 @@ def build_report(
         "warmup": 3,
         "torch_cpu_threads": 1,
         "gpu": torch.cuda.get_device_name(0),
+        "environment": collect_environment(),
         "versions": {
             "python": platform.python_version(),
             "numpy": np.__version__,
@@ -195,8 +206,11 @@ def build_report(
             for name in (
                 "benchmark_edf_records.py",
                 "edf_record_loading.py",
-                "native_edf_loading.py",
-                "signal_utils.py",
+                "edf_source.py",
+                "edf_reference.py",
+                "signal_calibration.py",
+                "benchmark_support.py",
+                "research_environment.py",
             )
         },
         "results": results,

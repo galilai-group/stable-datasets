@@ -10,7 +10,7 @@ import torch
 mne = pytest.importorskip("mne")
 pytest.importorskip("edfio")
 pytest.importorskip("pyedflib")
-native = importlib.import_module("profiling.native_edf_loading")
+native = importlib.import_module("profiling.edf_source")
 records_module = importlib.import_module("profiling.edf_record_loading")
 benchmark = importlib.import_module("profiling.benchmark_edf_records")
 
@@ -75,7 +75,7 @@ def test_vectorized_layouts_match_native_samples_and_mne(tmp_path, annotation_in
         records.read_cpu_from_records(gapped), np.stack([samples[start : start + 16] for start in gapped.starts])
     )
     with mne.io.read_raw_edf(str(path), preload=False, verbose="ERROR") as reference:
-        physical = native.read_mne_windows(reference, starts, 128)
+        physical = benchmark.read_mne_windows(reference, starts, 128)
         benchmark.validate_raw_paths(source, records, starts, 128, physical)
     assert path.read_bytes() == before
     if annotation_in_middle:
@@ -125,8 +125,10 @@ def test_gpu_assembles_records_with_annotations_and_repeated_windows(tmp_path):
     for starts, length in ((np.array([127, 0, 256, 127]), 128), (np.array([256, 0, 256]), 16), (np.array([0]), 384)):
         plan = records.plan(starts, length)
         actual = assembler.assemble(plan).cpu().numpy()
-        expected = native.calibrate_cpu(
-            np.stack([samples[start : start + length] for start in plan.starts]), source.metadata
+        expected = benchmark.calibrate_cpu(
+            np.stack([samples[start : start + length] for start in plan.starts]),
+            source.metadata.gain,
+            source.metadata.offset,
         )
         np.testing.assert_allclose(actual, expected, rtol=2e-6, atol=1e-10)
     config = benchmark.RecordBenchmarkConfig(

@@ -13,8 +13,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from profiling.native_edf_loading import NativeEdfReader
-from profiling.signal_utils import calibrate
+from profiling.edf_source import NativeEdfReader
+from profiling.signal_calibration import calibrate
 
 
 @dataclass(frozen=True)
