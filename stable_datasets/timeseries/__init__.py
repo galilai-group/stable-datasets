@@ -7,6 +7,7 @@ from .CatsDogs import CatsDogs
 from .daily_and_sports_activities import DailyAndSportsActivities
 from .electricity_hourly import ElectricityHourly
 from .epilepsy import Epilepsy
+from .Forex import Forex
 from .freefield1010 import Freefield1010
 from .fsd_kaggle_2018 import FSDKaggle2018
 from .groove_MIDI import GrooveMIDI
@@ -22,6 +23,7 @@ from .racket_sports import RacketSports
 from .robot_execution_failures import RobotExecutionFailures
 from .seizures_neonatal import SeizuresNeonatal
 from .sonycust import SONYCUST
+from .SP500 import SP500
 from .speech_commands import SpeechCommands
 from .uber_tlc import UberTLC
 from .uci_har import UCIHAR
@@ -35,6 +37,7 @@ from .warblr import Warblr
 __all__ = [
     "DailyAndSportsActivities",
     "RobotExecutionFailures",
+    "Forex",
     "AudioMNIST",
     "BasicMotions",
     "BirdVoxDCASE20k",
@@ -63,6 +66,7 @@ __all__ = [
     "VoiceGenderDetection",
     "VocalSet",
     "Warblr",
+    "SP500",
 ]
 
 # from . import (
