@@ -8,7 +8,9 @@ from .daily_and_sports_activities import DailyAndSportsActivities
 from .electricity_hourly import ElectricityHourly
 from .epilepsy import Epilepsy
 from .freefield1010 import Freefield1010
+from .fsd50k import FSD50K
 from .fsd_kaggle_2018 import FSDKaggle2018
+from .fsdnoisy18k import FSDnoisy18k
 from .groove_MIDI import GrooveMIDI
 from .gtzan import GTZAN
 from .hand_movement_direction import HandMovementDirection
@@ -42,7 +44,9 @@ __all__ = [
     "ElectricityHourly",
     "Epilepsy",
     "Freefield1010",
+    "FSD50K",
     "FSDKaggle2018",
+    "FSDnoisy18k",
     "GrooveMIDI",
     "GTZAN",
     "HandMovementDirection",
