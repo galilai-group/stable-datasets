@@ -223,6 +223,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../datasets/uwave_gesture_library/">UWaveGestureLibrary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/electricity_hourly/">Electricity (Hourly)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/uber_tlc/">Uber TLC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/fsd50k/">FSD50K</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../datasets/fsdnoisy18k/">FSDnoisy18k</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/something_something_v2/">Something-Something V2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/clevrer/">CLEVRER</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../datasets/dsprites/">dSprites</a></li>
@@ -379,6 +381,10 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.flowers17.Flowers17.BUILDER_CONFIGS">(Flowers17 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.freiburg_groceries.FreiburgGroceries.BUILDER_CONFIGS">(FreiburgGroceries attribute)</a>
+</li>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd50k.FSD50K.BUILDER_CONFIGS">(FSD50K attribute)</a>
+</li>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsdnoisy18k.FSDnoisy18k.BUILDER_CONFIGS">(FSDnoisy18k attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.BUILDER_CONFIGS">(HASYv2 attribute)</a>
 </li>
@@ -583,6 +589,10 @@
         <li><a href="../stable_datasets.images/#stable_datasets.images.flowers17.Flowers17.DEFAULT_CONFIG_NAME">(Flowers17 attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.freiburg_groceries.FreiburgGroceries.DEFAULT_CONFIG_NAME">(FreiburgGroceries attribute)</a>
+</li>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd50k.FSD50K.DEFAULT_CONFIG_NAME">(FSD50K attribute)</a>
+</li>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsdnoisy18k.FSDnoisy18k.DEFAULT_CONFIG_NAME">(FSDnoisy18k attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.hasy_v2.HASYv2.DEFAULT_CONFIG_NAME">(HASYv2 attribute)</a>
 </li>
@@ -791,7 +801,11 @@
 </li>
       <li><a href="../stable_datasets.images/#stable_datasets.images.fruits360.Fruits360">Fruits360 (class in stable_datasets.images.fruits360)</a>
 </li>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd50k.FSD50K">FSD50K (class in stable_datasets.timeseries.fsd50k)</a>
+</li>
       <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd_kaggle_2018.FSDKaggle2018">FSDKaggle2018 (class in stable_datasets.timeseries.fsd_kaggle_2018)</a>
+</li>
+      <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsdnoisy18k.FSDnoisy18k">FSDnoisy18k (class in stable_datasets.timeseries.fsdnoisy18k)</a>
 </li>
   </ul></td>
   </tr>
@@ -1322,7 +1336,11 @@
 </li>
         <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.freefield1010">stable_datasets.timeseries.freefield1010</a>
 </li>
+        <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.fsd50k">stable_datasets.timeseries.fsd50k</a>
+</li>
         <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.fsd_kaggle_2018">stable_datasets.timeseries.fsd_kaggle_2018</a>
+</li>
+        <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.fsdnoisy18k">stable_datasets.timeseries.fsdnoisy18k</a>
 </li>
         <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.groove_MIDI">stable_datasets.timeseries.groove_MIDI</a>
 </li>
@@ -1814,7 +1832,11 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.fruits360.Fruits360.SOURCE">(Fruits360 attribute)</a>
 </li>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd50k.FSD50K.SOURCE">(FSD50K attribute)</a>
+</li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd_kaggle_2018.FSDKaggle2018.SOURCE">(FSDKaggle2018 attribute)</a>
+</li>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsdnoisy18k.FSDnoisy18k.SOURCE">(FSDnoisy18k attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.galaxy10.Galaxy10Decal.SOURCE">(Galaxy10Decal attribute)</a>
 </li>
@@ -2254,8 +2276,6 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cifar100_n">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li>
     stable_datasets.images.cifar10_1
 
@@ -2263,6 +2283,8 @@
         <li><a href="../stable_datasets.images/#module-stable_datasets.images.cifar10_1">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul style="margin-left:0;list-style-type:none">
       <li>
     stable_datasets.images.cifar10_2
 
@@ -2999,10 +3021,24 @@
 </li>
       </ul></li>
       <li>
+    stable_datasets.timeseries.fsd50k
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.fsd50k">module</a>
+</li>
+      </ul></li>
+      <li>
     stable_datasets.timeseries.fsd_kaggle_2018
 
       <ul style="list-style-type:none">
         <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.fsd_kaggle_2018">module</a>
+</li>
+      </ul></li>
+      <li>
+    stable_datasets.timeseries.fsdnoisy18k
+
+      <ul style="list-style-type:none">
+        <li><a href="../stable_datasets.timeseries/#module-stable_datasets.timeseries.fsdnoisy18k">module</a>
 </li>
       </ul></li>
       <li>
@@ -3452,7 +3488,11 @@
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.fruits360.Fruits360.VERSION">(Fruits360 attribute)</a>
 </li>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd50k.FSD50K.VERSION">(FSD50K attribute)</a>
+</li>
         <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsd_kaggle_2018.FSDKaggle2018.VERSION">(FSDKaggle2018 attribute)</a>
+</li>
+        <li><a href="../stable_datasets.timeseries/#stable_datasets.timeseries.fsdnoisy18k.FSDnoisy18k.VERSION">(FSDnoisy18k attribute)</a>
 </li>
         <li><a href="../stable_datasets.images/#stable_datasets.images.galaxy10.Galaxy10Decal.VERSION">(Galaxy10Decal attribute)</a>
 </li>
