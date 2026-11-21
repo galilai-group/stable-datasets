@@ -1,0 +1,86 @@
+ISIC2016
+========
+
+This builder implements **ISIC 2016 Task 3: Lesion Classification**, preserving
+the official 900-image training and 379-image test sets. Each row contains
+``image`` (PIL image), ``label`` (integer), and ``image_id`` (string).
+Original JPEG bytes, dimensions, labels, and source splits are retained.
+
+.. figure:: teasers/isic2016_teaser.png
+   :alt: Six original ISIC2016 training images, three benign and three malignant, with labels and image IDs.
+   :width: 100%
+
+   Three examples per class from the official training set, selected by image
+   ID. Aspect ratios and original labels are preserved; images are not cropped.
+
+Data Structure
+--------------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 20 60
+
+   * - Key
+     - Type
+     - Description
+   * - ``image``
+     - PIL.Image.Image
+     - RGB PIL image, variable dimensions
+   * - ``label``
+     - int
+     - Integer: 0=benign, 1=malignant
+   * - ``image_id``
+     - str
+     - Original filename stem, unique within the dataset
+
+Usage
+-----
+
+.. code-block:: python
+
+   from stable_datasets.images import ISIC2016
+
+   datasets = ISIC2016()
+   train, test = datasets["train"], datasets["test"]
+   print(train.features["label"].names)  # ["benign", "malignant"]
+
+   datasets = ISIC2016(download_dir="/data/downloads",
+                       processed_cache_dir="/data/processed")
+
+The official CSV files have no header. Training labels use ``benign`` and
+``malignant``; test labels use ``0.0`` and ``1.0``. Both map to 0=benign and
+1=malignant. Labels are joined by image ID, independently of ZIP/CSV order.
+
+Testing
+-------
+
+The tests download the original release through the standard dataset API and
+check split sizes, class counts, image decoding, stable IDs, and cache reopening.
+Offline parser tests additionally check invalid inputs and label matching.
+
+Source and license
+------------------
+
+Official task: https://challenge.isic-archive.com/landing/2016/39/
+
+Official data index: https://challenge.isic-archive.com/data/
+
+The 2016 challenge data are listed under CC0. Measured SHA-256 values in
+``SOURCE`` identify the audited release; they are not publisher signatures.
+
+Citation
+--------
+
+.. code-block:: bibtex
+
+   @article{gutman2016skin,
+       title={Skin Lesion Analysis toward Melanoma Detection: A Challenge at the International
+              Symposium on Biomedical Imaging (ISBI) 2016, hosted by the International Skin
+              Imaging Collaboration (ISIC)},
+       author={Gutman, David and Codella, Noel C. F. and Celebi, Emre and Helba, Brian
+               and Marchetti, Michael and Mishra, Nabin and Halpern, Allan},
+       journal={arXiv preprint arXiv:1605.01397}, year={2016}
+   }
+
+Known exact-pixel duplicates are retained as source records. Evaluation code
+should group duplicate images within partitions and avoid train/test leakage.

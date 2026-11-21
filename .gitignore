@@ -5,6 +5,7 @@
 core.*
 *.pdf
 *.jpg
+!docs/source/datasets/teasers/*.jpg
 *.mp4
 figures/
 !benchmarks/figures/
