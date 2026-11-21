@@ -1,85 +1,65 @@
-# Reproduce on a fresh NVIDIA/Linux machine
+# Run the window-access experiment
 
-This guide replaces reliance on dependencies and recordings left under the
-original laptop's `/tmp`. Run from the repository root, on branch
-`research/gpu-medical-timeseries`. The pre-refactor measured implementation is `b852c549`;
-record your actual revision with `git rev-parse HEAD` when reproducing it.
-On a cluster, use an allocated GPU job rather than a login node.
+Use the repository root on branch `research/gpu-medical-timeseries`. The source
+is deliberately one neonatal EDF recording; this is not a full dataset build.
+No Git mutation or external tracking/upload is performed by these commands.
+On Hydra, execute CUDA work inside your allocated GPU job using the cluster's
+account-specific instructions; no partition or NFS mount is assumed here.
 
 ## Environment
 
-The measured host used Linux x86_64, Python 3.13.9 and an RTX 4060 Laptop GPU.
-The preserved training protocol records Linux 6.8.0-38 and NVIDIA driver
-590.48.01. These observations are historical provenance, not a complete
-compatibility specification for the recorded PyTorch CUDA build. The CPU model
-was not recorded; do not infer it or fill historical reports with this Mac's CPU.
-
-`requirements.txt` pins the recorded native-reader/numerical packages and the
-reported PyTorch and Triton builds. These are top-level pins, not a fully resolved transitive lock.
-The original pytest version was not recorded. Fresh installation and CUDA
-execution of this recipe have not been verified on the Mac doing the handoff.
-
-Use a separate environment. The following targets the recorded CUDA build;
-availability of those exact wheels and compatibility with the installed driver
-must be checked on the NVIDIA machine:
+Use an existing compatible CUDA-enabled PyTorch environment, or a fresh Python
+3.13 environment with the recorded package pins in `requirements.txt`. The
+recorded torch 2.15.0+cu132 wheel source must be available and compatible with
+the installed driver; a fresh installation of that exact CUDA environment has
+not been verified on this Mac. Do not silently substitute versions when
+claiming reproduction. Normal reference-reader dependencies must be installed
+(not an incomplete `--no-deps` installation).
 
 ```bash
-python3.13 -m venv "$HOME/.venvs/stable-datasets-medical"
-source "$HOME/.venvs/stable-datasets-medical/bin/activate"
-python -m pip install --upgrade pip
-python -m pip install 'torch==2.15.0+cu132' --index-url https://download.pytorch.org/whl/cu132
-python -m pip install -r profiling/medical_signal_research/requirements.txt
-python -m pip check
+python -m pip install -r profiling/medical_signal_research/requirements.txt --extra-index-url https://download.pytorch.org/whl/cu132
 nvidia-smi
-python -c "import torch; print(torch.__version__, torch.version.cuda); assert torch.cuda.is_available(), 'CUDA unavailable'; print(torch.cuda.get_device_name(0))"
+python -c "import torch, lance; print(torch.__version__, lance.__version__); assert torch.cuda.is_available(); print(torch.cuda.get_device_name(0)); assert hasattr(lance.LanceDataset, 'read_blob_ranges')"
 ```
 
-If the exact PyTorch build is unavailable or fails the CUDA check, stop that
-reproduction attempt and recover its installation source/wheels from the original
-working laptop. Do not silently substitute another build and describe its results
-as an exact reproduction. For a deliberately different environment, select a
-compatible build using [PyTorch's installation instructions](https://pytorch.org/get-started/locally/),
-retain a separate requirements file, and label the new measurements accordingly.
-No package installation is required merely to inspect saved JSON.
+For CPU-only development, CUDA-specific torch/Triton pins need not be installed.
+Use a supported CPU PyTorch build plus Lance, PyArrow, NumPy, MNE, edfio,
+pyEDFlib, pytest and matplotlib. Local compatibility checks use Python 3.10,
+MNE 1.10.2, Lance 13.0.0 and PyArrow 25.0.1; those are separate from the
+historical GPU environment. The benchmark requires file format 2.2 and the
+planned blob-range API; it fails rather than silently loading whole blobs.
 
-## Recordings and checksums
+## Source and preparation
 
-Only two EEG recordings and one ECG recording are required. The fourth file is
-the ECG header. Run this once into a fresh directory; do not overwrite an
-existing source collection:
+Choose paths **outside the repository**. On Hydra, set `signal_root` to your
+chosen NFS research directory if that is the storage under study. Verify the
+mount using your site's tools (for example `findmnt -T "$signal_root"` on Linux).
+The `--storage-label` field merely records your description, not verification.
 
 ```bash
-signal_repo_dir="$PWD"
-signal_data_dir="$HOME/stable-datasets-medical-data"
-mkdir "$signal_data_dir"
-curl --fail --location --max-time 120 --output "$signal_data_dir/eeg4.edf" https://zenodo.org/records/2547147/files/eeg4.edf
-curl --fail --location --max-time 120 --output "$signal_data_dir/S001R01.edf" https://physionet.org/files/eegmmidb/1.0.0/S001/S001R01.edf
-curl --fail --location --max-time 120 --output "$signal_data_dir/100.hea" https://physionet.org/files/mitdb/1.0.0/100.hea
-curl --fail --location --max-time 120 --output "$signal_data_dir/100.dat" https://physionet.org/files/mitdb/1.0.0/100.dat
-(cd "$signal_data_dir" && sha256sum -c "$signal_repo_dir/profiling/medical_signal_research/sources.sha256")
+signal_root="$HOME/eeg-window-study"
+mkdir -p "$signal_root"
+curl --fail --location --max-time 120 --output "$signal_root/eeg4.edf" https://zenodo.org/records/2547147/files/eeg4.edf
 ```
 
-Checksums come from the retained benchmark reports. A mismatch must be resolved
-before comparing with those reports. Do not repair or normalize the recordings.
-These sources cover the native-format study; earlier neonatal label/cache
-experiments additionally need `annotations_2017.mat`, outside this contribution. They are not required for the native study.
-
-## Correctness and machine provenance
-
-Create a fresh results directory outside the repository so previous measurements
-remain unchanged. The hardware capture is best-effort and read-only; confirm it
-contains the CPU model, driver and expected packages before sharing results.
+Expected SHA256 for `eeg4.edf`:
+`6444722cf46e101381754354888194dc1402ad445cd3da3df1df212e6365c81e`.
+Check it before preparation (`sha256sum` on Linux or `shasum -a 256` on macOS).
+Do not normalize or rewrite its header. The experiment uses edfio for source
+metadata/native samples and MNE as the physical-value reference.
 
 ```bash
-signal_results_dir="$HOME/stable-datasets-medical-results-$(date +%Y%m%d-%H%M%S)"
-mkdir "$signal_results_dir"
-python -m profiling.research_environment > "$signal_results_dir/environment.json"
-python -m pip freeze > "$signal_results_dir/environment.freeze.txt"
-git rev-parse HEAD > "$signal_results_dir/revision.txt"
-git diff --stat > "$signal_results_dir/working-changes.txt"
+python -m profiling.benchmark_signal_windows prepare "$signal_root/eeg4.edf" "$signal_root/prepared-1024" --chunk-samples 1024
 ```
 
-Run the retained tests (synthetic temporary fixtures, no dataset downloads):
+Preparation creates two immutable Lance stores, a production-format float32
+recording-row cache, and metadata/provenance. It refuses an existing workspace.
+At 256 Hz, 1024 samples is one four-second chunk; this is an initial choice,
+not an optimized universal size. To compare chunk sizes, prepare a different
+workspace and report its setup cost separately. Preparation may use substantial
+RAM because it includes one whole recording and the production list encoder.
+
+## Validate and measure
 
 ```bash
 python -m pytest -q -rs \
@@ -87,57 +67,37 @@ python -m pytest -q -rs \
   stable_datasets/tests/test_benchmark_support.py \
   stable_datasets/tests/test_edf_source.py \
   stable_datasets/tests/test_edf_record_loading.py \
-  stable_datasets/tests/test_wfdb212.py
+  stable_datasets/tests/test_lance_signal_windows.py
 ```
 
-Check the pytest skip summary:
-success with missing readers or skipped CUDA cases does not reproduce the
-reported full GPU validation. Save the terminal output alongside the new results.
-`environment.freeze.txt` records the actual resolved packages; it is not claimed
-to reconstruct the unrecorded transitive environment of the original study.
+Inspect skips. Synthetic EDF fixtures and real temporary Lance datasets require
+medical readers; CUDA checks require actual GPU access. Tests do not download
+recordings. The paused WFDB study need not be run for this experiment.
 
-## Native latency benchmarks
-
-First run a short functional check, using fresh output files:
+CPU smoke run (four paths, CPU output):
 
 ```bash
-python -m profiling.benchmark_edf_records "$signal_data_dir/eeg4.edf" --batch-size 4 --length 128 --rounds 1 --repeats 1 --output "$signal_results_dir/edf-smoke.json"
-python -m profiling.benchmark_wfdb212 "$signal_data_dir/100" --batch-size 4 --length 128 --rounds 1 --repeats 1 --output "$signal_results_dir/wfdb-smoke.json"
+python -m profiling.benchmark_signal_windows run "$signal_root/eeg4.edf" "$signal_root/prepared-1024" --device cpu --batch-sizes 1 4 --seconds 4 --repeats 1 --output "$signal_root/cpu-smoke.json"
 ```
 
-Then reproduce the EDF grid (defaults: seven rounds, thirty repeats):
+Matched five-path GPU run and standalone figure:
 
 ```bash
-for signal_source in eeg4 S001R01; do
-  for signal_batch in 4 32; do
-    for signal_length in 128 1024; do
-      python -m profiling.benchmark_edf_records "$signal_data_dir/$signal_source.edf" --batch-size "$signal_batch" --length "$signal_length" --output "$signal_results_dir/$signal_source-b$signal_batch-l$signal_length.json"
-    done
-  done
-done
+python -m profiling.benchmark_signal_windows run "$signal_root/eeg4.edf" "$signal_root/prepared-1024" --device cuda --batch-sizes 1 4 16 32 --seconds 4 --repeats 10 --storage-label nfs --output "$signal_root/gpu-warm.json"
+python -m profiling.benchmark_signal_windows plot "$signal_root/gpu-warm.json" --output "$signal_root/gpu-warm.png"
 ```
 
-This grouped invocation reproduces the configurations, not the original case
-execution order. Individual path order remains balanced by the benchmark. The
-original EDF order was 4×128, 32×1024, 4×1024, 32×128, alternating sources.
+Use `--storage-label local` instead if measuring local storage. Reports/figures
+refuse existing output filenames. All paths share the same seeded window
+requests per batch size; every output is compared with MNE before timing.
+Reports include errors, source/code hashes, preparation metadata, environment,
+per-round latency and windows/second, and logical payload/materialization counts.
+No cold-cache eviction is implemented and first reads after validation are warm.
+Do not interpret selected-byte counters as measured physical storage bandwidth.
 
-Reproduce the two WFDB workload series (defaults: six rounds, thirty repeats):
-
-```bash
-for signal_case in 4:128 32:1024 32:8192; do
-  python -m profiling.benchmark_wfdb212 "$signal_data_dir/100" --batch-size "${signal_case%:*}" --length "${signal_case#*:}" --output "$signal_results_dir/wfdb-a-${signal_case/:/-}.json"
-done
-for signal_case in 32:8192 32:1024 4:128; do
-  python -m profiling.benchmark_wfdb212 "$signal_data_dir/100" --batch-size "${signal_case%:*}" --length "${signal_case#*:}" --output "$signal_results_dir/wfdb-b-${signal_case/:/-}.json"
-done
-python -m profiling.benchmark_wfdb212 "$signal_data_dir/100" --batch-size 3 --length 650000 --rounds 1 --repeats 1 --output "$signal_results_dir/wfdb-full-record-check.json"
-```
-
-The full-record run checks correctness; its one-repeat timings are not a new
-performance estimate. Both native benchmarks now append CPU/OS/package/driver
-provenance to new reports after timing. Historical reports are retained as unchanged
-objects in `results/edf.json` and `results/wfdb212.json`; their source hashes
-refer to `results/measured-source.tar.gz`, not to the refactored implementation.
-Report warm-source completed-batch latency separately from training performance,
-cold storage and GPU-direct I/O. Changing hardware or drivers is a new experiment,
-not a reason to expect identical latency.
+For the Hydra handoff, retain the generated preparation report, measurement
+JSON, figure, environment and exact revision outside Git. Changing model size,
+worker count, cache conditions or chunk size is a separate controlled comparison.
+The subsequent training step must decide annotation-to-window labels and a
+patient-separated split, select a small EEG model, validate its stable-pretraining
+adaptation and compare matched learning progress versus elapsed wall time.

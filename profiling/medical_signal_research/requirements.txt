@@ -11,3 +11,7 @@ numba==0.62.1
 pytest>=8,<10
 torch==2.15.0+cu132
 triton==3.9.0
+
+# Verified planned blob-range reader and Arrow compatibility for the window study.
+pylance==13.0.0
+pyarrow==25.0.1
