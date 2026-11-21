@@ -109,6 +109,8 @@ Available Datasets
    rock_paper_scissor
    svhn
    linnaeus5
+   q_mnist
+   omniglot
    caltech101
    mnist_m
    bee_dataset
