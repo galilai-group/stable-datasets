@@ -167,6 +167,13 @@ Available Datasets
 
 .. toctree::
    :maxdepth: 1
+   :caption: Audio Datasets
+
+   fsd50k
+   fsdnoisy18k
+
+.. toctree::
+   :maxdepth: 1
    :caption: Video Datasets
 
    something_something_v2
