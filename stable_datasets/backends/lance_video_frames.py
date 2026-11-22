@@ -85,7 +85,9 @@ class LanceVideoFramesBackend:
     logical dataset exposes deterministic frame windows as samples.
     """
 
-    prefer_batched_take: bool = False
+    # StableDataset can use get_rows for batched access and avoid
+    # materializing decoded video tensors through Arrow tables.
+    prefer_batched_take: bool = True
 
     def __init__(
         self,
@@ -123,6 +125,7 @@ class LanceVideoFramesBackend:
         if self._seg_vid.size == 0:
             raise ValueError(f"no valid segments: every video has fewer than span={self._span} frames")
         self._ds = None
+        self._iter_batch_size = max(1, self._batch_readahead * 32)
 
     @property
     def _dataset(self):
@@ -177,36 +180,13 @@ class LanceVideoFramesBackend:
         }
 
     def get_row(self, idx: int) -> dict:
-        if idx < 0:
-            idx += self.num_rows
-        if idx < 0 or idx >= self.num_rows:
-            raise IndexError(idx)
+        return self._rows_for_indices([idx])[0]
 
-        vi = int(self._seg_vid[idx])
-        start = int(self._seg_start[idx])
-        video = self._videos[vi]
-        frame_indices = [start + j * self._stride for j in range(self.window_length)]
-        row0 = int(video["start_row"])
-        rows = [row0 + frame_idx for frame_idx in frame_indices]
-
-        blobs = self._dataset.take(rows, columns=["bytes"]).column("bytes").to_pylist()
-        frames = self._decode_blobs(blobs, int(video["H"]), int(video["W"]))
-
-        sample = {
-            "video": frames,
-            "video_idx": vi,
-            "filename": video["path"],
-            "start_frame": start,
-            "frame_indices": frame_indices,
-            "sample_idx": int(idx),
-        }
-        metadata = video.get("metadata")
-        if isinstance(metadata, dict):
-            sample.update(metadata)
-        return sample
+    def get_rows(self, indices: np.ndarray | list[int]) -> list[dict]:
+        return self._rows_for_indices(indices)
 
     def take(self, indices: np.ndarray | list[int]) -> pa.Table:
-        rows = [self.get_row(int(i)) for i in list(indices)]
+        rows = self._rows_for_indices(indices)
         serializable = []
         for row in rows:
             converted = dict(row)
@@ -230,8 +210,9 @@ class LanceVideoFramesBackend:
         if shuffle:
             rng = np.random.default_rng(seed)
             rng.shuffle(indices)
-        for idx in indices:
-            yield from self.take([int(idx)]).to_batches()
+        for start in range(0, len(indices), self._iter_batch_size):
+            chunk = indices[start : start + self._iter_batch_size]
+            yield from self.take(chunk).to_batches(max_chunksize=self._iter_batch_size)
 
     def __getstate__(self) -> dict:
         return {
@@ -250,6 +231,79 @@ class LanceVideoFramesBackend:
             hop_size=state.get("hop_size", 1),
             batch_readahead=state.get("batch_readahead", 8),
         )
+
+    def _normalize_index(self, idx: int) -> int:
+        idx = int(idx)
+        if idx < 0:
+            idx += self.num_rows
+        if idx < 0 or idx >= self.num_rows:
+            raise IndexError(idx)
+        return idx
+
+    def _rows_for_indices(self, indices: np.ndarray | list[int]) -> list[dict]:
+        if isinstance(indices, np.ndarray):
+            requested = [int(i) for i in indices.tolist()]
+        else:
+            requested = [int(i) for i in indices]
+        if not requested:
+            return []
+
+        normalized = [self._normalize_index(i) for i in requested]
+        requests_by_video: dict[int, list[tuple[int, int, list[int], list[int]]]] = {}
+        unique_rows_by_video: dict[int, list[int]] = {}
+        seen_rows_by_video: dict[int, set[int]] = {}
+        global_unique_rows: list[int] = []
+        global_seen: set[int] = set()
+
+        for out_pos, idx in enumerate(normalized):
+            vi = int(self._seg_vid[idx])
+            start = int(self._seg_start[idx])
+            frame_indices = [start + j * self._stride for j in range(self.window_length)]
+            row0 = int(self._videos[vi]["start_row"])
+            row_ids = [row0 + frame_idx for frame_idx in frame_indices]
+            requests_by_video.setdefault(vi, []).append((out_pos, idx, frame_indices, row_ids))
+
+            video_rows = unique_rows_by_video.setdefault(vi, [])
+            video_seen = seen_rows_by_video.setdefault(vi, set())
+            for row_id in row_ids:
+                if row_id not in video_seen:
+                    video_seen.add(row_id)
+                    video_rows.append(row_id)
+                if row_id not in global_seen:
+                    global_seen.add(row_id)
+                    global_unique_rows.append(row_id)
+
+        all_blobs = self._dataset.take(global_unique_rows, columns=["bytes"]).column("bytes").to_pylist()
+        blob_by_row = dict(zip(global_unique_rows, all_blobs, strict=False))
+
+        out: list[dict | None] = [None] * len(normalized)
+        for vi, reqs in requests_by_video.items():
+            ordered_unique_rows = unique_rows_by_video[vi]
+            blobs = [blob_by_row[row_id] for row_id in ordered_unique_rows]
+            decoded_frames = self._decode_blobs(
+                blobs,
+                int(self._videos[vi]["H"]),
+                int(self._videos[vi]["W"]),
+            )
+            by_row = {row_id: decoded_frames[i] for i, row_id in enumerate(ordered_unique_rows)}
+
+            video = self._videos[vi]
+            metadata = video.get("metadata")
+            for out_pos, sample_idx, frame_indices, row_ids in reqs:
+                frames = np.stack([by_row[row_id] for row_id in row_ids], axis=0)
+                sample = {
+                    "video": frames,
+                    "video_idx": vi,
+                    "filename": video["path"],
+                    "start_frame": int(frame_indices[0]),
+                    "frame_indices": frame_indices,
+                    "sample_idx": int(sample_idx),
+                }
+                if isinstance(metadata, dict):
+                    sample.update(metadata)
+                out[out_pos] = sample
+
+        return [row for row in out if row is not None]
 
     @staticmethod
     def worker_init(worker_id: int) -> None:
