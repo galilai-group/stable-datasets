@@ -183,13 +183,13 @@ class ArrowBackend:
     def slice(self, start: int, length: int) -> pa.Table:
         """Contiguous range access.
 
-        For single-shard datasets, slices directly from the mmap'd table
-        without triggering full materialization.
+        When the range is inside one shard, slices directly from the
+        mmap'd shard without triggering full materialization.
         """
-        if self._shard_paths is not None and self._cumulative is not None:
-            if len(self._shard_paths) == 1:
-                tbl = self._get_shard_table(0)
-                return tbl.fast_slice(start, length)
+        if self._cumulative is not None and 0 <= start < self._cumulative[-1]:
+            shard_id, local = self._locate_row(start)
+            if local + length <= self._shard_row_counts[shard_id]:
+                return self._get_shard_table(shard_id).fast_slice(local, length)
         return self._get_indexed_table().fast_slice(start, length)
 
     def iter_batches(

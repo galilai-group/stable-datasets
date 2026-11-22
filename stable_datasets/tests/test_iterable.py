@@ -266,3 +266,46 @@ class TestShuffleSeedNone:
         shuffled = [r["x"] for r in ds.iter_epoch(shuffle_shards=True, seed=None)]
         assert sorted(shuffled) == natural
         assert shuffled != natural
+
+
+class TestShardDefaults:
+    def test_lance_cache_splits_fragments_by_bytes(self, tmp_path):
+        import json
+
+        import lance
+
+        from stable_datasets.cache import write_lance_cache
+
+        features = Features({"blob": Value("binary"), "x": Value("int32")})
+        gen = ((i, {"blob": bytes(1000), "x": i}) for i in range(300))
+        meta = write_lance_cache(gen, features, tmp_path / "lance", batch_size=50, max_bytes_per_file=50_000)
+
+        fragment_counts = [f.count_rows() for f in lance.dataset(str(meta.cache_dir)).get_fragments()]
+        assert len(fragment_counts) > 1
+        assert sum(fragment_counts) == 300
+        assert json.loads((meta.cache_dir / "_metadata.json").read_text())["shard_row_counts"] == fragment_counts
+        assert meta.shard_row_counts == fragment_counts
+
+    def test_fewer_shards_than_workers_reads_contiguous_ranges(self, tmp_path):
+        ds, meta = _make_ds(tmp_path, n=40, shard_size_bytes=100, batch_size=20)
+        assert meta.num_shards == 2
+        blocks = []
+        for worker_id in range(4):
+            worker_info = MagicMock(id=worker_id, num_workers=4)
+            with patch("torch.utils.data.get_worker_info", return_value=worker_info):
+                blocks.append([r["x"] for r in ds.as_iterable()])
+        assert blocks == [list(range(i, i + 10)) for i in range(0, 40, 10)]
+        assert ds._backend._table is None
+
+    def test_lance_fragments_with_workers_yield_each_row_once(self, tmp_path):
+        from stable_datasets.cache import open_cache, write_lance_cache
+
+        features = Features({"x": Value("int32")})
+        write_lance_cache(((i, {"x": i}) for i in range(50)), features, tmp_path / "lance", max_rows_per_file=10)
+        opened = open_cache(tmp_path / "lance", features)
+        ds = StableDataset(features=features, info=DatasetInfo(features=features), backend=opened.backend)
+        assert opened.backend.num_shards == 5
+        # The parent process already used Lance, so forked workers are not safe.
+        iterable = ds.as_iterable(shuffle=True, seed=3, buffer_size=4)
+        xs = _loader_xs(iterable, num_workers=2, multiprocessing_context="spawn")
+        assert sorted(xs) == list(range(50))
