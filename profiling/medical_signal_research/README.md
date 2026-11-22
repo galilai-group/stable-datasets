@@ -69,12 +69,43 @@ coalescing and caches may cause different physical I/O. See the
 - `lance_signal_windows.py`: immutable int16 storage and window selection, without training policy.
 - `current_signal_cache.py`: production-format recording-row baseline.
 - `benchmark_signal_windows.py`: preparation/measurement/plot orchestration and matched endpoints.
+- `neonatal_targets.py`: expert annotations and the diagnostic's explicit window-label policy.
+- `training_windows.py`: batched CPU readers that open independently in spawned workers.
+- `benchmark_signal_training.py`: small CNN, matched training runs and data-wait measurements.
 - `edf_source.py`, `edf_record_loading.py`: existing EDF source and CPU/GPU assembly.
 - `signal_calibration.py`, `edf_reference.py`: numerical calibration and independent MNE validation.
 - `benchmark_support.py`, `research_environment.py`: measurement utilities and provenance.
 
 The existing GPU pinning/allocation behavior is intentionally unchanged, as
 Sami requested. Historical WFDB modules remain dormant; no work is added there.
+
+## Small CNN and data loading diagnostic
+
+`python -m profiling.benchmark_signal_training` consumes the existing prepared
+stores and the published neonatal MAT annotations. It uses the same seeded
+window schedule, targets, model initialization and AdamW settings for every
+loader. CPU paths support different DataLoader worker counts. Workers use
+`spawn`, open their own readers and return CPU tensors; CUDA remains in the
+training process. The unchanged GPU assembler is compared with zero workers.
+One dataset item is a full batch, preserving the recording-row baseline's
+once-per-recording materialization behavior.
+
+The diagnostic uses whole-second windows because the three experts' annotation
+time base is one second. Its explicit label policy is a majority vote per second
+and a positive window if any included second is positive. This is an experiment
+choice, not a clinical evaluation standard. The small CNN selects channels named
+`EEG`, excludes auxiliary signals and applies the same fixed scaling to every
+path. It is a single-recording systems diagnostic; patient-generalization
+evaluation and the eventual EEG model port are separate stages.
+
+The first batch is checked against MNE. Every measured training trajectory must
+match the reference loss trajectory within reported tolerances. Two model
+warmups precede measurement; model weights and optimizer state reset per trial.
+Training wall time includes worker startup, data delivery and synchronized
+forward/backward/optimizer steps. Data-ready time includes host-to-device work,
+while loader-wait time isolates the `next()` call. Workers can prefetch during
+compute, but synchronization at step boundaries means this is not a fully
+asynchronous training pipeline. Reader shutdown is outside the measured interval.
 
 ## Evidence and remaining work
 
@@ -89,12 +120,12 @@ whole-recording baseline materialization and EDF-to-benchmark/plot execution.
 Reference checks compare physical outputs with MNE before timing.
 
 Only warm-source measurement is currently implemented. Reader reopening is not
-called a cold-cache test. NFS, cold I/O, DataLoader worker settings and realistic
-EEG-model training remain unmeasured. A user-supplied `nfs` label is not mount
-verification. The next stage is to run the matched CUDA comparison on Hydra/NFS,
-then establish model/forward-backward equivalence in stable-pretraining and
-compare learning progress against wall time. No automatic CPU/GPU routing or
-end-to-end training speedup is claimed.
+called a cold-cache test. A user-supplied `nfs` label is not mount verification;
+retain independent mount evidence beside each report. Inspect worker startup
+and per-step data-ready/compute times before interpreting CNN training wall
+time. The later realistic EEG model requires forward/backward equivalence in
+stable-pretraining and learning progress against wall time. No automatic
+CPU/GPU routing or end-to-end training speedup is claimed by this experiment.
 
 Local validation of this stage: 31 tests passed, with two CUDA checks and two
 paused-WFDB dependency checks skipped. Real Lance range/chunk reads and the

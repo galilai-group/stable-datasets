@@ -101,3 +101,49 @@ worker count, cache conditions or chunk size is a separate controlled comparison
 The subsequent training step must decide annotation-to-window labels and a
 patient-separated split, select a small EEG model, validate its stable-pretraining
 adaptation and compare matched learning progress versus elapsed wall time.
+
+## Small CNN diagnostic
+
+Use the same prepared recording, and retain its published annotations outside
+the repository. The MAT file is unchanged between dataset versions 3 and 4;
+its published MD5 is `f0009a921d9dacd135fff4fc2377d872`.
+
+```bash
+curl --fail --location --max-time 120 --output "$signal_root/annotations_2017.mat" https://zenodo.org/records/4940267/files/annotations_2017.mat
+```
+
+Use `--subject-id 4` only with `eeg4.edf`. The command rejects a filename/subject
+mismatch and annotations that do not cover the recording. Targets follow an
+explicit experimental rule: a two-of-three expert majority per second, and a
+positive window if any included second is positive. Starts and durations use
+whole seconds; ambiguous subsecond label alignment is rejected. The label time
+base is described in the [dataset paper](https://doi.org/10.1038/sdata.2019.39).
+
+Run CUDA work in a Slurm allocation. For worker counts 0 and 2, request enough
+CPUs for the two reader processes and the training process, initially four.
+Keep each process's CPU pools bounded by setting `OMP_NUM_THREADS=1`,
+`MKL_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1`, `RAYON_NUM_THREADS=1` and
+`TOKIO_WORKER_THREADS=1`. Reader initialization also bounds Torch and Arrow
+pools. Set `CUBLAS_WORKSPACE_CONFIG=:4096:8` before Python starts for deterministic
+CUDA model comparisons. Keep Slurm's GPU visibility unchanged.
+
+```bash
+CUBLAS_WORKSPACE_CONFIG=:4096:8 python -m profiling.benchmark_signal_training "$signal_root/eeg4.edf" "$signal_root/prepared-1024" "$signal_root/annotations_2017.mat" --subject-id 4 --device cuda --batch-size 32 --steps 20 --workers 0 2 --trials 3 --output "$signal_root/cnn-workers.json"
+```
+
+Start with fewer steps/trials for a short functional test. The current-cache
+baseline can dominate runtime; size the job's time limit using previous loader
+measurements. For CPU development, use `--device cpu`; this runs the four CPU
+paths and is not comparable to CUDA-endpoint measurements.
+
+Results record the exact window starts/targets, first-batch MNE errors, every
+step's loss, cumulative training time, loader-wait time, synchronized data-ready
+time, compute time, worker startup, code/input hashes and allocation metadata.
+The existing GPU path is run only in the training process with zero workers;
+CPU paths use all requested counts. All trajectories must match within the
+reported tolerance, or the command fails without writing a successful report.
+Outputs must be outside the repository and must not already exist.
+
+This single-recording diagnostic evaluates data stalls, not held-out seizure
+accuracy. A later learning comparison must choose patient-separated splits and
+validate the reference EEG model's stable-pretraining adaptation.
