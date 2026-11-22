@@ -2,6 +2,10 @@
 
 from unittest.mock import MagicMock, patch
 
+import pyarrow as pa
+import pytest
+from torch.utils.data import DataLoader
+
 from stable_datasets.cache import write_sharded_arrow_cache
 from stable_datasets.dataset import StableDataset
 from stable_datasets.iterable import StableIterableDataset
@@ -145,3 +149,120 @@ class TestIterableRespectsView:
 
         view = decoded.select([7, 2, 9])
         assert [r["video"] for r in view.as_iterable()] == [(7, 0), (2, 1), (9, 2)]
+
+
+def _loader_xs(iterable, *, num_workers=2, **kwargs):
+    loader = DataLoader(iterable, batch_size=None, num_workers=num_workers, **kwargs)
+    return [int(row["x"]) for row in loader]
+
+
+class TestPartitioning:
+    def test_fewer_shards_than_workers_yields_each_row_once(self, tmp_path):
+        ds, meta = _make_ds(tmp_path, n=42, shard_size_bytes=100, batch_size=14)
+        assert meta.num_shards == 3
+        xs = _loader_xs(ds.as_iterable(shuffle=True, seed=2, buffer_size=4), num_workers=4)
+        assert sorted(xs) == list(range(42))
+
+    def test_more_shards_than_workers_yields_each_row_once(self, tmp_path):
+        ds, meta = _make_ds(tmp_path, n=60, shard_size_bytes=30, batch_size=3)
+        assert meta.num_shards > 4
+        xs = _loader_xs(ds.as_iterable(shuffle=True, seed=5, buffer_size=4), num_workers=3)
+        assert sorted(xs) == list(range(60))
+
+    def test_in_memory_dataset_yields_each_row_once(self):
+        features = Features({"x": Value("int32")})
+        ds = StableDataset(
+            features=features,
+            info=DatasetInfo(features=features),
+            table=pa.table({"x": pa.array(range(20), type=pa.int32())}),
+        )
+        assert sorted(_loader_xs(ds.as_iterable(), num_workers=2)) == list(range(20))
+
+    @pytest.mark.parametrize("shard_size_bytes", [100, 30])
+    def test_ranks_and_workers_yield_each_row_once(self, tmp_path, shard_size_bytes):
+        ds, _ = _make_ds(tmp_path, n=42, shard_size_bytes=shard_size_bytes, batch_size=3)
+        xs = []
+        for rank in range(2):
+            iterable = ds.as_iterable(shuffle=True, seed=1, buffer_size=4, rank=rank, world_size=2)
+            xs.extend(_loader_xs(iterable, num_workers=2))
+        assert sorted(xs) == list(range(42))
+
+    def test_invalid_rank_raises(self, tmp_path):
+        ds, _ = _make_ds(tmp_path, n=4)
+        with pytest.raises(ValueError, match="rank must be in"):
+            ds.as_iterable(rank=2, world_size=2)
+        with pytest.raises(ValueError, match="together"):
+            ds.as_iterable(world_size=2)
+
+    def test_pickled_copy_keeps_distributed_rank(self, tmp_path, monkeypatch):
+        import pickle
+
+        import torch.distributed as dist
+
+        ds, _ = _make_ds(tmp_path, n=42, shard_size_bytes=30, batch_size=3)
+        xs = []
+        for rank in range(2):
+            iterable = ds.as_iterable(shuffle=True, seed=1, buffer_size=4)
+            with monkeypatch.context() as m:
+                m.setattr(dist, "is_initialized", lambda: True)
+                m.setattr(dist, "get_rank", lambda: rank)
+                m.setattr(dist, "get_world_size", lambda: 2)
+                # A spawn worker gets a pickled copy and has no process group.
+                worker_copy = pickle.loads(pickle.dumps(iterable))
+            xs.extend(r["x"] for r in worker_copy)
+        assert sorted(xs) == list(range(42))
+
+
+class TestEpochs:
+    def test_epoch_advances_on_each_pass(self, tmp_path):
+        ds, _ = _make_ds(tmp_path, n=40, shard_size_bytes=30, batch_size=3)
+        iterable = ds.as_iterable(shuffle=True, seed=0, buffer_size=8)
+        first, second = [r["x"] for r in iterable], [r["x"] for r in iterable]
+        assert sorted(first) == sorted(second) == list(range(40))
+        assert first != second
+
+        replay = ds.as_iterable(shuffle=True, seed=0, buffer_size=8)
+        replay.set_epoch(1)
+        assert [r["x"] for r in replay] == second
+
+    def test_seed_and_epoch_do_not_collide(self, tmp_path):
+        ds, _ = _make_ds(tmp_path, n=40, shard_size_bytes=30, batch_size=3)
+        shifted_epoch = ds.as_iterable(shuffle=True, seed=0, buffer_size=8)
+        shifted_epoch.set_epoch(1)
+        shifted_seed = ds.as_iterable(shuffle=True, seed=1000, buffer_size=8)
+        assert [r["x"] for r in shifted_epoch] != [r["x"] for r in shifted_seed]
+
+    def test_persistent_workers_advance_epoch(self, tmp_path):
+        ds, _ = _make_ds(tmp_path, n=40, shard_size_bytes=30, batch_size=3)
+        loader = DataLoader(
+            ds.as_iterable(shuffle=True, seed=0, buffer_size=8),
+            batch_size=None,
+            num_workers=2,
+            persistent_workers=True,
+        )
+        first = [int(r["x"]) for r in loader]
+        second = [int(r["x"]) for r in loader]
+        assert sorted(first) == sorted(second) == list(range(40))
+        assert first != second
+
+    def test_set_epoch_reaches_persistent_workers(self, tmp_path):
+        ds, _ = _make_ds(tmp_path, n=40, shard_size_bytes=30, batch_size=3)
+        iterable = ds.as_iterable(shuffle=True, seed=0, buffer_size=8)
+        loader = DataLoader(iterable, batch_size=None, num_workers=2, persistent_workers=True)
+        list(loader)
+        iterable.set_epoch(7)
+        persistent = [int(r["x"]) for r in loader]
+
+        fresh = ds.as_iterable(shuffle=True, seed=0, buffer_size=8)
+        fresh.set_epoch(7)
+        assert persistent == _loader_xs(fresh, num_workers=2)
+
+
+class TestShuffleSeedNone:
+    def test_arrow_shuffles_shards_without_seed(self, tmp_path):
+        ds, meta = _make_ds(tmp_path, n=60, shard_size_bytes=30, batch_size=3)
+        assert meta.num_shards >= 10
+        natural = [r["x"] for r in ds.iter_epoch(shuffle_shards=False)]
+        shuffled = [r["x"] for r in ds.iter_epoch(shuffle_shards=True, seed=None)]
+        assert sorted(shuffled) == natural
+        assert shuffled != natural
