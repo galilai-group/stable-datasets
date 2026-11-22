@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import numpy as np
+import pyarrow as pa
 
 
 try:
@@ -28,6 +29,10 @@ class StableIterableDataset(_IterableBase):
     Wraps a ``StableDataset`` for efficient streaming in PyTorch DataLoader
     with multiple workers.  Shards are partitioned across workers so each
     worker reads a disjoint subset.
+
+    The rows are the rows of the wrapped dataset. The index view, the
+    format, the video decode config and the transform of the dataset
+    apply.
 
     Parameters
     ----------
@@ -105,34 +110,40 @@ class StableIterableDataset(_IterableBase):
         if self._shuffle and rng is not None:
             rng.shuffle(my_shards)
 
-        formatter = ds._formatter
-
-        def _row_gen():
-            if partition_rows:
-                # Row-level partitioning: must check each row index
-                row_idx = 0
-                for batch in ds._backend.iter_batches(shard_indices=my_shards):
-                    batch_dict = batch.to_pydict()
-                    n = batch.num_rows
-                    for i in range(n):
-                        if row_idx % num_workers != worker_id:
-                            row_idx += 1
-                            continue
-                        row = {k: v[i] for k, v in batch_dict.items()}
-                        yield formatter.format_row(row)
-                        row_idx += 1
-            else:
-                # Shard-partitioned: use batch formatting for less overhead
-                for batch in ds._backend.iter_batches(shard_indices=my_shards):
-                    yield from formatter.format_batch(batch)
+        if ds._indices is not None:
+            # An indexed view reads its own rows, not the rows of its shards.
+            row_gen = ds._iter_positions(range(worker_id, len(ds), num_workers))
+        elif partition_rows:
+            row_gen = self._iter_shard_rows(my_shards, worker_id=worker_id, num_workers=num_workers)
+        else:
+            row_gen = self._iter_shard_rows(my_shards)
 
         if self._shuffle and self._buffer_size > 0:
-            yield from self._buffered_shuffle(_row_gen(), rng)
+            yield from self._buffered_shuffle(row_gen, rng)
         else:
-            for row in _row_gen():
+            for row in row_gen:
                 if self._transform:
                     row = self._transform(row)
                 yield row
+
+    def _iter_shard_rows(self, shard_indices, *, worker_id: int = 0, num_workers: int = 1):
+        """Yield the dataset rows of the given shards.
+
+        Keep only the rows whose logical index is ``worker_id`` modulo
+        ``num_workers``. Each row goes through the dataset row pipeline.
+        """
+        ds = self._dataset
+        shard_starts = np.cumsum([0, *ds._backend.shard_row_counts])
+        for shard_id in shard_indices:
+            offset = int(shard_starts[shard_id])
+            for batch in ds._backend.iter_batches(shard_indices=[shard_id]):
+                positions = np.arange(offset, offset + batch.num_rows)
+                offset += batch.num_rows
+                if num_workers > 1:
+                    keep = positions % num_workers == worker_id
+                    batch = batch.filter(pa.array(keep))
+                    positions = positions[keep]
+                yield from ds._format_table(batch, positions.tolist())
 
     def _buffered_shuffle(self, row_gen, rng):
         """Reservoir-based buffered shuffle (Fisher-Yates).
