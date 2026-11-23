@@ -82,8 +82,10 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # libjpeg-turbo: framestore's C re-coder links it; jpegtran for its fuzz tests
+          sudo apt-get update -q && sudo apt-get install -yq libjpeg-turbo8-dev libjpeg-turbo-progs
           python -m pip install --upgrade pip
-          pip install -e ".[dev,benchmarks]"
+          pip install -e ".[dev,benchmarks,framestore]"
 
       # Shared timing history across branches/PRs (restore-only)
       - name: Restore pytest-split durations cache (shared)

@@ -43,6 +43,7 @@ If you would like to start testing or contribute to ``stable-datasets`` then ple
 
    datasets/index
    introduction/quickstart
+   introduction/framestore
    introduction/showcase
    introduction/contributing
 
