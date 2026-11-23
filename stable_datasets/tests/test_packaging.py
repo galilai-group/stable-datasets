@@ -36,7 +36,7 @@ def test_optional_dependencies(pyproject):
     assert "lance" not in extras
     assert "torch" in _names(extras["torch"])
     assert {"opencv-python-headless", "torchcodec"} <= _names(extras["video"])
-    assert extras["all"] == ["stable-datasets[torch,video]"]
+    assert extras["all"] == ["stable-datasets[torch,video,chunks]"]
     assert "stable-datasets[all]" in extras["dev"]
 
 
