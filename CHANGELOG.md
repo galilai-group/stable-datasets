@@ -38,6 +38,10 @@
   (`$SDS_INDEX_DIR` overrides; `$FRAMESTORE_INDEX_DIR` still works). `FrameIndex` is one; indexes of the old format
   are rebuilt. `storage.lance_files` is the one module that knows where Lance keeps a blob column's bytes, with a
   test that fails if a Lance release moves them
+- transforms (`stable_datasets.transforms`): ops draw their random parameters for a batch before any data is read
+  (`Chain.draw`), so `Chain.region` gives the input box each sample needs and `Chain.apply` gives the same output
+  from that box alone. Ops: `RandomResizedCrop` (LeVJEPA's ViewBuilder draw and roi_align, the parameters
+  `framestore.views` fuses), `RandomCrop` (N-D), `Resize`, `Flip`, `ColorJitter`, `Normalize`
 - docs: Frame stores guide; Video storage guide
 
 # V0.0.0
