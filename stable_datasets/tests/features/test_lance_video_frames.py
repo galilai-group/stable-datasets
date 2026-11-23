@@ -4,9 +4,9 @@ import numpy as np
 import pyarrow as pa
 import pytest
 
-from stable_datasets.cache import write_lance_video_frames_cache
 from stable_datasets.schema import DatasetInfo, DatasetSource, Features, Value, Version, Video
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.storage.video_frames import write_lance_video_frames_cache
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -193,7 +193,7 @@ def test_schema_comes_from_metadata_with_stable_metadata_types(tmp_path):
 
 def test_video_frames_writer_writes_each_video_when_encoded(tmp_path, monkeypatch):
     lance = pytest.importorskip("lance")
-    import stable_datasets.cache as cache
+    import stable_datasets.storage.video_frames as cache
 
     encoded = []
 

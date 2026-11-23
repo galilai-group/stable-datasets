@@ -7,13 +7,7 @@ import numpy as np
 import pytest
 from PIL import Image as PILImage
 
-from stable_datasets.cache import (
-    DEFAULT_SHARD_SIZE_BYTES,
-    open_cache,
-    read_lance_cache_meta,
-    write_lance_cache,
-    write_lance_table,
-)
+from stable_datasets.cache import DEFAULT_SHARD_SIZE_BYTES, open_cache, read_lance_cache_meta
 from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import (
     ClassLabel,
@@ -24,6 +18,7 @@ from stable_datasets.schema import (
     Version,
 )
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.storage.rows import write_lance_cache, write_lance_table
 from stable_datasets.tests._caches import cached_dataset
 from stable_datasets.utils import BaseDatasetBuilder
 
@@ -222,7 +217,8 @@ class TestSchemaChanges:
         assert len([p for p in tmp_path.iterdir() if p.is_dir()]) == 2
 
     def test_lance_cache_rejects_other_features(self, tmp_path):
-        from stable_datasets.cache import open_cache, write_lance_cache
+        from stable_datasets.cache import open_cache
+        from stable_datasets.storage.rows import write_lance_cache
 
         written = Features({"y": ClassLabel(names=[f"c{i}" for i in range(6)])})
         write_lance_cache(((i, {"y": i}) for i in range(3)), written, tmp_path / "lance")
@@ -234,9 +230,10 @@ class TestSchemaChanges:
 
     def test_video_frames_cache_rejects_other_features(self, tmp_path, monkeypatch):
         pytest.importorskip("lance")
-        import stable_datasets.cache as cache
-        from stable_datasets.cache import open_cache, write_lance_video_frames_cache
+        import stable_datasets.storage.video_frames as cache
+        from stable_datasets.cache import open_cache
         from stable_datasets.schema import Video
+        from stable_datasets.storage.video_frames import write_lance_video_frames_cache
 
         monkeypatch.setattr(
             cache, "_encode_one_video_frames", lambda task: ("ok", task[0], task[1], 1, 4, 4, [b"frame"])

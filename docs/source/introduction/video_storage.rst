@@ -7,17 +7,18 @@ picks it:
 
 .. code-block:: python
 
-    from stable_datasets.schema import VideoStorage
+    from stable_datasets.storage import VideoStorage
 
-    ds = SomethingSomethingV2(split="train", video_storage="mp4")                    # the defaults
-    ds = SomethingSomethingV2(split="train", video_storage=VideoStorage(fps=7.5, short_edge=384))
-    ds = SomethingSomethingV2(split="train", video_storage={"format": "jpeg", "fps": 15})
+    ds = SomethingSomethingV2(split="train", storage="mp4")                    # the defaults
+    ds = SomethingSomethingV2(split="train", storage=VideoStorage(fps=7.5, short_edge=384))
+    ds = SomethingSomethingV2(split="train", storage=VideoStorage(format="jpeg", fps=15))
 
     clips = ds.set_video_decode(num_frames=16, resize=224)   # each sample: a 16-frame window
     loader = clips.loader(batch_size=64)                     # GPU fast path: (64, 16, 224, 224, 3) uint8 batches
 
 The storage settings are part of the cache key, so each choice is its own cache, and a dataset never switches
-format by itself (no size check decides it).
+format by itself (no size check decides it). A builder can set a default with its ``STORAGE`` class attribute.
+``storage=`` takes any layout of ``stable_datasets.storage``: ``"frames"`` gives the WebP frame layout.
 
 Which to choose
 ---------------

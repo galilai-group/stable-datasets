@@ -19,9 +19,9 @@ import pyarrow as pa
 import pytest
 
 from stable_datasets.backends.lance_rows import LanceBackend
-from stable_datasets.cache import write_lance_cache
 from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value
+from stable_datasets.storage.rows import write_lance_cache
 
 
 BackendKind = str  # "table" | "lance"

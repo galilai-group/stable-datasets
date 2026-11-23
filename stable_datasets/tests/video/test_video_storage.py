@@ -1,4 +1,4 @@
-"""video_storage=: a builder's video column stored as a framestore store (MP4 or JPEG), its samples clip windows.
+"""storage=: a builder's video column stored as a framestore store (MP4 or JPEG), its samples clip windows.
 
 pytest stable_datasets/tests/video/test_video_storage.py      (needs ffmpeg and torchcodec)
 """
@@ -52,7 +52,7 @@ def videos(tmp_path_factory):
 
 
 def build(tmp_path, storage):
-    return TinyVideos(split="train", processed_cache_dir=tmp_path / "processed", video_storage=storage)
+    return TinyVideos(split="train", processed_cache_dir=tmp_path / "processed", storage=storage)
 
 
 def test_mp4_store_windows(tmp_path):

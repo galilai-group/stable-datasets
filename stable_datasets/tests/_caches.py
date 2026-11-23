@@ -1,8 +1,9 @@
 """Small Lance caches for the tests."""
 
-from stable_datasets.cache import open_cache, write_lance_cache
+from stable_datasets.cache import open_cache
 from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import DatasetInfo
+from stable_datasets.storage.rows import write_lance_cache
 
 
 def cached_dataset(gen, features, cache_dir, *, rows_per_fragment=None, batch_size=1000, info=None):

@@ -14,12 +14,17 @@
   - the store format is versioned in the schema metadata
 - platform wheels (Linux x86_64/aarch64, macOS arm64/x86_64) with framestore's C helpers prebuilt and libjpeg-turbo
   linked in; other platforms build them from the sdist, compile them on first use, or fall back to numba
-- video storage (`video_storage=` on every builder, `VideoStorage`, `Video(storage="mp4" | "jpeg")`): the video
+- video storage (`storage=` on every builder, `VideoStorage`, `Video(storage="mp4" | "jpeg")`): the video
   column built as a framestore store whose samples are clip windows (`set_video_decode`), with `ds.loader()` for the
   GPU fast path. MP4 (default): one H.264 file per video re-encoded for clip reads (a keyframe every 4 frames, one
   coded size, the GPU-decodable subset) and decoded on the GPU by `framestore.gpu_h264`; JPEG: restart-coded frames
 - `framestore.gpu_h264`: H.264 (the stores' subset) decoded by Triton kernels, bit-exact with ffmpeg;
   `framestore.h264`, the reference decoder; MP4 stores in `SharedClipLoader` (`decoders="triton:2,cpu"`)
+- storage layouts (`stable_datasets.storage`): a `Storage` class per cache layout (`RowStorage`,
+  `VideoFramesStorage`, `VideoStorage`) writes a split, opens it by the layout its metadata records, and gives the
+  dataset's `loader()`. `storage=` on every builder (a `Storage` or an alias: `"mp4"`, `"jpeg"`, `"frames"`) and
+  the `STORAGE` class attribute pick it; `register_layout` adds a layout. The cache writers moved from
+  `stable_datasets.cache` to their layout modules (`storage.rows.write_lance_cache`, ...). Cache keys are unchanged
 - docs: Frame stores guide; Video storage guide
 
 # V0.0.0

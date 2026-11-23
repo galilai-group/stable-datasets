@@ -29,14 +29,12 @@ from .cache import (
     open_cache,
     read_split_manifest,
     split_manifest_name,
-    write_framestore_video_cache,
-    write_lance_cache,
-    write_lance_video_frames_cache,
     write_split_manifest,
 )
 from .dataset import StableDataset, StableDatasetDict
-from .schema import BuilderConfig, DatasetSource, DownloadInfo, Features, Version, Video, VideoStorage
+from .schema import BuilderConfig, DatasetSource, DownloadInfo, Version
 from .splits import Split, SplitGenerator
+from .storage.base import Storage, storage_of
 
 
 DEFAULT_CACHE_DIR = "~/.stable-datasets/"
@@ -80,9 +78,9 @@ class BaseDatasetBuilder:
     BUILDER_CONFIGS: list = []
     DEFAULT_CONFIG_NAME: str | None = None
 
-    # Optional: how the video column is stored when built (a VideoStorage, "mp4" or "jpeg"); None keeps the
-    # builder's Video feature as declared. The video_storage= load argument overrides it.
-    VIDEO_STORAGE = None
+    # Optional: how the dataset is stored when built (a stable_datasets.storage.Storage or one of its aliases,
+    # e.g. "mp4"); None keeps the storage the features declare. The storage= load argument overrides it.
+    STORAGE = None
 
     @staticmethod
     def _freeze(obj):
@@ -316,7 +314,7 @@ class BaseDatasetBuilder:
         backend_kwargs=None,
         storage_options=None,
         decode_video=None,
-        video_storage=None,
+        storage=None,
         **kwargs,
     ):
         """
@@ -333,9 +331,9 @@ class BaseDatasetBuilder:
             backend_kwargs: Keyword arguments for the storage backend.
             storage_options: Object store options for Lance caches and for
                 the cache metadata files of a remote ``processed_cache_dir``.
-            video_storage: How to store the video column (a VideoStorage, "mp4", "jpeg" or a mapping of its
-                fields; default: the builder's VIDEO_STORAGE): a stable_datasets.framestore store whose samples are
-                clip windows (see VideoStorage for which to choose). Part of the cache fingerprint.
+            storage: How to store the dataset (a stable_datasets.storage.Storage such as VideoStorage, or an alias
+                such as "mp4", "jpeg" or "frames"; default: the builder's STORAGE, else what the features declare).
+                Part of the cache fingerprint.
             decode_video: Optional read-time video decode config or mapping.
                 This is applied after cache open/build and is not part of the
                 cache fingerprint.
@@ -368,17 +366,13 @@ class BaseDatasetBuilder:
         cls._validate_source(source)
 
         features = instance._dataset_info.features
-        vs = video_storage if video_storage is not None else cls.VIDEO_STORAGE
-        if vs is not None:  # the video column becomes a framestore store (part of the features, so of the cache key)
-            vs = VideoStorage.coerce(vs)
-            features = Features(
-                (name, Video(storage=vs.format, allowed_extensions=f.allowed_extensions, settings=vs))
-                if isinstance(f, Video) else (name, f)
-                for name, f in features.items()
-            )  # fmt: skip
+        requested = storage if storage is not None else cls.STORAGE
+        if requested is None:
+            layout = storage_of(features)
+        else:  # the features declare the storage's settings, so they are part of the cache key
+            layout = Storage.coerce(requested)
+            features = layout.apply(features)
             instance._dataset_info.features = features
-        has_frame_video = any(isinstance(f, Video) and f.storage == "frames" for f in features.values())
-        has_store_video = any(isinstance(f, Video) and f.storage in Video.STORES for f in features.values())
 
         # 4) Read the split manifest. When every wanted split is cached, do not download.
         def _shard_dir(split_name) -> str:
@@ -406,6 +400,7 @@ class BaseDatasetBuilder:
                 info=instance._dataset_info,
                 backend=opened.backend,
                 num_rows=opened.num_rows,
+                storage=opened.storage,
             )
 
         manifest_path = _uri.join(
@@ -450,18 +445,7 @@ class BaseDatasetBuilder:
                 with build_lock:
                     if not _is_built(sg.name):
                         generator = instance._iter_examples(**sg.gen_kwargs)
-                        if has_store_video:
-                            write_framestore_video_cache(
-                                generator, features, shard_dir, storage_options=storage_options
-                            )
-                        elif has_frame_video:
-                            write_lance_video_frames_cache(
-                                generator, features, shard_dir, storage_options=storage_options
-                            )
-                        else:
-                            write_lance_cache(
-                                generator, features, shard_dir, num_encode_workers=4, storage_options=storage_options
-                            )
+                        layout.write(generator, features, shard_dir, storage_options=storage_options)
 
                 splits_data[sg.name] = _open_split(sg.name)
 

@@ -15,6 +15,7 @@ from typing import Any
 import numpy as np
 import pyarrow as pa
 
+from ..storage.video import VideoStorage
 from .base import FeatureType
 
 
@@ -79,62 +80,11 @@ class VideoRef:
         return path.read_bytes()
 
 
-@dataclass(frozen=True)
-class VideoStorage:
-    """How a dataset stores its videos when it is built (stable_datasets.framestore), for fast clip reads.
-
-    ``format="mp4"`` (the default) keeps one H.264 MP4 per video, re-encoded so that every ``keyint``-th frame is a
-    keyframe a clip can start on with no earlier frame decoded, every video coded at one size (``canvas``; portrait
-    videos transposed, readers return each video as it was) and decodable on the GPU (framestore.gpu_h264) as well as
-    by ffmpeg or NVDEC. ``format="jpeg"`` keeps every frame as a JPEG with a restart marker after each MCU, so any
-    part of a frame decodes alone (partial decoding: the token loader).
-
-    Which to choose, measured on an H100 with Kinetics-400 at 7.5 fps, 384 px short edge (the whole-frame loader
-    alone, 224 x 224 clips of 16 frames; framestore's benchmarks): MP4 stores are ~half the size of JPEG ones at
-    the same frame rate (about the size of the source MP4s) and load 4,131 clips/s (GPU and CPU decoding) against
-    3,369 for JPEG; JPEG stores allow partial decoding, any frame stride when loading, and decode faster on the CPU
-    alone. A size check never switches the format: it is what is asked for.
-
-    fps, short_edge: frames kept per second (the clip stride is fixed then, for MP4) and the short edge in pixels
-    (None: the source's). crf, keyint, canvas: MP4's libx264 quality, frames between keyframes, coded size ("auto":
-    16:9 at the short edge; (H, W); None: each video's own). quality: JPEG's.
-    """
-
-    format: str = "mp4"
-    fps: float | None = None
-    short_edge: int | None = None
-    crf: int = 18
-    keyint: int = 4
-    canvas: str | tuple[int, int] | None = "auto"
-    quality: int = 90
-
-    def __post_init__(self):
-        if self.format not in ("mp4", "jpeg"):
-            raise ValueError(f"VideoStorage.format must be 'mp4' or 'jpeg', got {self.format!r}.")
-        if self.keyint < 1 or self.crf < 0:
-            raise ValueError("VideoStorage needs keyint >= 1 and crf >= 0.")
-        if isinstance(self.canvas, list):
-            object.__setattr__(self, "canvas", tuple(self.canvas))
-
-    @classmethod
-    def coerce(cls, value) -> VideoStorage:
-        """A VideoStorage from itself, a format name ("mp4", "jpeg") or a mapping of its fields."""
-        if isinstance(value, VideoStorage):
-            return value
-        if isinstance(value, str):
-            return cls(format=value)
-        if isinstance(value, Mapping):
-            return cls(**value)
-        raise TypeError(
-            f"video storage must be a VideoStorage, 'mp4', 'jpeg' or a mapping, got {type(value).__name__}"
-        )
-
-
 class Video(FeatureType):
     """Video feature with validated path, bytes, or specialized frame storage.
 
     storage: "path" or "bytes" (the source files), "frames" (WebP frames in Lance), or a framestore store: "mp4" or
-    "jpeg" (settings: a VideoStorage; see it for which to choose). A builder's ``video_storage=`` argument turns its
+    "jpeg" (settings: a VideoStorage; see it for which to choose). A builder's ``storage=`` argument turns its
     video column into a store.
     """
 

@@ -8,9 +8,11 @@ import pytest
 
 from stable_datasets import _uri
 from stable_datasets.backends.lance_rows import LanceBackend
-from stable_datasets.cache import open_cache, write_lance_cache, write_lance_video_frames_cache
+from stable_datasets.cache import open_cache
 from stable_datasets.schema import DatasetInfo, Features, Value, Version, Video
 from stable_datasets.splits import Split, SplitGenerator
+from stable_datasets.storage.rows import write_lance_cache
+from stable_datasets.storage.video_frames import write_lance_video_frames_cache
 from stable_datasets.utils import BaseDatasetBuilder
 
 
@@ -89,7 +91,7 @@ def test_lance_rewrite_publishes_a_new_commit(tmp_path):
 
 
 def test_video_frames_cache_through_file_uri(tmp_path, monkeypatch):
-    import stable_datasets.cache as cache
+    import stable_datasets.storage.video_frames as cache
 
     monkeypatch.setattr(
         cache, "_encode_one_video_frames", lambda task: ("ok", task[0], task[1], 2, 4, 4, [b"a", b"b"])

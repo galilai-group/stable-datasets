@@ -42,6 +42,7 @@ from .schema import (
     VideoDecodeConfig,
     VideoRef,
 )
+from .storage.base import Storage, storage_of
 
 
 # Rows per batched take when a view or a per-row operation reads rows in order.
@@ -71,6 +72,7 @@ class StableDataset:
         backend: StorageBackend | None = None,
         table: pa.Table | None = None,
         num_rows: int | None = None,
+        storage: Storage | None = None,
         # Index indirection
         _indices: np.ndarray | None = None,
         # Format control
@@ -82,6 +84,7 @@ class StableDataset:
     ):
         self._features = features
         self._info = info
+        self._storage = storage
 
         # Build backend from convenience args if not provided directly
         self._backend: StorageBackend
@@ -127,6 +130,7 @@ class StableDataset:
             "info": self._info,
             "backend": self._backend,
             "num_rows": self._num_rows,
+            "storage": self._storage,
             "_indices": self._indices,
             "_format_type": self._format_type,
             "_decode_images": self._decode_images,
@@ -141,6 +145,7 @@ class StableDataset:
             info=state["info"],
             backend=state["backend"],
             num_rows=state["num_rows"],
+            storage=state.get("storage"),
             _indices=state.get("_indices"),
             _format_type=state.get("_format_type"),
             _decode_images=state.get("_decode_images", True),
@@ -150,6 +155,11 @@ class StableDataset:
         )
 
     # -- Public API -----------------------------------------------------------
+
+    @property
+    def storage(self) -> Storage:
+        """The storage layout of the cache this dataset reads (stable_datasets.storage)."""
+        return self._storage if self._storage is not None else storage_of(self._features)
 
     @property
     def features(self) -> Features:
@@ -384,7 +394,8 @@ class StableDataset:
         cache_dir : path, optional
             Where to write the output cache. If None, uses a temp directory.
         """
-        from .cache import open_cache, write_lance_cache
+        from .cache import open_cache
+        from .storage.rows import write_lance_cache
 
         remove_set = set(remove_columns) if remove_columns else set()
 
@@ -590,37 +601,10 @@ class StableDataset:
         )
         return self._shallow_copy(_video_decode_config=next_config, backend=backend, num_rows=backend.num_rows)
 
-    def loader(self, batch_size: int, *, size=(224, 224), decoders: str | None = None, seed: int = 0, **kwargs):
-        """The fast path for a dataset whose video column is a framestore store (``Video(storage="mp4" |
-        "jpeg")``): a stable_datasets.framestore.SharedClipLoader over it, yielding (batch_size, T, H, W, 3) uint8
-        clips on the GPU, drawn iid (a video uniformly, then a window start in it), T and the frame stride from this
-        view's video decode (set_video_decode(num_frames=..., frame_stride=...)).
-
-        decoders: framestore's decoder spec ("triton:2,cpu": two GPU decode servers plus the CPU; MP4 stores also
-        take "nvdec"); None: the GPU and the CPU (triton:2,cpu) where there is a GPU decoder for the store. kwargs go
-        to SharedClipLoader. The loader decodes whole frames and resizes them to size; the other fields of the
-        rows (labels) are not part of its batches: use the dataset itself for those."""
-        from .framestore import SharedClipLoader
-
-        config = self._video_decode_config
-        col = (
-            config.column
-            if config is not None
-            else next(
-                (n for n, f in self._features.items() if isinstance(f, Video) and f.storage in Video.STORES), None
-            )
-        )
-        feat = self._features.get(col)
-        if not isinstance(feat, Video) or feat.storage not in Video.STORES:
-            raise ValueError(
-                "loader() needs a video column stored as a framestore store (video_storage='mp4' or 'jpeg')"
-            )
-        frames = config.num_frames if config is not None else 16
-        stride = config.frame_stride if config is not None else 1
-        return SharedClipLoader(
-            self._backend.store_path, batch_size, frames=frames, stride=stride, size=tuple(size),
-            decoders=decoders or "triton:2,cpu", seed=seed, **kwargs,
-        )  # fmt: skip
+    def loader(self, batch_size: int, **kwargs):
+        """A batch loader over this dataset, from its storage (stable_datasets.storage). For a framestore video
+        store (``storage="mp4" | "jpeg"``) it is a SharedClipLoader of clips on the GPU: see VideoStorage.loader."""
+        return self.storage.loader(self, batch_size, **kwargs)
 
     def make_sampler(self, kind: str = "shard_shuffle", **kwargs):
         """Return a backend-aware ``torch.utils.data.Sampler`` for this dataset.
@@ -677,7 +661,8 @@ class StableDataset:
         """Materialize an indexed view into a new contiguous Lance cache."""
         if self._indices is None:
             return self
-        from .cache import open_cache, write_lance_table
+        from .cache import open_cache
+        from .storage.rows import write_lance_table
 
         if cache_dir is None:
             cache_dir = Path(tempfile.mkdtemp(prefix=".flatten_"))
@@ -728,6 +713,7 @@ class StableDataset:
             "info": self._info,
             "backend": self._backend,
             "num_rows": self._num_rows,
+            "storage": self._storage,
             "_indices": self._indices,
             "_format_type": self._format_type,
             "_decode_images": self._decode_images,

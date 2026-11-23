@@ -256,7 +256,7 @@ class TestShardDefaults:
 
         import lance
 
-        from stable_datasets.cache import write_lance_cache
+        from stable_datasets.storage.rows import write_lance_cache
 
         features = Features({"blob": Value("binary"), "x": Value("int32")})
         gen = ((i, {"blob": bytes(1000), "x": i}) for i in range(300))
@@ -279,7 +279,8 @@ class TestShardDefaults:
         assert blocks == [list(range(i, i + 10)) for i in range(0, 40, 10)]
 
     def test_lance_fragments_with_workers_yield_each_row_once(self, tmp_path):
-        from stable_datasets.cache import open_cache, write_lance_cache
+        from stable_datasets.cache import open_cache
+        from stable_datasets.storage.rows import write_lance_cache
 
         features = Features({"x": Value("int32")})
         write_lance_cache(((i, {"x": i}) for i in range(50)), features, tmp_path / "lance", max_rows_per_file=10)
