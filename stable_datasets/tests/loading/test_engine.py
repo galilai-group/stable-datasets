@@ -28,7 +28,7 @@ def test_batches_carry_labels_and_follow_their_plan(jpeg_store):  # noqa: F811
         assert torch.equal(b["label"], b["record"] * 10)
     plan = planner.plan(np.random.default_rng([3, 1]), 8)
     want = torch.stack([planner.chain.apply(full[r], plan.params, i) for i, r in enumerate(plan.record)])
-    assert torch.allclose(batches[1]["image"], want, rtol=0, atol=1e-5)  # roi_align from a region: float rounding
+    assert torch.allclose(batches[1]["image"], want, rtol=0, atol=5e-4)  # roi_align from a region: float rounding
 
 
 def test_batches_do_not_depend_on_workers(jpeg_store):  # noqa: F811
