@@ -25,6 +25,13 @@ def shapes_of(xs):
     return np.array([x.shape[-2:] for x in xs])
 
 
+def same(a, b, chain):
+    """Equal, to float rounding where roi_align resamples (its sample positions come from region coordinates)."""
+    if any(isinstance(op, RandomResizedCrop) for op in chain.ops):
+        return torch.allclose(a, b, rtol=0, atol=1e-5)
+    return torch.equal(a, b)
+
+
 def crop_region(x, box):
     nd = len(box) // 2
     return x[(..., *[slice(int(a), int(b)) for a, b in zip(box[:nd], box[nd:])])]
@@ -51,7 +58,7 @@ def test_the_region_alone_gives_the_same_output(chain):
         full = chain.apply(x, params, i)
         part = chain.apply(crop_region(x, boxes[i]), params, i, origin=boxes[i, :2])
         assert full.shape == part.shape
-        assert torch.equal(full, part), i
+        assert same(full, part, chain), i
 
 
 def test_region_is_small_for_small_crops():

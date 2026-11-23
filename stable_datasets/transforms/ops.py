@@ -99,7 +99,8 @@ class RandomResizedCrop(Op):
     """A box of random area (``scale`` of the input's) and aspect ratio (``ratio``), resampled to ``size`` x
     ``size`` by roi_align (aligned, the mean of sampling_ratio^2 bilinear samples per output pixel), output float in
     [0, 1] from uint8 input. The draw is LeVJEPA's ViewBuilder.crop (no rejection: sides clamped to the input),
-    which framestore.views fuses with the ops after it."""
+    which framestore.views fuses with the ops after it. From only its region, the output equals the whole
+    input's to float rounding (about 1e-6): roi_align's sample positions are computed from region coordinates."""
 
     size: int = 224
     scale: tuple = (0.08, 1.0)
@@ -115,7 +116,8 @@ class RandomResizedCrop(Op):
         h = np.minimum(np.sqrt(area / r), H)
         x0 = rng.random(n) * (W - w)
         y0 = rng.random(n) * (H - h)
-        return {"box": np.stack([y0, x0, y0 + h, x0 + w], 1)}
+        # float32, the precision roi_align and the fused kernel compute in
+        return {"box": np.stack([y0, x0, y0 + h, x0 + w], 1).astype(np.float32)}
 
     def sampling_ratio(self, shape) -> int:
         max_side = math.sqrt(self.scale[1] * shape[0] * shape[1] * self.ratio[1])
@@ -211,11 +213,14 @@ class ColorJitter(Op):
         def lum(y):
             return 0.299 * y[..., 0:1, :, :] + 0.587 * y[..., 1:2, :, :] + 0.114 * y[..., 2:3, :, :]
 
-        x = (x * float(j[0])).clamp(0, 1)
-        mu = x.mean(dim=(-3, -2, -1), keepdim=True)
-        x = ((x - mu) * float(j[1]) + mu).clamp(0, 1)
-        lu = lum(x)
-        x = ((x - lu) * float(j[2]) + lu).clamp(0, 1)
+        if j[0] != 1:
+            x = (x * float(j[0])).clamp(0, 1)
+        if j[1] != 1:
+            mu = x.mean(dim=(-3, -2, -1), keepdim=True)
+            x = ((x - mu) * float(j[1]) + mu).clamp(0, 1)
+        if j[2] != 1:
+            lu = lum(x)
+            x = ((x - lu) * float(j[2]) + lu).clamp(0, 1)
         return lum(x).expand_as(x) if j[3] else x
 
     def signature(self):
