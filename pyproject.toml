@@ -15,6 +15,7 @@ dependencies = [
     "numpy>=1.22",
     "loguru",
     "pyarrow>=14",
+    "pylance",  # every cache is a Lance dataset
     "tqdm",
     "pillow",
     "pandas",
@@ -40,9 +41,6 @@ version = {attr = "stable_datasets.__version__"}
 
 # PyTorch DataLoader integration, samplers and torch output formats
 torch = ["torch"]
-
-# Lance caches (storage_format="lance")
-lance = ["pylance"]
 
 # Video decoding and Video(storage="frames") caches
 video = ["opencv-python-headless", "torch", "torchcodec"]
@@ -89,7 +87,7 @@ docs = [
 ]
 
 all = [
-    "stable-datasets[lance,torch,video]",
+    "stable-datasets[torch,video]",
 ]
 
 # =======================
