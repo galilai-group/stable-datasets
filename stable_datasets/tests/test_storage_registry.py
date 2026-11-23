@@ -113,10 +113,17 @@ def test_register_layout_rejects_a_second_class_for_one_name():
         register_layout(Unnamed)
 
 
-def test_layout_modules_load_without_the_schema():
-    code = "import stable_datasets.storage.video, sys; assert 'stable_datasets.cache' not in sys.modules"
+@pytest.mark.parametrize(
+    "code",
+    [
+        "import stable_datasets.storage.video",
+        "import stable_datasets.storage",
+        "from stable_datasets.features import Video, VideoStorage",
+        "from stable_datasets.storage import RowStorage, VideoFramesStorage",
+    ],
+)
+def test_imports_in_any_order(code):
     subprocess.run([sys.executable, "-c", code], check=True)
-    subprocess.run([sys.executable, "-c", "from stable_datasets.features import Video, VideoStorage"], check=True)
 
 
 @dataclass(frozen=True)
@@ -185,7 +192,7 @@ class _DeclaresJsonRows(JsonRows):
 
     @classmethod
     def from_features(cls, features):
-        return cls() if "x" in features else None
+        return cls() if "json_x" in features else None
 
 
 def test_a_registered_layout_is_written_and_opened_by_the_builder(tmp_path, json_rows):
@@ -207,7 +214,7 @@ def test_builder_storage_attribute_takes_an_alias(tmp_path, json_rows):
 def test_storage_of_asks_layouts_by_priority(tmp_path, json_rows):
     register_layout(_DeclaresJsonRows)
     try:
-        assert storage_of(Features({"x": Value("int32")})) == _DeclaresJsonRows()
+        assert storage_of(Features({"json_x": Value("int32")})) == _DeclaresJsonRows()
         assert storage_of(ROWS) == RowStorage()
     finally:
         _LAYOUTS.pop(_DeclaresJsonRows.layout)

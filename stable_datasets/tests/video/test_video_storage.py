@@ -71,7 +71,7 @@ def test_mp4_store_windows(tmp_path):
 
 
 def test_jpeg_store_windows(tmp_path):
-    ds = build(tmp_path, {"format": "jpeg", "fps": 7.5, "short_edge": 96})
+    ds = build(tmp_path, VideoStorage(format="jpeg", fps=7.5, short_edge=96))
     clips = ds.set_video_decode(
         num_frames=4, frame_stride=2, output="numpy", dtype="uint8", scale="none", layout="THWC"
     )
