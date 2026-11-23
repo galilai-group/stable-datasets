@@ -59,7 +59,7 @@ class CIFAR10_2(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path: str | Path, split: str):
+    def _iter_examples(self, data_path: str | Path, split: str):
         """Yield a CIFAR-10.2 NPZ split while validating its public contract."""
         with np.load(data_path, allow_pickle=False) as data:
             try:

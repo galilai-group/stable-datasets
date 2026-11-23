@@ -75,7 +75,7 @@ class UberTLC(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         freq, prediction_length, _ = self.SETTINGS[self.config.name]
         with zipfile.ZipFile(data_path) as archive, archive.open("uber-raw-data-janjune-15.csv") as handle:
             trips = pd.read_csv(handle, usecols=["Pickup_date", "locationID"], parse_dates=["Pickup_date"])

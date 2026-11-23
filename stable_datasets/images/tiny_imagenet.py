@@ -44,7 +44,7 @@ class TinyImagenet(BaseDatasetBuilder):
             license=source.get("license", None),
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         data_path = Path(data_path)
 
         # Default BaseDatasetBuilder flow: data_path is the downloaded .zip asset.

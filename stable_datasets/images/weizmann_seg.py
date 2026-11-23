@@ -85,7 +85,7 @@ class WeizmannSegmentation(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Yield one example per image folder, with all of its human segmentations."""
         # Archive layout: <image_id>/{src_color,src_bw,human_seg}/*.png (plus a few unrelated files).
         files = {}  # image_id -> {"src_color": {stem: bytes}, "src_bw": {...}, "human_seg": {...}}

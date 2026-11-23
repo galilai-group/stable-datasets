@@ -190,7 +190,7 @@ class TFFlowers(BaseDatasetBuilder):
             license=self.SOURCE.license,
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # The shared downloader returns completed cache hits without rehashing;
         # every cold native build verifies the raw archive before parsing it.
         _verify_archive_checksum(data_path, self.SOURCE.assets["train"].checksum)

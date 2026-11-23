@@ -104,7 +104,7 @@ class ISIC2016(BaseDatasetBuilder):
             raise ValueError("ISIC2016 label file is empty.")
         return labels
 
-    def _generate_examples(self, data_path, labels_path, split):
+    def _iter_examples(self, data_path, labels_path, split):
         if split not in (Split.TRAIN, Split.TEST):
             raise ValueError(f"Unknown ISIC2016 split: {split}")
         labels = self._read_labels(labels_path, split)

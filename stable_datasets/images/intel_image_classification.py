@@ -136,7 +136,7 @@ class IntelImageClassification(BaseDatasetBuilder):
 
         return result
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         if split not in self._candidate_splits():
             raise ValueError(f"Unknown Intel Image Classification split: {split}")
 

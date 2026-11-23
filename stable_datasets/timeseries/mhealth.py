@@ -105,7 +105,7 @@ class MHEALTH(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         del split
         with zipfile.ZipFile(data_path) as archive:
             for subject in range(1, 11):

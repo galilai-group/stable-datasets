@@ -101,9 +101,9 @@ def test_no_split_overlap(intel_archive):
         (Split.TEST, 18),
     ],
 )
-def test_generate_examples(intel_archive, split, expected_count):
+def test_iter_examples(intel_archive, split, expected_count):
     examples = list(
-        make_builder()._generate_examples(
+        make_builder()._iter_examples(
             data_path=intel_archive,
             split=split,
         )
@@ -122,7 +122,7 @@ def test_generate_examples(intel_archive, split, expected_count):
 def test_unknown_split(intel_archive):
     with pytest.raises(ValueError, match="Unknown Intel"):
         list(
-            make_builder()._generate_examples(
+            make_builder()._iter_examples(
                 data_path=intel_archive,
                 split="invalid",
             )
@@ -137,7 +137,7 @@ def test_empty_archive(tmp_path):
 
     with pytest.raises(ValueError, match="No Intel"):
         list(
-            make_builder()._generate_examples(
+            make_builder()._iter_examples(
                 data_path=archive_path,
                 split=Split.TRAIN,
             )

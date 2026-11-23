@@ -58,7 +58,7 @@ class COIL20(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         with zipfile.ZipFile(data_path) as archive:
             for member in sorted(archive.namelist()):
                 filename = PurePosixPath(member).name

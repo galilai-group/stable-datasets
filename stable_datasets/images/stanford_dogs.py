@@ -111,7 +111,7 @@ class StanfordDogs(BaseDatasetBuilder):
             mat = loadmat(io.BytesIO(archive.extractfile(f"{split}_list.mat").read()))
         return {str(f[0][0]): int(label[0]) - 1 for f, label in zip(mat["file_list"], mat["labels"])}
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         split_labels = self._load_split_labels(split)
 
         found = 0

@@ -71,7 +71,7 @@ class KannadaMNIST(BaseDatasetBuilder):
             for split in self._candidate_splits()
         ]
 
-    def _generate_examples(self, data_path, labels_path, split):
+    def _iter_examples(self, data_path, labels_path, split):
         if split not in self._candidate_splits():
             raise ValueError(f"Unknown Kannada-MNIST split: {split!r}")
         with gzip.open(data_path, "rb") as stream:

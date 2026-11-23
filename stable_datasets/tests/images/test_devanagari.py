@@ -27,8 +27,8 @@ def _archive(tmp_path, extra=None):
 def test_original_class_order_and_split_isolation(tmp_path):
     path = _archive(tmp_path)
     builder = object.__new__(Devanagari)
-    train = list(builder._generate_examples(path, "train"))
-    test = list(builder._generate_examples(path, "test"))
+    train = list(builder._iter_examples(path, "train"))
+    test = list(builder._iter_examples(path, "test"))
     assert len(train) == len(test) == 4
     assert not {key for key, _ in train} & {key for key, _ in test}
     assert [key for key, _ in train] == sorted(key for key, _ in train)
@@ -40,7 +40,7 @@ def test_original_class_order_and_split_isolation(tmp_path):
 
 def test_unknown_class_is_rejected(tmp_path):
     with pytest.raises(ValueError, match="Unexpected"):
-        list(object.__new__(Devanagari)._generate_examples(_archive(tmp_path, "unknown"), "train"))
+        list(object.__new__(Devanagari)._iter_examples(_archive(tmp_path, "unknown"), "train"))
 
 
 def test_empty_split_is_rejected(tmp_path):
@@ -48,7 +48,7 @@ def test_empty_split_is_rejected(tmp_path):
     with ZipFile(path, "w"):
         pass
     with pytest.raises(ValueError, match="No images"):
-        list(object.__new__(Devanagari)._generate_examples(path, "test"))
+        list(object.__new__(Devanagari)._iter_examples(path, "test"))
 
 
 def test_cache_roundtrip(tmp_path, monkeypatch):
@@ -92,4 +92,4 @@ def test_official_splits():
 
 def test_unknown_split_is_rejected(tmp_path):
     with pytest.raises(ValueError, match="Unknown Devanagari split"):
-        list(object.__new__(Devanagari)._generate_examples(_archive(tmp_path), "validation"))
+        list(object.__new__(Devanagari)._iter_examples(_archive(tmp_path), "validation"))

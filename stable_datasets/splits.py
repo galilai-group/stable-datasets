@@ -13,7 +13,7 @@ class Split:
 
 @dataclass
 class SplitGenerator:
-    """Describes one split and the kwargs to pass to ``_generate_examples``."""
+    """Describes one split and the kwargs to pass to ``_iter_examples``."""
 
     name: str
     gen_kwargs: dict = field(default_factory=dict)

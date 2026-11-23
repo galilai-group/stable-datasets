@@ -64,7 +64,7 @@ class GTZAN(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         del split
         with tarfile.open(data_path, "r:gz") as archive:
             for member in archive.getmembers():

@@ -53,7 +53,7 @@ class ElectricityHourly(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         with zipfile.ZipFile(data_path) as archive:
             text = archive.read("electricity_hourly_dataset.tsf").decode("utf-8")
         for idx, (name, start, values) in enumerate(_read_tsf(text)):

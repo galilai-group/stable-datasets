@@ -43,7 +43,7 @@ class Country211(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the tar archive."""
         with tarfile.open(data_path, "r:gz") as archive:
             # Navigate to the relevant split directory within the archive

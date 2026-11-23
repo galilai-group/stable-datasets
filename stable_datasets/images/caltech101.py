@@ -76,7 +76,7 @@ class Caltech101(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         images = self._read_images(data_path)
         split_files = self._split_files(images.keys())[split]
 

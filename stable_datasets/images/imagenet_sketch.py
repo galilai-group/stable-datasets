@@ -48,7 +48,7 @@ class ImageNetSketch(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # Archive layout: sketch/<wnid>/<name>.JPEG. The 7.6 GB zip is read in place, and entries
         # are sorted so the row order does not depend on how the archive was written.
         with zipfile.ZipFile(data_path, "r") as archive:

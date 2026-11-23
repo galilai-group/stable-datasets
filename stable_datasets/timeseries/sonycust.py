@@ -81,7 +81,7 @@ class SONYCUST(BaseDatasetBuilder):
             )
         ]
 
-    def _generate_examples(self, audio_path, annotations_path, split):
+    def _iter_examples(self, audio_path, annotations_path, split):
         del split
         with open(annotations_path, newline="", encoding="utf-8") as fh:
             reader = csv.reader(fh)

@@ -99,7 +99,7 @@ class DailyAndSportsActivities(BaseDatasetBuilder):
             license=self.SOURCE.license,
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         if split not in self.SPLIT_SUBJECTS:
             raise ValueError(f"Unknown split {split!r}; expected 'train' or 'test'.")
         subjects = self.SPLIT_SUBJECTS[split]

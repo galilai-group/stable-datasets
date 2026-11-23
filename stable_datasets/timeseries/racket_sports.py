@@ -66,7 +66,7 @@ class RacketSports(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         series, labels = _read_ts(data_path, f"RacketSports_{split.upper()}.ts")
         if series.shape[1:] != (self.SEQUENCE_LENGTH, self.NUM_CHANNELS):
             raise ValueError(f"Unexpected RacketSports series shape: {series.shape}")

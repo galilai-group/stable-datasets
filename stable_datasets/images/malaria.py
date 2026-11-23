@@ -134,7 +134,7 @@ class Malaria(BaseDatasetBuilder):
                     mapping[filename] = patient_id
         return mapping
 
-    def _generate_examples(self, path_map: dict | None = None, **_kwargs):
+    def _iter_examples(self, path_map: dict | None = None, **_kwargs):
         if path_map is None:
             raise TypeError("path_map is required")
         paths: dict = path_map

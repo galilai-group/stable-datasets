@@ -59,7 +59,7 @@ class Caltech101Silhouettes(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         mat = sio.loadmat(data_path)
         # Pixels are flattened column-major (MATLAB order) with 0 = object, 1 = background.
         # Reshape in Fortran order to get upright images and scale {0, 1} -> {0, 255}.

@@ -55,7 +55,7 @@ class ArabicCharacters(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the ZIP archives of images and labels."""
         with ZipFile(data_path, "r") as archive:
             for entry in tqdm(archive.infolist(), desc=f"Processing {split} set"):

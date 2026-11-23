@@ -69,6 +69,6 @@ class NATOPS(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         shape = (self.SEQUENCE_LENGTH, self.NUM_CHANNELS)
         yield from iter_examples(data_path, f"NATOPS_{split.upper()}.ts", shape, self._LABELS)

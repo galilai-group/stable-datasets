@@ -68,7 +68,7 @@ class Shapes3D(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         data = np.load(data_path)
         images = data["images"]
         labels = data["labels"]

@@ -160,4 +160,4 @@ def test_eth80_rejects_invalid_archives(tmp_path, names, error):
             add_bytes(archive, name, b"unused")
     builder = object.__new__(ETH80)
     with pytest.raises(ValueError, match=error):
-        list(builder._generate_examples(path, "train"))
+        list(builder._iter_examples(path, "train"))

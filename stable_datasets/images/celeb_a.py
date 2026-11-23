@@ -108,7 +108,7 @@ class CelebA(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, archive_path, attr_path, partition_path, split):
+    def _iter_examples(self, archive_path, attr_path, partition_path, split):
         with open(attr_path) as f:
             lines = f.readlines()
             parsed = [line.split() for line in lines[2:]]

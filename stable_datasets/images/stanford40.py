@@ -157,7 +157,7 @@ class Stanford40(BaseDatasetBuilder):
             raise ValueError("Stanford40 training and test splits overlap")
         return split_files
 
-    def _generate_examples(self, images_path, splits_path, split):
+    def _iter_examples(self, images_path, splits_path, split):
         if split not in ("train", "test"):
             raise ValueError(f"Unknown Stanford40 split: {split!r}")
         with zipfile.ZipFile(splits_path) as splits_archive:

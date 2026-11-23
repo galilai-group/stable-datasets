@@ -66,7 +66,7 @@ class BSDS500(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Yield one example per image, with all of its human annotations."""
         image_dir = _ROOT / "images" / _SPLIT_DIRS[split]
         truth_dir = _ROOT / "groundTruth" / _SPLIT_DIRS[split]

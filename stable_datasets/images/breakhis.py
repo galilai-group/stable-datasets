@@ -131,7 +131,7 @@ class BreakHis(BaseDatasetBuilder):
             for split in ("train", "test")
         ]
 
-    def _generate_examples(self, images_path, folds_path, split):
+    def _iter_examples(self, images_path, folds_path, split):
         """Stream the PNGs of one split of the selected fold out of the archive, in archive order."""
         groups = _read_fold(folds_path, self.config.name)
         idx = 0

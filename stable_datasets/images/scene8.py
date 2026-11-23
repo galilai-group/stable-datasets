@@ -57,7 +57,7 @@ class Scene8(BaseDatasetBuilder):
             license=self.SOURCE.license,
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         if split != Split.TRAIN:
             raise ValueError("Scene8 only exposes the original unsplit collection as 'train'.")
         with zipfile.ZipFile(data_path) as archive:

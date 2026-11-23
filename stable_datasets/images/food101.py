@@ -55,7 +55,7 @@ class Food101(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from uncompressed TAR archives.
 
         Expects TAR structure: class_name/image_id.jpg

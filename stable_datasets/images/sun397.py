@@ -202,7 +202,7 @@ class SUN397(BaseDatasetBuilder):
                 partition_images = {f"SUN397{line.decode().strip()}" for line in partf.readlines()}
         return partition_images
 
-    def _generate_examples(self, archive_path, partitions_path, partition, split):
+    def _iter_examples(self, archive_path, partitions_path, partition, split):
         """Generate examples from the .tar.gz archive."""
 
         # get image partition (if applicable)

@@ -66,7 +66,7 @@ class Galaxy10Decal(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the HDF5 file.
 
         The h5 file contains:

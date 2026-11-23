@@ -139,7 +139,7 @@ class CCT20(BaseDatasetBuilder):
             for split, annotation_file in _SPLIT_FILES.items()
         ]
 
-    def _generate_examples(self, images_path, annotations_path, annotation_file):
+    def _iter_examples(self, images_path, annotations_path, annotation_file):
         with tarfile.open(annotations_path) as archive:
             member = f"eccv_18_annotation_files/{annotation_file}_annotations.json"
             keep = _single_label_images(json.load(archive.extractfile(member)))

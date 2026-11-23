@@ -64,7 +64,7 @@ class KMNIST(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the npz archive."""
         data = np.load(data_path, allow_pickle=True)
         images = data["arr_0"]

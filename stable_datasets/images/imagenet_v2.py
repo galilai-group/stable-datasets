@@ -89,7 +89,7 @@ class ImageNetV2(BaseDatasetBuilder):
             license=source["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # Archive layout: <top dir>/<class index>/<hash>.jpeg, with class folders named by the
         # ImageNet-1K class index ("0" to "999"), not by WordNet ID. Despite the .tar.gz name the
         # files are uncompressed tars, so "r|*" lets tarfile detect the compression.

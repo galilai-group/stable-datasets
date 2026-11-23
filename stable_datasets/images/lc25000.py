@@ -92,7 +92,7 @@ class LC25000(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Read the images of one split from the zip. The folder name is the label."""
         groups_path = download(GROUPS_INFO, dest_folder=Path(data_path).parent, progress_bar=False)
         with zipfile.ZipFile(groups_path) as groups_archive:

@@ -100,7 +100,7 @@ class AWA2(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         # The upstream archive is not pre-split; benchmarks create a held-out
         # validation set from the train split when needed.
         with zipfile.ZipFile(data_path, "r") as z:

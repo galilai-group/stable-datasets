@@ -74,7 +74,7 @@ class HASYv2(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         fold_name = self.config.name
         csv_internal_path = f"classification-task/{fold_name}/{split}.csv"
 

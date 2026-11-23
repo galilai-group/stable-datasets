@@ -44,7 +44,7 @@ class MovingMNIST(BaseDatasetBuilder):
         data_path = download(self.SOURCE["assets"]["test"], dest_folder=self._raw_download_dir)
         return [SplitGenerator(name=Split.TEST, gen_kwargs={"data_path": data_path})]
 
-    def _generate_examples(self, data_path):
+    def _iter_examples(self, data_path):
         arr = np.load(Path(data_path))
         # Source layout: (T=20, N, H=64, W=64). Reshape to (N, T, H, W, 1).
         arr = np.transpose(arr, (1, 0, 2, 3))[..., None]

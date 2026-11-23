@@ -57,7 +57,7 @@ class BrainTumorMRI(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Read the images of one split from the zip. The folder name is the label."""
         split_folder = SPLIT_FOLDERS[split]
 

@@ -100,7 +100,7 @@ class PlantDoc(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         label_feature = self.info.features["label"]
         with zipfile.ZipFile(data_path, "r") as archive:
             for name in sorted(archive.namelist()):

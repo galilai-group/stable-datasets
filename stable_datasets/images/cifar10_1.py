@@ -77,7 +77,7 @@ class CIFAR10_1(BaseDatasetBuilder):
             )
         ]
 
-    def _generate_examples(self, images_path: str | Path, labels_path: str | Path):
+    def _iter_examples(self, images_path: str | Path, labels_path: str | Path):
         """Yield the paired image and label arrays stored in the v6 release."""
         images = np.load(images_path, allow_pickle=False)
         labels = np.load(labels_path, allow_pickle=False)

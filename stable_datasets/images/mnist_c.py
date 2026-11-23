@@ -88,7 +88,7 @@ class MNISTC(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         prefix = f"mnist_c/{self.config.name}/{split}"
         with zipfile.ZipFile(data_path, "r") as archive:
             images = np.load(io.BytesIO(archive.read(f"{prefix}_images.npy")))

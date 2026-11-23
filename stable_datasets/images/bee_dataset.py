@@ -79,7 +79,7 @@ class BeeDataset(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Yield images and their multi-label annotations from the ZIP archive."""
         if split != "train":
             raise ValueError(f"Unknown BeeDataset split: {split!r}")

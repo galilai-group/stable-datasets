@@ -95,7 +95,7 @@ class Flowers102(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, path_map, split):
+    def _iter_examples(self, path_map, split):
         images_path = path_map["images"]
         labels_path = path_map["labels"]
         setid_path = path_map["setid"]

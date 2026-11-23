@@ -102,7 +102,7 @@ class SmallNORB(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         images_left, images_right, features = _load_small_norb_from_zip(str(data_path))
 
         for idx in range(len(images_left)):

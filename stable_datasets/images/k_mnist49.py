@@ -75,7 +75,7 @@ class KMNIST49(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate examples from the image and label npz archives."""
         images = np.load(data_path)["arr_0"]
 

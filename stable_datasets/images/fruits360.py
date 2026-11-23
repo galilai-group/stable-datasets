@@ -50,7 +50,7 @@ class Fruits360(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Yield the JPEGs under ``<repo>/<Training|Test>/<class>/`` in the zip archive.
 
         Upstream has a few class folders that differ only in letter case (e.g. ``Blackberry 3`` and

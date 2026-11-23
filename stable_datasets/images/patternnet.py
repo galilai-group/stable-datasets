@@ -117,7 +117,7 @@ class PatternNet(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Yield the source JPEG bytes unchanged, keeping images 001-640 of each class for train and the rest for test."""
         with zipfile.ZipFile(data_path) as archive:
             for name in sorted(archive.namelist()):

@@ -44,8 +44,8 @@ def archives(tmp_path):
 
 def test_examples_follow_split_order_and_labels(archives):
     builder = _builder()
-    train = list(builder._generate_examples(*archives, split="train"))
-    test = list(builder._generate_examples(*archives, split="test"))
+    train = list(builder._iter_examples(*archives, split="train"))
+    test = list(builder._iter_examples(*archives, split="test"))
     assert [key for key, _ in train] == ["writing_on_a_book_001.jpg", "applauding_001.jpg"]
     assert [sample["label"] for _, sample in train] == [39, 0]
     assert [key for key, _ in test] == ["applauding_002.jpg"]
@@ -126,7 +126,7 @@ def test_non_rgb_images_are_converted_to_rgb(tmp_path, mode, color):
         archive.writestr("JPEGImages/feeding_a_horse_191.jpg", _jpeg(mode, (7, 5), color))
         archive.writestr("JPEGImages/applauding_001.jpg", _jpeg("RGB", (7, 5), (1, 2, 3)))
     splits_path = _write_splits(tmp_path / "splits.zip", ["feeding_a_horse_191.jpg"], ["applauding_001.jpg"])
-    ((_, sample),) = _builder()._generate_examples(images_path, splits_path, "train")
+    ((_, sample),) = _builder()._iter_examples(images_path, splits_path, "train")
     with Image.open(io.BytesIO(sample["image"])) as image:
         assert image.mode == "RGB"
         assert image.size == (7, 5)
@@ -135,13 +135,13 @@ def test_non_rgb_images_are_converted_to_rgb(tmp_path, mode, color):
 
 def test_unknown_split(archives):
     with pytest.raises(ValueError, match="Unknown Stanford40 split"):
-        list(_builder()._generate_examples(*archives, split="validation"))
+        list(_builder()._iter_examples(*archives, split="validation"))
 
 
 def test_missing_image(archives, tmp_path):
     splits = _write_splits(tmp_path / "missing.zip", ["applauding_999.jpg"], ["applauding_002.jpg"])
     with pytest.raises(KeyError, match="applauding_999.jpg"):
-        list(_builder()._generate_examples(archives[0], splits, "train"))
+        list(_builder()._iter_examples(archives[0], splits, "train"))
 
 
 def test_loading_and_cache_reuse(archives, tmp_path, monkeypatch):

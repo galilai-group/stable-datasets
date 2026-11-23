@@ -76,7 +76,7 @@ class MNIST(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, images_path, labels_path):
+    def _iter_examples(self, images_path, labels_path):
         with gzip.open(images_path, "rb") as img_file:
             _, num_images, rows, cols = struct.unpack(">IIII", img_file.read(16))
             images = np.frombuffer(img_file.read(), dtype=np.uint8).reshape(num_images, rows, cols)

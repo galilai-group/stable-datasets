@@ -60,7 +60,7 @@ class OlivettiFaces(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Generate grayscale images and identity labels."""
 
         raw_faces = loadmat(data_path)["faces"]

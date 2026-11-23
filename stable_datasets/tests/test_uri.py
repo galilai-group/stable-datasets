@@ -116,7 +116,7 @@ class _UriBuilder(BaseDatasetBuilder):
     def _split_generators(self):
         return [SplitGenerator(name=Split.TRAIN, gen_kwargs={})]
 
-    def _generate_examples(self):
+    def _iter_examples(self):
         for i in range(4):
             yield i, {"x": i}
 

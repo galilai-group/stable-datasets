@@ -75,7 +75,7 @@ class Epilepsy(BaseDatasetBuilder):
             license=self.SOURCE["license"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         series, labels = _read_ts(data_path, f"Epilepsy_{split.upper()}.ts")
         if series.shape[1:] != (self.SEQUENCE_LENGTH, self.NUM_CHANNELS):
             raise ValueError(f"Unexpected Epilepsy series shape: {series.shape}")

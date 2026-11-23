@@ -50,8 +50,8 @@ def test_parser_preserves_labels_axes_and_subjects(tmp_path):
         tmp_path,
         {"data/a01/p1/s01.txt": _csv(), "data/a19/p7/s60.txt": _csv(), "README.txt": "ignored"},
     )
-    train = list(_builder()._generate_examples(path, "train"))
-    test = list(_builder()._generate_examples(path, "test"))
+    train = list(_builder()._iter_examples(path, "train"))
+    test = list(_builder()._iter_examples(path, "test"))
     assert len(train) == len(test) == 1
     key, row = train[0]
     assert key == "a01/p1/s01"
@@ -66,35 +66,35 @@ def test_parser_preserves_labels_axes_and_subjects(tmp_path):
 def test_reject_wrong_shape(tmp_path, shape):
     path = _archive(tmp_path, {"data/a01/p1/s01.txt": _csv(shape)})
     with pytest.raises(ValueError, match="Expected"):
-        list(_builder()._generate_examples(path, "train"))
+        list(_builder()._iter_examples(path, "train"))
 
 
 @pytest.mark.parametrize("value", [np.nan, np.inf, -np.inf])
 def test_reject_nonfinite(tmp_path, value):
     path = _archive(tmp_path, {"data/a01/p1/s01.txt": _csv(value=value)})
     with pytest.raises(ValueError, match="Non-finite"):
-        list(_builder()._generate_examples(path, "train"))
+        list(_builder()._iter_examples(path, "train"))
 
 
 @pytest.mark.parametrize("name", ["a00/p1/s01.txt", "a20/p1/s01.txt", "a01/p9/s01.txt", "a01/p1/s61.txt"])
 def test_reject_bad_identifiers(tmp_path, name):
     path = _archive(tmp_path, {name: _csv()})
     with pytest.raises(ValueError, match="Invalid"):
-        list(_builder()._generate_examples(path, "train"))
+        list(_builder()._iter_examples(path, "train"))
 
 
 def test_reject_duplicate_window(tmp_path):
     path = _archive(tmp_path, {"data/a01/p1/s01.txt": _csv(), "other/a01/p1/s01.txt": _csv()})
     with pytest.raises(ValueError, match="Duplicate"):
-        list(_builder()._generate_examples(path, "train"))
+        list(_builder()._iter_examples(path, "train"))
 
 
 def test_reject_empty_and_unknown_split(tmp_path):
     path = _archive(tmp_path, {"README.txt": "not sensor data"})
     with pytest.raises(ValueError, match="No Daily"):
-        list(_builder()._generate_examples(path, "train"))
+        list(_builder()._iter_examples(path, "train"))
     with pytest.raises(ValueError, match="Unknown split"):
-        list(_builder()._generate_examples(path, "validation"))
+        list(_builder()._iter_examples(path, "validation"))
 
 
 def test_cache_reload_and_formats(tmp_path, monkeypatch):

@@ -62,7 +62,7 @@ class CINIC10(BaseDatasetBuilder):
             citation=self.SOURCE["citation"],
         )
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         """Stream the archive, whose members are ``<train|valid|test>/<class>/<file>.png``.
 
         CIFAR-10 images are named ``cifar10-<train|test>-<idx>.png``, ImageNet images ``<wnid>_<idx>.png``.

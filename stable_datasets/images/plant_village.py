@@ -159,7 +159,7 @@ class PlantVillage(BaseDatasetBuilder):
             raise ValueError(f"PlantVillage split manifest references missing color image: {min(missing)!r}")
         return sorted(members[path] for path in paths)
 
-    def _generate_examples(self, data_path, split):
+    def _iter_examples(self, data_path, split):
         if split not in self._candidate_splits():
             raise ValueError(f"Unknown PlantVillage split: {split}")
 

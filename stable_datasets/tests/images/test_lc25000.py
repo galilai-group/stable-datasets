@@ -64,7 +64,7 @@ def fake_build(tmp_path, monkeypatch):
     monkeypatch.setattr(lc25000, "download", lambda *args, **kwargs: groups_path)
 
     builder = object.__new__(LC25000)
-    examples = {split: dict(builder._generate_examples(images_path, split)) for split in ["train", "test"]}
+    examples = {split: dict(builder._iter_examples(images_path, split)) for split in ["train", "test"]}
     return examples, source_bytes
 
 

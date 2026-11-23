@@ -151,7 +151,7 @@ class DeepWeeds(BaseDatasetBuilder):
             ),
         ]
 
-    def _generate_examples(self, images_path, labels_path, split_file):
+    def _iter_examples(self, images_path, labels_path, split_file):
         with zipfile.ZipFile(labels_path) as repo:
             labels = {row["Filename"]: int(row["Label"]) for row in _read_csv(repo, "labels.csv")}
             filenames = [row["Filename"] for row in _read_csv(repo, split_file)]

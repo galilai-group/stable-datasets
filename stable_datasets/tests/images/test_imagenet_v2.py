@@ -136,7 +136,7 @@ def test_unexpected_class_folder_raises(tmp_path, folder):
 
     builder = _metadata_only_builder()
     with pytest.raises(ValueError, match="class folder"):
-        list(builder._generate_examples(data_path=archive_path, split="test"))
+        list(builder._iter_examples(data_path=archive_path, split="test"))
 
 
 @pytest.mark.parametrize(

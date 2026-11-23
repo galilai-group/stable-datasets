@@ -32,8 +32,8 @@ def test_eurosat_metadata():
     assert info.supervised_keys == ("image", "label")
 
 
-def test_eurosat_generate_examples_matches_info(tmp_path):
-    """Smoke-test _generate_examples on a tiny synthetic archive mirroring the real layout."""
+def test_eurosat_iter_examples_matches_info(tmp_path):
+    """Smoke-test _iter_examples on a tiny synthetic archive mirroring the real layout."""
     builder = _builder()
     names = builder.info.features["label"].names
 
@@ -46,7 +46,7 @@ def test_eurosat_generate_examples_matches_info(tmp_path):
         z.writestr("2750/README.txt", "not an image")
         z.writestr("2750/UnknownClass/UnknownClass_1.jpg", b"ignored")
 
-    examples = list(builder._generate_examples(data_path=zip_path, split="train"))
+    examples = list(builder._iter_examples(data_path=zip_path, split="train"))
 
     assert len(examples) == 3
     for key, example in examples:

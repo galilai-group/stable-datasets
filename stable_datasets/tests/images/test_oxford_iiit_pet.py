@@ -48,8 +48,8 @@ def test_oxford_iiit_pet_metadata():
     assert info.supervised_keys == ("image", "label")
 
 
-def test_oxford_iiit_pet_generate_examples_matches_info(tmp_path):
-    """Smoke-test _generate_examples on tiny synthetic archives mirroring the real layout."""
+def test_oxford_iiit_pet_iter_examples_matches_info(tmp_path):
+    """Smoke-test _iter_examples on tiny synthetic archives mirroring the real layout."""
     builder = _builder()
     names = builder.info.features["label"].names
 
@@ -67,8 +67,8 @@ def test_oxford_iiit_pet_generate_examples_matches_info(tmp_path):
         _add_bytes(tar, "annotations/test.txt", b"yorkshire_terrier_3 37 2 25\n")
 
     path_map = {"images": images_path, "annotations": annotations_path}
-    train = list(builder._generate_examples(path_map=path_map, split="trainval"))
-    test = list(builder._generate_examples(path_map=path_map, split="test"))
+    train = list(builder._iter_examples(path_map=path_map, split="trainval"))
+    test = list(builder._iter_examples(path_map=path_map, split="test"))
 
     assert [key for key, _ in train] == ["Abyssinian_1", "basset_hound_2"]
     assert [key for key, _ in test] == ["yorkshire_terrier_3"]

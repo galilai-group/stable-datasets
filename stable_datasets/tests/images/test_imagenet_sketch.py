@@ -136,16 +136,16 @@ def test_order_does_not_depend_on_archive_order(tmp_path):
     forward = _write_zip(tmp_path / "forward.zip", FAKE_ENTRIES)
     backward = _write_zip(tmp_path / "backward.zip", dict(reversed(FAKE_ENTRIES.items())))
 
-    keys = [key for key, _ in builder._generate_examples(data_path=forward, split="test")]
+    keys = [key for key, _ in builder._iter_examples(data_path=forward, split="test")]
     assert keys == [entry for entry, _, _ in EXPECTED_ROWS]
-    assert [key for key, _ in builder._generate_examples(data_path=backward, split="test")] == keys
+    assert [key for key, _ in builder._iter_examples(data_path=backward, split="test")] == keys
 
 
 def test_unknown_class_folder_raises(tmp_path):
     zip_path = _write_zip(tmp_path / "bad.zip", {"sketch/n99999999/a.JPEG": RGB_JPEG})
     builder = _metadata_only(ImageNetSketch)
     with pytest.raises(ValueError, match="sketch/n99999999/a.JPEG"):
-        list(builder._generate_examples(data_path=zip_path, split="test"))
+        list(builder._iter_examples(data_path=zip_path, split="test"))
 
 
 def test_imagenet_sketch_real_dataset():

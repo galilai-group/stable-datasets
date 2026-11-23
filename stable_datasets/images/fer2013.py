@@ -90,7 +90,7 @@ class FER2013(BaseDatasetBuilder):
             for name, key in ((Split.TRAIN, "train"), (Split.VALIDATION, "val"), (Split.TEST, "test"))
         ]
 
-    def _generate_examples(self, csv_path, split):
+    def _iter_examples(self, csv_path, split):
         with open(csv_path, newline="") as f:
             reader = csv.reader(f)
             columns = {name.strip(): i for i, name in enumerate(next(reader))}
