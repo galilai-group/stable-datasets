@@ -217,9 +217,9 @@ class Mp4Store:
         self.transposed = tr.astype(bool)
         self.fds = None
         if self.read == "pread":
-            from .index import store_files
+            from ..storage.lance_files import blob_files
 
-            self.fds = [os.open(f, os.O_RDONLY) for f in store_files(path, ds.get_fragments())[0]]
+            self.fds = [os.open(f, os.O_RDONLY) for f in blob_files(path, ds.get_fragments())[0]]
 
     def __len__(self):
         return len(self.n)

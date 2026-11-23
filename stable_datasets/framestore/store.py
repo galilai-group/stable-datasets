@@ -159,11 +159,12 @@ class FrameStore:
         self.frames_per_clip = 16  # rows are clips of this many frames, for read="spans" (windows() sets it)
         if not self.blob:  # lance take per batch
             return
-        from .index import FrameIndex, store_files
+        from ..storage.lance_files import blob_files
+        from .index import FrameIndex
 
         frags = self.ds.get_fragments()
         self.frag_start = np.cumsum([0] + [f.count_rows() for f in frags])
-        files, self.data_fid, self.side_fid = store_files(path, frags)
+        files, self.data_fid, self.side_fid = blob_files(path, frags)
         _allow_open_files(len(files) + 256)  # one descriptor per file (maps hold one too)
         if self.read in ("pread", "ranges", "spans"):  # bufs are the batch's buffer instead (_fetch)
             from ..sources import LocalSource
@@ -198,15 +199,11 @@ class FrameStore:
     def _columns(self, t, rows):
         d = t.column(self.column).combine_chunks()
         if self.blob:
-            kind = d.field("kind").to_numpy()
+            from ..storage.lance_files import blob_locations
+
             frag = np.searchsorted(self.frag_start, rows, side="right") - 1
-            fid = np.where(kind == 0, self.data_fid[frag], self.side_fid[frag, d.field("blob_id").to_numpy()])
-            assert kind.max() <= 2 and fid.min() >= 0, "unexpected blob descriptor"
-            out = {
-                "fid": fid,
-                "pos": d.field("position").to_numpy().astype(np.int64),
-                "size": d.field("size").to_numpy().astype(np.int64),
-            }
+            fid, pos, size = blob_locations(d, frag, self.data_fid, self.side_fid)
+            out = {"fid": fid, "pos": pos, "size": size}
         else:  # the taken bytes themselves: one arrow data buffer, frames at their offsets (no per-frame copies)
             import pyarrow as pa
 

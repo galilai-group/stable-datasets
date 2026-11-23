@@ -33,6 +33,11 @@
   region needs (`cover`, CSR `Units`). `RestartJpeg`: MCUs of restart-coded JPEGs, their byte ranges
   (`unit_ranges`) and a reference decode of only the MCUs under a box (`decode_region`). `Chunks`: N-D arrays as a
   grid of zstd, zlib or uncompressed chunks (`encode`, `decode_region`; extra `chunks` for zstd)
+- record indexes (`storage.record_index.RecordIndex`): per-node indexes of a store's records (columns per record plus
+  one ragged column), built once by the first process and memory-mapped by the rest, in /dev/shm when they fit
+  (`$SDS_INDEX_DIR` overrides; `$FRAMESTORE_INDEX_DIR` still works). `FrameIndex` is one; indexes of the old format
+  are rebuilt. `storage.lance_files` is the one module that knows where Lance keeps a blob column's bytes, with a
+  test that fails if a Lance release moves them
 - docs: Frame stores guide; Video storage guide
 
 # V0.0.0
