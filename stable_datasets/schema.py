@@ -14,7 +14,7 @@ from typing import Any, Literal, NewType, Protocol
 
 import pyarrow as pa
 
-from .features import Array3D, Array4D, ClassLabel, FeatureType, Image, Sequence, Value, Video, VideoRef
+from .features import Array3D, Array4D, ClassLabel, FeatureType, Image, Sequence, Value, Video, VideoRef, VideoStorage
 
 
 __all__ = [
@@ -37,6 +37,7 @@ __all__ = [
     "VideoDecodeFn",
     "VideoDecodeFnBatched",
     "VideoRef",
+    "VideoStorage",
     "collect_dataset_citations",
 ]
 

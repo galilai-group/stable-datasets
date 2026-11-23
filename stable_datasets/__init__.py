@@ -19,6 +19,7 @@ from .schema import (
     VideoDecodeFn,
     VideoDecodeFnBatched,
     VideoRef,
+    VideoStorage,
 )
 from .utils import BaseDatasetBuilder
 
@@ -47,4 +48,5 @@ __all__ = [
     "VideoDecodeFn",
     "VideoDecodeFnBatched",
     "VideoRef",
+    "VideoStorage",
 ]
