@@ -53,14 +53,16 @@ class PreadMany:
                     b - a,
                     buf.ctypes.data,
                 )
-                assert r >= 0, f"pread failed at read {a - 1 - r}"
+                if r < 0:
+                    raise OSError(f"pread failed or ended early at read {a - 1 - r}")
                 return
             mv = memoryview(buf)
             for i in range(a, b):
                 d, p, e = dst[i], src[i], dst[i] + n[i]
                 while d < e:
                     k = os.preadv(int(fd[i]), [mv[d:e]], int(p))
-                    assert k > 0, "short read"
+                    if k <= 0:
+                        raise OSError(f"pread ended early at read {i}")
                     d, p = d + k, p + k
 
         list(self.pool.map(run, parts))

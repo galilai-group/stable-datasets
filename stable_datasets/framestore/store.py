@@ -155,7 +155,7 @@ class FrameStore:
         self.List = List
         self.maps = []
         self.read = (read or os.environ.get("FRAMESTORE_READ", "mmap")) if self.blob else "take"
-        self.fds, self.pool = [], None
+        self.source = None
         self.frames_per_clip = 16  # rows are clips of this many frames, for read="spans" (windows() sets it)
         if not self.blob:  # lance take per batch
             return
@@ -165,7 +165,15 @@ class FrameStore:
         self.frag_start = np.cumsum([0] + [f.count_rows() for f in frags])
         files, self.data_fid, self.side_fid = store_files(path, frags)
         _allow_open_files(len(files) + 256)  # one descriptor per file (maps hold one too)
-        self.bufs = List([self._map(f) for f in files])
+        if self.read in ("pread", "ranges", "spans"):  # bufs are the batch's buffer instead (_fetch)
+            from ..sources import LocalSource
+
+            threads = int(os.environ.get("FRAMESTORE_READ_THREADS", "16"))
+            direct = os.environ.get("FRAMESTORE_ODIRECT") == "1"
+            self.source = LocalSource(files, threads=threads, direct=direct)
+            self.bufs = List([np.empty(0, np.uint8) for _ in files])
+        else:
+            self.bufs = List([self._map(f) for f in files])
         if index == "shared":  # one per node, memory-mapped by every worker (index.py)
             self.index = FrameIndex.shared(path)
             assert self.index.files == files, "index built for other files"
@@ -173,10 +181,6 @@ class FrameStore:
             self.index = self._columns(self.ds.take(np.arange(len(ep)), columns=self._cols()), np.arange(len(ep)))
 
     def _map(self, f):
-        if self.read in ("pread", "ranges", "spans"):
-            direct = os.O_DIRECT if os.environ.get("FRAMESTORE_ODIRECT") == "1" else 0
-            self.fds.append(os.open(f, os.O_RDONLY | direct))
-            return np.empty(0, np.uint8)  # bufs are the batch's buffer instead (_fetch)
         m = np.memmap(f, np.uint8, mode="r")
         if os.environ.get("FRAMESTORE_MADV_RANDOM") == "1":
             m._mmap.madvise(mmap.MADV_RANDOM)
@@ -269,13 +273,6 @@ class FrameStore:
         c.update(seg=seg, nseg=nseg, seg_start=np.cumsum(nseg) - nseg)
         return c
 
-    def _reader(self):
-        if self.pool is None:
-            from .preads import PreadMany
-
-            self.pool = PreadMany(int(os.environ.get("FRAMESTORE_READ_THREADS", "16")))
-        return self.pool
-
     def fetch_spans(self, fid, pos, size, limit=8 << 20):
         """One read per (clip, file): from its first frame's start to its last frame's end (frames are rows in
         order, so a clip's frames in one file lie in one stretch of it); stretches over `limit` bytes are read frame
@@ -301,7 +298,7 @@ class FrameStore:
         off = np.concatenate(([0], np.cumsum(n)))
         if getattr(self, "_rbuf", None) is None or len(self._rbuf) < off[-1]:
             self._rbuf = np.empty(int(off[-1] * 1.25), np.uint8)
-        self._reader()(np.asarray(self.fds)[gfid], lo, off[:-1], n, self._rbuf)
+        self.source.read_into(gfid, lo, n, self._rbuf, off[:-1])
         self.bufs = self.List([self._rbuf])
         return np.zeros(len(fid), np.int64), off[ginv] + pos - lo[ginv]
 
@@ -311,7 +308,7 @@ class FrameStore:
         off = np.concatenate(([0], np.cumsum(size)))
         if getattr(self, "_rbuf", None) is None or len(self._rbuf) < off[-1]:
             self._rbuf = np.empty(int(off[-1] * 1.25), np.uint8)
-        self._reader()(np.asarray(self.fds)[fid[fr]], pos[fr] + a, off[fr] + a, b - a, self._rbuf)
+        self.source.read_into(fid[fr], pos[fr] + a, b - a, self._rbuf, off[fr] + a)
         self.bufs = self.List([self._rbuf])
         return np.zeros(len(fid), np.int64), off[:-1]
 

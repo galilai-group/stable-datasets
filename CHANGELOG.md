@@ -25,6 +25,10 @@
   dataset's `loader()`. `storage=` on every builder (a `Storage` or an alias: `"mp4"`, `"jpeg"`, `"frames"`) and
   the `STORAGE` class attribute pick it; `register_layout` adds a layout. The cache writers moved from
   `stable_datasets.cache` to their layout modules (`storage.rows.write_lance_cache`, ...). Cache keys are unchanged
+- byte sources (`stable_datasets.sources`): `ByteSource` reads byte ranges `(file id, offset, size)` of a list of
+  files into one buffer; `LocalSource` does it with batched preads from C threads, opens its files per process (fork
+  and pickle safe), and merges ranges of one file within `gap` bytes into one read (`coalesce`). `FrameStore`'s
+  pread, ranges and spans reads go through it; a failed or short pread raises `OSError`
 - docs: Frame stores guide; Video storage guide
 
 # V0.0.0
