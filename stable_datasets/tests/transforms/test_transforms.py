@@ -40,7 +40,7 @@ def crop_region(x, box):
 CHAINS = [
     Chain(RandomResizedCrop(96, scale=(0.08, 1.0))),
     Chain(RandomResizedCrop(64, scale=(0.02, 0.3)), Flip(), ColorJitter(p=1.0, gray_p=0.5), Normalize()),
-    Chain(Normalize(mean=(10, 20, 30), std=(2, 3, 4)), RandomResizedCrop(48, scale=(0.5, 1.0))),
+    Chain(Normalize(mean=(0.1, 0.2, 0.3), std=(0.5, 0.6, 0.7)), RandomResizedCrop(48, scale=(0.5, 1.0))),
     Chain(RandomCrop((40, 50)), Flip(p=1.0)),
     Chain(RandomCrop(70)),
 ]
@@ -50,7 +50,7 @@ CHAINS = [
 def test_the_region_alone_gives_the_same_output(chain):
     xs = images()
     if isinstance(chain.ops[0], Normalize):
-        xs = [x.float() for x in xs]
+        xs = [x.float() / 255 for x in xs]
     params = chain.draw(np.random.default_rng(3), shapes_of(xs))
     boxes = chain.region(params)
     assert (boxes[:, :2] >= 0).all() and (boxes[:, 2:] <= shapes_of(xs)).all()
