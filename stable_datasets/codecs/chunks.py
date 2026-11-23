@@ -75,11 +75,35 @@ def encode(array: np.ndarray, chunk: Sequence[int], compression: str = "zstd", l
 
 class Chunks:
     name = "chunks"
+    channels_last = False  # decode_units returns the array's own axes
+
+    @staticmethod
+    def shapes(meta, record) -> np.ndarray:
+        return np.asarray(meta["shape"], np.int64)[np.asarray(record, np.int64)]
 
     def cover(self, meta, record, boxes) -> Units:
         """Chunks of each record a box (starts then stops) overlaps."""
         record = np.asarray(record, np.int64)
         return grid_cover(np.asarray(meta["shape"])[record], np.asarray(meta["chunk"])[record], boxes)
+
+    @staticmethod
+    def header_size(meta, record) -> np.ndarray:
+        return np.zeros(len(np.atleast_1d(record)), np.int64)
+
+    @staticmethod
+    def unit_ranges(meta, ragged, ragged_off, record, units: Units) -> tuple[np.ndarray, np.ndarray]:
+        """Byte ranges inside each record's blob (its compressed chunks back to back, in chunk order) of the
+        chunks ``units`` names. ``ragged``/``ragged_off``: every record's compressed chunk sizes."""
+        rec = np.asarray(record, np.int64)[units.sample()]
+        first = np.asarray(ragged_off, np.int64)[rec]
+        sizes = np.asarray(ragged, np.int64)
+        csum = np.concatenate(([0], np.cumsum(sizes)))
+        return csum[first + units.ids] - csum[first], sizes[first + units.ids]
+
+    @staticmethod
+    def decode_units(header, pieces, ids, meta_row, box) -> np.ndarray:
+        """``box`` of a record from the compressed chunks ``ids`` (bytes each, in the order of ids)."""
+        return Chunks.decode_region(dict(zip((int(i) for i in ids), pieces)), meta_row, box)
 
     @staticmethod
     def decode_region(chunks: Mapping[int, bytes], meta: Mapping, box) -> np.ndarray:

@@ -42,6 +42,11 @@
   (`Chain.draw`), so `Chain.region` gives the input box each sample needs and `Chain.apply` gives the same output
   from that box alone. Ops: `RandomResizedCrop` (LeVJEPA's ViewBuilder draw and roi_align, the parameters
   `framestore.views` fuses), `RandomCrop` (N-D), `Resize`, `Flip`, `ColorJitter`, `Normalize`
+- plans (`stable_datasets.loading`): `Planner` turns a batch into arrays before any byte is read: sampling-index
+  rows (`SamplingIndex`: record, box, label, weight; samplers `Uniform`, `Weighted`, `ClassBalanced`;
+  `clip_windows`), the chain's drawn parameters and regions, the codec's units and byte ranges, and coalesced reads
+  (`Plan`). `fetch_and_decode` is the reference execution: from a ByteSource, decoding only the fetched units. Codecs
+  gain `shapes`, `header_size`, `unit_ranges` and `decode_units`
 - docs: Frame stores guide; Video storage guide
 
 # V0.0.0

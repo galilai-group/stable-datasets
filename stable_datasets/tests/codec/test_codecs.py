@@ -141,7 +141,7 @@ def test_jpeg_cover_and_unit_ranges_address_the_mcus(jpegs):
     record = np.arange(len(frames_)).repeat(len(BOXES))
     boxes = np.array(BOXES * len(frames_))
     units = RestartJpeg().cover(meta, record, boxes)
-    start, size = RestartJpeg.unit_ranges(meta["sos_end"], seg, seg_off, record, units)
+    start, size = RestartJpeg.unit_ranges(meta, seg, seg_off, record, units)
     for i, r in enumerate(record):
         j, s = frames_[r]
         hdr = header(j.tobytes())
@@ -166,3 +166,37 @@ def test_jpeg_whole_decode(jpegs):
     assert RestartJpeg.decode(j).shape == (77, 133, 3)
     g, _ = jpegs["gray q90"][0]
     assert RestartJpeg.decode(g).shape == (77, 133, 1)
+
+
+def test_jpeg_decode_from_fetched_units_only(jpegs):
+    from stable_datasets.framestore import codec as fcodec
+
+    for name in ("4:2:0 q90", "4:2:2 q90", "gray q90"):
+        j, seg = jpegs[name][0]
+        off = np.array([0, len(j)])
+        info = fcodec.probe(j, off)
+        meta = {k: info[k] for k in ("h", "w", "mcu_h", "mcu_w", "sos_end")}
+        full = _full(j, seg)
+        for box in BOXES[:4]:
+            units = RestartJpeg().cover(meta, [0], np.array([box]))
+            start, size = RestartJpeg.unit_ranges(meta, seg, [0, len(seg)], [0], units)
+            pieces = [j[a : a + n] for a, n in zip(start, size)]
+            head = j[: RestartJpeg.header_size(meta, [0])[0]]
+            row = {k: v[0] for k, v in meta.items()}
+            got = RestartJpeg.decode_units(head, pieces, units.ids, row, box)
+            y0, x0, y1, x1 = box
+            assert np.array_equal(got, full[y0:y1, x0:x1]), (name, box)
+
+
+def test_chunks_decode_from_one_blob_per_record():
+    vol = np.arange(20 * 9 * 7, dtype=np.int16).reshape(20, 9, 7)
+    blobs, meta = encode(vol, (8, 4, 7), compression="zlib")
+    blob = b"".join(blobs)
+    sizes = np.array([len(b) for b in blobs])
+    m = {"shape": np.array([meta["shape"]]), "chunk": np.array([meta["chunk"]])}
+    box = np.array([3, 2, 0, 17, 9, 5])
+    units = Chunks().cover(m, [0], box[None])
+    start, size = Chunks.unit_ranges(m, sizes, [0, len(sizes)], [0], units)
+    pieces = [blob[a : a + n] for a, n in zip(start, size)]
+    got = Chunks.decode_units(b"", pieces, units.ids, meta, box)
+    assert np.array_equal(got, vol[3:17, 2:9, 0:5])

@@ -40,6 +40,23 @@ class Codec(Protocol):
     so a reader fetches and decodes only those. Formats without random access have one unit per record."""
 
     name: str
+    channels_last: bool
+
+    def shapes(self, meta: dict[str, np.ndarray], record: np.ndarray) -> np.ndarray:
+        """(n, ndim) spatial shape of each record."""
+        ...
+
+    def header_size(self, meta: dict[str, np.ndarray], record: np.ndarray) -> np.ndarray:
+        """Bytes at the start of each record that every partial decode needs (0: none)."""
+        ...
+
+    def unit_ranges(self, meta, ragged, ragged_off, record, units: Units) -> tuple[np.ndarray, np.ndarray]:
+        """(start, size) inside the record's bytes of every unit ``units`` names."""
+        ...
+
+    def decode_units(self, header, pieces, ids, meta_row: dict, box) -> np.ndarray:
+        """The pixels (voxels) of ``box`` from the record's header bytes and the fetched units ``ids``."""
+        ...
 
     def cover(self, meta: dict[str, np.ndarray], record: np.ndarray, boxes: np.ndarray) -> Units:
         """Units of ``record[i]`` that ``boxes[i]`` needs. ``meta`` holds per-record arrays; a box is
