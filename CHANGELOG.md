@@ -29,6 +29,10 @@
   files into one buffer; `LocalSource` does it with batched preads from C threads, opens its files per process (fork
   and pickle safe), and merges ranges of one file within `gap` bytes into one read (`coalesce`). `FrameStore`'s
   pread, ranges and spans reads go through it; a failed or short pread raises `OSError`
+- codecs (`stable_datasets.codecs`): a `Codec` names the units of a record that decode alone and which units a
+  region needs (`cover`, CSR `Units`). `RestartJpeg`: MCUs of restart-coded JPEGs, their byte ranges
+  (`unit_ranges`) and a reference decode of only the MCUs under a box (`decode_region`). `Chunks`: N-D arrays as a
+  grid of zstd, zlib or uncompressed chunks (`encode`, `decode_region`; extra `chunks` for zstd)
 - docs: Frame stores guide; Video storage guide
 
 # V0.0.0

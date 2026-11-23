@@ -51,6 +51,9 @@ video = ["opencv-python-headless", "torch", "torchcodec"]
 # JPEG frame stores with partial decoding (stable_datasets.framestore); the GPU loaders need torchvision with CUDA
 framestore = ["numba", "simplejpeg", "torchvision"]
 
+# Chunked N-D arrays compressed with zstd (stable_datasets.codecs.chunks)
+chunks = ["zstandard"]
+
 # Benchmark dependencies (profiling + SSL evaluation suite)
 benchmarks = [
     "psutil",
@@ -94,7 +97,7 @@ docs = [
 ]
 
 all = [
-    "stable-datasets[torch,video]",
+    "stable-datasets[torch,video,chunks]",
 ]
 
 # =======================
