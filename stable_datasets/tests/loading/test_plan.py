@@ -19,6 +19,13 @@ from stable_datasets.sources import LocalSource  # noqa: E402
 from stable_datasets.transforms import Chain, Flip, Normalize, RandomCrop, RandomResizedCrop  # noqa: E402
 
 
+def same(a, b, chain):
+    """Equal, to float rounding where roi_align resamples a region (see RandomResizedCrop)."""
+    if any(isinstance(op, RandomResizedCrop) for op in chain.ops):
+        return torch.allclose(a, b, rtol=0, atol=1e-5)
+    return torch.equal(a, b)
+
+
 class CountingSource(LocalSource):
     def read_into(self, fid, offset, size, buf, dst):
         self.reads = getattr(self, "reads", 0) + len(fid)
@@ -66,7 +73,7 @@ def test_plan_execution_equals_the_chain_on_whole_images(jpeg_store, chain):
     got = fetch_and_decode(plan, planner, LocalSource(records.files))
     for i, r in enumerate(plan.record):
         want = chain.apply(full[r], plan.params, i)
-        assert torch.equal(got[i], want), i
+        assert same(got[i], want, chain), i
 
 
 def test_small_crops_read_a_fraction_of_the_bytes(jpeg_store):
