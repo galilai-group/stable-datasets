@@ -47,6 +47,9 @@
   `clip_windows`), the chain's drawn parameters and regions, the codec's units and byte ranges, and coalesced reads
   (`Plan`). `fetch_and_decode` is the reference execution: from a ByteSource, decoding only the fetched units. Codecs
   gain `shapes`, `header_size`, `unit_ranges` and `decode_units`
+- `loading.PlanLoader`: batches (`image`, `label`, `record`) from a Planner and a ByteSource, built ahead by spawned
+  worker processes; batch b is planned from a generator seeded by (seed, b), so batches do not depend on the number
+  of workers and a run resumes from any batch (`start=`)
 - docs: Frame stores guide; Video storage guide
 
 # V0.0.0
