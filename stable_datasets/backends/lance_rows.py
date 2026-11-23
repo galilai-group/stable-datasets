@@ -50,9 +50,10 @@ import numpy as np
 import pyarrow as pa
 
 from .. import _uri
+from ._arrow import ArrowReads
 
 
-class LanceBackend:
+class LanceBackend(ArrowReads):
     #: Hint to :class:`StableDataset.__getitems__` that this backend's
     #: batched ``take(indices)`` path should be used for random index
     #: reads. Batching amortizes Lance's Python/Rust call boundary.
@@ -184,7 +185,7 @@ class LanceBackend:
         row = sub.to_pydict()
         return {k: v[0] for k, v in row.items()}
 
-    def take(self, indices: np.ndarray | list[int]) -> pa.Table:
+    def _arrow_take(self, indices: np.ndarray | list[int]) -> pa.Table:
         if isinstance(indices, np.ndarray):
             if indices.size == 0:
                 return self.schema.empty_table()
@@ -193,12 +194,12 @@ class LanceBackend:
             return self.schema.empty_table()
         return self._dataset.take(indices)
 
-    def slice(self, start: int, length: int) -> pa.Table:
+    def _arrow_slice(self, start: int, length: int) -> pa.Table:
         return self._dataset.to_table(offset=start, limit=length)
 
     # -- Sequential iteration -------------------------------------------------
 
-    def iter_batches(
+    def _arrow_batches(
         self,
         shard_indices: list[int] | None = None,
         shuffle: bool = False,

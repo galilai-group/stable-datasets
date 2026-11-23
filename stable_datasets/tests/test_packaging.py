@@ -56,13 +56,12 @@ class _Block:
 
 sys.meta_path.insert(0, _Block())
 
-import pyarrow as pa
 import stable_datasets.utils
-from stable_datasets import DatasetInfo, Features, StableDataset, Value
+from stable_datasets import Features, StableDataset, Value
 
 assert "pd" not in vars(stable_datasets.utils)
 features = Features({"x": Value("int32")})
-ds = StableDataset(features=features, info=DatasetInfo(features=features), table=pa.table({"x": [1, 2, 3]}))
+ds = StableDataset.from_dict({"x": [1, 2, 3]}, features)
 assert [row["x"] for row in ds.as_iterable()] == [1, 2, 3]
 assert "torch" not in sys.modules
 """

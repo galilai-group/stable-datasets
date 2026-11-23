@@ -1,9 +1,10 @@
-"""Formatters that convert Arrow-native values to user-facing types.
+"""Formatters that convert stored values to user-facing types.
 
 Middle layer of the three-layer split
 (:class:`StorageBackend` -> :class:`Formatter` -> :class:`StableDataset`).
-Formatters consume Arrow values and emit PIL images, numpy arrays, torch
-tensors, or raw Python, never touching files or storage themselves.
+Formatters consume the backend's :class:`Columns` (Python values) and emit PIL
+images, numpy arrays, torch tensors, or raw Python, never touching files or
+storage themselves.
 """
 
 from __future__ import annotations
@@ -19,13 +20,8 @@ def _zip_cols_to_rows(cols: dict, n: int) -> list[dict]:
     return [{k: cols[k][i] for k in keys} for i in range(n)]
 
 
-def _extract_columns(table) -> dict:
-    """Extract Python column lists one column at a time."""
-    return {name: table.column(name).to_pylist() for name in table.column_names}
-
-
 class Formatter:
-    """Base formatter. Subclasses convert Arrow-native values to user-facing types."""
+    """Base formatter. Subclasses convert stored values to user-facing types."""
 
     format_type = "default"
 
@@ -38,14 +34,13 @@ class Formatter:
         """Format a single row dict (from backend.get_row)."""
         return {name: self._format_value(name, value) for name, value in row.items()}
 
-    def format_batch(self, table) -> list[dict]:
-        """Format a batch (from backend.take). Returns list of row dicts.
+    def format_batch(self, columns) -> list[dict]:
+        """Format a batch (:class:`Columns` from backend.take). Returns list of row dicts.
 
-        Column-first: extract columns once, decode each column in bulk,
-        then zip into per-row dicts at the end.
+        Column-first: decode each column in bulk, then zip into per-row
+        dicts at the end.
         """
-        cols = self._format_columns(_extract_columns(table))
-        return _zip_cols_to_rows(cols, table.num_rows)
+        return _zip_cols_to_rows(self._format_columns(columns), columns.num_rows)
 
     def _format_value(self, name: str, value):
         feat = self.features.get(name)
@@ -69,7 +64,7 @@ class PythonFormatter(Formatter):
 
 
 class RawFormatter(Formatter):
-    """Raw format: all values as-is from Arrow (bytes for images, bytes for Array3D)."""
+    """Raw format: all values as stored (bytes for images, bytes for Array3D)."""
 
     format_type = "raw"
 
@@ -79,8 +74,8 @@ class RawFormatter(Formatter):
     def format_row(self, row: dict) -> dict:
         return row
 
-    def format_batch(self, table) -> list[dict]:
-        return _zip_cols_to_rows(_extract_columns(table), table.num_rows)
+    def format_batch(self, columns) -> list[dict]:
+        return columns.rows()
 
 
 class TorchFormatter(Formatter):

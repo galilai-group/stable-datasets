@@ -326,3 +326,55 @@ class BuilderConfig:
     name: str = "default"
     version: Version | None = None
     description: str = ""
+
+
+def infer_feature(arrow_type: pa.DataType) -> FeatureType:
+    """Infer a Feature type from an Arrow data type.
+
+    Covers common scalar, integer, float, string, binary, boolean, and
+    list types. Raises ``TypeError`` for types that cannot be mapped
+    unambiguously — callers should provide explicit ``features=`` instead.
+    """
+    # Integer types
+    _INT_MAP = {
+        pa.int8(): "int8",
+        pa.int16(): "int16",
+        pa.int32(): "int32",
+        pa.int64(): "int64",
+        pa.uint8(): "uint8",
+        pa.uint16(): "uint16",
+        pa.uint32(): "uint32",
+        pa.uint64(): "uint64",
+    }
+    if arrow_type in _INT_MAP:
+        return Value(_INT_MAP[arrow_type])
+
+    # Float types
+    if pa.types.is_float16(arrow_type):
+        return Value("float16")
+    if pa.types.is_float32(arrow_type):
+        return Value("float32")
+    if pa.types.is_float64(arrow_type):
+        return Value("float64")
+
+    # Boolean
+    if pa.types.is_boolean(arrow_type):
+        return Value("bool")
+
+    # String
+    if pa.types.is_string(arrow_type) or pa.types.is_large_string(arrow_type):
+        return Value("string")
+
+    # Binary
+    if pa.types.is_binary(arrow_type) or pa.types.is_large_binary(arrow_type):
+        return Value("binary")
+
+    # List → Sequence
+    if pa.types.is_list(arrow_type) or pa.types.is_large_list(arrow_type):
+        inner = infer_feature(arrow_type.value_type)
+        return Sequence(inner)
+
+    raise TypeError(
+        f"Cannot infer Feature type for Arrow type {arrow_type!r}. "
+        f"Provide explicit features= to map() or add_column()."
+    )

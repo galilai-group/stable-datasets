@@ -69,7 +69,7 @@ def test_lance_cache_roundtrip_through_file_uri(tmp_path):
     assert backend._storage_options == OPTIONS
     assert backend._batch_readahead == 2
     assert backend.cache_dir == tmp_path / "lance"
-    assert backend.take([4, 0]).column("x").to_pylist() == [4, 0]
+    assert backend.take([4, 0])["x"] == [4, 0]
 
     overridden = open_cache(uri, features, backend_kwargs={"shard_row_counts": [2, 3]}).backend
     assert overridden.shard_row_counts == [2, 3]

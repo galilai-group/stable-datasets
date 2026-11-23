@@ -500,10 +500,10 @@ class TestFeatureInference:
     def test_infer_fails_on_struct(self):
         import pyarrow as pa
 
-        from stable_datasets.dataset import _infer_feature
+        from stable_datasets.schema import infer_feature
 
         with pytest.raises(TypeError, match="Cannot infer"):
-            _infer_feature(pa.struct([pa.field("a", pa.int32())]))
+            infer_feature(pa.struct([pa.field("a", pa.int32())]))
 
 
 # ── Single file default ────────────────────────────────────────────────────
@@ -519,3 +519,43 @@ class TestSingleFileDefault:
         assert ds._backend.is_file_backed
         ds[0]
         assert ds._backend.is_file_backed
+
+
+# ── Arrow-free API ──────────────────────────────────────────────────────────
+
+
+class TestColumnsAndFromDict:
+    def test_from_dict_rows_and_numpy_columns(self):
+        features = Features({"x": Value("float32"), "label": ClassLabel(names=["a", "b"])})
+        ds = StableDataset.from_dict({"x": np.array([0.5, 1.5, 2.5]), "label": [1, 0, 1]}, features)
+        assert len(ds) == 3 and ds[1] == {"x": 1.5, "label": 0}
+
+    def test_column_follows_the_view(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10)
+        x = ds.column("x")
+        assert isinstance(x, np.ndarray) and x.tolist() == list(range(10))
+        assert ds.select([7, 2, 7]).column("x").tolist() == [7, 2, 7]
+        assert ds.shuffle(0).column("label").tolist() == [r["label"] for r in ds.shuffle(0)]
+        with pytest.raises(KeyError):
+            ds.column("nope")
+
+    def test_table_is_deprecated_and_follows_the_view(self, tmp_path):
+        ds = _make_ds(tmp_path, n=10).select([3, 1])
+        with pytest.warns(DeprecationWarning):
+            t = ds.table
+        assert t.column("x").to_pylist() == [3, 1]
+
+    def test_table_kwarg_is_deprecated(self):
+        import pyarrow as pa
+
+        features = Features({"x": Value("int32")})
+        with pytest.warns(DeprecationWarning):
+            ds = StableDataset(features, DatasetInfo(features=features), table=pa.table({"x": [4, 5]}))
+        assert ds.column("x").tolist() == [4, 5]
+
+    def test_dataset_module_does_not_import_pyarrow(self):
+        import stable_datasets.dataset as d
+        import stable_datasets.formatting as f
+
+        for mod in (d, f):
+            assert "pa" not in vars(mod) and "pyarrow" not in vars(mod)

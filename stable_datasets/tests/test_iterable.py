@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pyarrow as pa
 import pytest
 from torch.utils.data import DataLoader
 
@@ -153,11 +152,7 @@ class TestPartitioning:
 
     def test_in_memory_dataset_yields_each_row_once(self):
         features = Features({"x": Value("int32")})
-        ds = StableDataset(
-            features=features,
-            info=DatasetInfo(features=features),
-            table=pa.table({"x": pa.array(range(20), type=pa.int32())}),
-        )
+        ds = StableDataset.from_dict({"x": list(range(20))}, features)
         assert sorted(_loader_xs(ds.as_iterable(), num_workers=2)) == list(range(20))
 
     @pytest.mark.parametrize("rows_per_fragment", [14, 3])

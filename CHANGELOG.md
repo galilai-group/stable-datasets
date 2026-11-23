@@ -51,6 +51,12 @@
   worker processes; batch b is planned from a generator seeded by (seed, b), so batches do not depend on the number
   of workers and a run resumes from any batch (`start=`)
 - docs: Frame stores guide; Video storage guide
+- Arrow stays inside the backends: `StorageBackend.take`, `slice` and `iter_batches` return `Columns` (a dict of
+  column name to the rows' Python values, with `num_rows`) instead of Arrow tables and record batches;
+  `column_names`, `column` and `materialize` replace `schema` and `table` on the protocol. `StableDataset.column(name)`
+  gives one column's stored values (numpy for numbers) and `StableDataset.from_dict` builds an in-memory dataset;
+  `StableDataset.table` and `StableDataset(table=...)` are deprecated. Ruff's TID251 rejects `pyarrow` imports
+  outside the storage layer (backends, storage, the feature types, `schema`, `_uri`, framestore's Lance writers)
 
 # V0.0.0
 

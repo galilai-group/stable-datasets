@@ -93,7 +93,7 @@ def test_apply_declares_the_storage_in_the_features():
 
 
 def test_loader_needs_a_layout_with_one():
-    ds = StableDataset(features=ROWS, info=DatasetInfo(features=ROWS), table=pa.table({"x": [1.0], "y": [0]}))
+    ds = StableDataset.from_dict({"x": [1.0], "y": [0]}, ROWS)
     with pytest.raises(NotImplementedError, match="RowStorage has no batch loader"):
         ds.loader(4)
 

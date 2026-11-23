@@ -95,7 +95,7 @@ class TestLanceWriter:
     def test_write_lance_table_keeps_encoded_rows(self, tmp_path):
         features = _image_features()
         ds = cached_dataset(_image_gen(6), features, tmp_path / "src")
-        write_lance_table(ds._backend.take([5, 1]), features, tmp_path / "copy")
+        write_lance_table(ds._backend.materialize(np.array([5, 1])).table, features, tmp_path / "copy")
         copy = open_cache(tmp_path / "copy", features).backend
         assert copy.get_row(0) == ds._backend.get_row(5) and copy.get_row(1) == ds._backend.get_row(1)
 

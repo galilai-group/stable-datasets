@@ -188,7 +188,7 @@ def test_schema_comes_from_metadata_with_stable_metadata_types(tmp_path):
     schema = backend.schema
     assert backend._ds is None
     assert schema.field("note").type == pa.string()
-    assert backend.take([0]).schema == backend.take([3]).schema == schema
+    assert backend._arrow_take([0]).schema == backend._arrow_take([3]).schema == schema
 
 
 def test_video_frames_writer_writes_each_video_when_encoded(tmp_path, monkeypatch):

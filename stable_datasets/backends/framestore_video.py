@@ -10,12 +10,13 @@ import numpy as np
 import pyarrow as pa
 
 from .. import _uri
+from ._arrow import ArrowReads
 
 
 _WINDOWS_PER_BATCH = 64
 
 
-class FramestoreVideoBackend:
+class FramestoreVideoBackend(ArrowReads):
     """StorageBackend for a framestore video cache (``Video(storage="mp4" | "jpeg")``).
 
     The store holds one episode per video; the logical dataset is its clip windows of ``window_length`` frames,
@@ -143,16 +144,16 @@ class FramestoreVideoBackend:
 
     @property
     def table(self) -> pa.Table:
-        return self.take(np.arange(self.num_rows))
+        return self._arrow_take(np.arange(self.num_rows))
 
     def get_row(self, idx: int) -> dict:
         if idx < 0:
             idx += self.num_rows
         if not 0 <= idx < self.num_rows:
             raise IndexError(idx)
-        return self.take([idx]).to_pylist()[0]
+        return self._arrow_take([idx]).to_pylist()[0]
 
-    def take(self, indices) -> pa.Table:
+    def _arrow_take(self, indices) -> pa.Table:
         rows = np.asarray(indices, np.int64)
         vids, starts = self._vid[rows], self._start[rows]
         n = len(rows)
@@ -174,17 +175,17 @@ class FramestoreVideoBackend:
             )
         return pa.table(cols, schema=self.schema)
 
-    def slice(self, start: int, length: int) -> pa.Table:
-        return self.take(np.arange(start, start + length))
+    def _arrow_slice(self, start: int, length: int) -> pa.Table:
+        return self._arrow_take(np.arange(start, start + length))
 
-    def iter_batches(self, shard_indices=None, shuffle: bool = False, seed: int | None = None):
+    def _arrow_batches(self, shard_indices=None, shuffle: bool = False, seed: int | None = None):
         shards = list(range(self.num_shards)) if shard_indices is None else list(shard_indices)
         if shuffle:
             np.random.default_rng(seed).shuffle(shards)
         for s in shards:
             lo, hi = int(self._shard_starts[s]), int(self._shard_starts[s + 1])
             for a in range(lo, hi, _WINDOWS_PER_BATCH):
-                yield from self.take(np.arange(a, min(a + _WINDOWS_PER_BATCH, hi))).to_batches()
+                yield from self._arrow_take(np.arange(a, min(a + _WINDOWS_PER_BATCH, hi))).to_batches()
 
     def __getstate__(self) -> dict:
         return {

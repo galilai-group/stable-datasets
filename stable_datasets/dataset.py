@@ -7,26 +7,27 @@ Provides :class:`StableDataset` (single split) and
 
 Architecture: three layers with strict boundaries::
 
-    StorageBackend  -> row access, iteration, pickling (returns Arrow types)
+    StorageBackend  -> row access, iteration, pickling (returns Columns: column -> Python values)
         |
-    Formatter       -> Arrow -> user type (PIL / torch / numpy / raw)
+    Formatter       -> stored value -> user type (PIL / torch / numpy / raw)
         |
     StableDataset   -> orchestrates backend + formatter + indices + transform
 
 :class:`StableDataset` depends only on the :class:`StorageBackend`
-protocol, never on a concrete implementation or on-disk layout.
+protocol, never on a concrete implementation or on-disk layout. Arrow stays
+inside the backends: nothing here imports pyarrow.
 """
 
 from __future__ import annotations
 
 import operator
 import tempfile
+import warnings
 from collections.abc import Callable, Mapping
 from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
-import pyarrow as pa
 
 from .backends.protocol import StorageBackend
 from .backends.table import TableBackend
@@ -37,7 +38,7 @@ from .schema import (
     DatasetInfo,
     Features,
     Image,
-    Sequence,
+    Value,
     Video,
     VideoDecodeConfig,
     VideoRef,
@@ -58,7 +59,7 @@ class StableDataset:
     Construction:
 
     1. **Cached** (typical) — pass the backend of a Lance cache (``open_cache``).
-    2. **In-memory** — pass ``table=table`` (a :class:`TableBackend`).
+    2. **In-memory** — :meth:`from_dict` (columns of Python or numpy values).
     3. **Indexed view** — pass ``_indices=array`` to create a virtual view
        sharing the same backend.  Zero data copying.
     """
@@ -70,7 +71,7 @@ class StableDataset:
         *,
         # Storage — pass exactly one of: backend, table
         backend: StorageBackend | None = None,
-        table: pa.Table | None = None,
+        table=None,
         num_rows: int | None = None,
         storage: Storage | None = None,
         # Index indirection
@@ -91,6 +92,9 @@ class StableDataset:
         if backend is not None:
             self._backend = backend
         elif table is not None:
+            warnings.warn(
+                "StableDataset(table=...) is deprecated; use StableDataset.from_dict", DeprecationWarning, stacklevel=2
+            )
             self._backend = TableBackend(table, schema=features.to_arrow_schema())
         else:
             raise ValueError("Must provide one of: backend, table")
@@ -177,16 +181,27 @@ class StableDataset:
     def num_rows(self) -> int:
         return len(self)
 
-    @property
-    def table(self) -> pa.Table:
-        """Materialize and return the full Arrow table.
+    @classmethod
+    def from_dict(cls, data: Mapping, features: Features, info: DatasetInfo | None = None) -> StableDataset:
+        """An in-memory dataset from columns: name -> list or numpy array of stored values, typed by ``features``."""
+        return cls(features, info or DatasetInfo(features=features), backend=TableBackend.from_columns(data, features))
 
-        For single-file datasets this is a cheap mmap. For multi-file
-        datasets this concatenates all files — prefer ``__getitem__``
-        or ``__iter__`` for row access. Use this for bulk operations
-        like column mutations.
-        """
-        return self._backend.table
+    def column(self, name: str) -> np.ndarray | list:
+        """One column's stored values, undecoded, in this view's row order: a numpy array for numbers and
+        booleans (without nulls), else a list (bytes for images, dicts for video references)."""
+        if name not in self._features:
+            raise KeyError(name)
+        return self._backend.column(name, self._indices)
+
+    @property
+    def table(self):
+        """Deprecated: the stored rows as a ``pyarrow.Table``. Use :meth:`column`, ``__getitem__`` or ``__iter__``."""
+        warnings.warn(
+            "StableDataset.table is deprecated; use StableDataset.column(name) or row access",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._backend.materialize(self._indices).table
 
     def __len__(self) -> int:
         if self._num_rows is not None:
@@ -265,7 +280,7 @@ class StableDataset:
             yield from self
 
     def _iter_batches_formatted(self, batch_iter):
-        """Format Arrow batches in bulk and yield individual rows."""
+        """Format batches of columns in bulk and yield individual rows."""
         sample_offset = 0
         for batch in batch_iter:
             sample_indices = list(range(sample_offset, sample_offset + batch.num_rows))
@@ -284,9 +299,9 @@ class StableDataset:
             physical = self._indices[chunk] if self._indices is not None else chunk
             yield from self._format_table(self._backend.take(physical), chunk.tolist())
 
-    def _format_table(self, table, sample_indices: list[int]) -> list[dict]:
-        """Format, decode and transform the rows of an Arrow table or batch."""
-        rows = self._formatter.format_batch(table)
+    def _format_table(self, columns, sample_indices: list[int]) -> list[dict]:
+        """Format, decode and transform a batch of rows (backend :class:`Columns`)."""
+        rows = self._formatter.format_batch(columns)
         rows = self._apply_video_decode_batch(rows, sample_indices=sample_indices)
         if self._transform is not None:
             rows = [self._transform(row) for row in rows]
@@ -328,8 +343,7 @@ class StableDataset:
             matching = []
             row_offset = 0
             for batch in self._backend.iter_batches():
-                batch_dict = batch.to_pydict()
-                mask = fn(batch_dict)
+                mask = fn(dict(batch))
                 for i, keep in enumerate(mask):
                     if keep:
                         matching.append(row_offset + i)
@@ -342,9 +356,7 @@ class StableDataset:
                 idx_array = np.arange(start, end, dtype=np.int64)
                 if self._indices is not None:
                     idx_array = self._indices[idx_array]
-                batch_table = self._backend.take(idx_array)
-                batch_dict = batch_table.to_pydict()
-                mask = fn(batch_dict)
+                mask = fn(dict(self._backend.take(idx_array)))
                 for i, keep in enumerate(mask):
                     if keep:
                         matching.append(start + i)
@@ -419,13 +431,13 @@ class StableDataset:
                     # Infer from the probe value
                     val = probe_row[col_name]
                     if isinstance(val, int):
-                        features[col_name] = _infer_feature(pa.int64())
+                        features[col_name] = Value("int64")
                     elif isinstance(val, float):
-                        features[col_name] = _infer_feature(pa.float64())
+                        features[col_name] = Value("float64")
                     elif isinstance(val, str):
-                        features[col_name] = _infer_feature(pa.string())
+                        features[col_name] = Value("string")
                     else:
-                        features[col_name] = _infer_feature(pa.binary())
+                        features[col_name] = Value("binary")
 
         # Build output generator that feeds write_lance_cache
         def _map_gen():
@@ -434,7 +446,7 @@ class StableDataset:
                 for start in range(0, len(self), _ROW_CHUNK_SIZE):
                     positions = np.arange(start, min(start + _ROW_CHUNK_SIZE, len(self)), dtype=np.int64)
                     physical = self._indices[positions] if self._indices is not None else positions
-                    for i, row in zip(positions.tolist(), self._backend.take(physical).to_pylist()):
+                    for i, row in zip(positions.tolist(), self._backend.take(physical).rows()):
                         out = fn(row, i) if with_indices else fn(row)
                         if remove_set:
                             out = {k: v for k, v in out.items() if k not in remove_set}
@@ -446,8 +458,7 @@ class StableDataset:
                     idx_array = np.arange(start, end, dtype=np.int64)
                     if self._indices is not None:
                         idx_array = self._indices[idx_array]
-                    batch_table = self._backend.take(idx_array)
-                    batch_dict = batch_table.to_pydict()
+                    batch_dict = dict(self._backend.take(idx_array))
                     if with_indices:
                         out = fn(batch_dict, list(range(start, end)))
                     else:
@@ -494,52 +505,33 @@ class StableDataset:
 
     # -- Column mutations -----------------------------------------------------
 
-    def _logical_table(self) -> pa.Table:
-        """Return the table reflecting the current logical view.
-
-        If this dataset has an indices mapping, materializes only the
-        selected rows. Column mutations use this table to respect
-        indexed views.
-        """
-        tbl = self.table
-        if self._indices is not None:
-            tbl = tbl.take(self._indices)
-        return tbl
+    def _logical_rows(self):
+        """This view's rows in memory (a :class:`TableBackend`), for column mutations."""
+        return self._backend.materialize(self._indices)
 
     def add_column(self, name: str, column) -> StableDataset:
         """Return a new dataset with an additional column.
 
-        ``column`` can be a ``pa.Array``, a Python list, or a numpy array.
+        ``column`` can be a Python list or a numpy array.
         """
-        if not isinstance(column, pa.Array):
-            column = pa.array(column)
-        tbl = self._logical_table().append_column(name, column)
-        new_features = Features({**self._features, name: _infer_feature(column.type)})
-        return self._with_table(tbl, new_features)
+        backend = self._logical_rows().with_column(name, column)
+        return self._with_backend(backend, Features({**self._features, name: backend.feature_of(name)}))
 
     def remove_columns(self, columns: list[str] | str) -> StableDataset:
         """Return a new dataset without the specified columns."""
         if isinstance(columns, str):
             columns = [columns]
-        tbl = self._logical_table().drop_columns(columns)
         new_features = Features({k: v for k, v in self._features.items() if k not in columns})
-        return self._with_table(tbl, new_features)
+        return self._with_backend(self._logical_rows().drop_columns(columns), new_features)
 
     def rename_column(self, old_name: str, new_name: str) -> StableDataset:
         """Return a new dataset with a column renamed."""
-        tbl = self._logical_table()
-        names = [new_name if n == old_name else n for n in tbl.column_names]
-        tbl = tbl.rename_columns(names)
-        new_features = Features({(new_name if k == old_name else k): v for k, v in self._features.items()})
-        return self._with_table(tbl, new_features)
+        return self.rename_columns({old_name: new_name})
 
     def rename_columns(self, mapping: dict[str, str]) -> StableDataset:
         """Return a new dataset with columns renamed per the mapping."""
-        tbl = self._logical_table()
-        names = [mapping.get(n, n) for n in tbl.column_names]
-        tbl = tbl.rename_columns(names)
         new_features = Features({mapping.get(k, k): v for k, v in self._features.items()})
-        return self._with_table(tbl, new_features)
+        return self._with_backend(self._logical_rows().rename_columns(mapping), new_features)
 
     # -- Format and transform pipeline ----------------------------------------
 
@@ -667,7 +659,7 @@ class StableDataset:
         if cache_dir is None:
             cache_dir = Path(tempfile.mkdtemp(prefix=".flatten_"))
         write_lance_table(
-            self._backend.take(self._indices),
+            self._backend.materialize(self._indices).table,
             self._features,
             cache_dir,
             lineage={"operation": "flatten_indices", "source_num_rows": len(self)},
@@ -724,12 +716,12 @@ class StableDataset:
         kw.update(overrides)
         return StableDataset(**kw)
 
-    def _with_table(self, table: pa.Table, features: Features | None = None) -> StableDataset:
-        """Return a new in-memory dataset from a modified table."""
+    def _with_backend(self, backend: TableBackend, features: Features) -> StableDataset:
+        """Return a new in-memory dataset over modified rows."""
         return StableDataset(
-            features=features or self._features,
+            features=features,
             info=self._info,
-            backend=TableBackend(table, schema=(features or self._features).to_arrow_schema()),
+            backend=backend.typed(features),
             _format_type=self._format_type,
             _decode_images=self._decode_images,
             _video_decode_config=self._video_decode_config,
@@ -1102,60 +1094,6 @@ def _layout_video_frames(frames: np.ndarray, layout: str) -> np.ndarray:
     if layout == "CTHW":
         return np.transpose(frames, (3, 0, 1, 2))
     raise ValueError(f"Unknown decoded video layout {layout!r}.")
-
-
-def _infer_feature(arrow_type: pa.DataType):
-    """Infer a Feature type from an Arrow data type.
-
-    Covers common scalar, integer, float, string, binary, boolean, and
-    list types. Raises ``TypeError`` for types that cannot be mapped
-    unambiguously — callers should provide explicit ``features=`` instead.
-    """
-    from .schema import Value
-
-    # Integer types
-    _INT_MAP = {
-        pa.int8(): "int8",
-        pa.int16(): "int16",
-        pa.int32(): "int32",
-        pa.int64(): "int64",
-        pa.uint8(): "uint8",
-        pa.uint16(): "uint16",
-        pa.uint32(): "uint32",
-        pa.uint64(): "uint64",
-    }
-    if arrow_type in _INT_MAP:
-        return Value(_INT_MAP[arrow_type])
-
-    # Float types
-    if pa.types.is_float16(arrow_type):
-        return Value("float16")
-    if pa.types.is_float32(arrow_type):
-        return Value("float32")
-    if pa.types.is_float64(arrow_type):
-        return Value("float64")
-
-    # Boolean
-    if pa.types.is_boolean(arrow_type):
-        return Value("bool")
-
-    # String
-    if pa.types.is_string(arrow_type) or pa.types.is_large_string(arrow_type):
-        return Value("string")
-
-    # Binary
-    if pa.types.is_binary(arrow_type) or pa.types.is_large_binary(arrow_type):
-        return Value("binary")
-
-    # List → Sequence
-    if pa.types.is_list(arrow_type) or pa.types.is_large_list(arrow_type):
-        inner = _infer_feature(arrow_type.value_type)
-        return Sequence(inner)
-
-    raise TypeError(
-        f"Cannot infer Feature type for Arrow type {arrow_type!r}. "
-        f"Provide explicit features= to map() or add_column()."
-    )
 
 
 class StableDatasetDict(dict):

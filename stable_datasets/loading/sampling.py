@@ -45,34 +45,23 @@ class SamplingIndex:
         return np.asarray(self.box, np.int64)[np.asarray(rows)]
 
     def write_lance(self, path: str) -> None:
-        import lance
-        import pyarrow as pa
+        from ..storage.lance_arrays import write_arrays
 
-        cols = {"record": pa.array(np.asarray(self.record, np.int64))}
+        cols = {"record": np.asarray(self.record, np.int64)}
         if self.box is not None:
-            box = np.asarray(self.box, np.int64)
-            cols["box"] = pa.FixedSizeListArray.from_arrays(pa.array(box.reshape(-1)), box.shape[1])
+            cols["box"] = np.asarray(self.box, np.int64)
         if self.label is not None:
-            cols["label"] = pa.array(np.asarray(self.label))
+            cols["label"] = np.asarray(self.label)
         if self.weight is not None:
-            cols["weight"] = pa.array(np.asarray(self.weight, np.float64))
-        lance.write_dataset(pa.table(cols), path, mode="overwrite")
+            cols["weight"] = np.asarray(self.weight, np.float64)
+        write_arrays(path, cols)
 
     @staticmethod
     def read_lance(path: str) -> SamplingIndex:
-        import lance
+        from ..storage.lance_arrays import read_arrays
 
-        t = lance.dataset(path).to_table()
-        box = None
-        if "box" in t.column_names:
-            col = t.column("box").combine_chunks()
-            box = col.values.to_numpy().reshape(len(col), col.type.list_size)
-        return SamplingIndex(
-            t.column("record").to_numpy(),
-            box=box,
-            label=t.column("label").to_numpy() if "label" in t.column_names else None,
-            weight=t.column("weight").to_numpy() if "weight" in t.column_names else None,
-        )
+        c = read_arrays(path)
+        return SamplingIndex(c["record"], box=c.get("box"), label=c.get("label"), weight=c.get("weight"))
 
 
 class Sampler:

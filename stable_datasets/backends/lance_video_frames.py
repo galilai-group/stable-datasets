@@ -11,6 +11,7 @@ import numpy as np
 import pyarrow as pa
 
 from .. import _uri
+from ._arrow import ArrowReads
 
 
 _LANCE_CACHE: dict[tuple[str, int], Any] = {}
@@ -76,7 +77,7 @@ def _compute_segment_plan(
     return np.asarray(seg_vid, dtype=np.int64), np.asarray(seg_start, dtype=np.int64), per_video
 
 
-class LanceVideoFramesBackend:
+class LanceVideoFramesBackend(ArrowReads):
     """StorageBackend for the ``lance-video-frames`` layout.
 
     The physical Lance dataset stores one WebP-encoded frame per row. The
@@ -224,7 +225,7 @@ class LanceVideoFramesBackend:
 
     @property
     def table(self) -> pa.Table:
-        return self.take(np.arange(self.num_rows))
+        return self._arrow_take(np.arange(self.num_rows))
 
     @property
     def video_paths(self) -> list[str]:
@@ -253,9 +254,9 @@ class LanceVideoFramesBackend:
             idx += self.num_rows
         if idx < 0 or idx >= self.num_rows:
             raise IndexError(idx)
-        return self.take([idx]).to_pylist()[0]
+        return self._arrow_take([idx]).to_pylist()[0]
 
-    def take(self, indices: np.ndarray | list[int]) -> pa.Table:
+    def _arrow_take(self, indices: np.ndarray | list[int]) -> pa.Table:
         """Return the windows at ``indices``. Read all their frames with one Lance take."""
         segments = np.asarray(indices, dtype=np.int64)
         video_ids = self._seg_vid[segments]
@@ -283,10 +284,10 @@ class LanceVideoFramesBackend:
             columns[key] = pa.array(values, type=self.schema.field(key).type)
         return pa.table(columns, schema=self.schema)
 
-    def slice(self, start: int, length: int) -> pa.Table:
-        return self.take(np.arange(start, start + length))
+    def _arrow_slice(self, start: int, length: int) -> pa.Table:
+        return self._arrow_take(np.arange(start, start + length))
 
-    def iter_batches(
+    def _arrow_batches(
         self,
         shard_indices: list[int] | None = None,
         shuffle: bool = False,
@@ -303,7 +304,7 @@ class LanceVideoFramesBackend:
         for shard_id in shards:
             lo, hi = int(self._shard_starts[shard_id]), int(self._shard_starts[shard_id + 1])
             for start in range(lo, hi, _WINDOWS_PER_BATCH):
-                yield from self.take(np.arange(start, min(start + _WINDOWS_PER_BATCH, hi))).to_batches()
+                yield from self._arrow_take(np.arange(start, min(start + _WINDOWS_PER_BATCH, hi))).to_batches()
 
     def __getstate__(self) -> dict:
         return {

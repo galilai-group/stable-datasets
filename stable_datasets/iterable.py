@@ -201,8 +201,8 @@ class StableIterableDataset(_IterableBase):
             offset += counts[shard_id]
             for chunk_start in range(start, stop, chunk_size):
                 length = min(chunk_size, stop - chunk_start)
-                table = ds._backend.slice(chunk_start, length)
-                yield from ds._format_table(table, list(range(chunk_start, chunk_start + length)))
+                rows = ds._backend.slice(chunk_start, length)
+                yield from ds._format_table(rows, list(range(chunk_start, chunk_start + length)))
 
     def _buffered_shuffle(self, row_gen, rng):
         """Reservoir-based buffered shuffle (Fisher-Yates).

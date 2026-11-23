@@ -18,6 +18,7 @@ import numpy as np
 import pyarrow as pa
 import pytest
 
+from stable_datasets.backends import Columns
 from stable_datasets.backends.lance_rows import LanceBackend
 from stable_datasets.dataset import StableDataset
 from stable_datasets.schema import ClassLabel, DatasetInfo, Features, Value
@@ -51,8 +52,7 @@ def make_ds(request, tmp_path) -> Callable[..., StableDataset]:
             from stable_datasets.cache import encode_example
 
             rows = [encode_example(ex, features) for _, ex in gen()]
-            table = pa.Table.from_pylist(rows, schema=features.to_arrow_schema())
-            return StableDataset(features=features, info=info, table=table)
+            return StableDataset.from_dict({k: [r[k] for r in rows] for k in features}, features, info)
         elif kind == "lance":
             lance_dir = tmp_path / f"lance_cache_{n}"
             lance_meta = write_lance_cache(gen(), features, lance_dir, batch_size=batch_size)
@@ -223,52 +223,64 @@ class TestProtocol:
         ds = make_ds(n=13)
         assert ds._backend.num_rows == 13
 
-    def test_schema_property(self, make_ds):
+    def test_column_names(self, make_ds):
         ds = make_ds(n=5)
-        schema = ds._backend.schema
-        assert isinstance(schema, pa.Schema)
-        assert {f.name for f in schema} == {"x", "label"}
+        assert set(ds._backend.column_names) == {"x", "label"}
 
     def test_take_batch(self, make_ds):
         ds = make_ds(n=10)
         sub = ds._backend.take([0, 3, 9])
-        assert isinstance(sub, pa.Table)
+        assert isinstance(sub, Columns) and type(sub["x"]) is list
         assert sub.num_rows == 3
-        assert sub.column("x").to_pylist() == [0, 3, 9]
+        assert sub["x"] == [0, 3, 9]
 
     def test_take_numpy_indices(self, make_ds):
         ds = make_ds(n=10)
         sub = ds._backend.take(np.array([1, 4, 7], dtype=np.int64))
         assert sub.num_rows == 3
-        assert sub.column("x").to_pylist() == [1, 4, 7]
+        assert sub["x"] == [1, 4, 7]
 
     def test_take_single_shard_preserves_order_and_duplicates(self, make_ds):
         ds = make_ds(n=8, batch_size=16)
         sub = ds._backend.take([6, 2, 6, 1])
-        assert sub.column("x").to_pylist() == [6, 2, 6, 1]
+        assert sub["x"] == [6, 2, 6, 1]
 
     def test_take_multi_shard_preserves_order_and_duplicates(self, make_ds):
         ds = make_ds(n=12, batch_size=4)
         sub = ds._backend.take([8, 1, 8, 5, 0, 11])
-        assert sub.column("x").to_pylist() == [8, 1, 8, 5, 0, 11]
+        assert sub["x"] == [8, 1, 8, 5, 0, 11]
 
     def test_take_contiguous_matches_slice(self, make_ds):
         ds = make_ds(n=12, batch_size=4)
         taken = ds._backend.take([4, 5, 6])
         sliced = ds._backend.slice(4, 3)
-        assert taken.column("x").to_pylist() == sliced.column("x").to_pylist()
-        assert taken.column("label").to_pylist() == sliced.column("label").to_pylist()
+        assert taken["x"] == sliced["x"]
+        assert taken["label"] == sliced["label"]
 
     def test_slice(self, make_ds):
         ds = make_ds(n=20)
         sub = ds._backend.slice(5, 3)
         assert sub.num_rows == 3
-        assert sub.column("x").to_pylist() == [5, 6, 7]
+        assert sub["x"] == [5, 6, 7]
 
     def test_iter_batches_row_count(self, make_ds):
         ds = make_ds(n=23, batch_size=7)
         total = sum(b.num_rows for b in ds._backend.iter_batches())
         assert total == 23
+
+    def test_column(self, make_ds):
+        ds = make_ds(n=12, batch_size=4)
+        x = ds._backend.column("x")
+        assert isinstance(x, np.ndarray) and x.tolist() == list(range(12))
+        assert ds._backend.column("label", np.array([3, 0, 3])).tolist() == [1, 0, 1]
+
+    def test_no_arrow_crosses_the_boundary(self, make_ds):
+        ds = make_ds(n=6, batch_size=4)
+        b = ds._backend
+        for out in [b.take([1, 2]), b.slice(0, 3), *b.iter_batches()]:
+            assert type(out) is Columns
+            assert all(type(v) is list for v in out.values())
+            assert not any(type(x).__module__.startswith("pyarrow") for v in out.values() for x in v)
 
 
 # ── Shallow-copy + fork-safety ────────────────────────────────────────────────
@@ -436,7 +448,7 @@ class TestLanceVersionPinning:
         assert backend._ds is None
         assert worker_copy.num_rows == 4
         assert worker_copy.version == 1
-        assert worker_copy.table.column("x").to_pylist() == [0, 1, 2, 3]
+        assert worker_copy.column("x").tolist() == [0, 1, 2, 3]
 
     def test_pickled_copy_reads_the_version_the_parent_opened(self, tmp_path):
         import lance

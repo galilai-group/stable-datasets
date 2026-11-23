@@ -4,9 +4,10 @@ Defines :class:`StorageBackend`, the interface :class:`StableDataset`
 depends on for row access, iteration, and materialization. Concrete
 backends (e.g. :class:`LanceBackend`, :class:`TableBackend`) conform structurally.
 
-Arrow types (:class:`pa.Table`, :class:`pa.RecordBatch`,
-:class:`pa.Schema`) are the boundary types. Members not declared on the
-protocol are backend-private.
+The boundary types are :class:`Columns` (column name -> the rows' Python
+values), numpy arrays and Python dicts. Arrow, which Lance needs, stays
+inside the backends (see ``_arrow.ArrowReads``). Members not declared on
+the protocol are backend-private.
 """
 
 from __future__ import annotations
@@ -15,7 +16,8 @@ from collections.abc import Iterator
 from typing import Protocol, runtime_checkable
 
 import numpy as np
-import pyarrow as pa
+
+from .columns import Columns
 
 
 @runtime_checkable
@@ -37,26 +39,27 @@ class StorageBackend(Protocol):
     def is_file_backed(self) -> bool: ...
 
     @property
-    def schema(self) -> pa.Schema: ...
+    def column_names(self) -> list[str]: ...
 
     # -- Materialization ------------------------------------------------------
 
-    @property
-    def table(self) -> pa.Table:
-        """Full materialization as a single ``pa.Table``.
+    def column(self, name: str, indices: np.ndarray | None = None) -> np.ndarray | list:
+        """One column's stored values at ``indices`` (all rows if None)."""
+        ...
 
-        Expensive for multi-shard datasets. Hot paths should prefer
-        ``get_row``, ``take``, ``slice``, or ``iter_batches``.
-        """
+    def materialize(self, indices: np.ndarray | None = None):
+        """The rows at ``indices`` (all rows if None) in memory, as a backend
+        with column operations (``with_column``, ``drop_columns``,
+        ``rename_columns``). Expensive for large datasets."""
         ...
 
     # -- Random access --------------------------------------------------------
 
     def get_row(self, idx: int) -> dict: ...
 
-    def take(self, indices: np.ndarray | list[int]) -> pa.Table: ...
+    def take(self, indices: np.ndarray | list[int]) -> Columns: ...
 
-    def slice(self, start: int, length: int) -> pa.Table: ...
+    def slice(self, start: int, length: int) -> Columns: ...
 
     # -- Sequential iteration -------------------------------------------------
 
@@ -65,8 +68,8 @@ class StorageBackend(Protocol):
         shard_indices: list[int] | None = None,
         shuffle: bool = False,
         seed: int | None = None,
-    ) -> Iterator[pa.RecordBatch]:
-        """Yield record batches.
+    ) -> Iterator[Columns]:
+        """Yield batches of rows.
 
         With ``shuffle=True``, shuffle the shard order. A ``seed`` of
         ``None`` gives a different order on each call.
