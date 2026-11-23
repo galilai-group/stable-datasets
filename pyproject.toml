@@ -119,6 +119,7 @@ addopts = "--strict-markers"
 # Custom markers
 markers = [
     "large: downloads more than ~10 GB, so it never runs in CI; run it by hand before merging",
+    "gpu: needs a CUDA GPU; skipped where there is none",
 ]
 
 #####################

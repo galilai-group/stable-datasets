@@ -12,7 +12,9 @@ import pytest
 torch = pytest.importorskip("torch")
 pytest.importorskip("triton")
 tv_ops = pytest.importorskip("torchvision.ops")
-pytestmark = [pytest.mark.gpu, pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a GPU")]
+pytestmark = pytest.mark.gpu
+if not torch.cuda.is_available():
+    pytest.skip("needs a GPU", allow_module_level=True)
 
 from stable_datasets.framestore.views import MEAN, STD, draw_views, view_frames, view_patches
 
