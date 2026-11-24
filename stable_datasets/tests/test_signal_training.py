@@ -149,3 +149,135 @@ def test_existing_gpu_path_cannot_be_moved_into_workers(training_case):
     assert dataset._reader is None
     with pytest.raises(ValueError, match="zero workers"):
         train_trial(dataset, 2, torch.device("cuda"))
+
+
+def test_failed_trial_keeps_batch_phase_and_completed_steps(training_case):
+    from profiling.benchmark_signal_training import TrialFailure, train_trial
+    from profiling.training_windows import WindowBatches, configure_reader_threads
+
+    class FailingBatches(WindowBatches):
+        def __getitem__(self, index):
+            if index == 1:
+                raise RuntimeError("DataLoader timed out after 60 seconds")
+            return super().__getitem__(index)
+
+    configure_reader_threads()
+    source, workspace, _, starts, targets = training_case
+    dataset = FailingBatches(source, workspace, starts, targets, 256, "edf_memmap")
+    with pytest.raises(TrialFailure, match="batch 2/4") as caught:
+        train_trial(dataset, 0, torch.device("cpu"))
+    context = caught.value.context
+    assert context["phase"] == "waiting_for_batch"
+    assert context["batch_number"] == 2
+    assert len(context["completed_steps"]) == 1
+    assert np.isfinite(context["completed_steps"][0]["loss"])
+    assert isinstance(caught.value.__cause__, RuntimeError)
+
+
+def test_cli_preserves_validated_results_when_a_later_case_fails(training_case, tmp_path, monkeypatch):
+    import json
+    import sys
+
+    from profiling import benchmark_signal_training as benchmark
+
+    source, workspace, annotations, _, _ = training_case
+    original = benchmark.train_trial
+    calls = 0
+
+    def fail_third_case(dataset, workers, device):
+        nonlocal calls
+        calls += 1
+        if calls == 3:
+            raise RuntimeError("Simulated worker failure")
+        return original(dataset, workers, device)
+
+    output = tmp_path / "interrupted.json"
+    monkeypatch.setattr(benchmark, "train_trial", fail_third_case)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark",
+            str(source),
+            str(workspace),
+            str(annotations),
+            "--subject-id",
+            "4",
+            "--device",
+            "cpu",
+            "--batch-size",
+            "2",
+            "--steps",
+            "3",
+            "--seconds",
+            "2",
+            "--workers",
+            "0",
+            "--trials",
+            "1",
+            "--output",
+            str(output),
+        ],
+    )
+    with pytest.raises(RuntimeError, match="Simulated worker failure"):
+        benchmark.main()
+    journal = output.with_suffix(".progress.jsonl")
+    before = journal.read_bytes()
+    events = [json.loads(line) for line in before.decode().splitlines()]
+    completed = [e for e in events if e["event"] == "trial_completed"]
+    assert len(completed) == 2
+    assert all(e["validated"] and len(e["result"]["steps"]) == 3 for e in completed)
+    assert next(e for e in events if e["event"] == "trial_failed")["path"] == "lance_blob_ranges"
+    assert events[-1]["event"] == "run_failed"
+    assert not output.exists()
+    assert not any(e["event"] == "run_completed" for e in events)
+    with pytest.raises(FileExistsError):
+        benchmark.main()
+    assert journal.read_bytes() == before
+
+
+def test_cli_can_select_a_focused_reader_and_finish_its_journal(training_case, tmp_path, monkeypatch):
+    import json
+    import sys
+
+    from profiling.benchmark_signal_training import main
+
+    source, workspace, annotations, _, _ = training_case
+    output = tmp_path / "focused.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "benchmark",
+            str(source),
+            str(workspace),
+            str(annotations),
+            "--subject-id",
+            "4",
+            "--device",
+            "cpu",
+            "--batch-size",
+            "2",
+            "--steps",
+            "2",
+            "--seconds",
+            "2",
+            "--workers",
+            "0",
+            "--trials",
+            "1",
+            "--paths",
+            "edf_memmap",
+            "--output",
+            str(output),
+        ],
+    )
+    main()
+    report = json.loads(output.read_text())
+    assert report["cases"] == [{"path": "edf_memmap", "workers": 0}]
+    assert len(report["trials"]) == 1
+    events = [json.loads(line) for line in output.with_suffix(".progress.jsonl").read_text().splitlines()]
+    assert events[-1]["event"] == "run_completed"
+    metadata = next(e["metadata"] for e in events if e["event"] == "run_started")
+    assert metadata["source_sha256"] == report["source_sha256"]
+    assert metadata["code_sha256"] == report["code_sha256"]

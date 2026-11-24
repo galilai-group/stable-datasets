@@ -107,6 +107,18 @@ while loader-wait time isolates the `next()` call. Workers can prefetch during
 compute, but synchronization at step boundaries means this is not a fully
 asynchronous training pipeline. Reader shutdown is outside the measured interval.
 
+The CLI saves a flushed progress journal beside the final report. Validated
+trials are retained between measurements, even if a later reader fails. Failure
+records include the batch number, phase and partial observations; partial or
+unvalidated trials must not be pooled with successful trials. `--paths` can
+isolate a reader for diagnosis without repeating the full comparison. Worker
+timeouts remain 60 seconds; a timeout alone does not identify its underlying cause.
+
+CNN batches use different windows across steps. First-batch validation and
+replaying the schedule affect caching; the diagnostic does not verify residency
+of every requested page. Keep this condition distinct from the window-only
+benchmark, which warms the same request before timing its repetitions.
+
 ## Evidence and remaining work
 
 Result JSON, figures, data and measured-source archives live **outside Git**.

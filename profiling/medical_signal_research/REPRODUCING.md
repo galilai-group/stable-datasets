@@ -144,6 +144,20 @@ CPU paths use all requested counts. All trajectories must match within the
 reported tolerance, or the command fails without writing a successful report.
 Outputs must be outside the repository and must not already exist.
 
+The CLI also creates `OUTPUT.progress.jsonl` (replacing the `.json` suffix).
+It flushes and syncs metadata and each validated trial outside measurement.
+On failure, the journal retains completed trials and a failure event; a final
+successful report is written only after the whole comparison passes. A failed
+trial's partial steps are diagnostic observations, not validated measurements.
+Neither an existing report nor its progress journal is overwritten.
+
+For a focused reproduction, add `--paths edf_memmap --workers 2 --trials 3`.
+Keep the same batch size, steps, device and source as the failed run. Failure
+context records whether the error occurred while starting the iterator, waiting
+for a particular batch, preparing device data or executing the model. The
+60-second worker timeout is unchanged; do not treat it as proof of a particular
+NFS, worker-startup or pinning failure.
+
 This single-recording diagnostic evaluates data stalls, not held-out seizure
 accuracy. A later learning comparison must choose patient-separated splits and
 validate the reference EEG model's stable-pretraining adaptation.

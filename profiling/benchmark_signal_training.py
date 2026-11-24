@@ -8,6 +8,7 @@ Storage and label policy live in separate modules. GPU assembly is unchanged.
 import argparse
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 
@@ -59,6 +60,18 @@ def _new_model(channels, device):
     return model, optimizer
 
 
+class TrialFailure(RuntimeError):
+    """Keep failed-step context and partial observations separate from valid trials."""
+
+    def __init__(self, context, error):
+        self.context = context
+        super().__init__(
+            f"{context['path']} workers={context['workers']} failed during {context['phase']} "
+            f"at batch {context['batch_number']}/{context['total_batches']} "
+            f"after {len(context['completed_steps'])} completed steps: {error}"
+        )
+
+
 def train_trial(dataset: WindowBatches, workers: int, device: torch.device) -> dict:
     """Include worker startup and synchronized data-ready and training steps.
 
@@ -88,14 +101,21 @@ def train_trial(dataset: WindowBatches, workers: int, device: torch.device) -> d
         assembler = GpuRecordAssembler(BatchedEdfRecords(dataset.source, NativeEdfReader(dataset.source)), device)
     _synchronize(device)
     started = perf_counter()
-    iterator = iter(loader)
-    iterator_seconds = perf_counter() - started
+    iterator = None
+    iterator_seconds = None
+    phase = "starting_iterator"
+    batch_number = 0
     steps = []
     try:
-        for _ in range(len(dataset)):
+        iterator = iter(loader)
+        iterator_seconds = perf_counter() - started
+        for index in range(len(dataset)):
+            batch_number = index + 1
+            phase = "waiting_for_batch"
             ready_started = perf_counter()
             batch = next(iterator)
             wait_seconds = perf_counter() - ready_started
+            phase = "preparing_device_batch"
             if assembler is None:
                 values = batch["values"].to(device, non_blocking=True)
             else:
@@ -103,6 +123,7 @@ def train_trial(dataset: WindowBatches, workers: int, device: torch.device) -> d
             targets = batch["targets"].to(device, non_blocking=True)
             _synchronize(device)
             ready_seconds = perf_counter() - ready_started
+            phase = "training_step"
             compute_started = perf_counter()
             optimizer.zero_grad(set_to_none=True)
             loss = nn.functional.cross_entropy(model(values), targets)
@@ -120,8 +141,25 @@ def train_trial(dataset: WindowBatches, workers: int, device: torch.device) -> d
                 }
             )
         elapsed = perf_counter() - started
+    except Exception as error:
+        raise TrialFailure(
+            {
+                "path": dataset.path,
+                "workers": workers,
+                "phase": phase,
+                "batch_number": batch_number,
+                "total_batches": len(dataset),
+                "elapsed_seconds": perf_counter() - started,
+                "iterator_startup_seconds": iterator_seconds,
+                "completed_steps": steps,
+                "error_type": type(error).__name__,
+                "error": str(error),
+            },
+            error,
+        ) from error
     finally:
-        del iterator
+        if iterator is not None:
+            del iterator
     if not all(np.isfinite(row["loss"]) for row in steps):
         raise ValueError("Nonfinite training loss")
     return {
@@ -135,7 +173,21 @@ def train_trial(dataset: WindowBatches, workers: int, device: torch.device) -> d
     }
 
 
-def run(source, workspace, annotations, *, subject_id, batch_size, steps, seconds, workers, trials, device):
+def run(
+    source,
+    workspace,
+    annotations,
+    *,
+    subject_id,
+    batch_size,
+    steps,
+    seconds,
+    workers,
+    trials,
+    device,
+    paths=None,
+    progress=None,
+):
     """Validate the first batch against MNE, then compare matched learning runs."""
     import mne
 
@@ -177,9 +229,11 @@ def run(source, workspace, annotations, *, subject_id, batch_size, steps, second
     latest = meta["n_samples"] // int(rate) - int(seconds)
     starts = np.random.default_rng(0).integers(0, latest + 1, size=(steps, batch_size)) * int(rate)
     labels = window_targets(experts, starts, length, rate)
-    cases = [(name, w) for name in CPU_PATHS for w in sorted(set(workers))]
-    if target.type == "cuda":
-        cases.append((GPU_PATH, 0))
+    available = (*CPU_PATHS, GPU_PATH) if target.type == "cuda" else CPU_PATHS
+    selected = list(dict.fromkeys(available if paths is None else paths))
+    if not selected or any(name not in available for name in selected):
+        raise ValueError("Require loading paths available on the selected device")
+    cases = [(name, count) for name in selected for count in ([0] if name == GPU_PATH else sorted(set(workers)))]
     with mne.io.read_raw_edf(str(source), preload=False, verbose="ERROR") as raw:
         expected = read_mne_windows(raw, starts[0], length)
     datasets = {name: WindowBatches(source, workspace, starts, labels, length, name) for name, _ in cases}
@@ -207,29 +261,14 @@ def run(source, workspace, annotations, *, subject_id, batch_size, steps, second
     _synchronize(target)
     parameters = sum(p.numel() for p in warm_model.parameters())
     del warm_model, warm_optimizer, warm_values, warm_targets
-    reports = []
-    reference_losses = None
-    for trial in range(trials):
-        order = cases[trial % len(cases) :] + cases[: trial % len(cases)]
-        for name, count in order:
-            result = train_trial(datasets[name], count, target)
-            losses = [row["loss"] for row in result["steps"]]
-            if reference_losses is None:
-                reference_losses = losses
-            np.testing.assert_allclose(losses, reference_losses, rtol=2e-4, atol=2e-5)
-            result.update(trial=trial)
-            reports.append(result)
-            print(
-                f"trial={trial} path={name} workers={count} seconds={result['elapsed_seconds']:.3f} "
-                f"data_ready={100 * result['data_ready_fraction']:.1f}%",
-                flush=True,
-            )
-    if checksum(source) != source_hash or checksum(annotations) != annotation_hash:
-        raise ValueError("Experiment inputs changed during training")
-    return {
-        "scope": "Warm single-recording CNN data-stall diagnostic; synchronized steps; no held-out accuracy claim",
+    metadata = {
+        "scope": "Single-recording CNN data-stall diagnostic; synchronized steps; no held-out accuracy claim",
+        "cache_condition": "No eviction or residency verification; first-batch validation and repeated schedules affect caching",
         "label_policy": "Majority of three experts per second; any positive second makes the whole-second window positive",
         "subject_id": subject_id,
+        "device": str(target),
+        "planned_trials": trials,
+        "cases": [{"path": name, "workers": count} for name, count in cases],
         "source_sha256": source_hash,
         "annotations_sha256": annotation_hash,
         "model": "Two Conv1d/GroupNorm/GELU blocks and global pooling; EEG channels only; volts multiplied by 1e4",
@@ -245,7 +284,6 @@ def run(source, workspace, annotations, *, subject_id, batch_size, steps, second
         "targets": labels.tolist(),
         "positive_windows": int(labels.sum()),
         "recording": meta,
-        "trials": reports,
         "first_batch_max_abs_errors_volts": errors,
         "loss_equivalence_tolerance": {"rtol": 2e-4, "atol": 2e-5},
         "timing": "Includes worker startup and data-ready/compute steps; setup, MNE, two model warmups and reader shutdown excluded",
@@ -279,6 +317,51 @@ def run(source, workspace, annotations, *, subject_id, batch_size, steps, second
         },
     }
 
+    def emit(event, **values):
+        if progress is not None:
+            progress({"event": event, **values})
+
+    emit("run_started", metadata=metadata)
+    reports = []
+    reference_losses = None
+    for trial in range(trials):
+        order = cases[trial % len(cases) :] + cases[: trial % len(cases)]
+        for name, count in order:
+            case = {"trial": trial, "path": name, "workers": count}
+            emit("trial_started", **case)
+            print(f"starting trial={trial} path={name} workers={count}", flush=True)
+            result = None
+            try:
+                result = train_trial(datasets[name], count, target)
+                losses = [row["loss"] for row in result["steps"]]
+                if reference_losses is None:
+                    reference_losses = losses
+                np.testing.assert_allclose(losses, reference_losses, rtol=2e-4, atol=2e-5)
+            except Exception as error:
+                emit(
+                    "trial_failed",
+                    **case,
+                    error_type=type(error).__name__,
+                    error=str(error),
+                    context=getattr(error, "context", None),
+                    unvalidated_result=result,
+                )
+                raise
+            result.update(trial=trial)
+            reports.append(result)
+            emit("trial_completed", validated=True, result=result)
+            print(
+                f"trial={trial} path={name} workers={count} seconds={result['elapsed_seconds']:.3f} "
+                f"data_ready={100 * result['data_ready_fraction']:.1f}%",
+                flush=True,
+            )
+    if checksum(source) != source_hash or checksum(annotations) != annotation_hash:
+        raise ValueError("Experiment inputs changed during training")
+    for name, digest in metadata["code_sha256"].items():
+        if checksum(Path(__file__).resolve().parents[1] / name) != digest:
+            raise ValueError("Experiment code changed during training")
+    return {**metadata, "trials": reports}
+
 
 def main():
     """Keep diagnostic configuration and artifact writing outside storage code."""
@@ -291,6 +374,7 @@ def main():
     parser.add_argument("--steps", type=int, default=20)
     parser.add_argument("--seconds", type=float, default=4)
     parser.add_argument("--workers", type=int, nargs="+", default=[0, 2])
+    parser.add_argument("--paths", nargs="+", choices=(*CPU_PATHS, GPU_PATH))
     parser.add_argument("--trials", type=int, default=3)
     parser.add_argument("--device", choices=["cpu", "cuda"], default="cuda")
     parser.add_argument("--output", type=Path, required=True)
@@ -300,9 +384,31 @@ def main():
         raise ValueError("Research results must be outside the repository")
     if output.exists():
         raise FileExistsError(output)
-    report = run(**args)
-    with output.open("x") as stream:
-        json.dump(report, stream, indent=2)
+    journal = output.with_suffix(".progress.jsonl")
+    with journal.open("x") as stream:
+
+        def persist(event):
+            entry = {"timestamp_utc": datetime.now(timezone.utc).isoformat(), **event}
+            stream.write(json.dumps(entry) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+
+        persist(
+            {
+                "event": "invocation",
+                "arguments": {name: str(value) if isinstance(value, Path) else value for name, value in args.items()},
+            }
+        )
+        try:
+            report = run(**args, progress=persist)
+            with output.open("x") as destination:
+                json.dump(report, destination, indent=2)
+                destination.flush()
+                os.fsync(destination.fileno())
+        except Exception as error:
+            persist({"event": "run_failed", "error_type": type(error).__name__, "error": str(error)})
+            raise
+        persist({"event": "run_completed", "output": str(output)})
 
 
 if __name__ == "__main__":
