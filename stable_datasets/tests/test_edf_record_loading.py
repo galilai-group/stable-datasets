@@ -137,3 +137,29 @@ def test_gpu_assembles_records_with_annotations_and_repeated_windows(tmp_path):
     report = benchmark.run_benchmark(config)
     assert report["source_unchanged"]
     assert len(report["results"]) == 7
+
+
+def test_window_reader_cpu_matches_independent_mne_windows(tmp_path):
+    path = tmp_path / "source.edf"
+    make_source(path, annotation_in_middle=True)
+    reader = records_module.EdfWindowReader(path)
+    starts = np.array([127, 0, 256, 127])
+    actual = reader.read(starts, 128)
+    with mne.io.read_raw_edf(str(path), preload=False, verbose="ERROR") as raw:
+        expected = benchmark.read_mne_windows(raw, starts, 128)
+    assert actual.dtype == torch.float32 and actual.device.type == "cpu"
+    np.testing.assert_allclose(actual.numpy(), expected, rtol=2e-6, atol=1e-10)
+    with pytest.raises(ValueError, match="CUDA"):
+        records_module.EdfWindowReader(path, "edf_gpu_assembly", torch.device("cpu"))
+    with pytest.raises(ValueError, match="Unknown"):
+        records_module.EdfWindowReader(path, "invalid")
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA GPU not available")
+def test_window_reader_gpu_matches_cpu(tmp_path):
+    path = tmp_path / "source.edf"
+    make_source(path, annotation_in_middle=True)
+    starts = np.array([127, 0, 256, 127])
+    cpu = records_module.EdfWindowReader(path).read(starts, 128)
+    gpu = records_module.EdfWindowReader(path, "edf_gpu_assembly", torch.device("cuda")).read(starts, 128)
+    torch.testing.assert_close(gpu.cpu(), cpu, rtol=2e-6, atol=1e-10)

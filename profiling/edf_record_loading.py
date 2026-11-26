@@ -14,7 +14,7 @@ import numpy as np
 import torch
 
 from profiling.edf_source import NativeEdfReader
-from profiling.signal_calibration import calibrate
+from profiling.signal_calibration import calibrate, calibrate_cpu
 
 
 @dataclass(frozen=True)
@@ -197,3 +197,32 @@ class GpuRecordAssembler:
         indices = (records * self.source.layout.words_per_record + within_record)[:, :, None] + self.channel_offsets
         digital = raw.flatten()[indices]
         return calibrate(digital, self.gain, self.offset)
+
+
+EDF_PATHS = ("edf_memmap", "edf_gpu_assembly")
+
+
+class EdfWindowReader:
+    """Expose existing CPU/GPU assembly as source-ordered float32 volts.
+
+    GPU assembly stays in the calling process. This facade adds no new source
+    parsing, record gathering, calibration, pinning or buffering implementation.
+    """
+
+    def __init__(self, path: Path, loading_path: str = "edf_memmap", device: torch.device | None = None):
+        if loading_path not in EDF_PATHS:
+            raise ValueError("Unknown EDF loading path")
+        device = torch.device("cpu") if device is None else torch.device(device)
+        if loading_path == "edf_gpu_assembly" and (device.type != "cuda" or not torch.cuda.is_available()):
+            raise ValueError("GPU assembly requires a CUDA device")
+        self.records = BatchedEdfRecords(Path(path), NativeEdfReader(Path(path)))
+        self.metadata = self.records.metadata
+        self.assembler = GpuRecordAssembler(self.records, device) if loading_path == "edf_gpu_assembly" else None
+
+    def read(self, starts: np.ndarray, length: int) -> torch.Tensor:
+        """Read identical sample requests on CPU or CUDA, without model policy."""
+        plan = self.records.plan(starts, length)
+        if self.assembler is not None:
+            return self.assembler.assemble(plan)
+        digital = self.records.read_cpu_from_records(plan)
+        return torch.from_numpy(calibrate_cpu(digital, self.metadata.gain, self.metadata.offset))
