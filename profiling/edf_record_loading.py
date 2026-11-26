@@ -7,6 +7,7 @@ The original file is memory-mapped unchanged; no processed cache is created.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -215,12 +216,30 @@ class EdfWindowReader:
         device = torch.device("cpu") if device is None else torch.device(device)
         if loading_path == "edf_gpu_assembly" and (device.type != "cuda" or not torch.cuda.is_available()):
             raise ValueError("GPU assembly requires a CUDA device")
-        self.records = BatchedEdfRecords(Path(path), NativeEdfReader(Path(path)))
+        self.path, self.loading_path, self.device = Path(path), loading_path, device
+        self._open()
+
+    def _open(self):
+        if self.loading_path == "edf_gpu_assembly" and torch.utils.data.get_worker_info() is not None:
+            raise ValueError("GPU assembly must run in the main process")
+        self.records = BatchedEdfRecords(self.path, NativeEdfReader(self.path))
         self.metadata = self.records.metadata
-        self.assembler = GpuRecordAssembler(self.records, device) if loading_path == "edf_gpu_assembly" else None
+        self.assembler = (
+            GpuRecordAssembler(self.records, self.device) if self.loading_path == "edf_gpu_assembly" else None
+        )
+        self._pid = os.getpid()
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.update(records=None, assembler=None, _pid=None)
+        return state
 
     def read(self, starts: np.ndarray, length: int) -> torch.Tensor:
         """Read identical sample requests on CPU or CUDA, without model policy."""
+        if self.loading_path == "edf_gpu_assembly" and torch.utils.data.get_worker_info() is not None:
+            raise ValueError("GPU assembly must run in the main process")
+        if self._pid != os.getpid():
+            self._open()
         plan = self.records.plan(starts, length)
         if self.assembler is not None:
             return self.assembler.assemble(plan)

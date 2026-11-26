@@ -163,3 +163,17 @@ def test_window_reader_gpu_matches_cpu(tmp_path):
     cpu = records_module.EdfWindowReader(path).read(starts, 128)
     gpu = records_module.EdfWindowReader(path, "edf_gpu_assembly", torch.device("cuda")).read(starts, 128)
     torch.testing.assert_close(gpu.cpu(), cpu, rtol=2e-6, atol=1e-10)
+
+
+def test_window_reader_pickle_reopens_without_sharing_source_handles(tmp_path):
+    import pickle
+
+    path = tmp_path / "source.edf"
+    make_source(path)
+    reader = records_module.EdfWindowReader(path)
+    restored = pickle.loads(pickle.dumps(reader))
+    assert restored.records is None and restored.assembler is None
+    assert reader.records is not None
+    starts = np.array([127, 0, 127])
+    torch.testing.assert_close(restored.read(starts, 128), reader.read(starts, 128), rtol=0, atol=0)
+    assert restored.records is not reader.records
