@@ -6,6 +6,9 @@ it does not claim to run the full SeizuresNeonatal builder. Each recording is
 materialized once per batch, avoiding a deliberately weak repeated-row baseline.
 """
 
+import hashlib
+import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -57,3 +60,58 @@ class CurrentSignalCache:
         return sum(
             self.recordings[i].n_samples * len(self.recordings[i].channels) for i in {r.recording for r in requests}
         )
+
+
+class CurrentCacheWindowReader:
+    """Expose source-verified prepared cache windows with process-local handles."""
+
+    loading_path = "current_cache"
+
+    def __init__(self, source: Path, workspace: Path):
+        from profiling.benchmark_support import checksum
+        from profiling.edf_source import NativeEdfReader
+
+        self.workspace = Path(workspace).expanduser().resolve()
+        preparation = (self.workspace / "preparation.json").read_bytes()
+        prepared = json.loads(preparation)
+        digest = checksum(Path(source))
+        if prepared["source_sha256"] != digest:
+            raise ValueError("EDF differs from the prepared cache source")
+        self.metadata = NativeEdfReader(Path(source)).metadata
+        m = self.metadata
+        self.recording = Recording.from_dict(prepared["recording"])
+        expected = Recording(m.sample_count, m.sample_rate_hz, m.channel_names, tuple(m.gain), tuple(m.offset))
+        if self.recording != expected:
+            raise ValueError("Prepared cache recording metadata disagree with EDF")
+        self.provenance = {
+            "workspace": str(self.workspace),
+            "preparation_sha256": hashlib.sha256(preparation).hexdigest(),
+            "source_sha256": digest,
+        }
+        self._cache = None
+        self._pid = None
+        self._open()
+
+    def _open(self):
+        if self._cache is None or self._pid != os.getpid():
+            self._cache = CurrentSignalCache(self.workspace / "current", [self.recording])
+            self._pid = os.getpid()
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.update(_cache=None, _pid=None)
+        return state
+
+    def read(self, starts: np.ndarray, length: int):
+        """Return CPU float32 volts, materializing the recording once per batch."""
+        import torch
+
+        if starts.ndim != 1 or not np.issubdtype(starts.dtype, np.integer) or not len(starts):
+            raise ValueError("Require a nonempty integer start vector")
+        requests = [Window(0, int(start), length) for start in starts]
+        validate_windows([self.recording], requests)
+        self._open()
+        values = np.stack(self._cache.read(requests))
+        if values.shape != (len(starts), length, len(self.recording.channels)):
+            raise ValueError("Prepared cache window shape disagrees with EDF")
+        return torch.from_numpy(values)

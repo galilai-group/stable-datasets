@@ -194,4 +194,5 @@ NFS, worker-startup or pinning failure.
 
 This single-recording diagnostic evaluates data stalls, not held-out seizure
 accuracy. Reference EEG model checks are in the sibling stable-pretraining
-example; the old-cache versus GPU EEG training comparison remains future work.
+example. Its optional `current_cache` path reuses this prepared workspace; see
+that example's README for the matched CPU-cache/memmap/GPU training command.

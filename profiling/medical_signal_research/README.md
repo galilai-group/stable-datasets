@@ -65,7 +65,7 @@ coalescing and caches may cause different physical I/O. See the
 
 - `signal_windows.py`: recording metadata, request validation and common window conversion.
 - `lance_signal_windows.py`: immutable int16 storage and window selection, without training policy.
-- `current_signal_cache.py`: production-format recording-row baseline.
+- `current_signal_cache.py`: production-format recording-row baseline and source-verified, worker-safe window reader.
 - `benchmark_signal_windows.py`: preparation/measurement/plot orchestration and matched endpoints.
 - `neonatal_targets.py`: expert annotations and the diagnostic's explicit window-label policy.
 - `training_windows.py`: batched CPU readers that open independently in spawned workers.
@@ -137,9 +137,11 @@ retain independent mount evidence beside each report. Inspect worker startup
 and per-step data-ready/compute times before interpreting CNN training wall
 time. The sibling `stable-pretraining/examples/eeg_jepa` example retains reference
 forward/backward equivalence, contextual preprocessing and a matched EDF pilot.
-Old-cache CPU versus new-GPU EEG training, further Lance integration, GPU
-preprocessing and buffer tuning remain future work. No automatic CPU/GPU
-routing or end-to-end training speedup is claimed.
+The EEG pilot can compare the production-cache CPU path with EDF memmap and
+GPU assembly, using the prepared workspace and checking its source provenance.
+CUDA correctness and real-recording training speedup require separate execution.
+Further Lance integration, GPU preprocessing and buffer tuning remain future
+work. No automatic CPU/GPU routing or end-to-end training speedup is claimed.
 
 Historical exploratory CPU window measurements used the published `eeg4.edf`
 digest and batch sizes 1/4/16/32, five repeats and four balanced rounds. Their
