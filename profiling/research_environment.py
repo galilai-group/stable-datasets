@@ -7,7 +7,7 @@ from importlib import metadata
 from pathlib import Path
 
 
-PACKAGES = ("numpy", "scipy", "torch", "pyarrow", "mne", "edfio", "pyedflib", "wfdb", "numba", "triton", "pytest")
+PACKAGES = ("numpy", "scipy", "torch", "pyarrow", "mne", "edfio", "pyedflib", "triton", "pytest")
 
 
 def _command(arguments: list[str]) -> str | None:

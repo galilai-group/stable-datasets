@@ -8,26 +8,51 @@ account-specific instructions; no partition or NFS mount is assumed here.
 
 ## Environment
 
-Use an existing compatible CUDA-enabled PyTorch environment, or a fresh Python
-3.13 environment with the recorded package pins in `requirements.txt`. The
-recorded torch 2.15.0+cu132 wheel source must be available and compatible with
-the installed driver; a fresh installation of that exact CUDA environment has
-not been verified on this Mac. Do not silently substitute versions when
-claiming reproduction. Normal reference-reader dependencies must be installed
-(not an incomplete `--no-deps` installation).
+The `profiling` modules require a **source checkout** and the repository root
+on `PYTHONPATH`; installing stable-datasets alone does not install them. From
+the stable-datasets root, a fresh CPU development environment can be prepared as:
 
 ```bash
-python -m pip install -r profiling/medical_signal_research/requirements.txt --extra-index-url https://download.pytorch.org/whl/cu132
-nvidia-smi
-python -c "import torch, lance; print(torch.__version__, lance.__version__); assert torch.cuda.is_available(); print(torch.cuda.get_device_name(0)); assert hasattr(lance.LanceDataset, 'read_blob_ranges')"
+python3.12 -m venv "$HOME/.venvs/eeg-research"
+source "$HOME/.venvs/eeg-research/bin/activate"
+python -m pip install -e . pytest ruff matplotlib \
+  "torch==2.15.0" "numpy==2.5.5" "scipy==1.18.1" "mne==1.10.2" \
+  "edfio==0.4.18" "pyedflib==0.1.42" "pylance==14.0.3" "pyarrow==26.0.1"
+export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONDONTWRITEBYTECODE=1
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+export RAYON_NUM_THREADS=1 TOKIO_WORKER_THREADS=1
 ```
 
-For CPU-only development, CUDA-specific torch/Triton pins need not be installed.
-Use a supported CPU PyTorch build plus Lance, PyArrow, NumPy, MNE, edfio,
-pyEDFlib, pytest and matplotlib. Local compatibility checks use Python 3.10,
-MNE 1.10.2, Lance 13.0.0 and PyArrow 25.0.1; those are separate from the
-historical GPU environment. The benchmark requires file format 2.2 and the
-planned blob-range API; it fails rather than silently loading whole blobs.
+These versions were used for CPU cleanup validation with Python 3.12.13; this is
+not a complete transitive lock. The EEG example's additional installation and
+pinned reference are documented in the sibling
+`stable-pretraining/examples/eeg_jepa/README.md`.
+
+`requirements.txt` records **historical storage-benchmark pins** for Python
+3.13.9/Linux, including MNE 1.13.2, Lance 13.0.0, PyArrow 25.0.1 and a
+CUDA-specific PyTorch build. It is not the EEG integration environment or a
+complete lock. If reproducing that historical environment, install the project
+as well as those requirements, using the recorded CUDA wheel source:
+
+```bash
+python -m pip install -e . -r profiling/medical_signal_research/requirements.txt \
+  matplotlib --extra-index-url https://download.pytorch.org/whl/cu132
+```
+
+A fresh installation of that exact historical CUDA environment has not been
+verified on this Mac. For new GPU checks use a driver-compatible CUDA-enabled
+PyTorch environment, install the checkout and research dependencies, and retain
+its freeze/driver details externally. Keep PyTorch-required dependencies such
+as Triton; removing the paused experiment does not require uninstalling anything.
+
+The blob reader requires file format 2.2 and genuine planned byte-range support;
+it fails rather than loading whole blobs. Check the allocated GPU and API:
+
+```bash
+nvidia-smi
+python -c 'import torch, lance; assert torch.cuda.is_available(); print(torch.__version__, torch.cuda.get_device_name(0), lance.__version__); assert hasattr(lance.LanceDataset, "read_blob_ranges")'
+```
 
 ## Source and preparation
 
@@ -62,17 +87,28 @@ RAM because it includes one whole recording and the production list encoder.
 ## Validate and measure
 
 ```bash
-python -m pytest -q -rs \
+python -m pytest -q -rs -p no:cacheprovider \
   stable_datasets/tests/test_signal_calibration.py \
   stable_datasets/tests/test_benchmark_support.py \
   stable_datasets/tests/test_edf_source.py \
   stable_datasets/tests/test_edf_record_loading.py \
-  stable_datasets/tests/test_lance_signal_windows.py
+  stable_datasets/tests/test_lance_signal_windows.py \
+  stable_datasets/tests/test_signal_training.py
 ```
 
 Inspect skips. Synthetic EDF fixtures and real temporary Lance datasets require
 medical readers; CUDA checks require actual GPU access. Tests do not download
-recordings. The paused WFDB study need not be run for this experiment.
+recordings. Missing optional readers can skip entire modules; that is incomplete
+validation, not a successful correctness result. On CPU the CUDA-marked checks
+skip with a CUDA-unavailable reason. In an allocated GPU environment, require
+those tests to execute too. Keep dependency skips distinct from CUDA exclusions.
+
+```bash
+ruff check --no-cache profiling \
+  stable_datasets/tests/test_{benchmark_support,edf_source,edf_record_loading,signal_calibration,lance_signal_windows,signal_training}.py
+ruff format --no-cache --check profiling \
+  stable_datasets/tests/test_{benchmark_support,edf_source,edf_record_loading,signal_calibration,lance_signal_windows,signal_training}.py
+```
 
 CPU smoke run (four paths, CPU output):
 
@@ -95,12 +131,10 @@ per-round latency and windows/second, and logical payload/materialization counts
 No cold-cache eviction is implemented and first reads after validation are warm.
 Do not interpret selected-byte counters as measured physical storage bandwidth.
 
-For the Hydra handoff, retain the generated preparation report, measurement
-JSON, figure, environment and exact revision outside Git. Changing model size,
-worker count, cache conditions or chunk size is a separate controlled comparison.
-The subsequent training step must decide annotation-to-window labels and a
-patient-separated split, select a small EEG model, validate its stable-pretraining
-adaptation and compare matched learning progress versus elapsed wall time.
+Retain preparation, measurement, figure, environment, exact revision and code
+hashes outside Git. Changing model size, worker count, cache conditions or chunk
+size is a separate controlled comparison. Historical reports keep their original
+provenance; cleanup validation does not remeasure their performance.
 
 ## Small CNN diagnostic
 
@@ -159,5 +193,5 @@ for a particular batch, preparing device data or executing the model. The
 NFS, worker-startup or pinning failure.
 
 This single-recording diagnostic evaluates data stalls, not held-out seizure
-accuracy. A later learning comparison must choose patient-separated splits and
-validate the reference EEG model's stable-pretraining adaptation.
+accuracy. Reference EEG model checks are in the sibling stable-pretraining
+example; the old-cache versus GPU EEG training comparison remains future work.

@@ -1,15 +1,14 @@
-# Recorded research package versions, not a complete transitive environment lock.
+# Historical storage-benchmark versions; not the EEG integration environment or a complete lock.
 # Python 3.13.9 / Linux x86_64 was used. Install torch from the recorded CUDA wheel source.
 numpy==2.3.5
 scipy==1.16.3
 mne==1.13.2
 edfio==0.4.18
 pyedflib==0.1.42
-wfdb==4.3.1
-numba==0.62.1
 # The original pytest version was not recorded; this range is a setup choice.
 pytest>=8,<10
 torch==2.15.0+cu132
+# Retained for the recorded PyTorch build, independently of removed experiments.
 triton==3.9.0
 
 # Verified planned blob-range reader and Arrow compatibility for the window study.

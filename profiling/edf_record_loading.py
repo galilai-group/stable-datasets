@@ -112,17 +112,6 @@ class BatchedEdfRecords:
         ]
         return WindowPlan(starts.astype(np.int64, copy=True), length, np.unique(np.concatenate(ranges)))
 
-    def read_cpu(self, plan: WindowPlan) -> np.ndarray:
-        """Gather exactly requested int16 samples with broadcasted NumPy indexing.
-
-        Index construction and output allocation occur per call. The file remains
-        record-major/channel-blocked; no full recording is reshaped or copied.
-        """
-        times = plan.starts[:, None] + np.arange(plan.length)
-        record_indices, within_record = np.divmod(times, self.layout.samples_per_channel_record)
-        word_indices = within_record[:, :, None] + self.layout.channel_offsets
-        return np.asarray(self.records[record_indices[:, :, None], word_indices])
-
     def read_records(self, plan: WindowPlan) -> np.ndarray:
         """Copy unique complete original records, retaining skipped annotation words."""
         return np.asarray(self.records[plan.record_ids])
@@ -151,22 +140,6 @@ class BatchedEdfRecords:
         for destination, start in zip(output, local_starts):
             np.copyto(destination, flattened[int(start) : int(start) + plan.length])
         return output
-
-    def payload_statistics(self, plan: WindowPlan) -> dict:
-        """Describe logical payload, record reuse and overread, not physical disk bytes."""
-        times = plan.starts[:, None] + np.arange(plan.length)
-        channel_count = len(self.metadata.channel_names)
-        logical_bytes = len(plan.starts) * plan.length * channel_count * 2
-        unique_signal_bytes = len(np.unique(times)) * channel_count * 2
-        record_bytes = len(plan.record_ids) * self.layout.words_per_record * 2
-        return {
-            "unique_records": len(plan.record_ids),
-            "logical_window_bytes": logical_bytes,
-            "unique_requested_signal_bytes": unique_signal_bytes,
-            "record_payload_bytes": record_bytes,
-            "record_bytes_divided_by_logical_bytes": record_bytes / logical_bytes,
-            "record_overread_vs_unique_signal_bytes": record_bytes / unique_signal_bytes,
-        }
 
 
 class GpuRecordAssembler:

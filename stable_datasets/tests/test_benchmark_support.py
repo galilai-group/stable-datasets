@@ -29,7 +29,7 @@ def test_cuda_stage_waits_for_completed_work_and_excludes_warmup(monkeypatch):
 
 @pytest.mark.parametrize(
     "module,dependency",
-    [("profiling.edf_source", "edfio"), ("profiling.wfdb212", "wfdb"), ("profiling.wfdb212_cpu", "numba")],
+    [("profiling.edf_source", "edfio")],
 )
 def test_sources_and_cpu_decoder_import_without_benchmark_or_gpu_dependencies(module, dependency):
     pytest.importorskip(dependency)

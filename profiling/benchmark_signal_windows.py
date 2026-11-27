@@ -67,106 +67,60 @@ def prepare(source: Path, workspace: Path, chunk_samples: int):
     (workspace / "preparation.json").write_text(json.dumps(report, indent=2) + "\n")
 
 
-def run(
-    source: Path,
-    workspace: Path,
-    *,
-    batch_sizes: list[int],
-    seconds: float,
-    device: str,
-    repeats: int,
-    storage_label: str,
-):
-    """Validate every path against MNE, then time balanced warm-source batches."""
-    import mne
-
-    from profiling.edf_record_loading import BatchedEdfRecords, GpuRecordAssembler
-    from profiling.edf_reference import read_mne_windows
-    from profiling.edf_source import NativeEdfReader
+def _window_operations(current, blobs, chunks, meta, records, native, assembler, starts, length, requests, device):
     from profiling.signal_calibration import calibrate_cpu
 
-    if not batch_sizes or any(b < 1 for b in batch_sizes) or repeats < 1 or not np.isfinite(seconds) or seconds <= 0:
-        raise ValueError("Require positive batch sizes, repetitions and finite window seconds")
-    if device == "cuda" and not torch.cuda.is_available():
-        raise ValueError("CUDA unavailable")
-    torch.set_num_threads(1)
-    prep = json.loads((workspace / "preparation.json").read_text())
-    digest = checksum(source)
-    if digest != prep["source_sha256"]:
-        raise ValueError("EDF differs from the prepared source")
-    meta = Recording.from_dict(prep["recording"])
-    length = round(seconds * meta.rate_hz)
-    if length < 1 or length > meta.n_samples or not np.isclose(length / meta.rate_hz, seconds):
-        raise ValueError("Duration must be sample-aligned and fit the recording")
-    current = CurrentSignalCache(workspace / "current", [meta])
-    blobs, chunks = (LanceSignalWindows(workspace / name) for name in ("recordings.lance", "chunks.lance"))
-    if blobs.recordings != [meta] or chunks.recordings != [meta]:
-        raise ValueError("Prepared layout metadata disagree")
-    native = NativeEdfReader(source)
-    records = BatchedEdfRecords(source, native)
-    target = torch.device(device)
-    assembler = GpuRecordAssembler(records, target) if device == "cuda" else None
-    reports = []
-    with mne.io.read_raw_edf(str(source), preload=False, verbose="ERROR") as reference:
-        for batch_size in batch_sizes:
-            starts = np.random.default_rng(0).integers(0, meta.n_samples - length + 1, size=batch_size)
-            requests = [Window(0, int(start), length) for start in starts]
-            expected = read_mne_windows(reference, starts, length)
+    def memmap():
+        values = records.read_cpu_from_records(records.plan(starts, length))
+        return calibrate_cpu(values, native.metadata.gain, native.metadata.offset)
 
-            def memmap():
-                values = records.read_cpu_from_records(records.plan(starts, length))
-                return calibrate_cpu(values, native.metadata.gain, native.metadata.offset)
+    def blob():
+        return np.stack(physical_windows([meta], requests, blobs.read(requests)))
 
-            def blob():
-                return np.stack(physical_windows([meta], requests, blobs.read(requests)))
+    def chunk():
+        return np.stack(physical_windows([meta], requests, chunks.read(requests)))
 
-            def chunk():
-                return np.stack(physical_windows([meta], requests, chunks.read(requests)))
+    cpu = {
+        "current_cache": lambda: np.stack(current.read(requests)),
+        "edf_memmap": memmap,
+        "lance_blob_ranges": blob,
+        "lance_chunk_rows": chunk,
+    }
+    operations = {name: (lambda fn=fn: transfer_to_cuda(fn())) if device == "cuda" else fn for name, fn in cpu.items()}
+    if assembler is not None:
+        operations["edf_gpu_assembly"] = lambda: assembler.assemble(records.plan(starts, length))
+    return operations
 
-            cpu = {
-                "current_cache": lambda: np.stack(current.read(requests)),
-                "edf_memmap": memmap,
-                "lance_blob_ranges": blob,
-                "lance_chunk_rows": chunk,
-            }
-            operations = {
-                name: (lambda fn=fn: transfer_to_cuda(fn())) if device == "cuda" else fn for name, fn in cpu.items()
-            }
-            if assembler is not None:
-                operations["edf_gpu_assembly"] = lambda: assembler.assemble(records.plan(starts, length))
-            errors = {}
-            for name, operation in operations.items():
-                actual = operation()
-                if isinstance(actual, torch.Tensor):
-                    actual = actual.cpu().numpy()
-                np.testing.assert_allclose(actual, expected, rtol=2e-6, atol=1e-10)
-                errors[name] = float(np.max(np.abs(actual - expected)))
-            trials = {name: [] for name in operations}
-            order = np.random.default_rng(0).permutation(list(operations)).tolist()
-            for round_index in range(len(order)):
-                for name in order[round_index:] + order[:round_index]:
-                    trials[name].append(measure_stage(operations[name], target, 2, repeats))
-            results = {}
-            for name, values in trials.items():
-                latency = float(np.median([v["median_ms"] for v in values]))
-                results[name] = {
-                    "median_ms": latency,
-                    "windows_per_second": batch_size * 1000 / latency,
-                    "rounds": values,
-                }
-            reports.append(
-                {
-                    "batch_size": batch_size,
-                    "window_starts": starts.tolist(),
-                    "results": results,
-                    "max_abs_errors_volts": errors,
-                    "blob_requested_bytes": blobs.payload_bytes(requests),
-                    "chunk_selected_bytes": chunks.payload_bytes(requests),
-                    "current_materialized_scalars": current.materialized_samples(requests),
-                }
-            )
-    if checksum(source) != digest:
-        raise ValueError("Source changed during measurement")
+
+def _validate_operations(operations, expected):
+    errors = {}
+    for name, operation in operations.items():
+        actual = operation()
+        if isinstance(actual, torch.Tensor):
+            actual = actual.cpu().numpy()
+        np.testing.assert_allclose(actual, expected, rtol=2e-6, atol=1e-10)
+        errors[name] = float(np.max(np.abs(actual - expected)))
+    return errors
+
+
+def _measure_operations(operations, target, repeats, batch_size):
+    trials = {name: [] for name in operations}
+    order = np.random.default_rng(0).permutation(list(operations)).tolist()
+    for round_index in range(len(order)):
+        for name in order[round_index:] + order[:round_index]:
+            trials[name].append(measure_stage(operations[name], target, 2, repeats))
+    results = {}
+    for name, values in trials.items():
+        latency = float(np.median([v["median_ms"] for v in values]))
+        results[name] = {
+            "median_ms": latency,
+            "windows_per_second": batch_size * 1000 / latency,
+            "rounds": values,
+        }
+    return results
+
+
+def _window_report(source, storage_label, digest, device, seconds, length, meta, repeats, reports):
     return {
         "scope": "Warm-source completed-batch rate; no cold/NFS verification, overlap, workers or training claim",
         "baseline": "Production Arrow writer/backend/formatter, signal column only; one materialization per recording per batch",
@@ -203,6 +157,72 @@ def run(
             )
         },
     }
+
+
+def run(
+    source: Path,
+    workspace: Path,
+    *,
+    batch_sizes: list[int],
+    seconds: float,
+    device: str,
+    repeats: int,
+    storage_label: str,
+):
+    """Validate every path against MNE, then time balanced warm-source batches."""
+    import mne
+
+    from profiling.edf_record_loading import BatchedEdfRecords, GpuRecordAssembler
+    from profiling.edf_reference import read_mne_windows
+    from profiling.edf_source import NativeEdfReader
+
+    if not batch_sizes or any(b < 1 for b in batch_sizes) or repeats < 1 or not np.isfinite(seconds) or seconds <= 0:
+        raise ValueError("Require positive batch sizes, repetitions and finite window seconds")
+    if device == "cuda" and not torch.cuda.is_available():
+        raise ValueError("CUDA unavailable")
+    torch.set_num_threads(1)
+    prep = json.loads((workspace / "preparation.json").read_text())
+    digest = checksum(source)
+    if digest != prep["source_sha256"]:
+        raise ValueError("EDF differs from the prepared source")
+    meta = Recording.from_dict(prep["recording"])
+    length = round(seconds * meta.rate_hz)
+    if length < 1 or length > meta.n_samples or not np.isclose(length / meta.rate_hz, seconds):
+        raise ValueError("Duration must be sample-aligned and fit the recording")
+    current = CurrentSignalCache(workspace / "current", [meta])
+    blobs, chunks = (LanceSignalWindows(workspace / name) for name in ("recordings.lance", "chunks.lance"))
+    if blobs.recordings != [meta] or chunks.recordings != [meta]:
+        raise ValueError("Prepared layout metadata disagree")
+    native = NativeEdfReader(source)
+    records = BatchedEdfRecords(source, native)
+    target = torch.device(device)
+    assembler = GpuRecordAssembler(records, target) if device == "cuda" else None
+    reports = []
+    with mne.io.read_raw_edf(str(source), preload=False, verbose="ERROR") as reference:
+        for batch_size in batch_sizes:
+            starts = np.random.default_rng(0).integers(0, meta.n_samples - length + 1, size=batch_size)
+            requests = [Window(0, int(start), length) for start in starts]
+            expected = read_mne_windows(reference, starts, length)
+
+            operations = _window_operations(
+                current, blobs, chunks, meta, records, native, assembler, starts, length, requests, device
+            )
+            errors = _validate_operations(operations, expected)
+            results = _measure_operations(operations, target, repeats, batch_size)
+            reports.append(
+                {
+                    "batch_size": batch_size,
+                    "window_starts": starts.tolist(),
+                    "results": results,
+                    "max_abs_errors_volts": errors,
+                    "blob_requested_bytes": blobs.payload_bytes(requests),
+                    "chunk_selected_bytes": chunks.payload_bytes(requests),
+                    "current_materialized_scalars": current.materialized_samples(requests),
+                }
+            )
+    if checksum(source) != digest:
+        raise ValueError("Source changed during measurement")
+    return _window_report(source, storage_label, digest, device, seconds, length, meta, repeats, reports)
 
 
 def plot(report: Path, output: Path):

@@ -12,7 +12,8 @@ pytest.importorskip("edfio")
 pytest.importorskip("pyedflib")
 native = importlib.import_module("profiling.edf_source")
 records_module = importlib.import_module("profiling.edf_record_loading")
-benchmark = importlib.import_module("profiling.benchmark_edf_records")
+reference_checks = importlib.import_module("profiling.edf_reference")
+calibration = importlib.import_module("profiling.signal_calibration")
 
 
 def make_source(path, *, annotation_in_middle=False):
@@ -66,7 +67,7 @@ def test_vectorized_layouts_match_native_samples_and_mne(tmp_path, annotation_in
     starts = np.array([127, 0, 256, 127])
     plan = records.plan(starts, 128)
     expected = np.stack([samples[start : start + 128] for start in starts])
-    np.testing.assert_array_equal(records.read_cpu(plan), expected)
+    np.testing.assert_array_equal(source.read_windows(starts, 128), expected)
     np.testing.assert_array_equal(records.read_cpu_from_records(plan), expected)
     np.testing.assert_array_equal(plan.record_ids, [0, 1, 2])
     gapped = records.plan(np.array([256, 0, 256]), 16)
@@ -75,8 +76,12 @@ def test_vectorized_layouts_match_native_samples_and_mne(tmp_path, annotation_in
         records.read_cpu_from_records(gapped), np.stack([samples[start : start + 16] for start in gapped.starts])
     )
     with mne.io.read_raw_edf(str(path), preload=False, verbose="ERROR") as reference:
-        physical = benchmark.read_mne_windows(reference, starts, 128)
-        benchmark.validate_raw_paths(source, records, starts, 128, physical)
+        physical = reference_checks.read_mne_windows(reference, starts, 128)
+        reference_checks.validate_source(source, reference, starts, 128)
+        calibrated = calibration.calibrate_cpu(
+            records.read_cpu_from_records(plan), source.metadata.gain, source.metadata.offset
+        )
+        reference_checks.require_matching_signals(calibrated, physical)
     assert path.read_bytes() == before
     if annotation_in_middle:
         assert records.layout.channel_offsets[1] > records.layout.samples_per_channel_record
@@ -119,24 +124,26 @@ def test_source_size_and_unknown_record_count_fail_before_mapping(tmp_path):
 def test_gpu_assembles_records_with_annotations_and_repeated_windows(tmp_path):
     path = tmp_path / "source.edf"
     samples = make_source(path, annotation_in_middle=True)
+    before = path.read_bytes()
     source = native.NativeEdfReader(path)
     records = records_module.BatchedEdfRecords(path, source)
     assembler = records_module.GpuRecordAssembler(records, torch.device("cuda"))
     for starts, length in ((np.array([127, 0, 256, 127]), 128), (np.array([256, 0, 256]), 16), (np.array([0]), 384)):
         plan = records.plan(starts, length)
         actual = assembler.assemble(plan).cpu().numpy()
-        expected = benchmark.calibrate_cpu(
+        expected = calibration.calibrate_cpu(
             np.stack([samples[start : start + length] for start in plan.starts]),
             source.metadata.gain,
             source.metadata.offset,
         )
         np.testing.assert_allclose(actual, expected, rtol=2e-6, atol=1e-10)
-    config = benchmark.RecordBenchmarkConfig(
-        path, tmp_path / "unused.json", batch_size=3, length=128, repeats=1, rounds=1
-    )
-    report = benchmark.run_benchmark(config)
-    assert report["source_unchanged"]
-    assert len(report["results"]) == 7
+        cpu = calibration.calibrate_cpu(
+            records.read_cpu_from_records(plan), source.metadata.gain, source.metadata.offset
+        )
+        reference_checks.require_matching_signals(actual, cpu)
+        with mne.io.read_raw_edf(str(path), preload=False, verbose="ERROR") as raw:
+            reference_checks.require_matching_signals(actual, reference_checks.read_mne_windows(raw, starts, length))
+    assert path.read_bytes() == before
 
 
 def test_window_reader_cpu_matches_independent_mne_windows(tmp_path):
@@ -146,7 +153,7 @@ def test_window_reader_cpu_matches_independent_mne_windows(tmp_path):
     starts = np.array([127, 0, 256, 127])
     actual = reader.read(starts, 128)
     with mne.io.read_raw_edf(str(path), preload=False, verbose="ERROR") as raw:
-        expected = benchmark.read_mne_windows(raw, starts, 128)
+        expected = reference_checks.read_mne_windows(raw, starts, 128)
     assert actual.dtype == torch.float32 and actual.device.type == "cpu"
     np.testing.assert_allclose(actual.numpy(), expected, rtol=2e-6, atol=1e-10)
     with pytest.raises(ValueError, match="CUDA"):

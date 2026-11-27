@@ -1,7 +1,8 @@
 """Small CNN diagnostic for neonatal window loading, workers and data stalls.
 
 This is a single-recording systems experiment with real seizure annotations,
-not a patient-generalization evaluation or the later EEG-JEPA adaptation.
+not a patient-generalization evaluation. EEG-JEPA model adaptation lives in
+the sibling stable-pretraining example.
 Storage and label policy live in separate modules. GPU assembly is unchanged.
 """
 
@@ -173,38 +174,7 @@ def train_trial(dataset: WindowBatches, workers: int, device: torch.device) -> d
     }
 
 
-def run(
-    source,
-    workspace,
-    annotations,
-    *,
-    subject_id,
-    batch_size,
-    steps,
-    seconds,
-    workers,
-    trials,
-    device,
-    paths=None,
-    progress=None,
-):
-    """Validate the first batch against MNE, then compare matched learning runs."""
-    import mne
-
-    from profiling.edf_reference import read_mne_windows
-
-    if min(batch_size, steps, trials) < 1 or not workers or any(w < 0 for w in workers):
-        raise ValueError("Require positive sizes and nonnegative worker counts")
-    if not np.isfinite(seconds) or seconds <= 0:
-        raise ValueError("Require positive finite window duration")
-    if source.name != f"eeg{subject_id}.edf":
-        raise ValueError("EDF filename must agree with the annotated subject ID")
-    prep = json.loads((workspace / "preparation.json").read_text())
-    source_hash = checksum(source)
-    annotation_hash = checksum(annotations)
-    if source_hash != prep["source_sha256"]:
-        raise ValueError("EDF differs from the prepared source")
-    configure_reader_threads()
+def _configure_device(device):
     target = torch.device(device)
     if target.type == "cuda":
         if not torch.cuda.is_available() or torch.cuda.device_count() != 1:
@@ -218,7 +188,10 @@ def run(
         torch.backends.cudnn.allow_tf32 = False
         torch.backends.cuda.matmul.allow_tf32 = False
     torch.use_deterministic_algorithms(True)
-    meta = prep["recording"]
+    return target
+
+
+def _window_schedule(meta, annotations, subject_id, seconds, steps, batch_size):
     rate = float(meta["rate_hz"])
     length = round(seconds * rate)
     if rate != int(rate) or seconds != int(seconds) or length > meta["n_samples"]:
@@ -229,11 +202,23 @@ def run(
     latest = meta["n_samples"] // int(rate) - int(seconds)
     starts = np.random.default_rng(0).integers(0, latest + 1, size=(steps, batch_size)) * int(rate)
     labels = window_targets(experts, starts, length, rate)
+    return starts, labels, length
+
+
+def _loading_cases(paths, target, workers):
     available = (*CPU_PATHS, GPU_PATH) if target.type == "cuda" else CPU_PATHS
     selected = list(dict.fromkeys(available if paths is None else paths))
     if not selected or any(name not in available for name in selected):
         raise ValueError("Require loading paths available on the selected device")
     cases = [(name, count) for name in selected for count in ([0] if name == GPU_PATH else sorted(set(workers)))]
+    return cases
+
+
+def _prepare_datasets(source, workspace, starts, labels, length, cases, target):
+    import mne
+
+    from profiling.edf_reference import read_mne_windows
+
     with mne.io.read_raw_edf(str(source), preload=False, verbose="ERROR") as raw:
         expected = read_mne_windows(raw, starts[0], length)
     datasets = {name: WindowBatches(source, workspace, starts, labels, length, name) for name, _ in cases}
@@ -249,6 +234,10 @@ def run(
             actual = dataset[0]["values"]
         np.testing.assert_allclose(actual, expected, rtol=2e-6, atol=1e-10)
         errors[name] = float(np.max(np.abs(actual - expected)))
+    return datasets, expected, errors
+
+
+def _warm_model(meta, expected, labels, target):
     # Warm model forward/backward kernels using an independent model, then reset
     # weights and AdamW state for every measured trial.
     warm_model, warm_optimizer = _new_model(tuple(meta["channels"]), target)
@@ -261,6 +250,25 @@ def run(
     _synchronize(target)
     parameters = sum(p.numel() for p in warm_model.parameters())
     del warm_model, warm_optimizer, warm_values, warm_targets
+    return parameters
+
+
+def _training_metadata(
+    *,
+    subject_id,
+    target,
+    trials,
+    cases,
+    source_hash,
+    annotation_hash,
+    parameters,
+    batch_size,
+    seconds,
+    starts,
+    labels,
+    meta,
+    errors,
+):
     metadata = {
         "scope": "Single-recording CNN data-stall diagnostic; synchronized steps; no held-out accuracy claim",
         "cache_condition": "No eviction or residency verification; first-batch validation and repeated schedules affect caching",
@@ -317,6 +325,10 @@ def run(
         },
     }
 
+    return metadata
+
+
+def _execute_trials(datasets, cases, trials, target, metadata, progress):
     def emit(event, **values):
         if progress is not None:
             progress({"event": event, **values})
@@ -355,6 +367,59 @@ def run(
                 f"data_ready={100 * result['data_ready_fraction']:.1f}%",
                 flush=True,
             )
+    return reports
+
+
+def run(
+    source,
+    workspace,
+    annotations,
+    *,
+    subject_id,
+    batch_size,
+    steps,
+    seconds,
+    workers,
+    trials,
+    device,
+    paths=None,
+    progress=None,
+):
+    """Validate the first batch against MNE, then compare matched learning runs."""
+    if min(batch_size, steps, trials) < 1 or not workers or any(w < 0 for w in workers):
+        raise ValueError("Require positive sizes and nonnegative worker counts")
+    if not np.isfinite(seconds) or seconds <= 0:
+        raise ValueError("Require positive finite window duration")
+    if source.name != f"eeg{subject_id}.edf":
+        raise ValueError("EDF filename must agree with the annotated subject ID")
+    prep = json.loads((workspace / "preparation.json").read_text())
+    source_hash = checksum(source)
+    annotation_hash = checksum(annotations)
+    if source_hash != prep["source_sha256"]:
+        raise ValueError("EDF differs from the prepared source")
+    configure_reader_threads()
+    target = _configure_device(device)
+    meta = prep["recording"]
+    starts, labels, length = _window_schedule(meta, annotations, subject_id, seconds, steps, batch_size)
+    cases = _loading_cases(paths, target, workers)
+    datasets, expected, errors = _prepare_datasets(source, workspace, starts, labels, length, cases, target)
+    parameters = _warm_model(meta, expected, labels, target)
+    metadata = _training_metadata(
+        subject_id=subject_id,
+        target=target,
+        trials=trials,
+        cases=cases,
+        source_hash=source_hash,
+        annotation_hash=annotation_hash,
+        parameters=parameters,
+        batch_size=batch_size,
+        seconds=seconds,
+        starts=starts,
+        labels=labels,
+        meta=meta,
+        errors=errors,
+    )
+    reports = _execute_trials(datasets, cases, trials, target, metadata, progress)
     if checksum(source) != source_hash or checksum(annotations) != annotation_hash:
         raise ValueError("Experiment inputs changed during training")
     for name, digest in metadata["code_sha256"].items():

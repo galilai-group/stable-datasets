@@ -1,10 +1,9 @@
 # Random EEG windows: storage before GPU tuning
 
-Sami's review of [PR #162](https://github.com/galilai-group/stable-datasets/pull/162#pullrequestreview-6005673988)
-prioritizes neonatal EDF, random windows for EEG classification, and a fair
-comparison against efficient Lance layouts. The earlier native-format work
-provides correctness checks and comparison paths; WFDB and mixed-rate EDF are
-paused. Production builders and public features are unchanged.
+This source-checkout experiment compares random neonatal EDF windows with
+production-format Arrow and two immutable Lance layouts. Production builders
+and public features are unchanged. See [REPRODUCING.md](REPRODUCING.md) for
+installation and validation; `profiling` is not installed as a package.
 
 ## Current experiment
 
@@ -53,9 +52,8 @@ compaction; there is no production cache migration or general signal feature.
 The writer streams one blob/chunk at a time. The preparation command still
 materializes one complete EDF recording on CPU; preparation memory/time must
 not be confused with training read costs. Embedded EDF annotation metadata is
-retained externally, but no seizure-label policy is invented. External neonatal
-MAT labels, patient-separated training splits and model adaptation belong to
-the later training experiment.
+retained externally. The separate CNN diagnostic below owns its neonatal MAT
+annotation policy; patient-separated evaluation is outside this experiment.
 
 The recording-blob path requires genuine planned byte-range support, verified
 with local Lance 13.0.0 and file format 2.2. No full-blob fallback is allowed.
@@ -76,8 +74,9 @@ coalescing and caches may cause different physical I/O. See the
 - `signal_calibration.py`, `edf_reference.py`: numerical calibration and independent MNE validation.
 - `benchmark_support.py`, `research_environment.py`: measurement utilities and provenance.
 
-The existing GPU pinning/allocation behavior is intentionally unchanged, as
-Sami requested. Historical WFDB modules remain dormant; no work is added there.
+The existing GPU pinning/allocation behavior is unchanged. The paused WFDB
+experiment and superseded seven-path EDF ablation CLI have been removed; native
+EDF correctness tests import the owning reader, calibration and MNE modules.
 
 ## Small CNN and data loading diagnostic
 
@@ -96,7 +95,8 @@ and a positive window if any included second is positive. This is an experiment
 choice, not a clinical evaluation standard. The small CNN selects channels named
 `EEG`, excludes auxiliary signals and applies the same fixed scaling to every
 path. It is a single-recording systems diagnostic; patient-generalization
-evaluation and the eventual EEG model port are separate stages.
+evaluation is outside this diagnostic. EEG-JEPA model adaptation and training
+live in the sibling stable-pretraining example.
 
 The first batch is checked against MNE. Every measured training trajectory must
 match the reference loss trajectory within reported tolerances. Two model
@@ -135,18 +135,15 @@ Only warm-source measurement is currently implemented. Reader reopening is not
 called a cold-cache test. A user-supplied `nfs` label is not mount verification;
 retain independent mount evidence beside each report. Inspect worker startup
 and per-step data-ready/compute times before interpreting CNN training wall
-time. The later realistic EEG model requires forward/backward equivalence in
-stable-pretraining and learning progress against wall time. No automatic
-CPU/GPU routing or end-to-end training speedup is claimed by this experiment.
+time. The sibling `stable-pretraining/examples/eeg_jepa` example retains reference
+forward/backward equivalence, contextual preprocessing and a matched EDF pilot.
+Old-cache CPU versus new-GPU EEG training, further Lance integration, GPU
+preprocessing and buffer tuning remain future work. No automatic CPU/GPU
+routing or end-to-end training speedup is claimed.
 
-Local validation of this stage: 31 tests passed, with two CUDA checks and two
-paused-WFDB dependency checks skipped. Real Lance range/chunk reads and the
-EDF-to-benchmark/plot smoke test executed. One unchanged neonatal `eeg4.edf`
-was also checked against its published source digest and used for an exploratory
-four-second-window CPU comparison (batch sizes 1/4/16/32, five repeats per path
-in four balanced rounds). All paths passed MNE comparisons. Its report and
-figure are external artifacts, not committed research results or evidence of
-Hydra/NFS/GPU/training performance. The preparation source has 876,800 time
-samples and 21 channels; one recording-row materialization therefore visits
-18,412,800 scalar values, even for a short window. No baseline library file,
-GPU assembly implementation or calibration algorithm was changed.
+Historical exploratory CPU window measurements used the published `eeg4.edf`
+digest and batch sizes 1/4/16/32, five repeats and four balanced rounds. Their
+report and figure remain external artifacts; they are not measurements of this
+cleanup, Hydra/NFS/GPU evidence or training results. The source has 876,800 time
+samples and 21 channels, so one recording-row materialization visits 18,412,800
+scalar values even for a short window. New reports retain their own code hashes.
