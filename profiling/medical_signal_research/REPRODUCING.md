@@ -1,10 +1,8 @@
 # Run the window-access experiment
 
-Use the repository root on branch `research/gpu-medical-timeseries`. The source
-is deliberately one neonatal EDF recording; this is not a full dataset build.
-No Git mutation or external tracking/upload is performed by these commands.
-On Hydra, execute CUDA work inside your allocated GPU job using the cluster's
-account-specific instructions; no partition or NFS mount is assumed here.
+Run these commands from the stable-datasets source checkout. The experiment
+uses one neonatal EDF recording rather than building the complete dataset.
+CUDA commands require access to an assigned GPU.
 
 ## Environment
 
@@ -24,27 +22,25 @@ export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 export RAYON_NUM_THREADS=1 TOKIO_WORKER_THREADS=1
 ```
 
-These versions were used for CPU cleanup validation with Python 3.12.13; this is
-not a complete transitive lock. The EEG example's additional installation and
+These pins target Python 3.12 and are not a complete transitive lock.
+The EEG example's additional installation and
 pinned reference are documented in the sibling
 `stable-pretraining/examples/eeg_jepa/README.md`.
 
-`requirements.txt` records **historical storage-benchmark pins** for Python
-3.13.9/Linux, including MNE 1.13.2, Lance 13.0.0, PyArrow 25.0.1 and a
-CUDA-specific PyTorch build. It is not the EEG integration environment or a
-complete lock. If reproducing that historical environment, install the project
-as well as those requirements, using the recorded CUDA wheel source:
+`requirements.txt` provides a separate Python 3.13/Linux CUDA environment with
+MNE 1.13.2, Lance 13.0.0 and PyArrow 25.0.1. It is not a complete lock and its
+MNE version is incompatible with the companion EEG GPU preprocessing candidate.
+To use that storage-only environment, install the project and requirements
+using the matching CUDA wheel source:
 
 ```bash
 python -m pip install -e . -r profiling/medical_signal_research/requirements.txt \
   matplotlib --extra-index-url https://download.pytorch.org/whl/cu132
 ```
 
-A fresh installation of that exact historical CUDA environment has not been
-verified on this Mac. For new GPU checks use a driver-compatible CUDA-enabled
-PyTorch environment, install the checkout and research dependencies, and retain
-its freeze/driver details externally. Keep PyTorch-required dependencies such
-as Triton; removing the paused experiment does not require uninstalling anything.
+Use a CUDA-enabled PyTorch build compatible with the GPU driver. Install the
+checkout and research dependencies into that environment without replacing its
+CUDA build with CPU-only wheels.
 
 The blob reader requires file format 2.2 and genuine planned byte-range support;
 it fails rather than loading whole blobs. Check the allocated GPU and API:
@@ -56,10 +52,10 @@ python -c 'import torch, lance; assert torch.cuda.is_available(); print(torch.__
 
 ## Source and preparation
 
-Choose paths **outside the repository**. On Hydra, set `signal_root` to your
-chosen NFS research directory if that is the storage under study. Verify the
-mount using your site's tools (for example `findmnt -T "$signal_root"` on Linux).
-The `--storage-label` field merely records your description, not verification.
+The commands require a workspace outside the source checkout. Set `signal_root`
+to the storage directory under study. Verify its mount, for example with
+`findmnt -T "$signal_root"` on Linux. The `--storage-label` field records a
+label; it does not verify storage type.
 
 ```bash
 signal_root="$HOME/eeg-window-study"
@@ -131,15 +127,13 @@ per-round latency and windows/second, and logical payload/materialization counts
 No cold-cache eviction is implemented and first reads after validation are warm.
 Do not interpret selected-byte counters as measured physical storage bandwidth.
 
-Retain preparation, measurement, figure, environment, exact revision and code
-hashes outside Git. Changing model size, worker count, cache conditions or chunk
-size is a separate controlled comparison. Historical reports keep their original
-provenance; cleanup validation does not remeasure their performance.
+Changing model size, worker count, cache conditions or chunk size is a separate
+controlled comparison.
 
 ## Small CNN diagnostic
 
-Use the same prepared recording, and retain its published annotations outside
-the repository. The MAT file is unchanged between dataset versions 3 and 4;
+Use the same prepared recording and its published annotations.
+The MAT file is unchanged between dataset versions 3 and 4;
 its published MD5 is `f0009a921d9dacd135fff4fc2377d872`.
 
 ```bash
@@ -153,13 +147,13 @@ positive window if any included second is positive. Starts and durations use
 whole seconds; ambiguous subsecond label alignment is rejected. The label time
 base is described in the [dataset paper](https://doi.org/10.1038/sdata.2019.39).
 
-Run CUDA work in a Slurm allocation. For worker counts 0 and 2, request enough
-CPUs for the two reader processes and the training process, initially four.
+For worker counts 0 and 2, provide enough CPUs for two reader processes and the
+training process, initially four.
 Keep each process's CPU pools bounded by setting `OMP_NUM_THREADS=1`,
 `MKL_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1`, `RAYON_NUM_THREADS=1` and
 `TOKIO_WORKER_THREADS=1`. Reader initialization also bounds Torch and Arrow
 pools. Set `CUBLAS_WORKSPACE_CONFIG=:4096:8` before Python starts for deterministic
-CUDA model comparisons. Keep Slurm's GPU visibility unchanged.
+CUDA model comparisons. Preserve the GPU visibility assigned by your runtime.
 
 ```bash
 CUBLAS_WORKSPACE_CONFIG=:4096:8 python -m profiling.benchmark_signal_training "$signal_root/eeg4.edf" "$signal_root/prepared-1024" "$signal_root/annotations_2017.mat" --subject-id 4 --device cuda --batch-size 32 --steps 20 --workers 0 2 --trials 3 --output "$signal_root/cnn-workers.json"
@@ -195,4 +189,5 @@ NFS, worker-startup or pinning failure.
 This single-recording diagnostic evaluates data stalls, not held-out seizure
 accuracy. Reference EEG model checks are in the sibling stable-pretraining
 example. Its optional `current_cache` path reuses this prepared workspace; see
-that example's README for the matched CPU-cache/memmap/GPU training command.
+that example's README for dependency versions, CPU-cache/memmap/GPU training
+commands and the optional GPU preprocessing route.

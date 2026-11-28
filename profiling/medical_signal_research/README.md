@@ -74,10 +74,6 @@ coalescing and caches may cause different physical I/O. See the
 - `signal_calibration.py`, `edf_reference.py`: numerical calibration and independent MNE validation.
 - `benchmark_support.py`, `research_environment.py`: measurement utilities and provenance.
 
-The existing GPU pinning/allocation behavior is unchanged. The paused WFDB
-experiment and superseded seven-path EDF ablation CLI have been removed; native
-EDF correctness tests import the owning reader, calibration and MNE modules.
-
 ## Small CNN and data loading diagnostic
 
 `python -m profiling.benchmark_signal_training` consumes the existing prepared
@@ -119,33 +115,20 @@ replaying the schedule affect caching; the diagnostic does not verify residency
 of every requested page. Keep this condition distinct from the window-only
 benchmark, which warms the same request before timing its repetitions.
 
-## Evidence and remaining work
-
-Result JSON, figures, data and measured-source archives live **outside Git**.
-Historical evidence was copied and checksum-verified outside the repository
-before removal from this working contribution. Earlier timings do not establish
-the performance of these new layouts. Source/code hashes accompany new reports.
+## Validation and limitations
 
 Synthetic tests check real Lance reads, cross-chunk and recording boundaries,
 duplicates, metadata/calibration, exact byte-range calls, deduplication payloads,
 whole-recording baseline materialization and EDF-to-benchmark/plot execution.
 Reference checks compare physical outputs with MNE before timing.
 
-Only warm-source measurement is currently implemented. Reader reopening is not
-called a cold-cache test. A user-supplied `nfs` label is not mount verification;
-retain independent mount evidence beside each report. Inspect worker startup
-and per-step data-ready/compute times before interpreting CNN training wall
-time. The sibling `stable-pretraining/examples/eeg_jepa` example retains reference
-forward/backward equivalence, contextual preprocessing and a matched EDF pilot.
-The EEG pilot can compare the production-cache CPU path with EDF memmap and
-GPU assembly, using the prepared workspace and checking its source provenance.
-CUDA correctness and real-recording training speedup require separate execution.
-Further Lance integration, GPU preprocessing and buffer tuning remain future
-work. No automatic CPU/GPU routing or end-to-end training speedup is claimed.
+Only warm-source measurement is implemented. Reopening a reader does not make
+a filesystem cache cold. The `--storage-label` field is a user-supplied label;
+verify the mount independently when comparing local and NFS storage. Inspect
+worker startup and per-step data-ready/compute times before interpreting CNN
+training intervals.
 
-Historical exploratory CPU window measurements used the published `eeg4.edf`
-digest and batch sizes 1/4/16/32, five repeats and four balanced rounds. Their
-report and figure remain external artifacts; they are not measurements of this
-cleanup, Hydra/NFS/GPU evidence or training results. The source has 876,800 time
-samples and 21 channels, so one recording-row materialization visits 18,412,800
-scalar values even for a short window. New reports retain their own code hashes.
+The companion `stable-pretraining/examples/eeg_jepa` example owns EEG-JEPA
+adaptation, preprocessing and training. It compares the production-cache CPU
+path, CPU memmap and GPU assembly, with an optional GPU preprocessing route.
+Its EEG-JEPA training comparison does not include the Lance layouts.
